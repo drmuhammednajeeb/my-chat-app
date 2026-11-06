@@ -627,7 +627,30 @@ function beginReply(m){if(!m||m.deleted_at)return;if(state.editTarget)$('message
 function beginEditMessage(m){if(!m||m.sender_id!==state.user?.id||m.deleted_at)return;state.editTarget=m;state.replyTarget=null;$('attachBtn').disabled=true;$('messageInput').value=m.content||'';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');renderComposerContext();resizeComposer();$('messageInput').focus();$('messageInput').setSelectionRange($('messageInput').value.length,$('messageInput').value.length)}
 function cancelComposerContext(){state.replyTarget=null;state.editTarget=null;renderComposerContext()}
 function renderPinnedBanner(){const box=$('pinnedBanner');if(!box)return;const pins=[...state.pinnedMessages.values()].sort((a,b)=>new Date(b.pinned_at)-new Date(a.pinned_at)),latest=pins[0];if(!latest){box.classList.add('hidden');return}const message=state.messages.find(m=>m.id===latest.message_id)||state.replyMessages.get(latest.message_id);box.classList.remove('hidden');$('pinnedText').textContent=messagePreview(message);const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;$('pinnedUnpin').classList.toggle('hidden',latest.pinned_by!==state.user?.id&&!['owner','admin'].includes(role)&&!state.isTeamAdmin);$('pinnedJump').onclick=()=>jumpToMessage(latest.message_id);$('pinnedUnpin').onclick=()=>toggleMessagePin(message||{id:latest.message_id,conversation_id:state.active?.id})}
-function jumpToMessage(id){const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500)}else toast('هذه الرسالة خارج الرسائل المحملة حالياً. حدّث المحادثة للوصول إليها')}
+async function jumpToMessage(id){
+ let row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);
+ if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500);return}
+ const conversationId=state.active?.id;if(!conversationId)return;
+ try{
+  const {data:target,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).eq('id',id).maybeSingle();
+  if(error||!target){toast('تعذر العثور على الرسالة المثبتة');return}
+  const [beforeResult,afterResult]=await Promise.all([
+   supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',target.created_at).order('created_at',{ascending:false}).limit(40),
+   supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).gt('created_at',target.created_at).order('created_at',{ascending:true}).limit(40)
+  ]);
+  if(beforeResult.error||afterResult.error)throw beforeResult.error||afterResult.error;
+  const rows=[...(beforeResult.data||[]).reverse(),target,...(afterResult.data||[])].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const requestId=++state.messageLoadVersion;state.messages=rows;state.replyMessages=new Map();
+  const replyIds=[...new Set(rows.map(m=>m.reply_to).filter(x=>x&&!rows.some(m=>m.id===x)))];
+  if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!parentError)(parents||[]).forEach(m=>state.replyMessages.set(m.id,m))}
+  await loadMessageReactions(conversationId,rows);await loadMessagePins(conversationId);
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;
+  const area=$('messages');area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
+  for(const message of rows){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;await renderMessage(message,conversationId,requestId)}
+  row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);
+  if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500)}
+ }catch(error){console.error('Jump to message failed:',error);toast('تعذر تحميل الرسائل المحيطة بالرسالة المطلوبة')}
+}
 async function loadMessagePins(id){const {data,error}=await supabaseClient.from('message_pins').select('id,conversation_id,message_id,pinned_by,pinned_at').eq('conversation_id',id).order('pinned_at',{ascending:false});if(error){console.warn('Pinned messages load failed',error.message);state.pinnedMessages=new Map();renderPinnedBanner();return false}state.pinnedMessages=new Map((data||[]).map(x=>[x.message_id,x]));const missing=[...state.pinnedMessages.keys()].filter(mid=>!state.messages.some(m=>m.id===mid)&&!state.replyMessages.has(mid));if(missing.length){const {data:rows,error:messageError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at,attachment_path').eq('conversation_id',id).in('id',missing);if(!messageError)(rows||[]).forEach(m=>state.replyMessages.set(m.id,m))}renderPinnedBanner();return true}
 async function toggleMessagePin(m){if(!m?.id||!state.active?.id)return;const id=state.active.id,existing=state.pinnedMessages.get(m.id);try{if(existing){const {error}=await supabaseClient.from('message_pins').delete().eq('conversation_id',id).eq('message_id',m.id);if(error)throw error;state.pinnedMessages.delete(m.id);toast('تم إلغاء تثبيت الرسالة')}else{const {data,error}=await supabaseClient.from('message_pins').insert({conversation_id:id,message_id:m.id,pinned_by:state.user.id}).select().single();if(error)throw error;state.pinnedMessages.set(m.id,data);toast('تم تثبيت الرسالة')}renderPinnedBanner();const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===m.id);if(row)renderMessagePinMark(row,m)}catch(error){console.error('Pin action failed',error);toast('تعذر تغيير تثبيت الرسالة. تحقق من صلاحياتك')}}
 function renderMessagePinMark(row,m){row.querySelector('.message-pinned-mark')?.remove();if(!state.pinnedMessages.has(m.id)||m.deleted_at)return;const mark=document.createElement('div');mark.className='message-pinned-mark';mark.textContent='📌 رسالة مثبتة';row.querySelector('.bubble')?.prepend(mark)}
