@@ -24,7 +24,7 @@
 .sidebar-foot{border-top:1px solid var(--line);padding:12px 17px;color:var(--muted);font-size:10px;display:flex;justify-content:space-between}
 .chat{min-width:0;display:flex;flex-direction:column;position:relative;background:radial-gradient(ellipse at 50% 0%,#1a2c4030,transparent 55%),var(--bg)}
 .chat-head{height:76px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 24px;gap:12px;background:#101b2bcf;backdrop-filter:blur(18px)}.chat-head .avatar{width:43px;height:43px}.chat-title{flex:1;min-width:0}.chat-title strong{font-size:16px}.chat-title small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.head-actions{display:flex;gap:8px}
-.messages{flex:1;overflow:auto;padding:24px clamp(14px,5vw,70px);display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth}.welcome{margin:auto;text-align:center;max-width:390px;color:var(--muted)}.welcome .welcome-icon{width:78px;height:78px;margin:0 auto 18px;border-radius:26px;background:#173346;color:var(--accent);display:grid;place-items:center;font-size:38px}.welcome h2{color:var(--text);font-size:23px;margin:0 0 7px}.welcome p{font-size:13px;line-height:1.8;margin:0}
+.messages{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:24px clamp(14px,5vw,70px);display:flex;flex-direction:column;gap:9px;scroll-behavior:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-gutter:stable;overflow-anchor:auto}.messages::-webkit-scrollbar{width:7px}.messages::-webkit-scrollbar-thumb{background:var(--line);border-radius:20px}.messages::-webkit-scrollbar-thumb:hover{background:var(--muted)}.messages-history-loader{align-self:center;flex:none;padding:7px 12px;margin:0 0 8px;border:1px solid var(--line);border-radius:20px;background:var(--panel);color:var(--muted);font-size:11px}.welcome{margin:auto;text-align:center;max-width:390px;color:var(--muted)}.welcome .welcome-icon{width:78px;height:78px;margin:0 auto 18px;border-radius:26px;background:#173346;color:var(--accent);display:grid;place-items:center;font-size:38px}.welcome h2{color:var(--text);font-size:23px;margin:0 0 7px}.welcome p{font-size:13px;line-height:1.8;margin:0}
 .day-divider{align-self:center;padding:6px 13px;border:1px solid var(--line);background:#142238;color:var(--muted);border-radius:30px;font-size:10px;margin:15px 0}
 .message{max-width:min(75%,600px);display:flex;flex-direction:column;gap:4px;align-self:flex-start}.message.mine{align-self:flex-end}.sender{font-size:10px;color:var(--accent);padding:0 7px}.bubble{position:relative;padding:10px 13px 7px;border:1px solid var(--line);border-radius:17px 5px 17px 17px;background:var(--bubble);font-size:14px;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap}.mine .bubble{background:linear-gradient(145deg,#176d68,#145b5b);border-color:#2a827a;border-radius:5px 17px 17px 17px}.bubble.deleted{color:var(--muted);font-style:italic}.bubble img{display:block;max-width:100%;max-height:300px;border-radius:11px;margin-bottom:7px;cursor:zoom-in}.meta{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:9px;color:#b6c8d0a8;margin-top:2px}.msg-actions{display:flex;gap:5px;opacity:0;position:absolute;top:-15px;left:3px}.message:hover .msg-actions{opacity:1}.msg-actions button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;padding:3px 6px;font-size:10px}
 .typing{height:23px;padding:0 26px;color:var(--muted);font-size:11px;flex:none}
@@ -359,6 +359,12 @@ const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 const groupSelectedProfiles=new Map();let groupSearchTimer=null;let groupSearchRequest=0;let publicChannelsCache=[];let channelDirectoryRequest=0;
+let messagesScrollFrame=0;
+function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
+ if(!area)return;
+ if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
+ messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
+}
 const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
@@ -574,6 +580,7 @@ async function openConversation(c){
  if(!c?.id)return;
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
  state.active=c;state.messages=[];state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
+ $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
  stopMessagePolling();subscribeConversation();await loadMessages();if(state.active?.id===c.id)startMessagePolling(c.id);
@@ -697,7 +704,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
   if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)){state.messageIds.delete(m.id);return false;}
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
   const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
-  area.append(row);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');if(near||m.sender_id===state.user?.id)area.scrollTop=area.scrollHeight;updateDiagnostics();
+  area.append(row);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');if(!state.isLoadingMessages&&(near||m.sender_id===state.user?.id))scheduleMessagesBottom(area,'auto');updateDiagnostics();
   return true;
  }catch(error){
   state.messageIds.delete(m.id);state.diagnostics.lastRenderError=String(error?.message||error);console.error('Message rendering failed:',error);diagLog('render-error',{id:m.id,error:state.diagnostics.lastRenderError});
@@ -707,11 +714,12 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
 }
 async function loadMessages(){
  const conversationId=state.active?.id;if(!conversationId)return false;
- const requestId=++state.messageLoadVersion,area=$('messages');diagLog('fetch-start',{conversationId,requestId});
+ const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;diagLog('fetch-start',{conversationId,requestId});
  area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
  try{
   const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).order('created_at',{ascending:false}).limit(100);
   if(error)throw error;
+  state.hasMoreMessages=(data||[]).length===100;
   state.diagnostics.lastFetchAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastFetchCount=(data||[]).length;state.diagnostics.lastFetchError=null;diagLog('fetch-success',{count:(data||[]).length,requestId});
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   // Merge fetched rows with Realtime INSERTs received while this request was in flight.
@@ -732,16 +740,53 @@ async function loadMessages(){
    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
    area.scrollTop=area.scrollHeight;
   }
+  state.isLoadingMessages=false;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId)await markConversationReceipt(conversationId,document.visibilityState==='visible');
   return true;
  }catch(error){
   state.diagnostics.lastFetchError=String(error?.message||error);diagLog('fetch-error',{error:state.diagnostics.lastFetchError});console.error('Message loading failed:',error);
+  state.isLoadingMessages=false;
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){area.innerHTML='<div class="welcome"><h2>تعذر تحميل الرسائل</h2><p>تم إبقاء المحادثة مفتوحة. اضغط تحديث لإعادة المحاولة.</p></div>';toast('تعذر استرجاع الرسائل من قاعدة البيانات')}
   return false;
  }
 }
-function stopMessagePolling(){state.messagePollGeneration++;if(state.messagePollTimer){clearInterval(state.messagePollTimer);state.messagePollTimer=null}state.messagePollBusy=false;diagLog('poll-stopped',{generation:state.messagePollGeneration})}
+async function loadOlderMessages(){
+ const conversationId=state.active?.id,area=$('messages');
+ if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
+ const oldest=state.messages[0];if(!oldest?.created_at)return false;
+ state.loadingOlderMessages=true;
+ const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
+ const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
+ const oldHeight=area.scrollHeight,oldTop=area.scrollTop,requestId=state.messageLoadVersion;
+ const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
+ try{
+  const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',oldest.created_at).order('created_at',{ascending:false}).limit(50);
+  if(error)throw error;
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  const older=(data||[]).slice().reverse();
+  state.hasMoreMessages=older.length===50;
+  if(!older.length){state.hasMoreMessages=false;return false}
+  const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
+  state.messages=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const replyIds=[...new Set(state.messages.map(m=>m.reply_to).filter(id=>id&&!merged.has(id)))];
+  if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(parentError)throw parentError;(parents||[]).forEach(parent=>state.replyMessages.set(parent.id,parent))}
+  await loadMessageReactions(conversationId,older);await loadMessagePins(conversationId);
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  state.isLoadingMessages=true;area.style.overflowAnchor='none';area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
+  for(const message of state.messages){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;await renderMessage(message,conversationId,requestId)}
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  const restoredAnchor=anchorId?Array.from(area.querySelectorAll('.message')).find(node=>node.dataset.messageId===anchorId):null;
+  if(restoredAnchor)area.scrollTop=oldTop+(restoredAnchor.getBoundingClientRect().top-anchorTop);
+  else area.scrollTop=oldTop+(area.scrollHeight-oldHeight);
+  state.isLoadingMessages=false;area.style.overflowAnchor='';return true;
+ }catch(error){
+  console.error('Older message loading failed:',error);toast('تعذر تحميل الرسائل الأقدم');
+  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){state.isLoadingMessages=false;area.style.overflowAnchor=''}
+  return false;
+ }finally{state.loadingOlderMessages=false;area.querySelector('.messages-history-loader')?.remove()}
+}
+function stopMessagePolling(){state.isLoadingMessages=false;state.loadingOlderMessages=false;state.hasMoreMessages=false;state.messagePollGeneration++;if(state.messagePollTimer){clearInterval(state.messagePollTimer);state.messagePollTimer=null}state.messagePollBusy=false;diagLog('poll-stopped',{generation:state.messagePollGeneration})}
 function startMessagePolling(conversationId){
  stopMessagePolling();const generation=state.messagePollGeneration;
  state.messagePollTimer=setInterval(()=>pollMessagesFallback(conversationId,generation),4000);diagLog('poll-started',{conversationId,generation});
@@ -832,6 +877,10 @@ $('messageInput').addEventListener('input',()=>{resizeComposer();if($('messageIn
 $('messageInput').addEventListener('blur',()=>publishTyping(false));
 $('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendMessage()}});
 $('composerContextCancel').onclick=()=>{if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}cancelComposerContext();resizeComposer()};
+$('messages').addEventListener('scroll',()=>{
+ const area=$('messages');if(!area||state.loadingOlderMessages||!state.hasMoreMessages||state.isLoadingMessages)return;
+ if(area.scrollTop<=110){if(!state.historyScrollFrame){state.historyScrollFrame=requestAnimationFrame(()=>{state.historyScrollFrame=0;if(area.scrollTop<=140)loadOlderMessages()})}}
+},{passive:true});
 $('sendBtn').onclick=sendMessage;$('search').oninput=()=>{
  if(state.sidebarView==='team'){state.teamSearch=$('search').value.trim().toLocaleLowerCase('ar');renderTeamDashboard()}
  else if(state.sidebarView==='users'){
