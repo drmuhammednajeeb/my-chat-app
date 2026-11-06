@@ -494,6 +494,7 @@ async function renderMessage(m,conversationId=state.active?.id){
   }
   const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · معدلة':'');bubble.append(meta);
   if(m.sender_id===state.user?.id&&!m.deleted_at){const actions=document.createElement('div');actions.className='msg-actions';const edit=document.createElement('button');edit.type='button';edit.textContent='تعديل';edit.onclick=()=>editMessage(m);const del=document.createElement('button');del.type='button';del.textContent='حذف';del.onclick=()=>deleteMessage(m);actions.append(edit,del);bubble.append(actions)}
+  row.append(bubble);
   if(state.active?.id!==conversationId)return false;
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
   const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
