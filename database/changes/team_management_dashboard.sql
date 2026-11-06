@@ -153,7 +153,7 @@ begin
         'id', g.id, 'title', g.title, 'created_at', g.created_at,
         'member_count', (select count(*) from public.conversation_members cm where cm.conversation_id = g.id),
         'last_message_at', (select max(m.created_at) from public.chat_messages m where m.conversation_id = g.id)
-      ) order by coalesce(g.last_message_at,g.created_at))
+      ) order by coalesce(g.last_message_at,g.created_at) desc)
       from public.conversations g where g.type = 'group'
     ), '[]'::jsonb),
     'users', coalesce((
