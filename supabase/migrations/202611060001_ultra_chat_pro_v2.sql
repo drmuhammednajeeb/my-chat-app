@@ -56,14 +56,14 @@ revoke all on function app_private.is_conversation_member(uuid) from public, ano
 revoke all on function app_private.can_manage_conversation(uuid) from public, anon;
 create or replace function app_private.touch_conversation()
 returns trigger language plpgsql security definer set search_path=''
-as $
+as $$
 begin
  if new.sender_id is distinct from (select auth.uid()) then
   raise exception 'message sender does not match authenticated user';
  end if;
  update public.conversations set last_message_at=new.created_at, updated_at=now() where id=new.conversation_id;
  return new;
-end $;
+end $$;
 revoke all on function app_private.touch_conversation() from public, anon;
 grant execute on function app_private.is_conversation_member(uuid) to authenticated;
 grant execute on function app_private.can_manage_conversation(uuid) to authenticated;
