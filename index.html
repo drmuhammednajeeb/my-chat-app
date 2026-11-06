@@ -145,6 +145,39 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
  .conversation:active{background:#e9edef}
 }
 
+
+/* Ultra Chat Pro — UI polish pass */
+:root{--chat-focus:#00a884;--chat-divider:#e9edef}
+*{scrollbar-width:thin;scrollbar-color:#c7d0d5 transparent}
+*::-webkit-scrollbar{width:7px;height:7px}
+*::-webkit-scrollbar-thumb{background:#c7d0d5;border-radius:20px}
+*::-webkit-scrollbar-track{background:transparent}
+.chat-head{box-shadow:0 1px 2px #0b141a08;z-index:1}
+.profile,.conversation,.searchbox input,.composer,.auth-card{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease}
+.conversation:focus-visible,.iconbtn:focus-visible,.attach:focus-visible,.send:focus-visible{outline:2px solid var(--chat-focus);outline-offset:-2px}
+.conversation.active .conv-top strong{color:#075e54}
+.conv-avatar{flex-shrink:0}
+.messages{overscroll-behavior:contain}
+.message{animation:chatMessageIn .16s ease-out both}
+.bubble{overflow-wrap:anywhere;word-break:break-word}
+.bubble a{color:#008f72;text-decoration:underline;text-underline-offset:2px}
+.bubble img{object-fit:contain;background:#f0f2f5}
+.composer:focus-within{box-shadow:0 0 0 2px #00a88426,0 1px 3px #0b141a16}
+.composer textarea{width:100%;overflow-y:auto}
+.send:active,.attach:active,.iconbtn:active{transform:scale(.96)}
+.welcome{max-width:440px}
+@keyframes chatMessageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:760px){
+ .chat-head{box-shadow:0 1px 3px #0b141a10}
+ .conversation{min-height:72px}
+ .messages{overscroll-behavior-y:contain}
+ .message{max-width:90%}
+ .bubble{border-radius:9px 9px 9px 2px}
+ .mine .bubble{border-radius:9px 9px 2px 9px}
+ .composer-hint{display:none}
+}
+@media(prefers-reduced-motion:reduce){.message{animation:none}}
+
 </style>
 </head>
 <body>
