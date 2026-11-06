@@ -30,6 +30,121 @@
 .auth-card{width:min(100%,440px);padding:34px;background:#111e30;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:27px}.auth-brand .brandmark{width:52px;height:52px}.auth-card h2{font-size:25px;margin:0 0 7px}.auth-card>p{color:var(--muted);font-size:13px;margin:0 0 24px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);padding:4px;border-radius:12px;margin-bottom:20px}.tabs button{border:0;background:none;color:var(--muted);padding:9px;border-radius:9px}.tabs button.active{background:var(--panel3);color:var(--text)}.form-row{margin:13px 0}.form-row label{display:block;font-size:12px;color:#b5c4d6;margin-bottom:7px}.field{width:100%;border:1px solid var(--line);background:#0d1726;border-radius:12px;padding:12px 13px;color:var(--text);outline:none}.primary{width:100%;border:0;border-radius:12px;background:linear-gradient(110deg,#56d5bb,#2da999);color:#052d2a;padding:13px;font-weight:800;margin-top:12px}.auth-note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:17px}.alert{padding:10px 12px;border-radius:10px;background:#502c36;color:#ffc4c4;font-size:12px;margin:10px 0}.hidden{display:none!important}.mobile-back{display:none}
 @media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:absolute;inset:0;z-index:4;transition:transform .25s}.sidebar.closed{transform:translateX(105%)}.chat{grid-column:1}.mobile-back{display:grid}.chat-head{height:66px;padding:0 12px}.messages{padding:16px 12px}.message{max-width:88%}.head-actions .optional{display:none}.brand{padding-top:max(16px,env(safe-area-inset-top))}.composer-wrap{padding-left:10px;padding-right:10px}.auth-card{padding:25px 20px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* Ultra Chat Pro — WhatsApp-inspired interface refresh */
+:root{
+ color-scheme:light;
+ --bg:#efeae2;
+ --panel:#ffffff;
+ --panel2:#f0f2f5;
+ --panel3:#e7f5ee;
+ --line:#e8e9eb;
+ --text:#111b21;
+ --muted:#667781;
+ --accent:#00a884;
+ --accent2:#008f72;
+ --danger:#d9534f;
+ --bubble:#ffffff;
+ --mine:#d9fdd3;
+ --shadow:0 2px 12px #0b141a12;
+}
+html,body{background:#d1d7db;color:var(--text)}
+.app{max-width:none;grid-template-columns: minmax(310px,380px) minmax(0,1fr);background:#fff;box-shadow:none}
+.sidebar{background:#fff;border-left:1px solid #e9edef}
+.brand{min-height:72px;padding:14px 20px;background:#f0f2f5;gap:11px}
+.brandmark{width:42px;height:42px;border-radius:50%;background:#00a884;color:#fff;box-shadow:none}
+.brand h1{font-size:18px;color:#111b21}
+.brand p{color:#667781;font-size:11px}
+.profile{margin:0;padding:12px 17px 13px;border:0;border-radius:0;border-bottom:1px solid #e9edef;background:#fff}
+.avatar{width:43px;height:43px;border-radius:50%;background:#dfe9e5;color:#087e68}
+.iconbtn{width:39px;height:39px;border:0;border-radius:50%;background:transparent;color:#54656f}
+.iconbtn:hover{background:#e9edef;color:#111b21}
+.searchbox{margin:10px 12px 8px}
+.searchbox input{border:0;border-radius:9px;background:#f0f2f5;color:#3b4a54;padding:11px 40px 11px 13px}
+.searchbox input:focus,.field:focus{border:0;box-shadow:inset 0 0 0 1px #00a884}
+.searchbox i{right:14px;top:13px;color:#667781}
+.sectionhead{padding:10px 18px;color:#667781;font-size:12px}
+.sectionhead button{color:#00a884}
+.conversation-list{padding:0}
+.conversation{position:relative;gap:12px;padding:12px 16px;border-radius:0;margin:0;min-height:76px;border-bottom:1px solid #f1f2f3}
+.conversation:hover{background:#f5f6f6}
+.conversation.active{background:#f0f2f5;box-shadow:none}
+.conv-avatar{width:49px;height:49px;border-radius:50%;background:#dce8e3;color:#087e68;font-size:19px}
+.conv-top strong{font-size:14px;font-weight:700;color:#111b21}
+.conv-top time{font-size:11px;color:#667781}
+.conv-last{font-size:12px;color:#667781;margin-top:5px}
+.sidebar-foot{background:#f0f2f5;border-top:1px solid #e9edef;color:#667781;padding:11px 17px}
+.chat{background-color:#efeae2;background-image:radial-gradient(circle at 20% 20%,#d9d1c522 1.2px,transparent 1.4px),radial-gradient(circle at 80% 70%,#d9d1c522 1.2px,transparent 1.4px);background-size:28px 28px}
+.chat-head{height:64px;padding:0 20px;background:#f0f2f5;border-bottom:1px solid #e9edef;backdrop-filter:none;gap:12px}
+.chat-head .avatar{width:42px;height:42px}
+.chat-title strong{font-size:15px;color:#111b21}
+.chat-title small{font-size:12px;color:#667781}
+.head-actions .iconbtn{background:transparent}
+.messages{padding:24px clamp(14px,5vw,90px);gap:8px}
+.welcome{background:#f7f8fae8;border:1px solid #e8e9eb;border-radius:16px;padding:26px 24px;box-shadow:0 1px 2px #0b141a0a}
+.welcome .welcome-icon{width:68px;height:68px;border-radius:50%;background:#d9fdd3;color:#008f72;font-size:32px}
+.welcome h2{font-size:21px;color:#41525d}
+.welcome p{color:#667781}
+.day-divider{border:0;background:#fff;color:#54656f;box-shadow:0 1px 1px #0b141a12;padding:6px 13px;font-size:11px}
+.message{max-width:min(76%,650px);gap:3px}
+.sender{color:#008f72;font-weight:700}
+.bubble{padding:8px 10px 6px;border:0;border-radius:8px 8px 8px 0;background:#fff;color:#111b21;box-shadow:0 1px 1px #0b141a16;font-size:14px;line-height:1.65}
+.mine .bubble{background:#d9fdd3;border:0;border-radius:8px 8px 0 8px;color:#111b21}
+.bubble.deleted{color:#8696a0}
+.meta{color:#667781;font-size:10px}
+.msg-actions button{background:#fff;color:#54656f;border:1px solid #e9edef}
+.typing{color:#008f72;padding:0 28px}
+.composer-wrap{padding:10px clamp(12px,4vw,62px) max(15px,env(safe-area-inset-bottom));background:#efeae2}
+.composer{gap:8px;padding:7px 10px;background:#fff;border:0;border-radius:28px;box-shadow:0 1px 2px #0b141a20}
+.composer textarea{min-height:42px;color:#111b21;padding:11px 8px}
+.composer textarea::placeholder{color:#667781}
+.send{width:42px;height:42px;border-radius:50%;background:#00a884;color:#fff;transition:background .18s,transform .18s}
+.send:hover{background:#008f72;transform:scale(1.04)}
+.attach{width:42px;height:42px;border-radius:50%;color:#667781}
+.attach:hover{background:#f0f2f5;color:#00a884}
+.composer-hint{color:#8696a0}
+.auth-screen{background:linear-gradient(180deg,#00a884 0 31%,#e9edef 31% 100%);padding:24px}
+.auth-card{background:#fff;border:1px solid #e9edef;border-radius:18px;box-shadow:0 12px 38px #0b141a18;color:#111b21}
+.auth-brand .brandmark{background:#00a884;color:#fff}
+.auth-card h2{color:#111b21}
+.auth-card>p{color:#667781}
+.tabs{background:#f0f2f5}
+.tabs button{color:#667781}
+.tabs button.active{background:#d9fdd3;color:#075e54;font-weight:700}
+.form-row label{color:#41525d}
+.field{background:#f7f8fa;border:1px solid #e1e5e8;color:#111b21;border-radius:10px}
+.primary{background:#00a884;color:#fff;border-radius:10px;box-shadow:0 2px 5px #008f7222}
+.primary:hover{background:#008f72}
+.auth-note{color:#667781}
+.alert{background:#fff0ef;color:#b42318;border:1px solid #ffd4d0}
+:focus-visible{outline:2px solid #00a884;outline-offset:2px}
+button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
+@media(min-width:1100px){
+ .app{grid-template-columns:minmax(340px,410px) minmax(0,1fr)}
+ .messages{padding-left:clamp(30px,7vw,110px);padding-right:clamp(30px,7vw,110px)}
+}
+@media(max-width:760px){
+ html,body{background:#fff}
+ .app{grid-template-columns:1fr}
+ .sidebar{background:#fff;box-shadow:0 0 0 1px #e9edef}
+ .sidebar.closed{transform:translateX(105%)}
+ .chat{background-color:#efeae2}
+ .chat-head{height:60px;padding:0 10px}
+ .messages{padding:14px 10px}
+ .message{max-width:88%}
+ .bubble{font-size:14px;padding:8px 9px 6px}
+ .composer-wrap{padding:8px 8px max(10px,env(safe-area-inset-bottom))}
+ .composer{gap:5px;padding:5px 7px}
+ .composer textarea{min-height:40px}
+ .send,.attach{width:39px;height:39px;flex:none}
+ .auth-screen{padding:16px;background:linear-gradient(180deg,#00a884 0 23%,#e9edef 23% 100%)}
+ .auth-card{padding:25px 20px;border-radius:16px}
+}
+@media(prefers-reduced-motion:no-preference){
+ .conversation,.iconbtn,.send,.primary{transition:background .18s ease,color .18s ease,transform .18s ease}
+ .conversation:active{background:#e9edef}
+}
+
 </style>
 </head>
 <body>
