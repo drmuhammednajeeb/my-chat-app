@@ -17,6 +17,8 @@
 .profile{margin:0 15px 17px;padding:11px;border:1px solid var(--line);background:var(--panel);border-radius:16px;display:flex;align-items:center;gap:10px}.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#294d69,#327e83);display:grid;place-items:center;overflow:hidden;font-weight:800;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.profile-info{min-width:0;flex:1}.profile-info strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profile-info small{color:var(--muted);font-size:11px}.iconbtn{width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--muted);display:grid;place-items:center;font-size:18px;transition:.2s}.iconbtn:hover{color:var(--text);border-color:#49627e}
 .searchbox{margin:0 15px 13px;position:relative}.searchbox i{position:absolute;right:13px;top:12px;color:var(--muted)}.searchbox input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:10px 38px 10px 12px;color:var(--text);outline:none}.searchbox input:focus,.field:focus{border-color:var(--accent)}
 .sectionhead{padding:8px 19px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:700}.sectionhead button{border:0;background:none;color:var(--accent);font-size:19px}
+/* WhatsApp-style conversation filters */
+.chat-filters{display:flex;gap:7px;padding:2px 13px 11px;overflow-x:auto;scrollbar-width:none}.chat-filters::-webkit-scrollbar{display:none}.chat-filter{flex:none;border:0;border-radius:18px;padding:7px 13px;background:#f0f2f5;color:#54656f;font-size:11px;font-weight:700}.chat-filter.active{background:#d9fdd3;color:#075e54}.chat-filter:focus-visible{outline:2px solid #00a884;outline-offset:2px}
 .conversation-list{overflow:auto;flex:1;padding:0 9px 12px}.conversation{width:100%;border:0;background:transparent;color:inherit;display:flex;align-items:center;gap:11px;padding:11px;border-radius:14px;text-align:right;margin:2px 0}.conversation:hover{background:#17243a}.conversation.active{background:#1b3344;box-shadow:inset -3px 0 var(--accent)}.conv-avatar{width:45px;height:45px;border-radius:15px;display:grid;place-items:center;flex:none;background:linear-gradient(145deg,#24485d,#236e6b);font-size:18px;font-weight:700}.conv-copy{min-width:0;flex:1}.conv-top{display:flex;justify-content:space-between;gap:6px}.conv-top strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.conv-top time{font-size:10px;color:var(--muted);white-space:nowrap}.conv-last{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}
 .sidebar-foot{border-top:1px solid var(--line);padding:12px 17px;color:var(--muted);font-size:10px;display:flex;justify-content:space-between}
 .chat{min-width:0;display:flex;flex-direction:column;position:relative;background:radial-gradient(ellipse at 50% 0%,#1a2c4030,transparent 55%),var(--bg)}
@@ -90,6 +92,7 @@ html,body{background:#d1d7db;color:var(--text)}
 .sender{color:#008f72;font-weight:700}
 .bubble{padding:8px 10px 6px;border:0;border-radius:8px 8px 8px 0;background:#fff;color:#111b21;box-shadow:0 1px 1px #0b141a16;font-size:14px;line-height:1.65}
 .mine .bubble{background:#d9fdd3;border:0;border-radius:8px 8px 0 8px;color:#111b21}
+.message:not(.mine) .bubble:before,.message.mine .bubble:before{content:"";position:absolute;bottom:0;width:9px;height:11px;background:inherit}.message:not(.mine) .bubble:before{left:-5px;clip-path:polygon(100% 0,100% 100%,0 100%)}.message.mine .bubble:before{right:-5px;clip-path:polygon(0 0,100% 100%,0 100%)}
 .bubble.deleted{color:#8696a0}
 .meta{color:#667781;font-size:10px}
 .msg-actions button{background:#fff;color:#54656f;border:1px solid #e9edef}
@@ -205,6 +208,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
   <div class="brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><h1>Ultra Chat Pro</h1><p>مساحة تواصلك الذكية</p></div></div>
   <div class="profile"><div id="myAvatar" class="avatar">U</div><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
   <div class="searchbox"><i class="ph ph-magnifying-glass"></i><input id="search" placeholder="ابحث في المحادثات…" aria-label="بحث المحادثات"></div>
+  <nav class="chat-filters" aria-label="تصفية المحادثات"><button type="button" class="chat-filter active" data-filter="all" aria-pressed="true">الكل</button><button type="button" class="chat-filter" data-filter="unread" aria-pressed="false">غير مقروءة</button><button type="button" class="chat-filter" data-filter="groups" aria-pressed="false">المجموعات</button></nav>
   <div class="sectionhead"><span>المحادثات</span><button id="newChat" title="محادثة جديدة"><i class="ph ph-plus-circle"></i></button></div>
   <div id="conversationList" class="conversation-list"></div>
   <div class="sidebar-foot"><span>Ultra Chat Pro 2.0</span><span id="connectionState">جارٍ الاتصال</span></div>
@@ -233,7 +237,7 @@ const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const $=id=>document.getElementById(id);
-const state={user:null,profile:null,conversations:[],memberReads:{},active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
+const state={user:null,profile:null,conversations:[],memberReads:{},conversationFilter:'all',active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -278,7 +282,7 @@ function convName(c){if(c.type==='group')return c.title||'مجموعة جديد�
 function convPreview(c){return c.last_message?.content||'ابدأ المحادثة الآن'}
 function renderConversations(){
  const q=$('search').value.trim().toLowerCase(),list=$('conversationList');list.replaceChildren();
- const rows=state.conversations.filter(c=>(convName(c)+' '+convPreview(c)+' '+(otherMember(c)?.username||'')).toLowerCase().includes(q));
+ const rows=state.conversations.filter(c=>{const matchesSearch=(convName(c)+' '+convPreview(c)+' '+(otherMember(c)?.username||'')).toLowerCase().includes(q);const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at)));const matchesFilter=state.conversationFilter==='all'||(state.conversationFilter==='unread'&&unread)||(state.conversationFilter==='groups'&&c.type==='group');return matchesSearch&&matchesFilter});
  if(!rows.length){const p=document.createElement('p');p.textContent=q?'لا توجد نتائج':'لا توجد محادثات بعد';p.style.cssText='text-align:center;color:var(--muted);font-size:12px;padding:30px 8px';list.append(p);return}
  rows.forEach(c=>{const b=document.createElement('button');b.className='conversation'+(state.active?.id===c.id?' active':'');const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at)));b.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));b.innerHTML='<div class="conv-avatar">'+(c.type==='group'?'<i class="ph ph-users-three"></i>':esc(initials(convName(c))))+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';b.onclick=()=>openConversation(c);list.append(b)})
 }
@@ -355,6 +359,7 @@ function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.styl
 $('messageInput').addEventListener('input',()=>{resizeComposer();if(state.typingChannel&&Date.now()-state.typingSent>1200){state.typingSent=Date.now();state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile.display_name}})}});
 $('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendMessage()}});
 $('sendBtn').onclick=sendMessage;$('search').oninput=renderConversations;$('refreshBtn').onclick=loadConversations;
+document.querySelectorAll('.chat-filter').forEach(button=>button.addEventListener('click',()=>{state.conversationFilter=button.dataset.filter;document.querySelectorAll('.chat-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});renderConversations()}));
 $('mobileMenu').onclick=()=>$('sidebar').classList.remove('closed');
 $('newChat').onclick=async()=>{
  const isGroup=confirm('موافق لإنشاء مجموعة. إلغاء لبدء محادثة خاصة.');
