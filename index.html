@@ -233,6 +233,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
   <div id="conversationList" class="conversation-list"></div>
   <div id="directorySummary" class="directory-summary hidden"></div>
   <div id="directoryList" class="directory-list hidden" aria-live="polite"></div>
+  <button id="loadMoreUsers" class="sidebar-tab hidden" type="button" style="margin:0 12px 12px">عرض المزيد من المستخدمين</button>
   <div class="sidebar-foot"><span>Ultra Chat Pro 2.0</span><span id="connectionState">جارٍ الاتصال</span></div>
  </aside>
  <main class="chat">
@@ -259,7 +260,7 @@ const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const $=id=>document.getElementById(id);
-const state={user:null,profile:null,conversations:[],memberReads:{},conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
+const state={user:null,profile:null,conversations:[],memberReads:{},conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -317,14 +318,17 @@ function setSidebarView(view){
  $('search').setAttribute('aria-label',users?'البحث في المستخدمين':'بحث المحادثات');$('search').value='';
  if(users){renderDirectory();if(!state.directoryUsers.length)loadDirectory()}else renderConversations();
 }
-async function loadDirectory(){
+async function loadDirectory(reset=true){
  if(!state.user||state.directoryLoading)return;
- state.directoryLoading=true;$('directoryList').replaceChildren();
- const loading=document.createElement('div');loading.className='directory-empty';loading.textContent='جارٍ تحميل المستخدمين…';$('directoryList').append(loading);
- const {data,error}=await supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id).order('display_name',{ascending:true}).limit(100);
+ if(reset){state.directoryOffset=0;state.directoryUsers=[];state.directoryHasMore=false}
+ state.directoryLoading=true;$('loadMoreUsers').disabled=true;$('loadMoreUsers').textContent='جارٍ تحميل المستخدمين…';
+ if(reset){$('directoryList').replaceChildren();const loading=document.createElement('div');loading.className='directory-empty';loading.textContent='جارٍ تحميل المستخدمين…';$('directoryList').append(loading)}
+ const from=state.directoryOffset,to=from+49;
+ const {data,error}=await supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id).order('display_name',{ascending:true}).range(from,to);
  state.directoryLoading=false;
- if(error){console.error('Directory load failed:',error);$('directoryList').replaceChildren();const box=document.createElement('div');box.className='directory-empty';box.textContent='تعذر تحميل دليل المستخدمين. تحقق من صلاحيات قراءة الملفات الشخصية في Supabase ثم حاول التحديث.';$('directoryList').append(box);$('directorySummary').textContent='تعذر تحميل البيانات';return}
- state.directoryUsers=data||[];renderDirectory();
+ if(error){console.error('Directory load failed:',error);if(reset)$('directoryList').replaceChildren();const box=document.createElement('div');box.className='directory-empty';box.textContent='تعذر تحميل دليل المستخدمين. تحقق من صلاحيات قراءة الملفات الشخصية في Supabase ثم حاول التحديث.';$('directoryList').append(box);$('directorySummary').textContent='تعذر تحميل البيانات';$('loadMoreUsers').classList.add('hidden');return}
+ const page=data||[];state.directoryUsers=reset?page:state.directoryUsers.concat(page);state.directoryOffset+=page.length;state.directoryHasMore=page.length===50;
+ renderDirectory();$('loadMoreUsers').classList.toggle('hidden',!state.directoryHasMore);$('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';
 }
 function renderDirectory(){
  const list=$('directoryList');if(!list)return;list.replaceChildren();
@@ -443,7 +447,7 @@ function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.styl
 $('messageInput').addEventListener('input',()=>{resizeComposer();if(state.typingChannel&&Date.now()-state.typingSent>1200){state.typingSent=Date.now();state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile.display_name}})}});
 $('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendMessage()}});
 $('sendBtn').onclick=sendMessage;$('search').oninput=()=>state.sidebarView==='users'?renderDirectory():renderConversations();$('refreshBtn').onclick=loadConversations;
-$('chatsTab').onclick=()=>setSidebarView('chats');$('usersTab').onclick=()=>setSidebarView('users');$('refreshDirectory').onclick=loadDirectory;
+$('chatsTab').onclick=()=>setSidebarView('chats');$('usersTab').onclick=()=>setSidebarView('users');$('refreshDirectory').onclick=()=>loadDirectory(true);$('loadMoreUsers').onclick=()=>loadDirectory(false);
 document.querySelectorAll('.chat-filter').forEach(button=>button.addEventListener('click',()=>{state.conversationFilter=button.dataset.filter;document.querySelectorAll('.chat-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});renderConversations()}));
 $('mobileMenu').onclick=()=>$('sidebar').classList.remove('closed');
 $('newChat').onclick=async()=>{
