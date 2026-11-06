@@ -197,6 +197,10 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 .directory-copy{min-width:0;flex:1}.directory-copy strong{display:block;font-size:13px;color:#111b21;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .directory-copy small{display:block;margin-top:4px;font-size:11px;color:#667781;direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis}
 .directory-status{font-size:10px;color:#667781;white-space:nowrap}.directory-status.online{color:#16875c;font-weight:700}
+.directory-filters{display:flex;gap:7px;padding:8px 12px;background:#fff;border-bottom:1px solid #f0f2f5}
+.directory-filter{border:1px solid #e4e9ec;background:#fff;color:#667781;border-radius:18px;padding:6px 11px;font-size:10px;font-weight:700;cursor:pointer}
+.directory-filter.active{background:#d9fdd3;border-color:#c3efbd;color:#075e54}
+.filter-online-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#25b66a;margin-left:4px}
 .directory-summary{padding:8px 17px;color:#86949c;font-size:10px;border-bottom:1px solid #f0f2f5}
 .directory-empty{margin:22px 12px;padding:22px 15px;text-align:center;border:1px dashed #dce2e5;border-radius:12px;color:#667781;font-size:12px;line-height:1.8}
 @media(max-width:760px){.sidebar-tabs{padding-top:7px}.directory-user{min-height:66px}}
@@ -228,6 +232,10 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
    <button type="button" id="usersTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-users-three"></i> المستخدمون</button>
   </div>
   <div class="searchbox"><i class="ph ph-magnifying-glass"></i><input id="search" placeholder="ابحث في المحادثات…" aria-label="بحث المحادثات"></div>
+  <nav id="directoryFilters" class="directory-filters hidden" aria-label="تصفية المستخدمين">
+   <button type="button" class="directory-filter active" data-directory-filter="all" aria-pressed="true">الكل</button>
+   <button type="button" class="directory-filter" data-directory-filter="online" aria-pressed="false"><span class="filter-online-dot"></span> المتصلون الآن</button>
+  </nav>
   <nav id="chatFilters" class="chat-filters" aria-label="تصفية المحادثات"><button type="button" class="chat-filter active" data-filter="all" aria-pressed="true">الكل</button><button type="button" class="chat-filter" data-filter="unread" aria-pressed="false">غير مقروءة</button><button type="button" class="chat-filter" data-filter="groups" aria-pressed="false">المجموعات</button></nav>
   <div class="sectionhead"><span id="sidebarSectionTitle">المحادثات</span><button id="newChat" title="محادثة جديدة"><i class="ph ph-plus-circle"></i></button><button id="refreshDirectory" class="hidden" type="button" title="تحديث دليل المستخدمين" aria-label="تحديث دليل المستخدمين"><i class="ph ph-arrows-clockwise"></i></button></div>
   <div id="conversationList" class="conversation-list"></div>
@@ -260,7 +268,7 @@ const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const $=id=>document.getElementById(id);
-const state={user:null,profile:null,conversations:[],memberReads:{},conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
+const state={user:null,profile:null,conversations:[],memberReads:{},conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -307,37 +315,45 @@ function renderAvatar(container,profile,className='directory-avatar'){
  if(raw){try{const url=new URL(raw);if(url.protocol==='https:'){const img=document.createElement('img');img.src=url.href;img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>img.remove();container.replaceChildren(img)}}catch(_e){}}
 }
 function setSidebarView(view){
- state.sidebarView=view;const users=view==='users';
+ state.sidebarView=view;const users=view==='users';if(users){state.directorySearch='';state.directoryFilter='all';document.querySelectorAll('.directory-filter').forEach(item=>{const active=item.dataset.directoryFilter==='all';item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))})}
  $('chatsTab').classList.toggle('active',!users);$('usersTab').classList.toggle('active',users);
  $('chatsTab').setAttribute('aria-selected',String(!users));$('usersTab').setAttribute('aria-selected',String(users));
- $('chatFilters').classList.toggle('hidden',users);$('conversationList').classList.toggle('hidden',users);
+ $('chatFilters').classList.toggle('hidden',users);$('directoryFilters').classList.toggle('hidden',!users);$('conversationList').classList.toggle('hidden',users);
  $('directoryList').classList.toggle('hidden',!users);$('directorySummary').classList.toggle('hidden',!users);$('loadMoreUsers').classList.toggle('hidden',!users||!state.directoryHasMore);
  $('newChat').classList.toggle('hidden',users);$('refreshDirectory').classList.toggle('hidden',!users);
  $('sidebarSectionTitle').textContent=users?'دليل المستخدمين':'المحادثات';
  $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':'ابحث في المحادثات…';
- $('search').setAttribute('aria-label',users?'البحث في المستخدمين':'بحث المحادثات');$('search').value='';
+ $('search').setAttribute('aria-label',users?'البحث في المستخدمين':'بحث المحادثات');$('search').value='';if(users)state.directorySearch='';
  if(users){renderDirectory();if(!state.directoryUsers.length)loadDirectory()}else renderConversations();
 }
 async function loadDirectory(reset=true){
- if(!state.user||state.directoryLoading)return;
- if(reset){state.directoryOffset=0;state.directoryUsers=[];state.directoryHasMore=false}
+ if(!state.user||(!reset&&state.directoryLoading))return;
+ if(reset){state.directoryOffset=0;state.directoryUsers=[];state.directoryHasMore=false;state.directoryRequestId++}
+ const requestId=state.directoryRequestId;
  state.directoryLoading=true;$('loadMoreUsers').disabled=true;$('loadMoreUsers').textContent='جارٍ تحميل المستخدمين…';
- if(reset){$('directoryList').replaceChildren();const loading=document.createElement('div');loading.className='directory-empty';loading.textContent='جارٍ تحميل المستخدمين…';$('directoryList').append(loading)}
- const from=state.directoryOffset,to=from+49;
- const {data,error}=await supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id).order('display_name',{ascending:true}).range(from,to);
+ if(reset){$('directoryList').replaceChildren();const loading=document.createElement('div');loading.className='directory-empty';loading.textContent='جارٍ البحث عن المستخدمين…';$('directoryList').append(loading)}
+ const from=state.directoryOffset,to=from+49,term=state.directorySearch;
+ let query=supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id);
+ if(term)query=query.or('display_name.ilike.%'+term+'%,username.ilike.%'+term+'%');
+ if(state.directoryFilter==='online'){
+  const ids=Array.from(state.onlineUsers);if(!ids.length){if(requestId===state.directoryRequestId){state.directoryLoading=false;state.directoryUsers=[];renderDirectory();$('loadMoreUsers').classList.add('hidden')}return}
+  query=query.in('id',ids);
+ }
+ const {data,error}=await query.order('display_name',{ascending:true}).order('id',{ascending:true}).range(from,to);
+ if(requestId!==state.directoryRequestId)return;
  state.directoryLoading=false;
- if(error){console.error('Directory load failed:',error);if(reset)$('directoryList').replaceChildren();const box=document.createElement('div');box.className='directory-empty';box.textContent='تعذر تحميل دليل المستخدمين. تحقق من صلاحيات قراءة الملفات الشخصية في Supabase ثم حاول التحديث.';$('directoryList').append(box);$('directorySummary').textContent='تعذر تحميل البيانات';$('loadMoreUsers').classList.add('hidden');return}
+ if(error){console.error('Directory search failed:',error);if(reset)$('directoryList').replaceChildren();const box=document.createElement('div');box.className='directory-empty';box.textContent='تعذر تنفيذ البحث. تحقق من صلاحيات قراءة الملفات الشخصية ثم حاول مجدداً.';$('directoryList').append(box);$('directorySummary').textContent='تعذر تحميل النتائج';$('loadMoreUsers').classList.add('hidden');return}
  const page=data||[];state.directoryUsers=reset?page:state.directoryUsers.concat(page);state.directoryOffset+=page.length;state.directoryHasMore=page.length===50;
- renderDirectory();$('loadMoreUsers').classList.toggle('hidden',!state.directoryHasMore);$('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';
+ renderDirectory();$('loadMoreUsers').classList.toggle('hidden',!state.directoryHasMore||state.sidebarView!=='users');$('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';
 }
 function renderDirectory(){
  const list=$('directoryList');if(!list)return;list.replaceChildren();
- const q=$('search').value.trim().toLocaleLowerCase('ar');
- const rows=state.directoryUsers.filter(p=>((p.display_name||'')+' '+(p.username||'')).toLocaleLowerCase('ar').includes(q));
+ const rows=state.directoryUsers.slice();
  const onlineCount=rows.filter(p=>state.onlineUsers.has(p.id)).length;
- $('directorySummary').textContent=rows.length+' مستخدم'+(rows.length===1?'':'ون')+' · '+onlineCount+' متصل الآن';
+ const filterLabel=state.directoryFilter==='online'?' · المتصلون فقط':'';
+ $('directorySummary').textContent=rows.length+' نتيجة'+filterLabel+' · '+onlineCount+' متصل الآن';
  rows.sort((a,b)=>Number(state.onlineUsers.has(b.id))-Number(state.onlineUsers.has(a.id))||(a.display_name||a.username||'').localeCompare(b.display_name||b.username||'','ar'));
- if(!rows.length){const empty=document.createElement('div');empty.className='directory-empty';empty.textContent=state.directoryUsers.length?(q?'لا توجد نتائج مطابقة لبحثك.':'لا يوجد مستخدمون آخرون حتى الآن.'):'لا توجد حسابات أخرى ظاهرة في الدليل.';list.append(empty);return}
+ if(!rows.length){const empty=document.createElement('div');empty.className='directory-empty';empty.textContent=state.directorySearch?'لا توجد حسابات تطابق «'+state.directorySearch+'».':(state.directoryFilter==='online'?'لا يوجد مستخدمون متصلون الآن.':'لا يوجد مستخدمون آخرون حتى الآن.');list.append(empty);return}
  rows.forEach(profile=>{
   const row=document.createElement('article');row.className='directory-user';
   const avatar=document.createElement('div');renderAvatar(avatar,profile);
@@ -446,8 +462,16 @@ async function sendMessage(){
 function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';$('sendBtn').disabled=!state.active||(!n.value.trim()&&!state.attachment)}
 $('messageInput').addEventListener('input',()=>{resizeComposer();if(state.typingChannel&&Date.now()-state.typingSent>1200){state.typingSent=Date.now();state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile.display_name}})}});
 $('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendMessage()}});
-$('sendBtn').onclick=sendMessage;$('search').oninput=()=>state.sidebarView==='users'?renderDirectory():renderConversations();$('refreshBtn').onclick=loadConversations;
+$('sendBtn').onclick=sendMessage;$('search').oninput=()=>{
+ if(state.sidebarView==='users'){
+  state.directorySearch=$('search').value.trim().toLocaleLowerCase('ar').replace(/[^\\p{L}\\p{N}\\s@_-]/gu,'').slice(0,60);
+  if(state.directorySearchTimer)clearTimeout(state.directorySearchTimer);
+  state.directorySearchTimer=setTimeout(()=>loadDirectory(true),300);
+ }else renderConversations();
+};$('search').onkeydown=e=>{if(e.key==='Escape'&&state.sidebarView==='users'){$('search').value='';state.directorySearch='';loadDirectory(true)}};
+$('refreshBtn').onclick=loadConversations;
 $('chatsTab').onclick=()=>setSidebarView('chats');$('usersTab').onclick=()=>setSidebarView('users');$('refreshDirectory').onclick=()=>loadDirectory(true);$('loadMoreUsers').onclick=()=>loadDirectory(false);
+document.querySelectorAll('.directory-filter').forEach(button=>button.addEventListener('click',()=>{state.directoryFilter=button.dataset.directoryFilter;document.querySelectorAll('.directory-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});loadDirectory(true)}));
 document.querySelectorAll('.chat-filter').forEach(button=>button.addEventListener('click',()=>{state.conversationFilter=button.dataset.filter;document.querySelectorAll('.chat-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});renderConversations()}));
 $('mobileMenu').onclick=()=>$('sidebar').classList.remove('closed');
 $('newChat').onclick=async()=>{
