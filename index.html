@@ -398,16 +398,19 @@ function renderConversations(){
 }
 async function loadConversations(){
  const {data:members,error}=await supabaseClient.from('conversation_members').select('conversation_id,role,last_read_at').eq('user_id',state.user.id);
- if(error){toast('تعذر تحميل المحادثات');console.error(error);return}
- state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];renderConversations();return}
+ if(error){toast('تعذر تحميل المحادثات');console.error(error);return false}
+ state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];renderConversations();return true}
  const {data:convs,error:ce}=await supabaseClient.from('conversations').select('*').in('id',ids).order('last_message_at',{ascending:false});
- if(ce){toast('تعذر قراءة المحادثات');return}
- const {data:allMembers}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,profiles(id,username,display_name,avatar_url)').in('conversation_id',ids);
- const {data:latest}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
+ if(ce){toast('تعذر قراءة المحادثات');console.error(ce);return false}
+ const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,profiles(id,username,display_name,avatar_url)').in('conversation_id',ids);
+ if(me){toast('تعذر قراءة أعضاء المحادثات');console.error(me);return false}
+ const {data:latest,error:le}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
+ if(le){toast('تعذر تحميل معاينة الرسائل');console.error(le);return false}
  state.conversations=(convs||[]).map(c=>({...c,last_read_at:state.memberReads[c.id]||null,members:(allMembers||[]).filter(m=>m.conversation_id===c.id).map(m=>({...m,profile:m.profiles})),last_message:(latest||[]).find(m=>m.conversation_id===c.id)}));
  state.conversations.sort((a,b)=>new Date(b.last_message?.created_at||b.created_at)-new Date(a.last_message?.created_at||a.created_at));
  renderConversations();
  if(state.active){const refreshed=state.conversations.find(c=>c.id===state.active.id);if(refreshed)state.active=refreshed}
+ return true;
 }
 function findDirectConversation(userId){
  return state.conversations.find(c=>c.type==='direct'&&(c.members||[]).length===2&&c.members.some(m=>m.user_id===state.user.id)&&c.members.some(m=>m.user_id===userId))||null;
@@ -416,14 +419,21 @@ async function openDirectConversation(profile,button){
  if(!state.user||!profile?.id||profile.id===state.user.id)return;
  if(button?.disabled)return;
  if(button){button.disabled=true;button.textContent='جارٍ الفتح…'}
- try{
+ const pending=state.directConversationPromises.get(profile.id);
+ if(pending){
+  try{const conversation=await pending;if(conversation)await openConversation(conversation)}
+  catch(error){console.error('Direct conversation failed:',error);toast(error?.message||'تعذر فتح المحادثة الخاصة')}
+  finally{if(button){button.disabled=false;button.textContent='مراسلة'}}
+  return;
+ }
+ const task=(async()=>{
   let existing=findDirectConversation(profile.id);
   if(!existing){
-   // Refresh the signed-in user's visible conversations before creating anything.
-   await loadConversations();
+   const refreshed=await loadConversations();
+   if(!refreshed)throw new Error('تعذر التحقق من المحادثات الحالية. حاول مجدداً قبل إنشاء محادثة جديدة.');
    existing=findDirectConversation(profile.id);
   }
-  if(existing){await openConversation(existing);return}
+  if(existing)return existing;
   const {data:conv,error:convError}=await supabaseClient.from('conversations').insert({type:'direct',title:null,created_by:state.user.id}).select().single();
   if(convError)throw convError;
   const {error:membersError}=await supabaseClient.from('conversation_members').insert([
@@ -431,9 +441,8 @@ async function openDirectConversation(profile,button){
    {conversation_id:conv.id,user_id:profile.id,role:'member'}
   ]);
   if(membersError){
-   // Best-effort cleanup of a conversation that has no members yet.
-   await supabaseClient.from('conversations').delete().eq('id',conv.id).eq('created_by',state.user.id);
-   throw membersError;
+   console.error('Could not add direct-conversation members:',membersError);
+   throw new Error('تم إنشاء سجل المحادثة لكن تعذرت إضافة الأعضاء. راجع صلاحيات RLS قبل إعادة المحاولة.');
   }
   const created={...conv,members:[
    {conversation_id:conv.id,user_id:state.user.id,role:'owner',profile:state.profile},
@@ -441,12 +450,18 @@ async function openDirectConversation(profile,button){
   ],last_message:null,last_read_at:null};
   state.conversations=[created,...state.conversations.filter(c=>c.id!==conv.id)];
   renderConversations();
-  await openConversation(created);
+  return created;
+ })();
+ state.directConversationPromises.set(profile.id,task);
+ try{
+  const conversation=await task;
+  await openConversation(conversation);
   toast('تم فتح المحادثة الخاصة');
  }catch(error){
   console.error('Direct conversation failed:',error);
   toast(error?.message||'تعذر بدء المحادثة. تحقق من صلاحيات إنشاء المحادثات وإضافة الأعضاء.');
  }finally{
+  if(state.directConversationPromises.get(profile.id)===task)state.directConversationPromises.delete(profile.id);
   if(button){button.disabled=false;button.textContent='مراسلة'}
  }
 }
