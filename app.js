@@ -9,7 +9,6 @@ const receiverInput = document.getElementById('receiver');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
-// استعادة اسم المستخدم المحفوظ محلياً
 usernameInput.value = localStorage.getItem('chat_username') || '';
 receiverInput.value = localStorage.getItem('chat_receiver') || '';
 
@@ -21,7 +20,6 @@ receiverInput.addEventListener('input', () => {
   localStorage.setItem('chat_receiver', receiverInput.value.trim());
 });
 
-// إرسال الرسالة
 async function sendMessage() {
   const sender = usernameInput.value.trim();
   const receiver = receiverInput.value.trim();
@@ -43,7 +41,6 @@ async function sendMessage() {
   }
 }
 
-// عرض الرسائل في الشاشة
 function renderMessage(msg) {
   const currentUser = usernameInput.value.trim();
   const isSentByMe = msg.sender === currentUser;
@@ -67,7 +64,6 @@ function renderMessage(msg) {
   messagesBox.scrollTop = messagesBox.scrollHeight;
 }
 
-// جلب الرسائل السابقة
 async function fetchMessages() {
   const { data, error } = await supabaseClient
     .from('messages')
@@ -83,7 +79,6 @@ async function fetchMessages() {
   data.forEach(renderMessage);
 }
 
-// الاشتراك في التحديثات اللحظية Realtime
 supabaseClient
   .channel('public:messages')
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -91,7 +86,6 @@ supabaseClient
   })
   .subscribe();
 
-// الأحداث (Event Listeners)
 sendBtn.addEventListener('click', sendMessage);
 
 messageInput.addEventListener('keypress', (e) => {
@@ -100,5 +94,4 @@ messageInput.addEventListener('keypress', (e) => {
   }
 });
 
-// تحميل الرسائل عند الفتح
 fetchMessages();
