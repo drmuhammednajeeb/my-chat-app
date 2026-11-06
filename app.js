@@ -1,6 +1,5 @@
-// استبدل المفاتيح بمفاتيح مشروعك الجديد من Supabase
 const SUPABASE_URL = 'https://lvkeohpuocuklagvwpnq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
+const SUPABASE_KEY = 'sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbyDR';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -10,16 +9,30 @@ const receiverInput = document.getElementById('receiver');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
-// 1. إرسال رسالة
+// استعادة اسم المستخدم المحفوظ محلياً
+usernameInput.value = localStorage.getItem('chat_username') || '';
+receiverInput.value = localStorage.getItem('chat_receiver') || '';
+
+usernameInput.addEventListener('input', () => {
+  localStorage.setItem('chat_username', usernameInput.value.trim());
+});
+
+receiverInput.addEventListener('input', () => {
+  localStorage.setItem('chat_receiver', receiverInput.value.trim());
+});
+
+// إرسال الرسالة
 async function sendMessage() {
   const sender = usernameInput.value.trim();
   const receiver = receiverInput.value.trim();
   const content = messageInput.value.trim();
 
   if (!sender || !content) {
-    alert('يرجى كتابة اسمك ونح النص قبل الإرسال');
+    alert('يرجى كتابة اسمك والرسالة أولاً');
     return;
   }
+
+  messageInput.value = '';
 
   const { error } = await supabaseClient
     .from('messages')
@@ -27,46 +40,65 @@ async function sendMessage() {
 
   if (error) {
     console.error('خطأ في الإرسال:', error);
-  } else {
-    messageInput.value = '';
   }
 }
 
-// 2. عرض الرسالة في الشاشة
+// عرض الرسائل في الشاشة
 function renderMessage(msg) {
-  const currentSender = usernameInput.value.trim();
-  const div = document.createElement('div');
-  div.classList.add('message');
-  
-  if (msg.sender === currentSender) {
-    div.classList.add('sent');
-  } else {
-    div.classList.add('received');
-  }
+  const currentUser = usernameInput.value.trim();
+  const isSentByMe = msg.sender === currentUser;
 
-  div.innerHTML = `
-    <span class="sender-name">${msg.sender}</span>
-    ${msg.content}
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('message-wrapper', isSentByMe ? 'sent' : 'received');
+
+  const timeStr = msg.created_at 
+    ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  wrapper.innerHTML = `
+    <span class="message-sender">${msg.sender}</span>
+    <div class="message-bubble">
+      ${msg.content}
+      <div class="message-time">${timeStr}</div>
+    </div>
   `;
-  messagesBox.appendChild(div);
+
+  messagesBox.appendChild(wrapper);
   messagesBox.scrollTop = messagesBox.scrollHeight;
 }
 
-// 3. الاستماع للرسائل الجديدة فورياً (Realtime)
-function listenForMessages() {
-  supabaseClient
-    .channel('public:messages')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-      renderMessage(payload.new);
-    })
-    .subscribe();
+// جلب الرسائل السابقة
+async function fetchMessages() {
+  const { data, error } = await supabaseClient
+    .from('messages')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('خطأ في جلب الرسائل:', error);
+    return;
+  }
+
+  messagesBox.innerHTML = '';
+  data.forEach(renderMessage);
 }
 
-// الأحداث
+// الاشتراك في التحديثات اللحظية Realtime
+supabaseClient
+  .channel('public:messages')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+    renderMessage(payload.new);
+  })
+  .subscribe();
+
+// الأحداث (Event Listeners)
 sendBtn.addEventListener('click', sendMessage);
+
 messageInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') sendMessage();
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
 });
 
-// بدء الاستماع للرسائل عند فتح الصفحة
-listenForMessages();
+// تحميل الرسائل عند الفتح
+fetchMessages();
