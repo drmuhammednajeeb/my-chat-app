@@ -570,7 +570,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
   const fetched=(data||[]).slice().reverse();let added=0;
   for(const message of fetched){
    if(generation!==state.messagePollGeneration||state.active?.id!==conversationId)break;
-   if(!current.has(message.id)){
+   if(!state.messageIds.has(message.id)&&!state.renderingMessageIds.has(message.id)){
     const rendered=await renderMessage(message,conversationId);
     if(rendered){current.set(message.id,message);added++}
    }
