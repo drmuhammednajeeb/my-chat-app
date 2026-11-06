@@ -501,10 +501,11 @@ async function loadMessages(){
  const requestId=++state.messageLoadVersion,area=$('messages');
  area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
  try{
-  const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).order('created_at',{ascending:true}).limit(100);
+  // Fetch the newest page first so long conversations restore their latest activity.
+  const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).order('created_at',{ascending:false}).limit(100);
   if(error)throw error;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;
-  const messages=data||[];
+  const messages=(data||[]).slice().reverse();
   area.replaceChildren();state.messageIds.clear();
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{for(const message of messages){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;await renderMessage(message,conversationId)}area.scrollTop=area.scrollHeight}
@@ -540,9 +541,14 @@ async function sendMessage(){
   if(sessionError)throw sessionError;
   if(!session?.user?.id||session.user.id!==userId)throw new Error('انتهت جلسة الدخول. أعد تسجيل الدخول ثم حاول إرسال الرسالة مجدداً.');
   let attachment={};if(file)attachment=await uploadAttachment(file);
-  const {error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})});
+  const {data:savedMessage,error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();
   if(error)throw error;
-  if(state.active?.id===conversationId){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');resizeComposer()}
+  // Render the database-confirmed row immediately; Realtime echoes are deduplicated by message id.
+  if(state.active?.id===conversationId){
+   const rendered=await renderMessage(savedMessage,conversationId);
+   if(!rendered)await loadMessages();
+   $('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');resizeComposer();
+  }
   await loadConversations();
  }catch(e){console.error('Send message failed:',e);toast(e.message||'تعذر إرسال الرسالة. بقي النص والمرفق محفوظين لإعادة المحاولة')}
  finally{state.uploading=false;resizeComposer()}
