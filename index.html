@@ -3,50 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>تطبيق المحادثة الفورية Pro</title>
+  <title>نظام المحادثة المتقدم Ultra Chat Pro</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="chat-app">
-    <!-- الشريط العلوي -->
+    <!-- الشريط العلوي الرئيسي -->
     <header class="chat-header">
-      <div class="brand">
-        <div class="status-dot online"></div>
-        <h1>محادثة فورية</h1>
-      </div>
-      <div class="user-config">
-        <div class="input-group">
-          <label for="username">أنا:</label>
-          <input type="text" id="username" placeholder="اسمك..." autocomplete="off">
+      <div class="header-top">
+        <div class="brand">
+          <span class="status-indicator" id="statusIndicator"></span>
+          <h2>Ultra Chat Pro</h2>
         </div>
-        <div class="input-group">
-          <label for="receiver">إلى:</label>
-          <input type="text" id="receiver" placeholder="المستقبل..." autocomplete="off">
+        <div class="header-actions">
+          <button id="soundToggle" class="icon-btn" title="تبديل الصوت">🔔</button>
+        </div>
+      </div>
+      
+      <div class="config-bar">
+        <div class="input-field">
+          <label>اسمك:</label>
+          <input type="text" id="username" placeholder="مثال: محمد" autocomplete="off">
+        </div>
+        <div class="input-field">
+          <label>الغرفة:</label>
+          <input type="text" id="roomInput" placeholder="عامة (general)" value="general" autocomplete="off">
         </div>
       </div>
     </header>
 
-    <!-- شاشة إشعار النظام -->
-    <div id="systemToast" class="toast hidden"></div>
+    <!-- شريط التنبيهات -->
+    <div id="toast" class="toast-notification hidden"></div>
 
-    <!-- منطقة عرض الرسائل -->
-    <main id="messagesBox" class="messages-container">
-      <div class="empty-state" id="emptyState">
-        <p>لا توجد رسائل بعد. ابدأ المحادثة الآن!</p>
-      </div>
+    <!-- منطقة عرض المحادثة -->
+    <main id="messagesContainer" class="messages-container">
+      <div id="loadingSpinner" class="spinner"></div>
+      <div id="emptyState" class="empty-state hidden">لا توجد رسائل في هذه الغرفة بعد. كن أول من يرسل!</div>
     </main>
 
-    <!-- الشريط السفلي للإرسال -->
+    <!-- شريط الإدخال ومؤشر الكتابة -->
     <footer class="chat-footer">
-      <div class="input-wrapper">
-        <textarea id="messageInput" placeholder="اكتب رسالتك هنا..." rows="1" autocomplete="off"></textarea>
+      <div id="typingIndicator" class="typing-indicator hidden">
+        <span></span><span></span><span></span> <small>أحدهم يكتب الآن...</small>
       </div>
-      <button id="sendBtn" class="send-btn" aria-label="إرسال الرسالة" disabled>
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
-        </svg>
-      </button>
+      <div class="input-controls">
+        <textarea id="messageInput" placeholder="اكتب رسالتك..." rows="1" autocomplete="off"></textarea>
+        <button id="sendBtn" class="send-btn" disabled>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+          </svg>
+        </button>
+      </div>
     </footer>
   </div>
 
