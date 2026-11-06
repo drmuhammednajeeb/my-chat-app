@@ -2,27 +2,52 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>محادثة فورية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تطبيق المحادثة الفورية Pro</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <h2>محادثة فورية</h2>
-      <div class="user-inputs">
-        <input type="text" id="username" placeholder="اسمي (مثل: محمد)">
-        <input type="text" id="receiver" placeholder="اسم المستقبل (مثل: أحمد)">
+  <div class="chat-app">
+    <!-- الشريط العلوي -->
+    <header class="chat-header">
+      <div class="brand">
+        <div class="status-dot online"></div>
+        <h1>محادثة فورية</h1>
       </div>
-    </div>
+      <div class="user-config">
+        <div class="input-group">
+          <label for="username">أنا:</label>
+          <input type="text" id="username" placeholder="اسمك..." autocomplete="off">
+        </div>
+        <div class="input-group">
+          <label for="receiver">إلى:</label>
+          <input type="text" id="receiver" placeholder="المستقبل..." autocomplete="off">
+        </div>
+      </div>
+    </header>
 
-    <div id="messagesBox" class="messages-box"></div>
+    <!-- شاشة إشعار النظام -->
+    <div id="systemToast" class="toast hidden"></div>
 
-    <div class="chat-footer">
-      <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." autocomplete="off">
-      <button id="sendBtn">إرسال</button>
-    </div>
+    <!-- منطقة عرض الرسائل -->
+    <main id="messagesBox" class="messages-container">
+      <div class="empty-state" id="emptyState">
+        <p>لا توجد رسائل بعد. ابدأ المحادثة الآن!</p>
+      </div>
+    </main>
+
+    <!-- الشريط السفلي للإرسال -->
+    <footer class="chat-footer">
+      <div class="input-wrapper">
+        <textarea id="messageInput" placeholder="اكتب رسالتك هنا..." rows="1" autocomplete="off"></textarea>
+      </div>
+      <button id="sendBtn" class="send-btn" aria-label="إرسال الرسالة" disabled>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+        </svg>
+      </button>
+    </footer>
   </div>
 
   <script src="app.js"></script>
