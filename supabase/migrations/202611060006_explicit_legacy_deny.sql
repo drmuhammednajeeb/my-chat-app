@@ -1,0 +1,1 @@
+create policy "Explicitly deny legacy message access" on public.messages for all to anon using(false) with check(false);
