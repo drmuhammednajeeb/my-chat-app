@@ -1,107 +1,148 @@
-// التهيئة والربط مع Supabase
+// التهيئة ومفاتيح الاتصال
 const SUPABASE_URL = 'https://lvkeohpuocuklagvwpnq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbyDR';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// عناصر الواجهة (DOM Elements)
-const messagesBox = document.getElementById('messagesBox');
+// عناصر الشاشة
+const messagesContainer = document.getElementById('messagesContainer');
 const usernameInput = document.getElementById('username');
-const receiverInput = document.getElementById('receiver');
+const roomInput = document.getElementById('roomInput');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
-const toast = document.getElementById('systemToast');
+const statusIndicator = document.getElementById('statusIndicator');
+const typingIndicator = document.getElementById('typingIndicator');
 const emptyState = document.getElementById('emptyState');
+const soundToggle = document.getElementById('soundToggle');
+const toast = document.getElementById('toast');
 
-// حالة التطبيق المحلي
-const state = {
-  renderedIds: new Set()
-};
+let isSoundMuted = false;
+let typingTimeout = null;
+let currentChannel = null;
+const loadedMsgIds = new Set();
 
-// حماية النص ضد هجمات XSS
-function sanitizeHTML(str) {
-  const temp = document.createElement('div');
-  temp.textContent = str;
-  return temp.innerHTML;
+// تنظيف النصوص ضد ثغرات XSS
+function escapeHTML(str) {
+  const p = document.createElement('p');
+  p.textContent = str;
+  return p.innerHTML;
 }
 
-// عرض تنبيه للنظام
-function showToast(msg, duration = 3000) {
+function showToast(msg) {
   toast.textContent = msg;
   toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), duration);
+  setTimeout(() => toast.classList.add('hidden'), 3000);
 }
 
-// استعادة وإدارة البيانات المحلية
-function initStorage() {
-  usernameInput.value = localStorage.getItem('chat_user') || '';
-  receiverInput.value = localStorage.getItem('chat_recv') || '';
-  validateForm();
+// إنشاء صوت تنبيه عند استقبال رسالة
+function playNotificationSound() {
+  if (isSoundMuted) return;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = 600;
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.15);
 }
+
+// استعادة بيانات الجلسة المحلية
+usernameInput.value = localStorage.getItem('ultra_username') || '';
+roomInput.value = localStorage.getItem('ultra_room') || 'general';
 
 usernameInput.addEventListener('input', () => {
-  localStorage.setItem('chat_user', usernameInput.value.trim());
+  localStorage.setItem('ultra_username', usernameInput.value.trim());
   validateForm();
 });
 
-receiverInput.addEventListener('input', () => {
-  localStorage.setItem('chat_recv', receiverInput.value.trim());
+roomInput.addEventListener('change', () => {
+  localStorage.setItem('ultra_room', roomInput.value.trim());
+  initChatRoom();
 });
 
 messageInput.addEventListener('input', () => {
-  // ضبط ارتفاع حقل الإدخال تلقائياً
   messageInput.style.height = 'auto';
-  messageInput.style.height = `${Math.min(messageInput.scrollHeight, 100)}px`;
+  messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
   validateForm();
+  sendTypingSignal();
 });
 
 function validateForm() {
   const hasUser = usernameInput.value.trim().length > 0;
-  const hasMsg = messageInput.value.trim().length > 0;
-  sendBtn.disabled = !(hasUser && hasMsg);
+  const hasText = messageInput.value.trim().length > 0;
+  sendBtn.disabled = !(hasUser && hasText);
 }
 
-// رسم الرسالة على الواجهة
+// رسم الرسائل على الصفحة
 function renderMessage(msg) {
-  if (state.renderedIds.has(msg.id)) return;
-  if (msg.id) state.renderedIds.add(msg.id);
+  if (loadedMsgIds.has(msg.id)) return;
+  if (msg.id) loadedMsgIds.add(msg.id);
 
-  if (emptyState) emptyState.remove();
+  if (emptyState) emptyState.classList.add('hidden');
 
-  const currentUser = usernameInput.value.trim();
-  const isSent = msg.sender === currentUser;
+  const me = usernameInput.value.trim();
+  const isMe = msg.sender === me;
 
-  const row = document.createElement('div');
-  row.className = `message-row ${isSent ? 'sent' : 'received'}`;
+  const wrapper = document.createElement('div');
+  wrapper.className = `msg-wrapper ${isMe ? 'me' : 'other'}`;
 
   const timeStr = msg.created_at
     ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  row.innerHTML = `
-    <span class="sender-name">${sanitizeHTML(msg.sender || 'مجهول')}</span>
-    <div class="bubble">
-      ${sanitizeHTML(msg.content)}
-      <span class="timestamp">${timeStr}</span>
+  wrapper.innerHTML = `
+    <span class="msg-header">${escapeHTML(msg.sender || 'مجهول')}</span>
+    <div class="msg-bubble">
+      ${escapeHTML(msg.content)}
+      <div class="msg-meta">
+        <span>${timeStr}</span>
+        ${isMe ? '<span>✓</span>' : ''}
+      </div>
     </div>
   `;
 
-  messagesBox.appendChild(row);
-  messagesBox.scrollTop = messagesBox.scrollHeight;
+  messagesContainer.appendChild(wrapper);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  if (!isMe) playNotificationSound();
 }
 
-// إرسال الرسالة إلى قاعدة البيانات
-async function handleSend() {
-  const sender = usernameInput.value.trim();
-  const receiver = receiverInput.value.trim();
-  const content = messageInput.value.trim();
+// جلب الرسائل من قاعدة البيانات
+async function fetchRoomMessages() {
+  messagesContainer.innerHTML = '';
+  loadedMsgIds.clear();
 
-  if (!sender || !content) {
-    showToast('يرجى تحديد الاسم وكتابة الرسالة أولاً');
+  const currentRoom = roomInput.value.trim() || 'general';
+
+  const { data, error } = await supabaseClient
+    .from('messages')
+    .select('*')
+    .or(`receiver.eq.${currentRoom},receiver.is.null`)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    showToast('خطأ في جلب بيانات المحادثة');
     return;
   }
 
-  // التصفير السريع للمُدخل لتجربة سريعة جداً
+  if (data.length === 0) {
+    emptyState.classList.remove('hidden');
+    messagesContainer.appendChild(emptyState);
+  } else {
+    data.forEach(renderMessage);
+  }
+}
+
+// إرسال الرسالة
+async function sendMessage() {
+  const sender = usernameInput.value.trim();
+  const receiver = roomInput.value.trim() || 'general';
+  const content = messageInput.value.trim();
+
+  if (!sender || !content) return;
+
   messageInput.value = '';
   messageInput.style.height = 'auto';
   validateForm();
@@ -111,52 +152,71 @@ async function handleSend() {
     .insert([{ sender, receiver, content }]);
 
   if (error) {
-    console.error('Database Send Error:', error);
-    showToast('تعذر إرسال الرسالة، تحقق من الاتصال');
+    showToast('فشل الإرسال، اعد المحاولة');
   }
 }
 
-// جلب الرسائل المخزنة
-async function loadMessages() {
-  const { data, error } = await supabaseClient
-    .from('messages')
-    .select('*')
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    console.error('Database Fetch Error:', error);
-    showToast('فشل في تحميل الرسائل');
-    return;
+// الاتصال المباشر (Realtime Broadcast & Presence)
+function initChatRoom() {
+  if (currentChannel) {
+    supabaseClient.removeChannel(currentChannel);
   }
 
-  data.forEach(renderMessage);
-}
-
-// تفعيل الاستماع اللحظي (Realtime Subscription)
-function setupRealtime() {
-  supabaseClient
-    .channel('public:messages')
+  const room = roomInput.value.trim() || 'general';
+  
+  currentChannel = supabaseClient.channel(`room:${room}`)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
       renderMessage(payload.new);
     })
+    .on('broadcast', { event: 'typing' }, payload => {
+      if (payload.payload.sender !== usernameInput.value.trim()) {
+        showTypingIndicator();
+      }
+    })
     .subscribe((status) => {
       if (status === 'SUBSCRIBED') {
-        console.log('Realtime connected successfully');
+        statusIndicator.classList.add('connected');
+      } else {
+        statusIndicator.classList.remove('connected');
       }
     });
+
+  fetchRoomMessages();
 }
 
-// الأحداث والتأثيرات التفاعلية
-sendBtn.addEventListener('click', handleSend);
+// إرسال إشارة جاري الكتابة
+function sendTypingSignal() {
+  if (!currentChannel) return;
+  currentChannel.send({
+    type: 'broadcast',
+    event: 'typing',
+    payload: { sender: usernameInput.value.trim() }
+  });
+}
+
+function showTypingIndicator() {
+  typingIndicator.classList.remove('hidden');
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    typingIndicator.classList.add('hidden');
+  }, 2000);
+}
+
+// الأزرار والأحداث
+sendBtn.addEventListener('click', sendMessage);
 
 messageInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    if (!sendBtn.disabled) handleSend();
+    if (!sendBtn.disabled) sendMessage();
   }
 });
 
+soundToggle.addEventListener('click', () => {
+  isSoundMuted = !isSoundMuted;
+  soundToggle.textContent = isSoundMuted ? '🔕' : '🔔';
+});
+
 // بدء التشغيل
-initStorage();
-loadMessages();
-setupRealtime();
+validateForm();
+initChatRoom();
