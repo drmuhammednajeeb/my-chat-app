@@ -311,7 +311,7 @@ function setSidebarView(view){
  $('chatsTab').classList.toggle('active',!users);$('usersTab').classList.toggle('active',users);
  $('chatsTab').setAttribute('aria-selected',String(!users));$('usersTab').setAttribute('aria-selected',String(users));
  $('chatFilters').classList.toggle('hidden',users);$('conversationList').classList.toggle('hidden',users);
- $('directoryList').classList.toggle('hidden',!users);$('directorySummary').classList.toggle('hidden',!users);
+ $('directoryList').classList.toggle('hidden',!users);$('directorySummary').classList.toggle('hidden',!users);$('loadMoreUsers').classList.toggle('hidden',!users||!state.directoryHasMore);
  $('newChat').classList.toggle('hidden',users);$('refreshDirectory').classList.toggle('hidden',!users);
  $('sidebarSectionTitle').textContent=users?'دليل المستخدمين':'المحادثات';
  $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':'ابحث في المحادثات…';
