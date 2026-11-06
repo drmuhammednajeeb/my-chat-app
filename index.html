@@ -434,23 +434,13 @@ async function openDirectConversation(profile,button){
    existing=findDirectConversation(profile.id);
   }
   if(existing)return existing;
-  const {data:conv,error:convError}=await supabaseClient.from('conversations').insert({type:'direct',title:null,created_by:state.user.id}).select().single();
-  if(convError)throw convError;
-  const {error:membersError}=await supabaseClient.from('conversation_members').insert([
-   {conversation_id:conv.id,user_id:state.user.id,role:'owner'},
-   {conversation_id:conv.id,user_id:profile.id,role:'member'}
-  ]);
-  if(membersError){
-   console.error('Could not add direct-conversation members:',membersError);
-   throw new Error('تم إنشاء سجل المحادثة لكن تعذرت إضافة الأعضاء. راجع صلاحيات RLS قبل إعادة المحاولة.');
-  }
-  const created={...conv,members:[
-   {conversation_id:conv.id,user_id:state.user.id,role:'owner',profile:state.profile},
-   {conversation_id:conv.id,user_id:profile.id,role:'member',profile}
-  ],last_message:null,last_read_at:null};
-  state.conversations=[created,...state.conversations.filter(c=>c.id!==conv.id)];
-  renderConversations();
-  return created;
+  const {data:conversationId,error:rpcError}=await supabaseClient.rpc('get_or_create_direct_conversation',{p_other_user_id:profile.id});
+  if(rpcError)throw rpcError;
+  const refreshed=await loadConversations();
+  if(!refreshed)throw new Error('تم تجهيز المحادثة، لكن تعذر تحديث القائمة. أعد المحاولة.');
+  const conversation=state.conversations.find(c=>c.id===conversationId)||findDirectConversation(profile.id);
+  if(!conversation)throw new Error('لم تظهر المحادثة في قائمتك. تحقق من صلاحيات قراءة أعضاء المحادثات.');
+  return conversation;
  })();
  state.directConversationPromises.set(profile.id,task);
  try{
@@ -544,6 +534,7 @@ $('newChat').onclick=async()=>{
  const {data:people,error}=await supabaseClient.from('profiles').select('id,username').in('username',handles);if(error)return toast('تعذر البحث عن المستخدمين');
  const others=(people||[]).filter(p=>p.id!==state.user.id);if(!others.length)return toast('لم يتم العثور على مستخدمين مطابقين');
  if(!isGroup&&others.length>1)return toast('اختر مستخدماً واحداً للمحادثة الخاصة');
+ if(!isGroup){await openDirectConversation(others[0]);return}
  try{
   const {data:conv,error:ce}=await supabaseClient.from('conversations').insert({type:isGroup?'group':'direct',title:isGroup?(prompt('اسم المجموعة')||'مجموعة جديدة'):null,created_by:state.user.id}).select().single();if(ce)throw ce;
   const {error:me}=await supabaseClient.from('conversation_members').insert({conversation_id:conv.id,user_id:state.user.id,role:'owner'});if(me)throw me;
