@@ -251,6 +251,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 .group-person-check{width:22px;height:22px;border:1px solid #c8d2d5;border-radius:50%;display:grid;place-items:center;color:#fff}.group-person.selected .group-person-check{background:#00a884;border-color:#00a884}
 .group-dialog-foot{display:flex;gap:9px;padding:14px 18px;border-top:1px solid #e9edef}.group-dialog-foot button{flex:1;border:0;border-radius:10px;padding:12px;font-weight:800}.group-cancel{background:#f0f2f5;color:#41525d}.group-create{background:#00a884;color:#fff}.group-create:disabled{opacity:.45;cursor:not-allowed}.group-hint{font-size:11px;color:#667781;line-height:1.7}
 @media(max-width:520px){.group-modal{padding:8px}.group-dialog{max-height:94dvh;border-radius:14px}.group-dialog-body{padding:13px}.group-dialog-foot{padding:11px 13px}}
+.new-messages-jump{position:absolute;z-index:4;bottom:104px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:9px 17px;border:1px solid #b9e7d4;border-radius:22px;background:#e7f8ef;color:#075e54;font-size:12px;font-weight:800;box-shadow:0 3px 14px #0b141a1c;white-space:nowrap;cursor:pointer;transition:background .18s,box-shadow .18s,transform .18s}.new-messages-jump:hover{background:#d5f3e3;box-shadow:0 5px 18px #0b141a25}.new-messages-jump:active{transform:translateX(-50%) scale(.97)}.new-messages-jump i{font-size:16px}.new-messages-jump.hidden{display:none!important}@media(max-width:760px){.new-messages-jump{bottom:82px;min-height:38px;padding:8px 14px;font-size:11px}}.chat-search-panel{position:absolute;z-index:8;top:70px;left:18px;width:min(420px,calc(100% - 36px));max-height:min(65dvh,520px);overflow:hidden;background:#fff;border:1px solid #e3e8eb;border-radius:14px;box-shadow:0 12px 36px #0b141a25;color:#111b21}.chat-search-panel.hidden{display:none!important}.chat-search-top{display:flex;gap:8px;padding:10px;border-bottom:1px solid #e9edef}.chat-search-top input{flex:1;min-width:0;border:0;outline:0;background:#f0f2f5;border-radius:9px;padding:10px 12px;color:#111b21}.chat-search-top button{width:38px;border:0;border-radius:9px;background:#f0f2f5;color:#54656f}.chat-search-results{max-height:calc(min(65dvh,520px) - 60px);overflow:auto;padding:7px}.chat-search-results>p{padding:10px;color:#667781;font-size:12px}.chat-search-result{display:block;width:100%;padding:10px;border:0;border-bottom:1px solid #edf0f1;background:#fff;color:#111b21;text-align:right;border-radius:8px}.chat-search-result:hover{background:#f4f7f7}.chat-search-result strong{display:block;font-size:12px;color:#008f72;margin-bottom:4px}.chat-search-result span{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-search-result small{display:block;color:#8696a0;font-size:10px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -298,12 +299,14 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <div id="chatAvatar" class="avatar">U</div>
    <div class="chat-title"><strong id="chatTitle">اختر محادثة</strong><small id="chatSub">محادثاتك الخاصة والمجموعات</small></div>
-   <div class="head-actions"><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
+   <div class="head-actions"><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
    <button id="debugBtn" class="iconbtn" type="button" title="تشخيص حالة المحادثة" aria-expanded="false"><i class="ph ph-bug"></i></button>
   </header>
+  <div id="chatSearchPanel" class="chat-search-panel hidden"><div class="chat-search-top"><input id="chatSearchInput" type="search" placeholder="ابحث في رسائل هذه المحادثة…" autocomplete="off"><button id="chatSearchClose" type="button" title="إغلاق البحث"><i class="ph ph-x"></i></button></div><div id="chatSearchResults" class="chat-search-results"><p>اكتب كلمة للبحث داخل المحادثة الحالية.</p></div></div>
   <div id="pinnedBanner" class="pinned-banner hidden" aria-live="polite"><button id="pinnedJump" type="button" class="pinned-jump"><i class="ph ph-push-pin"></i><span><small>رسالة مثبتة</small><strong id="pinnedText">—</strong></span></button><button id="pinnedUnpin" type="button" class="pinned-unpin" title="إلغاء التثبيت"><i class="ph ph-x"></i></button></div>
   <aside id="diagnosticsPanel" hidden aria-live="polite"><h3>تشخيص مباشر — لا يعرض محتوى الرسائل أو بيانات الدخول</h3><button id="testComposerFocus" type="button" style="margin:0 0 9px;padding:7px 10px;border:0;border-radius:8px;background:#00a884;color:#fff;cursor:pointer">اختبار التركيز على حقل الكتابة</button><pre id="diagnosticsOutput">بانتظار بيانات التشغيل…</pre></aside>
   <section id="messages" class="messages"><div class="welcome"><div class="welcome-icon"><i class="ph ph-chats-circle"></i></div><h2>أهلاً بك في Ultra Chat</h2><p>ابدأ محادثة خاصة أو أنشئ مجموعة جديدة. تواصلك أصبح في مساحة واحدة منظمة.</p></div></section>
+  <button id="newMessagesJump" class="new-messages-jump hidden" type="button" aria-live="polite" aria-label="الانتقال إلى أحدث الرسائل"><i class="ph ph-arrow-down"></i><span id="newMessagesJumpText">رسائل جديدة</span></button>
   <div id="typing" class="typing"></div>
   <div class="composer-wrap"><div id="composerContext" class="composer-context hidden"><div class="composer-context-copy"><small id="composerContextLabel">الرد على</small><strong id="composerContextText"></strong></div><button id="composerContextCancel" type="button" title="إلغاء"><i class="ph ph-x"></i></button></div><div class="composer">
    <button id="attachBtn" class="attach" title="إرفاق صورة أو ملف"><i class="ph ph-paperclip"></i></button>
@@ -360,12 +363,16 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY
 const $=id=>document.getElementById(id);
 const groupSelectedProfiles=new Map();let groupSearchTimer=null;let groupSearchRequest=0;let publicChannelsCache=[];let channelDirectoryRequest=0;
 let messagesScrollFrame=0;
+function isMessagesNearBottom(area=$('messages'),threshold=120){return !!area&&(area.scrollHeight-area.scrollTop-area.clientHeight)<=threshold}
+function updateNewMessagesIndicator(){const button=$('newMessagesJump'),label=$('newMessagesJumpText');if(!button||!label)return;const count=state.newMessageCount||0;button.classList.toggle('hidden',count===0);label.textContent=count===1?'رسالة جديدة · الانتقال للأسفل':'رسائل جديدة · '+count.toLocaleString('ar-SA');button.setAttribute('aria-label',count+' رسائل جديدة. الانتقال إلى أحدث الرسائل')}
+function clearNewMessages(markRead=false){const hadUnread=(state.newMessageCount||0)>0;state.newMessageCount=0;updateNewMessagesIndicator();if(hadUnread&&markRead&&state.active?.id&&document.visibilityState==='visible')markConversationReceipt(state.active.id,true).catch(error=>console.warn('Read receipt after jump failed:',error?.message||error))}
+function jumpToLatestMessages(){const area=$('messages');if(!area)return;const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;area.scrollTo({top:area.scrollHeight,behavior:reduced?'auto':'smooth'});clearNewMessages(true)}
 function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(!area)return;
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -579,7 +586,7 @@ async function openDirectConversation(profile,button){
 async function openConversation(c){
  if(!c?.id)return;
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.messages=[];state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
+ state.active=c;state.messages=[];state.newMessageCount=0;updateNewMessagesIndicator();state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
  $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
@@ -645,6 +652,23 @@ function beginReply(m){if(!m||m.deleted_at)return;if(state.editTarget)$('message
 function beginEditMessage(m){if(!m||m.sender_id!==state.user?.id||m.deleted_at)return;state.editTarget=m;state.replyTarget=null;$('attachBtn').disabled=true;$('messageInput').value=m.content||'';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');renderComposerContext();resizeComposer();$('messageInput').focus();$('messageInput').setSelectionRange($('messageInput').value.length,$('messageInput').value.length)}
 function cancelComposerContext(){state.replyTarget=null;state.editTarget=null;renderComposerContext()}
 function renderPinnedBanner(){const box=$('pinnedBanner');if(!box)return;const pins=[...state.pinnedMessages.values()].sort((a,b)=>new Date(b.pinned_at)-new Date(a.pinned_at)),latest=pins[0];if(!latest){box.classList.add('hidden');return}const message=state.messages.find(m=>m.id===latest.message_id)||state.replyMessages.get(latest.message_id);box.classList.remove('hidden');$('pinnedText').textContent=messagePreview(message);const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;$('pinnedUnpin').classList.toggle('hidden',latest.pinned_by!==state.user?.id&&!['owner','admin'].includes(role)&&!state.isTeamAdmin);$('pinnedJump').onclick=()=>jumpToMessage(latest.message_id);$('pinnedUnpin').onclick=()=>toggleMessagePin(message||{id:latest.message_id,conversation_id:state.active?.id})}
+async function searchActiveConversation(term){
+ const panel=$('chatSearchResults'),conversationId=state.active?.id,query=String(term||'').trim();
+ const request=++state.chatSearchRequest;if(!panel)return;
+ panel.replaceChildren();
+ if(!query){const p=document.createElement('p');p.textContent='اكتب كلمة للبحث داخل المحادثة الحالية.';panel.append(p);return}
+ if(!conversationId){const p=document.createElement('p');p.textContent='افتح محادثة أولاً.';panel.append(p);return}
+ if(query.length<2){const p=document.createElement('p');p.textContent='اكتب حرفين على الأقل.';panel.append(p);return}
+ const loading=document.createElement('p');loading.textContent='جارٍ البحث…';panel.append(loading);
+ try{
+  const escaped=query.replace(/[\\%_]/g,'\\async function jumpToMessage(id){');
+  const {data,error}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,created_at,deleted_at').eq('conversation_id',conversationId).ilike('content','%'+escaped+'%').order('created_at',{ascending:false}).limit(30);
+  if(error)throw error;if(request!==state.chatSearchRequest||state.active?.id!==conversationId)return;
+  panel.replaceChildren();
+  if(!data?.length){const p=document.createElement('p');p.textContent='لا توجد رسائل مطابقة في هذه المحادثة.';panel.append(p);return}
+  data.forEach(message=>{const button=document.createElement('button');button.type='button';button.className='chat-search-result';const member=(state.active?.members||[]).find(m=>m.user_id===message.sender_id);const name=document.createElement('strong');name.textContent=member?.profile?.display_name||(message.sender_id===state.user?.id?'أنت':'عضو');const body=document.createElement('span');body.textContent=message.deleted_at?'تم حذف هذه الرسالة':message.content||'مرفق';const date=document.createElement('small');date.textContent=new Date(message.created_at).toLocaleString('ar-SA');button.append(name,body,date);button.onclick=()=>{$('chatSearchPanel').classList.add('hidden');jumpToMessage(message.id)};panel.append(button)});
+ }catch(error){console.error('Conversation search failed:',error);panel.replaceChildren();const p=document.createElement('p');p.textContent='تعذر البحث. حاول مرة أخرى.';panel.append(p)}
+}
 async function jumpToMessage(id){
  let row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);
  if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500);return}
@@ -681,7 +705,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||state.messageIds.has(m.id)||state.renderingMessageIds.has(m.id))return false;
  state.renderingMessageIds.add(m.id);
  try{
-  const area=$('messages'),near=area.scrollHeight-area.scrollTop-area.clientHeight<100;
+  const area=$('messages'),near=isMessagesNearBottom(area,120);
   const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
   const activeConversation=state.active;
   const member=(activeConversation?.members||[]).find(x=>x.user_id===m.sender_id),sender=member?.profile?.display_name||'عضو';
@@ -705,7 +729,9 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
   if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)){state.messageIds.delete(m.id);return false;}
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
   const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
-  area.append(row);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');if(!state.isLoadingMessages&&(near||m.sender_id===state.user?.id))scheduleMessagesBottom(area,'auto');updateDiagnostics();
+  area.append(row);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
+  if(!state.isLoadingMessages){if(m.sender_id===state.user?.id){clearNewMessages(false);scheduleMessagesBottom(area,'auto')}else if(near){scheduleMessagesBottom(area,'auto')}else{state.newMessageCount=(state.newMessageCount||0)+1;updateNewMessagesIndicator()}}
+  updateDiagnostics();
   return true;
  }catch(error){
   state.messageIds.delete(m.id);state.diagnostics.lastRenderError=String(error?.message||error);console.error('Message rendering failed:',error);diagLog('render-error',{id:m.id,error:state.diagnostics.lastRenderError});
@@ -715,7 +741,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
 }
 async function loadMessages(){
  const conversationId=state.active?.id;if(!conversationId)return false;
- const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;diagLog('fetch-start',{conversationId,requestId});
+ const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
  area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
  try{
   const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).order('created_at',{ascending:false}).limit(100);
@@ -810,7 +836,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
   }
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId)return;
   state.messages=Array.from(current.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
-  if(added)await markConversationReceipt(conversationId,document.visibilityState==='visible');
+  if(added)await markConversationReceipt(conversationId,document.visibilityState==='visible'&&isMessagesNearBottom());
   const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole);if($('messageInput').disabled&&!channelReadOnly){$('messageInput').disabled=false;diagLog('composer-reenabled-by-poll')}
   resizeComposer();diagLog('poll-success',{fetched:fetched.length,added,rendered:$('messages').querySelectorAll('.message').length});
  }catch(error){diagLog('poll-error',{error:String(error?.message||error)});console.warn('Fallback message sync failed:',error)}
@@ -822,7 +848,7 @@ function subscribeConversation(){
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  const id=state.active.id;diagLog('realtime-subscribe',{conversationId:id});
  state.channel=supabaseClient.channel('chat:'+id)
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible')})
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom())})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id)loadMessages().catch(error=>console.error('Realtime refresh failed:',error))})
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
@@ -878,8 +904,15 @@ $('messageInput').addEventListener('input',()=>{resizeComposer();if($('messageIn
 $('messageInput').addEventListener('blur',()=>publishTyping(false));
 $('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendMessage()}});
 $('composerContextCancel').onclick=()=>{if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}cancelComposerContext();resizeComposer()};
+$('newMessagesJump').onclick=jumpToLatestMessages;
+$('chatSearchBtn').onclick=()=>{$('chatSearchPanel').classList.toggle('hidden');if(!$('chatSearchPanel').classList.contains('hidden'))$('chatSearchInput').focus()};
+$('chatSearchClose').onclick=()=>{$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';$('chatSearchResults').innerHTML='<p>اكتب كلمة للبحث داخل المحادثة الحالية.</p>'};
+$('chatSearchInput').addEventListener('input',()=>{if(state.chatSearchTimer)clearTimeout(state.chatSearchTimer);const term=$('chatSearchInput').value;state.chatSearchTimer=setTimeout(()=>searchActiveConversation(term),250)});
+$('chatSearchInput').addEventListener('keydown',event=>{if(event.key==='Escape')$('chatSearchPanel').classList.add('hidden')});
 $('messages').addEventListener('scroll',()=>{
- const area=$('messages');if(!area||state.loadingOlderMessages||!state.hasMoreMessages||state.isLoadingMessages)return;
+ const area=$('messages');if(!area)return;
+ if(isMessagesNearBottom(area,70))clearNewMessages(true);
+ if(state.loadingOlderMessages||!state.hasMoreMessages||state.isLoadingMessages)return;
  if(area.scrollTop<=110){if(!state.historyScrollFrame){state.historyScrollFrame=requestAnimationFrame(()=>{state.historyScrollFrame=0;if(area.scrollTop<=140)loadOlderMessages()})}}
 },{passive:true});
 $('sendBtn').onclick=sendMessage;$('search').oninput=()=>{
