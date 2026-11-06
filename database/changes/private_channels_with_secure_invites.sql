@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS app_private.channel_invites (
   max_uses integer CHECK (max_uses IS NULL OR max_uses > 0)
 );
 ALTER TABLE app_private.channel_invites ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "No direct access to channel invites" ON app_private.channel_invites FOR ALL TO PUBLIC USING (false) WITH CHECK (false);
 REVOKE ALL ON TABLE app_private.channel_invites FROM PUBLIC, anon, authenticated;
 CREATE INDEX IF NOT EXISTS channel_invites_conversation_active_idx
   ON app_private.channel_invites(conversation_id, expires_at)
