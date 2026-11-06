@@ -54,6 +54,17 @@ returns boolean language sql stable security definer set search_path=''
 as $$ select exists(select 1 from public.conversation_members cm where cm.conversation_id=target_conversation and cm.user_id=(select auth.uid()) and cm.role in ('owner','admin')) $$;
 revoke all on function app_private.is_conversation_member(uuid) from public, anon;
 revoke all on function app_private.can_manage_conversation(uuid) from public, anon;
+create or replace function app_private.touch_conversation()
+returns trigger language plpgsql security definer set search_path=''
+as $
+begin
+ if new.sender_id is distinct from (select auth.uid()) then
+  raise exception 'message sender does not match authenticated user';
+ end if;
+ update public.conversations set last_message_at=new.created_at, updated_at=now() where id=new.conversation_id;
+ return new;
+end $;
+revoke all on function app_private.touch_conversation() from public, anon;
 grant execute on function app_private.is_conversation_member(uuid) to authenticated;
 grant execute on function app_private.can_manage_conversation(uuid) to authenticated;
 
@@ -80,13 +91,17 @@ drop policy if exists "Members view membership" on public.conversation_members;
 create policy "Members view membership" on public.conversation_members for select to authenticated using(app_private.is_conversation_member(conversation_id));
 drop policy if exists "Creator adds first member" on public.conversation_members;
 create policy "Creator adds first member" on public.conversation_members for insert to authenticated with check(
- (user_id=(select auth.uid()) and exists(select 1 from public.conversations c where c.id=conversation_id and c.created_by=(select auth.uid())))
- or app_private.can_manage_conversation(conversation_id)
+ (user_id=(select auth.uid()) and role='owner' and exists(select 1 from public.conversations c where c.id=conversation_id and c.created_by=(select auth.uid())))
+ or (role='member' and app_private.can_manage_conversation(conversation_id))
 );
 drop policy if exists "Members update own read state" on public.conversation_members;
 create policy "Members update own read state" on public.conversation_members for update to authenticated using(user_id=(select auth.uid())) with check(user_id=(select auth.uid()));
 drop policy if exists "Members leave or admins remove" on public.conversation_members;
 create policy "Members leave or admins remove" on public.conversation_members for delete to authenticated using(user_id=(select auth.uid()) or app_private.can_manage_conversation(conversation_id));
+
+drop trigger if exists chat_messages_touch_conversation on public.chat_messages;
+create trigger chat_messages_touch_conversation after insert on public.chat_messages
+for each row execute function app_private.touch_conversation();
 
 drop policy if exists "Conversation members read messages" on public.chat_messages;
 create policy "Conversation members read messages" on public.chat_messages for select to authenticated using(app_private.is_conversation_member(conversation_id));
@@ -97,7 +112,8 @@ create policy "Authors edit own messages" on public.chat_messages for update to 
 
 grant select,insert,update on public.profiles to authenticated;
 grant select,insert,update on public.conversations to authenticated;
-grant select,insert,update,delete on public.conversation_members to authenticated;
+grant select,insert,delete on public.conversation_members to authenticated;
+grant update(last_read_at) on public.conversation_members to authenticated;
 grant select,insert,update on public.chat_messages to authenticated;
 
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
