@@ -274,7 +274,7 @@ const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
-const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),messageLoadVersion:0,realtimeStatus:'CONNECTING'};
+const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),messages:[],messageLoadVersion:0,realtimeStatus:'CONNECTING'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -466,12 +466,12 @@ async function openDirectConversation(profile,button){
 }
 async function openConversation(c){
  if(!c?.id)return;
- state.active=c;state.messageIds.clear();state.messageLoadVersion++;renderConversations();$('chatTitle').textContent=convName(c);$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=false;resizeComposer();
+ state.active=c;state.messages=[];state.messageIds.clear();state.messageLoadVersion++;renderConversations();$('chatTitle').textContent=convName(c);$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=false;resizeComposer();
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
  subscribeConversation();await loadMessages();
 }
-async function renderMessage(m,conversationId=state.active?.id){
+async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||state.messageIds.has(m.id))return false;
  state.messageIds.add(m.id);
  try{
@@ -495,7 +495,7 @@ async function renderMessage(m,conversationId=state.active?.id){
   const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · معدلة':'');bubble.append(meta);
   if(m.sender_id===state.user?.id&&!m.deleted_at){const actions=document.createElement('div');actions.className='msg-actions';const edit=document.createElement('button');edit.type='button';edit.textContent='تعديل';edit.onclick=()=>editMessage(m);const del=document.createElement('button');del.type='button';del.textContent='حذف';del.onclick=()=>deleteMessage(m);actions.append(edit,del);bubble.append(actions)}
   row.append(bubble);
-  if(state.active?.id!==conversationId)return false;
+  if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)){state.messageIds.delete(m.id);return false;}
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
   const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
   area.append(row);if(near||m.sender_id===state.user?.id)area.scrollTop=area.scrollHeight;
@@ -514,14 +514,19 @@ async function loadMessages(){
   const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).order('created_at',{ascending:false}).limit(100);
   if(error)throw error;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  const messages=(data||[]).slice().reverse();
+  // Merge fetched rows with Realtime INSERTs received while this request was in flight.
+  const merged=new Map((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>[m.id,m]));
+  (data||[]).forEach(m=>merged.set(m.id,m));
+  const messages=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
+  state.messages=messages;
   area.replaceChildren();state.messageIds.clear();
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{
    for(const message of messages){
     if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-    await renderMessage(message,conversationId);
+    await renderMessage(message,conversationId,requestId);
    }
+   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
    area.scrollTop=area.scrollHeight;
   }
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
@@ -539,19 +544,19 @@ function subscribeConversation(){
  if(state.channel)supabaseClient.removeChannel(state.channel);
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  const id=state.active.id;
- state.channel=supabaseClient.channel('chat:'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{renderMessage(p.new,id).catch(error=>console.error('Realtime message failed:',error))}).on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id)loadMessages().catch(error=>console.error('Realtime refresh failed:',error))}).subscribe(s=>{$('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';});
+ state.channel=supabaseClient.channel('chat:'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;const incoming=p.new;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id).catch(error=>console.error('Realtime message failed:',error))}).on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id)loadMessages().catch(error=>console.error('Realtime refresh failed:',error))}).subscribe(s=>{$('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';});
  state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=(payload?.name||'عضو')+' يكتب الآن…';clearTimeout(state.typingTimer);state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
 }
 async function editMessage(m){const text=prompt('تعديل الرسالة',m.content);if(text===null||!text.trim())return;const {error}=await supabaseClient.from('chat_messages').update({content:text.trim(),edited_at:new Date().toISOString()}).eq('id',m.id);if(error)toast('تعذر تعديل الرسالة');else loadMessages()}
 async function deleteMessage(m){if(!confirm('هل تريد حذف هذه الرسالة؟'))return;const {error}=await supabaseClient.from('chat_messages').update({deleted_at:new Date().toISOString(),content:'تم حذف الرسالة',attachment_path:null}).eq('id',m.id);if(error)toast('تعذر حذف الرسالة');else loadMessages()}
-async function uploadAttachment(file){
- if(!state.active)throw new Error('اختر محادثة أولاً');
+async function uploadAttachment(file,conversationId=state.active?.id,userId=state.user?.id){
+ if(!conversationId||!userId)throw new Error('اختر محادثة أولاً');
  if(file.size>12*1024*1024)throw new Error('الحد الأقصى لحجم الملف 12 ميجابايت');
- const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'),path=state.active.id+'/'+state.user.id+'/'+crypto.randomUUID()+'_'+safe;
+ const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'),path=conversationId+'/'+userId+'/'+crypto.randomUUID()+'_'+safe;
  const {error}=await supabaseClient.storage.from('chat-media').upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;return {path,type:file.type};
 }
 async function sendMessage(){
- const content=$('messageInput').value.trim(),file=state.attachment,conversationId=state.active?.id,userId=state.user?.id;
+ const draftValue=$('messageInput').value,content=draftValue.trim(),file=state.attachment,conversationId=state.active?.id,userId=state.user?.id;
  if(!conversationId||!userId||(!content&&!file)||state.uploading)return;
  state.uploading=true;$('sendBtn').disabled=true;$('messageInput').disabled=false;
  let savedMessage=null;
@@ -559,7 +564,7 @@ async function sendMessage(){
   const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
   if(sessionError)throw sessionError;
   if(!session?.user?.id||session.user.id!==userId)throw new Error('انتهت جلسة الدخول. أعد تسجيل الدخول ثم حاول إرسال الرسالة مجدداً.');
-  let attachment={};if(file)attachment=await uploadAttachment(file);
+  let attachment={};if(file)attachment=await uploadAttachment(file,conversationId,userId);
   const {data,error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();
   if(error)throw error;
   savedMessage=data;
@@ -568,9 +573,13 @@ async function sendMessage(){
   toast(error.message||'لم يتم تأكيد حفظ الرسالة. احتفظنا بالنص لإعادة المحاولة.');
   state.uploading=false;resizeComposer();return;
  }
- // Database confirmation is the persistence boundary. Later UI failures must not turn a saved message into a reported send failure.
- $('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');resizeComposer();
+ // Clear only the exact draft that was sent, and only while its conversation remains active.
+ if(state.active?.id===conversationId&&$('messageInput').value===draftValue&&state.attachment===file){
+  $('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');resizeComposer();
+ }
  if(state.active?.id===conversationId){
+  const existing=state.messages.findIndex(m=>m.id===savedMessage.id);
+  if(existing>=0)state.messages[existing]=savedMessage;else state.messages.push(savedMessage);
   const restored=await loadMessages();
   if(!restored)toast('تم حفظ الرسالة في قاعدة البيانات، لكن تعذر تحديث العرض. اضغط تحديث المحادثة.');
  }
