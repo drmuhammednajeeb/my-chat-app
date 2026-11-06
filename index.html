@@ -1,444 +1,227 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f1c24">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101a2a"><meta name="description" content="Ultra Chat Pro — منصة محادثات حديثة وآمنة">
 <title>Ultra Chat Pro</title>
-<script src="https://cdn.tailwindcss.com/3.4.17"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-:root{
-  --bg:#0f1c24; --surface:#16262f; --raised:#1d313c; --line:#2a424f;
-  --text:#eee8da; --muted:#8fa3ad; --mine:#1f7a72; --accent:#e8b04a;
-}
-*{font-family:'Tajawal',system-ui,sans-serif;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--text)}
-body{display:flex;align-items:center;justify-content:center}
-.app{width:100%;height:100dvh;max-width:880px;background:var(--surface);display:flex;flex-direction:column;position:relative;overflow:hidden}
-@media(min-width:768px){.app{height:94dvh;border-radius:24px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.45)}}
-.field{background:var(--bg);border:1px solid var(--line);border-radius:12px;transition:border-color .2s}
-.field:focus-within{border-color:var(--accent)}
-.field input,.field textarea{background:transparent;border:0;outline:0;color:var(--text);width:100%}
-.field input::placeholder,.field textarea::placeholder{color:var(--muted)}
-.icon-btn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--raised);color:var(--muted);transition:.15s}
-.icon-btn:hover{color:var(--text)}
-.icon-btn[aria-pressed="true"]{background:var(--accent);color:#1b1403}
-.icon-btn:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-#feed{scroll-behavior:smooth;overscroll-behavior:contain}
-.msg{animation:in .22s ease-out both}
-@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.bubble{border-radius:18px;padding:8px 12px;font-size:.92rem;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
-.bubble.mine{background:var(--mine);color:#fff}
-.bubble.other{background:var(--raised);border:1px solid var(--line)}
-.bubble.bot{background:#2b2616;border:1px solid #5a4a1e;color:#f3e3b5}
-.bubble.mine.first{border-top-left-radius:6px}
-.bubble.other.first,.bubble.bot.first{border-top-right-radius:6px}
-.dot{animation:blink 1.3s infinite ease-in-out both}
-.dot:nth-child(2){animation-delay:.18s}.dot:nth-child(3){animation-delay:.36s}
-@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
-.skel{background:linear-gradient(90deg,var(--raised),var(--line),var(--raised));background-size:200% 100%;animation:sh 1.4s infinite;border-radius:16px}
-@keyframes sh{to{background-position:-200% 0}}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--panel2:#17243a;--panel3:#1d2d46;--line:#263852;--text:#edf3fb;--muted:#8da0b8;--accent:#45c5b0;--accent2:#249b8d;--danger:#ef7777;--bubble:#1b2a40;--mine:#146e68;--shadow:0 22px 70px #02081770}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Tajawal,system-ui,sans-serif}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
+.app{height:100dvh;width:100%;display:grid;grid-template-columns:340px minmax(0,1fr);max-width:1440px;margin:auto;background:var(--panel);overflow:hidden}
+.sidebar{border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0;background:#0e1929}
+.brand{padding:23px 22px 18px;display:flex;align-items:center;gap:12px}.brandmark{width:44px;height:44px;border-radius:15px;background:linear-gradient(145deg,#55d5bd,#258e8a);display:grid;place-items:center;color:#062b2a;font-size:24px;box-shadow:0 8px 24px #2cb5a33b}.brand h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.1px}.brand p{font-size:11px;margin:1px 0 0;color:var(--muted)}
+.profile{margin:0 15px 17px;padding:11px;border:1px solid var(--line);background:var(--panel);border-radius:16px;display:flex;align-items:center;gap:10px}.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#294d69,#327e83);display:grid;place-items:center;overflow:hidden;font-weight:800;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.profile-info{min-width:0;flex:1}.profile-info strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profile-info small{color:var(--muted);font-size:11px}.iconbtn{width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--muted);display:grid;place-items:center;font-size:18px;transition:.2s}.iconbtn:hover{color:var(--text);border-color:#49627e}
+.searchbox{margin:0 15px 13px;position:relative}.searchbox i{position:absolute;right:13px;top:12px;color:var(--muted)}.searchbox input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:10px 38px 10px 12px;color:var(--text);outline:none}.searchbox input:focus,.field:focus{border-color:var(--accent)}
+.sectionhead{padding:8px 19px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:700}.sectionhead button{border:0;background:none;color:var(--accent);font-size:19px}
+.conversation-list{overflow:auto;flex:1;padding:0 9px 12px}.conversation{width:100%;border:0;background:transparent;color:inherit;display:flex;align-items:center;gap:11px;padding:11px;border-radius:14px;text-align:right;margin:2px 0}.conversation:hover{background:#17243a}.conversation.active{background:#1b3344;box-shadow:inset -3px 0 var(--accent)}.conv-avatar{width:45px;height:45px;border-radius:15px;display:grid;place-items:center;flex:none;background:linear-gradient(145deg,#24485d,#236e6b);font-size:18px;font-weight:700}.conv-copy{min-width:0;flex:1}.conv-top{display:flex;justify-content:space-between;gap:6px}.conv-top strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.conv-top time{font-size:10px;color:var(--muted);white-space:nowrap}.conv-last{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}
+.sidebar-foot{border-top:1px solid var(--line);padding:12px 17px;color:var(--muted);font-size:10px;display:flex;justify-content:space-between}
+.chat{min-width:0;display:flex;flex-direction:column;position:relative;background:radial-gradient(ellipse at 50% 0%,#1a2c4030,transparent 55%),var(--bg)}
+.chat-head{height:76px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 24px;gap:12px;background:#101b2bcf;backdrop-filter:blur(18px)}.chat-head .avatar{width:43px;height:43px}.chat-title{flex:1;min-width:0}.chat-title strong{font-size:16px}.chat-title small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.head-actions{display:flex;gap:8px}
+.messages{flex:1;overflow:auto;padding:24px clamp(14px,5vw,70px);display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth}.welcome{margin:auto;text-align:center;max-width:390px;color:var(--muted)}.welcome .welcome-icon{width:78px;height:78px;margin:0 auto 18px;border-radius:26px;background:#173346;color:var(--accent);display:grid;place-items:center;font-size:38px}.welcome h2{color:var(--text);font-size:23px;margin:0 0 7px}.welcome p{font-size:13px;line-height:1.8;margin:0}
+.day-divider{align-self:center;padding:6px 13px;border:1px solid var(--line);background:#142238;color:var(--muted);border-radius:30px;font-size:10px;margin:15px 0}
+.message{max-width:min(75%,600px);display:flex;flex-direction:column;gap:4px;align-self:flex-start}.message.mine{align-self:flex-end}.sender{font-size:10px;color:var(--accent);padding:0 7px}.bubble{position:relative;padding:10px 13px 7px;border:1px solid var(--line);border-radius:17px 5px 17px 17px;background:var(--bubble);font-size:14px;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap}.mine .bubble{background:linear-gradient(145deg,#176d68,#145b5b);border-color:#2a827a;border-radius:5px 17px 17px 17px}.bubble.deleted{color:var(--muted);font-style:italic}.bubble img{display:block;max-width:100%;max-height:300px;border-radius:11px;margin-bottom:7px;cursor:zoom-in}.meta{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:9px;color:#b6c8d0a8;margin-top:2px}.msg-actions{display:flex;gap:5px;opacity:0;position:absolute;top:-15px;left:3px}.message:hover .msg-actions{opacity:1}.msg-actions button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;padding:3px 6px;font-size:10px}
+.typing{height:23px;padding:0 26px;color:var(--muted);font-size:11px;flex:none}
+.composer-wrap{padding:10px clamp(12px,4vw,58px) max(16px,env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--bg) 70%,transparent)}.composer{display:flex;align-items:flex-end;gap:9px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:19px;box-shadow:var(--shadow)}.composer textarea{flex:1;resize:none;max-height:130px;min-height:40px;padding:9px 8px;background:transparent;border:0;outline:none;color:var(--text);line-height:1.5}.send{width:42px;height:42px;border:0;border-radius:14px;background:var(--accent);color:#062a28;font-size:19px;display:grid;place-items:center}.attach{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px}.composer-hint{text-align:center;color:#71849b;font-size:10px;margin-top:7px}
+.auth-screen{min-height:100dvh;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 20% 15%,#1a786c2b,transparent 40%),radial-gradient(ellipse at 80% 90%,#2855a52a,transparent 40%),var(--bg)}
+.auth-card{width:min(100%,440px);padding:34px;background:#111e30;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:27px}.auth-brand .brandmark{width:52px;height:52px}.auth-card h2{font-size:25px;margin:0 0 7px}.auth-card>p{color:var(--muted);font-size:13px;margin:0 0 24px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);padding:4px;border-radius:12px;margin-bottom:20px}.tabs button{border:0;background:none;color:var(--muted);padding:9px;border-radius:9px}.tabs button.active{background:var(--panel3);color:var(--text)}.form-row{margin:13px 0}.form-row label{display:block;font-size:12px;color:#b5c4d6;margin-bottom:7px}.field{width:100%;border:1px solid var(--line);background:#0d1726;border-radius:12px;padding:12px 13px;color:var(--text);outline:none}.primary{width:100%;border:0;border-radius:12px;background:linear-gradient(110deg,#56d5bb,#2da999);color:#052d2a;padding:13px;font-weight:800;margin-top:12px}.auth-note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:17px}.alert{padding:10px 12px;border-radius:10px;background:#502c36;color:#ffc4c4;font-size:12px;margin:10px 0}.hidden{display:none!important}.mobile-back{display:none}
+@media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:absolute;inset:0;z-index:4;transition:transform .25s}.sidebar.closed{transform:translateX(105%)}.chat{grid-column:1}.mobile-back{display:grid}.chat-head{height:66px;padding:0 12px}.messages{padding:16px 12px}.message{max-width:88%}.head-actions .optional{display:none}.brand{padding-top:max(16px,env(safe-area-inset-top))}.composer-wrap{padding-left:10px;padding-right:10px}.auth-card{padding:25px 20px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="app">
-
-  <header class="px-4 pt-3 pb-3 shrink-0 border-b" style="border-color:var(--line);padding-top:max(.75rem,env(safe-area-inset-top))">
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3 min-w-0">
-        <div class="relative shrink-0">
-          <div class="w-11 h-11 rounded-2xl grid place-items-center text-xl" style="background:var(--accent);color:#1b1403"><i class="ph-bold ph-chats-circle"></i></div>
-          <span id="statusDot" class="absolute -bottom-0.5 -left-0.5 w-3.5 h-3.5 rounded-full border-2" style="background:#6b7c85;border-color:var(--surface)"></span>
-        </div>
-        <div class="min-w-0">
-          <h1 class="font-extrabold text-base leading-tight truncate"># <span id="roomTitle">general</span></h1>
-          <p id="statusText" class="text-xs" style="color:var(--muted)">جارٍ الاتصال…</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <button id="botBtn" class="icon-btn" aria-pressed="false" title="الرد الآلي التجريبي" aria-label="الرد الآلي"><i class="ph-bold ph-robot"></i></button>
-        <button id="soundBtn" class="icon-btn" aria-pressed="false" title="كتم الصوت" aria-label="كتم الصوت"><i id="soundIcon" class="ph-bold ph-bell"></i></button>
-        <button id="hideBtn" class="icon-btn" title="إخفاء الرسائل الحالية من شاشتي فقط" aria-label="إخفاء الرسائل محلياً"><i class="ph-bold ph-eraser"></i></button>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-2 mt-3">
-      <label class="field px-3 py-2 flex items-center gap-2 text-sm"><i class="ph-bold ph-user-circle" style="color:var(--muted)"></i>
-        <input id="nameInput" maxlength="24" placeholder="اسمك" autocomplete="off" aria-label="اسمك"></label>
-      <label class="field px-3 py-2 flex items-center gap-2 text-sm"><i class="ph-bold ph-hash" style="color:var(--muted)"></i>
-        <input id="roomInput" maxlength="30" placeholder="general" autocomplete="off" aria-label="اسم الغرفة"></label>
-    </div>
-  </header>
-
-  <div id="toast" role="status" aria-live="polite" class="absolute left-1/2 -translate-x-1/2 top-24 z-30 px-4 py-2 rounded-full text-xs font-bold shadow-lg opacity-0 pointer-events-none transition-opacity duration-200"></div>
-
-  <main id="feed" class="flex-1 overflow-y-auto px-4 py-4 flex flex-col" aria-live="polite"></main>
-
-  <button id="jumpBtn" class="hidden absolute z-20 left-4 bottom-28 h-10 px-3 rounded-full items-center gap-2 text-xs font-bold shadow-lg" style="background:var(--accent);color:#1b1403">
-    <i class="ph-bold ph-arrow-down"></i><span id="jumpCount"></span>
-  </button>
-
-  <div id="typing" class="px-5 h-6 flex items-center gap-2 text-xs opacity-0 transition-opacity" style="color:var(--muted)">
-    <span class="flex gap-1"><i class="dot w-1.5 h-1.5 rounded-full" style="background:var(--accent)"></i><i class="dot w-1.5 h-1.5 rounded-full" style="background:var(--accent)"></i><i class="dot w-1.5 h-1.5 rounded-full" style="background:var(--accent)"></i></span>
-    <span id="typingText"></span>
+<div id="auth" class="auth-screen">
+ <form id="authForm" class="auth-card">
+  <div class="auth-brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><strong style="font-size:20px">Ultra Chat Pro</strong><div style="color:var(--muted);font-size:11px">تواصل بلا حدود، بخصوصية أفضل</div></div></div>
+  <h2 id="authTitle">مرحباً بعودتك</h2><p id="authSub">سجّل الدخول لمتابعة محادثاتك.</p>
+  <div class="tabs"><button type="button" id="loginTab" class="active">تسجيل الدخول</button><button type="button" id="signupTab">إنشاء حساب</button></div>
+  <div id="signupFields" class="hidden">
+   <div class="form-row"><label for="displayName">الاسم الظاهر</label><input id="displayName" class="field" maxlength="48" autocomplete="name" placeholder="اسمك الذي سيظهر للآخرين"></div>
+   <div class="form-row"><label for="username">اسم المستخدم</label><input id="username" class="field" maxlength="24" pattern="[a-zA-Z0-9_]{3,24}" autocomplete="username" placeholder="username"></div>
   </div>
-
-  <div id="attach" class="hidden px-4 py-2 items-center justify-between border-t" style="border-color:var(--line);background:var(--bg)">
-    <div class="flex items-center gap-3"><img id="attachImg" alt="" class="w-11 h-11 rounded-lg object-cover"><span id="attachInfo" class="text-xs" style="color:var(--muted)"></span></div>
-    <button id="attachCancel" class="text-xs font-bold px-2 py-1" style="color:#f08a8a">إزالة</button>
-  </div>
-
-  <footer class="px-3 pt-2 border-t shrink-0" style="border-color:var(--line);padding-bottom:max(.75rem,env(safe-area-inset-bottom))">
-    <div class="flex items-end gap-2">
-      <label class="icon-btn cursor-pointer shrink-0" style="width:44px;height:44px" title="إرفاق صورة"><i class="ph-bold ph-image text-lg"></i>
-        <input type="file" id="fileInput" accept="image/*" class="hidden"></label>
-      <div class="field flex-1 px-3 py-2.5 rounded-2xl"><textarea id="msgInput" rows="1" maxlength="2000" placeholder="اكتب رسالة…" class="text-sm resize-none block max-h-32" aria-label="نص الرسالة"></textarea></div>
-      <button id="sendBtn" disabled class="shrink-0 grid place-items-center rounded-2xl transition disabled:opacity-35 disabled:cursor-not-allowed active:scale-95" style="width:44px;height:44px;background:var(--mine);color:#fff" aria-label="إرسال"><i class="ph-bold ph-paper-plane-tilt text-lg" style="transform:scaleX(-1)"></i></button>
-    </div>
-  </footer>
+  <div class="form-row"><label for="email">البريد الإلكتروني</label><input id="email" type="email" class="field" required autocomplete="email" placeholder="name@example.com"></div>
+  <div class="form-row"><label for="password">كلمة المرور</label><input id="password" type="password" class="field" required minlength="8" autocomplete="current-password" placeholder="8 أحرف على الأقل"></div>
+  <div id="authError" class="alert hidden" role="alert"></div>
+  <button id="authSubmit" class="primary" type="submit">تسجيل الدخول</button>
+  <div class="auth-note">باستخدامك للمنصة، أنت مسؤول عن حماية بيانات دخولك واحترام خصوصية الآخرين.</div>
+ </form>
 </div>
-
-<div id="lightbox" class="hidden fixed inset-0 z-50 bg-black/85 p-4 items-center justify-center cursor-zoom-out"><img id="lightboxImg" alt="" class="max-w-full max-h-full rounded-xl"></div>
-
+<div id="app" class="app hidden">
+ <aside id="sidebar" class="sidebar">
+  <div class="brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><h1>Ultra Chat Pro</h1><p>مساحة تواصلك الذكية</p></div></div>
+  <div class="profile"><div id="myAvatar" class="avatar">U</div><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
+  <div class="searchbox"><i class="ph ph-magnifying-glass"></i><input id="search" placeholder="ابحث في المحادثات…" aria-label="بحث المحادثات"></div>
+  <div class="sectionhead"><span>المحادثات</span><button id="newChat" title="محادثة جديدة"><i class="ph ph-plus-circle"></i></button></div>
+  <div id="conversationList" class="conversation-list"></div>
+  <div class="sidebar-foot"><span>Ultra Chat Pro 2.0</span><span id="connectionState">جارٍ الاتصال</span></div>
+ </aside>
+ <main class="chat">
+  <header class="chat-head">
+   <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
+   <div id="chatAvatar" class="avatar">U</div>
+   <div class="chat-title"><strong id="chatTitle">اختر محادثة</strong><small id="chatSub">محادثاتك الخاصة والمجموعات</small></div>
+   <div class="head-actions"><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
+  </header>
+  <section id="messages" class="messages"><div class="welcome"><div class="welcome-icon"><i class="ph ph-chats-circle"></i></div><h2>أهلاً بك في Ultra Chat</h2><p>ابدأ محادثة خاصة أو أنشئ مجموعة جديدة. تواصلك أصبح في مساحة واحدة منظمة.</p></div></section>
+  <div id="typing" class="typing"></div>
+  <div class="composer-wrap"><div class="composer">
+   <button id="attachBtn" class="attach" title="إرفاق صورة أو ملف"><i class="ph ph-paperclip"></i></button>
+   <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" class="hidden">
+   <textarea id="messageInput" rows="1" maxlength="5000" placeholder="اكتب رسالتك هنا…" aria-label="رسالة جديدة" disabled></textarea>
+   <button id="sendBtn" class="send" disabled title="إرسال"><i class="ph ph-paper-plane-tilt"></i></button>
+  </div><div id="attachmentPreview" class="hidden" style="font-size:11px;color:var(--muted);padding:7px 12px"></div><div class="composer-hint">Enter للإرسال · Shift + Enter لسطر جديد</div></div>
+ </main>
+</div>
+<div id="lightbox" class="hidden" style="position:fixed;inset:0;z-index:10;background:#000e;display:grid;place-items:center;padding:20px" role="dialog" aria-modal="true"><button id="closeLightbox" class="iconbtn" style="position:absolute;top:20px;left:20px"><i class="ph ph-x"></i></button><img id="lightboxImage" alt="معاينة المرفق" style="max-width:95vw;max-height:90vh;border-radius:14px"></div>
 <script>
 'use strict';
-/* ========== Config ========== */
-const CONFIG = {
-  SUPABASE_URL: 'https://lvkeohpuocuklagvwpnq.supabase.co',
-  SUPABASE_KEY: 'sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbyDR',
-  TABLE: 'messages',
-  PAGE_SIZE: 100,
-  MAX_DOM_MESSAGES: 300,
-  GROUP_WINDOW_MS: 5 * 60 * 1000,
-  TYPING_THROTTLE_MS: 1500,
-  TYPING_HIDE_MS: 2500,
-  POLL_FALLBACK_MS: 4000,
-  IMG_MAX_SIDE: 1280,
-  IMG_QUALITY: 0.72,
-  BOT_NAME: 'المساعد الآلي'
-};
-
-/* ========== DOM ========== */
-const $ = id => document.getElementById(id);
-const el = { feed:$('feed'), name:$('nameInput'), room:$('roomInput'), msg:$('msgInput'), send:$('sendBtn'),
-  dot:$('statusDot'), status:$('statusText'), title:$('roomTitle'), typing:$('typing'), typingText:$('typingText'),
-  toast:$('toast'), file:$('fileInput'), attach:$('attach'), attachImg:$('attachImg'), attachInfo:$('attachInfo'),
-  attachCancel:$('attachCancel'), bot:$('botBtn'), sound:$('soundBtn'), soundIcon:$('soundIcon'), hide:$('hideBtn'),
-  jump:$('jumpBtn'), jumpCount:$('jumpCount'), lightbox:$('lightbox'), lightboxImg:$('lightboxImg') };
-
-/* ========== State ========== */
-const state = {
-  room: 'general', muted: false, bot: false, image: null, unread: 0, sending: false,
-  channel: null, connected: false, lastTs: null, lastSender: null, lastTime: 0, lastDay: '',
-  seen: new Set(), typingHide: null, lastTypingSent: 0, pollTimer: null, loadToken: 0,
-};
-const db = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-
-/* ========== Utils ========== */
-const store = {
-  get(k, d = '') { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
-};
-const cleanRoom = v => (v || '').trim().replace(/[^\p{L}\p{N}_-]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'general';
-const currentUser = () => el.name.value.trim();
-const isNearBottom = () => el.feed.scrollHeight - el.feed.scrollTop - el.feed.clientHeight < 120;
-const scrollBottom = (smooth = false) => el.feed.scrollTo({ top: el.feed.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
-const fmtTime = d => d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-const fmtDay = d => {
-  const t = new Date(), y = new Date(Date.now() - 864e5);
-  if (d.toDateString() === t.toDateString()) return 'اليوم';
-  if (d.toDateString() === y.toDateString()) return 'أمس';
-  return d.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });
-};
-const PALETTE = ['#e8b04a', '#6fc3b2', '#e58f7a', '#9db7f0', '#c9a0e8', '#a6d17a', '#f0a3c3'];
-const colorFor = s => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PALETTE[h % PALETTE.length]; };
-const safeImg = u => typeof u === 'string' && (/^data:image\/(png|jpe?g|gif|webp);base64,/.test(u) || /^https:\/\//.test(u));
-function h(tag, cls = '', text = '') { const n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; }
-
-/* ========== UI: toast, sound, status ========== */
-let toastTimer;
-function toast(text, ok = false) {
-  el.toast.textContent = text;
-  el.toast.style.background = ok ? '#2f8f6a' : '#c0504d';
-  el.toast.style.color = '#fff';
-  el.toast.style.opacity = '1';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.toast.style.opacity = '0'), 3000);
+const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const $=id=>document.getElementById(id);
+const state={user:null,profile:null,conversations:[],active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
+const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+const toast=(msg)=>{const n=document.createElement('div');n.textContent=msg;n.style.cssText='position:fixed;z-index:20;bottom:28px;left:50%;transform:translateX(-50%);background:#253c50;border:1px solid #426078;color:white;padding:11px 17px;border-radius:12px;font-size:12px;box-shadow:var(--shadow)';document.body.append(n);setTimeout(()=>n.remove(),3200)};
+function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'انضم إلى مساحة تواصل أكثر تنظيماً.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden')}
+function authError(msg){$('authError').textContent=msg;$('authError').classList.remove('hidden')}
+function slug(s){return String(s||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'').slice(0,24)}
+async function ensureProfile(user){
+ const meta=user.user_metadata||{};let username=slug(meta.username||user.email?.split('@')[0]||'user');
+ if(username.length<3)username='user_'+user.id.slice(0,8);
+ const display=(meta.display_name||user.email?.split('@')[0]||'مستخدم').slice(0,48);
+ const {data,error}=await supabaseClient.from('profiles').upsert({id:user.id,username,display_name:display},{onConflict:'id'}).select().single();
+ if(error){const retry=await supabaseClient.from('profiles').select('*').eq('id',user.id).maybeSingle();if(retry.data)return retry.data;throw error}return data;
 }
-
-let audioCtx;
-function beep(freq = 587) {
-  if (state.muted) return;
-  try {
-    audioCtx ??= new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = audioCtx.currentTime;
-    o.frequency.value = freq; g.gain.setValueAtTime(0.07, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
-    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.18);
-  } catch {}
+async function enterApp(user){
+ state.user=user;
+ try{state.profile=await ensureProfile(user)}catch(e){console.error(e);toast('تعذر إعداد ملفك الشخصي: '+e.message);return}
+ $('auth').classList.add('hidden');$('app').classList.remove('hidden');
+ $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;$('myAvatar').textContent=initials(state.profile.display_name);
+ await loadConversations();
 }
-
-function setStatus(kind) {
-  const map = { live: ['#3fbf8f', 'متصل مباشرة'], poll: ['#e8b04a', 'تحديث تلقائي'], wait: ['#6b7c85', 'جارٍ الاتصال…'], off: ['#d9534f', 'لا يوجد اتصال'] };
-  const [c, t] = map[kind];
-  el.dot.style.background = c; el.status.textContent = t;
-}
-
-/* ========== UI: rendering ========== */
-function showEmpty() {
-  el.feed.replaceChildren();
-  const box = h('div', 'm-auto text-center py-12');
-  box.append(h('div', 'text-4xl mb-3', '💬'), h('p', 'font-bold', 'لا رسائل في هذه الغرفة بعد'),
-    h('p', 'text-xs mt-1', 'اكتب أول رسالة لتبدأ المحادثة.'));
-  box.lastChild.style.color = 'var(--muted)';
-  box.id = 'empty';
-  el.feed.append(box);
-}
-function showSkeleton() {
-  el.feed.replaceChildren();
-  [['60%', 'self-start'], ['45%', 'self-end'], ['70%', 'self-start'], ['38%', 'self-end']].forEach(([w, s]) => {
-    const n = h('div', `skel h-12 mb-3 ${s}`); n.style.width = w; el.feed.append(n);
-  });
-}
-
-function renderMessage(m, { silent = false } = {}) {
-  if (!m || (m.id != null && state.seen.has(m.id))) return;
-  if (m.id != null) state.seen.add(m.id);
-  if (m.created_at && (!state.lastTs || m.created_at > state.lastTs)) state.lastTs = m.created_at;
-
-  const stickBottom = isNearBottom();
-  $('empty')?.remove();
-  if (el.feed.querySelector('.skel')) el.feed.replaceChildren();
-
-  const date = m.created_at ? new Date(m.created_at) : new Date();
-  const day = date.toDateString();
-  if (day !== state.lastDay) {
-    const sep = h('div', 'self-center text-[11px] px-3 py-1 rounded-full my-3', fmtDay(date));
-    sep.style.cssText = 'background:var(--raised);color:var(--muted)';
-    el.feed.append(sep); state.lastDay = day; state.lastSender = null;
+$('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
+$('authForm').addEventListener('submit',async e=>{
+ e.preventDefault();$('authError').classList.add('hidden');$('authSubmit').disabled=true;
+ const email=$('email').value.trim(),password=$('password').value;
+ try{
+  if(state.authMode==='signup'){
+   const username=slug($('username').value),display=$('displayName').value.trim();
+   if(username.length<3)throw new Error('اسم المستخدم يجب أن يتكون من 3 إلى 24 حرفاً إنجليزياً أو رقماً أو _');
+   if(!display)throw new Error('أدخل الاسم الظاهر');
+   const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{username,display_name:display}}});
+   if(error)throw error;
+   if(data.session)await enterApp(data.user);else authError('تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد التسجيل، ثم سجّل الدخول.');
+  }else{
+   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)throw error;await enterApp(data.user)
   }
-
-  const me = currentUser();
-  const sender = m.sender || 'مجهول';
-  const mine = sender === me;
-  const bot = sender === CONFIG.BOT_NAME;
-  const first = state.lastSender !== sender || date - state.lastTime > CONFIG.GROUP_WINDOW_MS;
-  state.lastSender = sender; state.lastTime = +date;
-
-  const row = h('div', `msg flex flex-col max-w-[84%] md:max-w-[70%] ${mine ? 'items-start self-start' : 'items-end self-end'} ${first ? 'mt-3' : 'mt-1'}`);
-  row.style.alignItems = mine ? 'flex-start' : 'flex-end';
-  if (first && !mine) {
-    const n = h('span', 'text-[11px] font-bold px-1 mb-1', (bot ? '🤖 ' : '') + sender);
-    n.style.color = bot ? 'var(--accent)' : colorFor(sender); row.append(n);
-  }
-  const b = h('div', `bubble ${mine ? 'mine' : bot ? 'bot' : 'other'} ${first ? 'first' : ''}`);
-  if (safeImg(m.image_url)) {
-    const img = h('img', 'rounded-xl max-h-60 w-full object-cover mb-1.5 cursor-zoom-in');
-    img.src = m.image_url; img.loading = 'lazy'; img.alt = 'صورة مرفقة';
-    img.addEventListener('click', () => openLightbox(m.image_url));
-    b.append(img);
-  }
-  if (m.content) b.append(document.createTextNode(m.content));
-  const t = h('div', 'text-[10px] opacity-70 mt-0.5 text-left', fmtTime(date));
-  t.style.direction = 'ltr'; t.style.textAlign = 'left';
-  b.append(t); row.append(b); el.feed.append(row);
-
-  while (el.feed.childElementCount > CONFIG.MAX_DOM_MESSAGES) el.feed.firstElementChild.remove();
-
-  if (mine || stickBottom) scrollBottom(!silent);
-  else { state.unread++; updateJump(); }
-  if (!mine && !silent) beep(bot ? 880 : 587);
-}
-
-function updateJump() {
-  const far = !isNearBottom();
-  if (!far) state.unread = 0;
-  el.jump.classList.toggle('hidden', !far);
-  el.jump.classList.toggle('flex', far);
-  el.jumpCount.textContent = state.unread ? `${state.unread} جديدة` : 'للأسفل';
-}
-function openLightbox(src) { el.lightboxImg.src = src; el.lightbox.classList.remove('hidden'); el.lightbox.classList.add('flex'); }
-
-/* ========== Data layer ========== */
-const roomFilter = r => `receiver.eq.${r},receiver.is.null`;
-
-async function loadRoom() {
-  const token = ++state.loadToken, room = state.room;
-  state.seen.clear(); state.lastTs = null; state.lastSender = null; state.lastDay = ''; state.unread = 0;
-  showSkeleton(); updateJump();
-
-  const { data, error } = await db.from(CONFIG.TABLE).select('*').or(roomFilter(room))
-    .order('created_at', { ascending: false }).limit(CONFIG.PAGE_SIZE);
-  if (token !== state.loadToken) return;                 // user switched rooms meanwhile
-  if (error) { showEmpty(); toast('تعذر جلب الرسائل — تحقق من الاتصال'); return; }
-  if (!data.length) return showEmpty();
-  el.feed.replaceChildren();
-  data.reverse().forEach(m => renderMessage(m, { silent: true }));
-  scrollBottom(); state.unread = 0; updateJump();
-}
-
-async function syncNew() {                               // incremental fallback, fetches only newer rows
-  if (!state.lastTs) return;
-  const token = state.loadToken;
-  const { data, error } = await db.from(CONFIG.TABLE).select('*').or(roomFilter(state.room))
-    .gt('created_at', state.lastTs).order('created_at', { ascending: true });
-  if (!error && data && token === state.loadToken) data.forEach(m => renderMessage(m));
-}
-
-async function insertMessage(payload) {
-  const { data, error } = await db.from(CONFIG.TABLE).insert([payload]).select().single();
-  if (!error && data) renderMessage(data);              // instant echo; realtime duplicate is ignored by id
-  return { data, error };
-}
-
-/* ========== Realtime ========== */
-function connect() {
-  if (state.channel) db.removeChannel(state.channel);
-  state.connected = false; setStatus('wait'); updatePolling();
-  const room = state.room;
-  state.channel = db.channel(`room:${room}`, { config: { broadcast: { self: false } } })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: CONFIG.TABLE }, ({ new: m }) => {
-      if (m.receiver == null || m.receiver === state.room) renderMessage(m);   // room filter was missing before
-    })
-    .on('broadcast', { event: 'typing' }, ({ payload }) => {
-      if (payload?.sender && payload.sender !== currentUser()) showTyping(payload.sender);
-    })
-    .subscribe(status => {
-      state.connected = status === 'SUBSCRIBED';
-      setStatus(state.connected ? 'live' : (navigator.onLine ? 'poll' : 'off'));
-      updatePolling();
-      if (state.connected) syncNew();                    // catch anything missed while reconnecting
-    });
-  loadRoom();
-}
-
-function updatePolling() {                                // poll only while realtime is down
-  clearInterval(state.pollTimer);
-  if (!state.connected) state.pollTimer = setInterval(syncNew, CONFIG.POLL_FALLBACK_MS);
-}
-
-function showTyping(who) {
-  el.typingText.textContent = `${who} يكتب الآن…`;
-  el.typing.style.opacity = '1';
-  clearTimeout(state.typingHide);
-  state.typingHide = setTimeout(() => (el.typing.style.opacity = '0'), CONFIG.TYPING_HIDE_MS);
-}
-function sendTyping() {
-  const now = Date.now();
-  if (!state.connected || now - state.lastTypingSent < CONFIG.TYPING_THROTTLE_MS) return;
-  state.lastTypingSent = now;
-  state.channel.send({ type: 'broadcast', event: 'typing', payload: { sender: currentUser() } }).catch(() => {});
-}
-
-/* ========== Images ========== */
-function compressImage(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image(), url = URL.createObjectURL(file);
-    img.onload = () => {
-      const r = Math.min(1, CONFIG.IMG_MAX_SIDE / Math.max(img.width, img.height));
-      const c = document.createElement('canvas');
-      c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
-      resolve(c.toDataURL('image/jpeg', CONFIG.IMG_QUALITY));
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
-    img.src = url;
-  });
-}
-function clearAttachment() {
-  state.image = null; el.file.value = ''; el.attach.classList.add('hidden'); el.attach.classList.remove('flex'); validate();
-}
-
-/* ========== Actions ========== */
-function validate() {
-  el.send.disabled = state.sending || !currentUser() || !(el.msg.value.trim() || state.image);
-}
-function autosize() { el.msg.style.height = 'auto'; el.msg.style.height = Math.min(el.msg.scrollHeight, 128) + 'px'; }
-
-async function sendMessage() {
-  const sender = currentUser(), content = el.msg.value.trim(), image = state.image;
-  if (!sender) return toast('اكتب اسمك أولاً');
-  if (!content && !image) return;
-  state.sending = true; validate();
-
-  const payload = { sender, receiver: state.room, content };
-  if (image) payload.image_url = image;
-  const { error } = await insertMessage(payload);
-  state.sending = false;
-
-  if (error) { toast('تعذر الإرسال — رسالتك محفوظة، أعد المحاولة'); validate(); return; }
-  el.msg.value = ''; autosize(); clearAttachment(); el.msg.focus();
-  if (state.bot && content) setTimeout(() => botReply(), 1000);
-}
-
-async function botReply() {
-  const lines = ['وصلتني رسالتك ✅', 'الاتصال اللحظي يعمل بشكل سليم.', `تم تسجيل نشاطك في غرفة ${state.room}.`, 'هذا رد تجريبي لاختبار سرعة الإرسال والاستقبال.'];
-  await insertMessage({ sender: CONFIG.BOT_NAME, receiver: state.room, content: lines[Math.floor(Math.random() * lines.length)] });
-}
-
-function changeRoom() {
-  const room = cleanRoom(el.room.value);
-  el.room.value = room;
-  if (room === state.room && state.channel) return;
-  state.room = room; el.title.textContent = room; store.set('ucp_room', room);
-  connect();
-}
-
-/* ========== Events ========== */
-el.name.addEventListener('input', () => { store.set('ucp_user', el.name.value.trim()); validate(); });
-el.room.addEventListener('change', changeRoom);
-el.room.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.room.blur(); } });
-el.msg.addEventListener('input', () => { autosize(); validate(); if (el.msg.value) sendTyping(); });
-el.msg.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!el.send.disabled) sendMessage(); }
+ }catch(err){authError(err.message||'حدث خطأ، حاول مرة أخرى')}finally{$('authSubmit').disabled=false}
 });
-el.send.addEventListener('click', sendMessage);
-
-el.file.addEventListener('change', async e => {
-  const f = e.target.files[0]; if (!f) return;
-  try {
-    state.image = await compressImage(f);
-    el.attachImg.src = state.image;
-    el.attachInfo.textContent = `صورة جاهزة (${Math.round(state.image.length * 0.75 / 1024)} ك.ب بعد الضغط)`;
-    el.attach.classList.remove('hidden'); el.attach.classList.add('flex'); validate();
-  } catch { toast('تعذر قراءة الصورة'); clearAttachment(); }
-});
-el.attachCancel.addEventListener('click', clearAttachment);
-
-el.bot.addEventListener('click', () => {
-  state.bot = !state.bot; el.bot.setAttribute('aria-pressed', state.bot);
-  toast(state.bot ? 'الرد الآلي التجريبي مفعّل' : 'تم إيقاف الرد الآلي', true);
-});
-el.sound.addEventListener('click', () => {
-  state.muted = !state.muted; store.set('ucp_muted', state.muted ? '1' : '');
-  el.sound.setAttribute('aria-pressed', state.muted);
-  el.soundIcon.className = `ph-bold ${state.muted ? 'ph-bell-slash' : 'ph-bell'}`;
-  toast(state.muted ? 'تم كتم التنبيهات' : 'تم تفعيل التنبيهات', true);
-});
-el.hide.addEventListener('click', () => { showEmpty(); toast('أُخفيت الرسائل من شاشتك فقط', true); });
-el.feed.addEventListener('scroll', updateJump, { passive: true });
-el.jump.addEventListener('click', () => { scrollBottom(true); state.unread = 0; updateJump(); });
-el.lightbox.addEventListener('click', () => { el.lightbox.classList.add('hidden'); el.lightbox.classList.remove('flex'); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') el.lightbox.click(); });
-document.addEventListener('visibilitychange', () => { if (!document.hidden) syncNew(); });
-window.addEventListener('online', () => { toast('عاد الاتصال', true); connect(); });
-window.addEventListener('offline', () => { setStatus('off'); toast('انقطع الاتصال بالإنترنت'); });
-
-/* ========== Init ========== */
-(function init() {
-  el.name.value = store.get('ucp_user');
-  state.room = cleanRoom(store.get('ucp_room', 'general'));
-  el.room.value = state.room; el.title.textContent = state.room;
-  state.muted = !!store.get('ucp_muted');
-  if (state.muted) { el.sound.setAttribute('aria-pressed', 'true'); el.soundIcon.className = 'ph-bold ph-bell-slash'; }
-  validate(); connect();
-  if (!el.name.value) el.name.focus();
-})();
+$('logoutBtn').onclick=async()=>{await supabaseClient.auth.signOut();location.reload()};
+function otherMember(conv){return (conv.members||[]).find(m=>m.user_id!==state.user.id)?.profile}
+function convName(c){if(c.type==='group')return c.title||'مجموعة جديدة';const p=otherMember(c);return p?.display_name||p?.username||'محادثة خاصة'}
+function convPreview(c){return c.last_message?.content||'ابدأ المحادثة الآن'}
+function renderConversations(){
+ const q=$('search').value.trim().toLowerCase(),list=$('conversationList');list.replaceChildren();
+ const rows=state.conversations.filter(c=>(convName(c)+' '+convPreview(c)).toLowerCase().includes(q));
+ if(!rows.length){const p=document.createElement('p');p.textContent=q?'لا توجد نتائج':'لا توجد محادثات بعد';p.style.cssText='text-align:center;color:var(--muted);font-size:12px;padding:30px 8px';list.append(p);return}
+ rows.forEach(c=>{const b=document.createElement('button');b.className='conversation'+(state.active?.id===c.id?' active':'');b.innerHTML='<div class="conv-avatar">'+(c.type==='group'?'<i class="ph ph-users-three"></i>':esc(initials(convName(c))))+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+'</strong><time>'+(c.last_message?.created_at?time(c.last_message.created_at):'')+'</time></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';b.onclick=()=>openConversation(c);list.append(b)})
+}
+async function loadConversations(){
+ const {data:members,error}=await supabaseClient.from('conversation_members').select('conversation_id,role,last_read_at').eq('user_id',state.user.id);
+ if(error){toast('تعذر تحميل المحادثات');console.error(error);return}
+ const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];renderConversations();return}
+ const {data:convs,error:ce}=await supabaseClient.from('conversations').select('*').in('id',ids).order('last_message_at',{ascending:false});
+ if(ce){toast('تعذر قراءة المحادثات');return}
+ const {data:allMembers}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,profiles(id,username,display_name,avatar_url)').in('conversation_id',ids);
+ const {data:latest}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
+ state.conversations=(convs||[]).map(c=>({...c,members:(allMembers||[]).filter(m=>m.conversation_id===c.id).map(m=>({...m,profile:m.profiles})),last_message:(latest||[]).find(m=>m.conversation_id===c.id)}));
+ state.conversations.sort((a,b)=>new Date(b.last_message?.created_at||b.created_at)-new Date(a.last_message?.created_at||a.created_at));
+ renderConversations();
+ if(state.active){const refreshed=state.conversations.find(c=>c.id===state.active.id);if(refreshed)state.active=refreshed}
+}
+async function openConversation(c){
+ state.active=c;state.messageIds.clear();renderConversations();$('chatTitle').textContent=convName(c);$('chatSub').textContent=c.type==='group'?'مجموعة · '+c.members.length+' أعضاء':'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=false;$('sendBtn').disabled=false;
+ if(innerWidth<=760)$('sidebar').classList.add('closed');
+ await loadMessages();subscribeConversation();
+}
+function renderMessage(m){
+ if(state.messageIds.has(m.id))return;state.messageIds.add(m.id);
+ const area=$('messages'),near=area.scrollHeight-area.scrollTop-area.clientHeight<100;
+ const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
+ const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
+ const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
+ const mine=m.sender_id===state.user.id,member=state.active.members.find(x=>x.user_id===m.sender_id),sender=member?.profile?.display_name||'عضو';
+ const row=document.createElement('article');row.className='message'+(mine?' mine':'');
+ const bubble=document.createElement('div');bubble.className='bubble'+(m.deleted_at?' deleted':'');
+ if(!mine&&state.active.type==='group'){const label=document.createElement('div');label.className='sender';label.textContent=sender;row.append(label)}
+ if(m.deleted_at){bubble.textContent='تم حذف هذه الرسالة'}else{
+  if(m.attachment_path){const {data}=supabaseClient.storage.from('chat-media').getPublicUrl(m.attachment_path);if(m.attachment_type?.startsWith('image/')){const img=document.createElement('img');img.src=data.publicUrl;img.alt='مرفق';img.onclick=()=>{$('lightboxImage').src=img.src;$('lightbox').classList.remove('hidden')};bubble.append(img)}else{const a=document.createElement('a');a.href=data.publicUrl;a.target='_blank';a.rel='noopener';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}}
+  if(m.content){const t=document.createElement('div');t.textContent=m.content;bubble.append(t)}
+ }
+ const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · معدلة':'');bubble.append(meta);
+ if(mine&&!m.deleted_at){const actions=document.createElement('div');actions.className='msg-actions';const edit=document.createElement('button');edit.textContent='تعديل';edit.onclick=()=>editMessage(m);const del=document.createElement('button');del.textContent='حذف';del.onclick=()=>deleteMessage(m);actions.append(edit,del);bubble.append(actions)}
+ row.append(bubble);area.append(row);if(near||mine)area.scrollTop=area.scrollHeight;
+}
+async function loadMessages(){
+ const area=$('messages');area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
+ const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',state.active.id).order('created_at',{ascending:true}).limit(100);
+ if(error){toast('تعذر تحميل الرسائل');console.error(error);return}
+ area.replaceChildren();state.messageIds.clear();if(!data.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>';return}
+ data.forEach(renderMessage);area.scrollTop=area.scrollHeight;
+}
+function subscribeConversation(){
+ if(state.channel)supabaseClient.removeChannel(state.channel);
+ if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
+ const id=state.active.id;
+ state.channel=supabaseClient.channel('chat:'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>renderMessage(p.new)).on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{const node=[...$('messages').querySelectorAll('.message')].find(x=>x.dataset?.id===p.new.id);if(!node)loadMessages()}).subscribe(s=>{$('connectionState').textContent=s==='SUBSCRIBED'?'متصل':'إعادة الاتصال…';});
+ state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=(payload?.name||'عضو')+' يكتب الآن…';clearTimeout(state.typingTimer);state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
+}
+async function editMessage(m){const text=prompt('تعديل الرسالة',m.content);if(text===null||!text.trim())return;const {error}=await supabaseClient.from('chat_messages').update({content:text.trim(),edited_at:new Date().toISOString()}).eq('id',m.id);if(error)toast('تعذر تعديل الرسالة');else loadMessages()}
+async function deleteMessage(m){if(!confirm('هل تريد حذف هذه الرسالة؟'))return;const {error}=await supabaseClient.from('chat_messages').update({deleted_at:new Date().toISOString(),content:'',attachment_path:null}).eq('id',m.id);if(error)toast('تعذر حذف الرسالة');else loadMessages()}
+async function uploadAttachment(file){
+ if(!state.active)throw new Error('اختر محادثة أولاً');
+ if(file.size>12*1024*1024)throw new Error('الحد الأقصى لحجم الملف 12 ميجابايت');
+ const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'),path=state.active.id+'/'+state.user.id+'/'+crypto.randomUUID()+'_'+safe;
+ const {error}=await supabaseClient.storage.from('chat-media').upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;return {path,type:file.type};
+}
+async function sendMessage(){
+ const content=$('messageInput').value.trim(),file=state.attachment;if(!state.active||(!content&&!file)||state.uploading)return;
+ state.uploading=true;$('sendBtn').disabled=true;
+ try{
+  let attachment={};if(file)attachment=await uploadAttachment(file);
+  const {error}=await supabaseClient.from('chat_messages').insert({conversation_id:state.active.id,sender_id:state.user.id,content,...(attachment. path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})});
+  if(error)throw error;
+  $('messageInput').value='';resizeComposer();state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');await loadConversations();
+ }catch(e){toast(e.message||'تعذر إرسال الرسالة')}finally{state.uploading=false;$('sendBtn').disabled=false}
+}
+function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';$('sendBtn').disabled=!state.active||(!n.value.trim()&&!state.attachment)}
+$('messageInput').addEventListener('input',()=>{resizeComposer();if(state.typingChannel&&Date.now()-state.typingSent>1200){state.typingSent=Date.now();state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile.display_name}})}});
+$('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendMessage()}});
+$('sendBtn').onclick=sendMessage;$('search').oninput=renderConversations;$('refreshBtn').onclick=loadConversations;
+$('mobileMenu').onclick=()=>$('sidebar').classList.remove('closed');
+$('newChat').onclick=async()=>{
+ const isGroup=confirm('موافق لإنشاء مجموعة. إلغاء لبدء محادثة خاصة.');
+ const names=prompt(isGroup?'أدخل أسماء المستخدمين مفصولة بفواصل':'أدخل اسم المستخدم للمحادثة');
+ if(!names)return;const handles=[...new Set(names.split(',').map(slug).filter(x=>x.length>=3))];if(!handles.length)return toast('أدخل اسم مستخدم صحيحاً');
+ const {data:people,error}=await supabaseClient.from('profiles').select('id,username').in('username',handles);if(error)return toast('تعذر البحث عن المستخدمين');
+ const others=(people||[]).filter(p=>p.id!==state.user.id);if(!others.length)return toast('لم يتم العثور على مستخدمين مطابقين');
+ if(!isGroup&&others.length>1)return toast('اختر مستخدماً واحداً للمحادثة الخاصة');
+ try{
+  const {data:conv,error:ce}=await supabaseClient.from('conversations').insert({type:isGroup?'group':'direct',title:isGroup?(prompt('اسم المجموعة')||'مجموعة جديدة'):null,created_by:state.user.id}).select().single();if(ce)throw ce;
+  const rows=[{conversation_id:conv.id,user_id:state.user.id,role:'owner'},...others.map(p=>({conversation_id:conv.id,user_id:p.id,role:'member'}))];
+  const {error:me}=await supabaseClient.from('conversation_members').insert(rows);if(me)throw me;
+  await loadConversations();const created=state.conversations.find(c=>c.id===conv.id);if(created)await openConversation(created);
+ }catch(e){toast(e.message||'تعذر إنشاء المحادثة')}
+};
+$('attachBtn').onclick=()=>$('fileInput').click();
+$('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;state.attachment=f;$('attachmentPreview').textContent='المرفق المحدد: '+f.name+' ('+Math.ceil(f.size/1024)+' كيلوبايت)';$('attachmentPreview').classList.remove('hidden');resizeComposer()};
+$('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox').onclick=e=>{if(e.target===$('lightbox'))$('lightbox').classList.add('hidden')};
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){state.user=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden')}});
+(async()=>{const {data:{session}}=await supabaseClient.auth.getSession();if(session?.user)await enterApp(session.user)})();
 </script>
-</body>
-</html>
+</body></html>
