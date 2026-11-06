@@ -562,6 +562,7 @@ async function openDirectConversation(profile,button){
 }
 async function openConversation(c){
  if(!c?.id)return;
+ if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
  state.active=c;state.messages=[];state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
