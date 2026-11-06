@@ -213,6 +213,20 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 .directory-message-btn:disabled{opacity:.55;cursor:wait;transform:none}
 @media(max-width:420px){.directory-message-btn{padding:7px 9px;font-size:10px}.directory-user{gap:8px}.directory-status{display:none}}
 </style>
+<style>
+.group-modal{position:fixed;inset:0;z-index:30;display:none;place-items:center;padding:16px;background:#0b141a80;backdrop-filter:blur(3px)}
+.group-modal.open{display:grid}.group-dialog{width:min(100%,520px);max-height:min(88dvh,760px);display:flex;flex-direction:column;background:#fff;color:#111b21;border:1px solid #e9edef;border-radius:18px;box-shadow:0 20px 70px #0b141a40;overflow:hidden;direction:rtl}
+.group-dialog-head{display:flex;align-items:center;justify-content:space-between;padding:17px 19px;border-bottom:1px solid #e9edef}.group-dialog-head h2{font-size:18px;margin:0}
+.group-dialog-body{padding:16px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px}.group-field-label{font-size:12px;font-weight:800;color:#41525d}
+.group-field{width:100%;border:1px solid #dce2e5;border-radius:10px;padding:11px 12px;background:#f7f8fa;color:#111b21;outline:none}.group-field:focus{border-color:#00a884;box-shadow:0 0 0 2px #00a88420}
+.group-selected{display:flex;flex-wrap:wrap;gap:7px;min-height:8px}.group-chip{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:18px;padding:6px 10px;background:#d9fdd3;color:#075e54;font-size:11px;font-weight:700}.group-chip button{border:0;background:transparent;color:inherit;padding:0;font-size:15px;line-height:1}
+.group-results{display:flex;flex-direction:column;gap:4px;min-height:80px;max-height:270px;overflow:auto;border:1px solid #edf0f1;border-radius:11px;padding:5px}
+.group-person{width:100%;display:flex;align-items:center;gap:10px;padding:9px;border:0;border-radius:9px;background:#fff;color:#111b21;text-align:right}.group-person:hover{background:#f4f7f6}.group-person.selected{background:#eaf8ed}.group-person .avatar{width:38px;height:38px;flex:none}
+.group-person-copy{min-width:0;flex:1}.group-person-copy strong,.group-person-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.group-person-copy strong{font-size:13px}.group-person-copy small{font-size:10px;color:#667781;margin-top:2px}
+.group-person-check{width:22px;height:22px;border:1px solid #c8d2d5;border-radius:50%;display:grid;place-items:center;color:#fff}.group-person.selected .group-person-check{background:#00a884;border-color:#00a884}
+.group-dialog-foot{display:flex;gap:9px;padding:14px 18px;border-top:1px solid #e9edef}.group-dialog-foot button{flex:1;border:0;border-radius:10px;padding:12px;font-weight:800}.group-cancel{background:#f0f2f5;color:#41525d}.group-create{background:#00a884;color:#fff}.group-create:disabled{opacity:.45;cursor:not-allowed}.group-hint{font-size:11px;color:#667781;line-height:1.7}
+@media(max-width:520px){.group-modal{padding:8px}.group-dialog{max-height:94dvh;border-radius:14px}.group-dialog-body{padding:13px}.group-dialog-foot{padding:11px 13px}}
+</style>
 </head>
 <body>
 <div id="auth" class="auth-screen">
@@ -272,12 +286,28 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
  </main>
 </div>
 <div id="lightbox" class="hidden" style="position:fixed;inset:0;z-index:10;background:#000e;display:grid;place-items:center;padding:20px" role="dialog" aria-modal="true"><button id="closeLightbox" class="iconbtn" style="position:absolute;top:20px;left:20px"><i class="ph ph-x"></i></button><img id="lightboxImage" alt="معاينة المرفق" style="max-width:95vw;max-height:90vh;border-radius:14px"></div>
+
+<div id="groupModal" class="group-modal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
+ <section class="group-dialog">
+  <header class="group-dialog-head"><h2 id="groupModalTitle">إنشاء مجموعة جديدة</h2><button id="closeGroupModal" class="iconbtn" type="button" aria-label="إغلاق"><i class="ph ph-x"></i></button></header>
+  <div class="group-dialog-body">
+   <label class="group-field-label" for="groupNameInput">اسم المجموعة</label><input id="groupNameInput" class="group-field" maxlength="70" placeholder="مثلاً: فريق أضواء النجاح والثراء">
+   <label class="group-field-label" for="groupMemberSearch">إضافة الأعضاء</label><input id="groupMemberSearch" class="group-field" placeholder="ابحث بالاسم أو اسم المستخدم…">
+   <div id="groupSelectedMembers" class="group-selected" aria-live="polite"></div>
+   <div id="groupMemberResults" class="group-results"><div class="group-hint" style="padding:12px">جارٍ تحميل الأعضاء…</div></div>
+   <div id="groupMemberCount" class="group-hint">لم يتم اختيار أعضاء بعد. اختر عضواً واحداً على الأقل.</div>
+  </div>
+  <footer class="group-dialog-foot"><button id="cancelGroupCreation" class="group-cancel" type="button">إلغاء</button><button id="createGroupBtn" class="group-create" type="button" disabled>إنشاء المجموعة</button></footer>
+ </section>
+</div>
+
 <script>
 'use strict';
 const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
+const groupSelectedProfiles=new Map();let groupSearchTimer=null;let groupSearchRequest=0;
 const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),messages:[],messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
@@ -665,20 +695,76 @@ $('chatsTab').onclick=()=>setSidebarView('chats');$('usersTab').onclick=()=>setS
 document.querySelectorAll('.directory-filter').forEach(button=>button.addEventListener('click',()=>{state.directoryFilter=button.dataset.directoryFilter;document.querySelectorAll('.directory-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});loadDirectory(true)}));
 document.querySelectorAll('.chat-filter').forEach(button=>button.addEventListener('click',()=>{state.conversationFilter=button.dataset.filter;document.querySelectorAll('.chat-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});renderConversations()}));
 $('mobileMenu').onclick=()=>$('sidebar').classList.remove('closed');
-$('newChat').onclick=async()=>{
- const isGroup=confirm('موافق لإنشاء مجموعة. إلغاء لبدء محادثة خاصة.');
- const names=prompt(isGroup?'أدخل أسماء المستخدمين مفصولة بفواصل':'أدخل اسم المستخدم للمحادثة');
- if(!names)return;const handles=[...new Set(names.split(',').map(slug).filter(x=>x.length>=3))];if(!handles.length)return toast('أدخل اسم مستخدم صحيحاً');
- const {data:people,error}=await supabaseClient.from('profiles').select('id,username').in('username',handles);if(error)return toast('تعذر البحث عن المستخدمين');
- const others=(people||[]).filter(p=>p.id!==state.user.id);if(!others.length)return toast('لم يتم العثور على مستخدمين مطابقين');
- if(!isGroup&&others.length>1)return toast('اختر مستخدماً واحداً للمحادثة الخاصة');
- if(!isGroup){await openDirectConversation(others[0]);return}
+$('newChat').title='إنشاء مجموعة جديدة';
+$('newChat').setAttribute('aria-label','إنشاء مجموعة جديدة');
+$('newChat').onclick=()=>openGroupModal();
+async function loadGroupCandidates(term=''){
+ const request=++groupSearchRequest;const results=$('groupMemberResults');
+ results.innerHTML='<div class="group-hint" style="padding:12px">جارٍ البحث عن الأعضاء…</div>';
  try{
-  const {data:conv,error:ce}=await supabaseClient.from('conversations').insert({type:isGroup?'group':'direct',title:isGroup?(prompt('اسم المجموعة')||'مجموعة جديدة'):null,created_by:state.user.id}).select().single();if(ce)throw ce;
-  const {error:me}=await supabaseClient.from('conversation_members').insert({conversation_id:conv.id,user_id:state.user.id,role:'owner'});if(me)throw me;
-  const {error:othersError}=await supabaseClient.from('conversation_members').insert(others.map(p=>({conversation_id:conv.id,user_id:p.id,role:'member'})));if(othersError)throw othersError;
-  await loadConversations();const created=state.conversations.find(c=>c.id===conv.id);if(created)await openConversation(created);
- }catch(e){toast(e.message||'تعذر إنشاء المحادثة')}
+  let people=[];
+  if(!term){
+   const {data,error}=await supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id).order('display_name',{ascending:true}).limit(60);
+   if(error)throw error;people=data||[];
+  }else{
+   const pattern='%'+term.replace(/[\\%_]/g,'\\$&')+'%';
+   const [byName,byHandle]=await Promise.all([
+    supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id).ilike('display_name',pattern).limit(40),
+    supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id).ilike('username',pattern).limit(40)
+   ]);
+   if(byName.error)throw byName.error;if(byHandle.error)throw byHandle.error;
+   const merged=new Map();[...(byName.data||[]),...(byHandle.data||[])].forEach(p=>merged.set(p.id,p));people=[...merged.values()];
+  }
+  if(request!==groupSearchRequest)return;
+  renderGroupCandidates(people);
+ }catch(error){if(request===groupSearchRequest){results.innerHTML='<div class="group-hint" style="padding:12px">تعذر تحميل الأعضاء. حاول تحديث البحث.</div>';console.error('Group member search failed:',error)}}
+}
+function renderGroupCandidates(people){
+ const results=$('groupMemberResults');results.replaceChildren();
+ if(!people.length){const empty=document.createElement('div');empty.className='group-hint';empty.style.padding='12px';empty.textContent='لا توجد نتائج مطابقة.';results.append(empty);return}
+ people.forEach(profile=>{
+  const selected=groupSelectedProfiles.has(profile.id);const button=document.createElement('button');button.type='button';button.className='group-person'+(selected?' selected':'');
+  const avatar=document.createElement('div');avatar.className='avatar';renderAvatar(avatar,profile);
+  const copy=document.createElement('div');copy.className='group-person-copy';
+  const name=document.createElement('strong');name.textContent=profile.display_name||profile.username||'مستخدم';
+  const handle=document.createElement('small');handle.textContent='@'+(profile.username||'user');copy.append(name,handle);
+  const check=document.createElement('span');check.className='group-person-check';check.innerHTML=selected?'<i class="ph ph-check"></i>':'';
+  button.append(avatar,copy,check);button.onclick=()=>{if(groupSelectedProfiles.has(profile.id))groupSelectedProfiles.delete(profile.id);else groupSelectedProfiles.set(profile.id,profile);renderGroupCandidates(people);renderGroupSelection()};results.append(button);
+ });
+}
+function renderGroupSelection(){
+ const selected=$('groupSelectedMembers');selected.replaceChildren();
+ groupSelectedProfiles.forEach(profile=>{
+  const chip=document.createElement('span');chip.className='group-chip';chip.append(document.createTextNode(profile.display_name||profile.username||'عضو'));
+  const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','إزالة '+(profile.display_name||profile.username));remove.onclick=()=>{groupSelectedProfiles.delete(profile.id);renderGroupSelection();loadGroupCandidates($('groupMemberSearch').value.trim())};chip.append(remove);selected.append(chip);
+ });
+ const count=groupSelectedProfiles.size;$('groupMemberCount').textContent=count?'تم اختيار '+count+' من الأعضاء، وستكون أنت مشرف المجموعة.':'لم يتم اختيار أعضاء بعد. اختر عضواً واحداً على الأقل.';
+ $('createGroupBtn').disabled=count===0||!$('groupNameInput').value.trim();
+}
+function openGroupModal(){
+ if(!state.user)return toast('سجّل الدخول أولاً');
+ groupSelectedProfiles.clear();$('groupNameInput').value='';$('groupMemberSearch').value='';$('groupModal').classList.add('open');renderGroupSelection();loadGroupCandidates('');setTimeout(()=>$('groupNameInput').focus(),60);
+}
+function closeGroupModal(){$('groupModal').classList.remove('open');}
+$('closeGroupModal').onclick=closeGroupModal;$('cancelGroupCreation').onclick=closeGroupModal;
+$('groupModal').addEventListener('click',event=>{if(event.target===$('groupModal'))closeGroupModal()});
+$('groupNameInput').addEventListener('input',renderGroupSelection);
+$('groupMemberSearch').addEventListener('input',()=>{
+ clearTimeout(groupSearchTimer);const term=$('groupMemberSearch').value.trim();groupSearchTimer=setTimeout(()=>loadGroupCandidates(term),220);
+});
+$('createGroupBtn').onclick=async()=>{
+ const title=$('groupNameInput').value.trim();const others=[...groupSelectedProfiles.values()];
+ if(!title)return toast('اكتب اسم المجموعة أولاً');if(!others.length)return toast('اختر عضواً واحداً على الأقل');
+ const button=$('createGroupBtn');button.disabled=true;button.textContent='جارٍ إنشاء المجموعة…';
+ try{
+  const {data:conv,error:ce}=await supabaseClient.from('conversations').insert({type:'group',title,created_by:state.user.id}).select().single();if(ce)throw ce;
+  const {error:ownerError}=await supabaseClient.from('conversation_members').insert({conversation_id:conv.id,user_id:state.user.id,role:'owner'});if(ownerError)throw ownerError;
+  const {error:membersError}=await supabaseClient.from('conversation_members').insert(others.map(profile=>({conversation_id:conv.id,user_id:profile.id,role:'member'})));
+  if(membersError)throw membersError;
+  closeGroupModal();await loadConversations();const created=state.conversations.find(item=>item.id===conv.id);
+  if(created)await openConversation(created);toast('تم إنشاء المجموعة وإضافة '+others.length+' أعضاء');
+ }catch(error){console.error('Group creation failed:',error);toast(error?.message||'تعذر إنشاء المجموعة. تحقق من الاتصال والصلاحيات.')}
+ finally{button.textContent='إنشاء المجموعة';renderGroupSelection()}
 };
 $('attachBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;state.attachment=f;$('attachmentPreview').textContent='المرفق المحدد: '+f.name+' ('+Math.ceil(f.size/1024)+' كيلوبايت)';$('attachmentPreview').classList.remove('hidden');resizeComposer()};
