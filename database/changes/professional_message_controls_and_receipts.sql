@@ -97,3 +97,5 @@ with check (
 
 alter publication supabase_realtime add table public.message_pins;
 alter publication supabase_realtime add table public.conversation_members;
+
+create index if not exists message_pins_pinned_by_idx on public.message_pins(pinned_by);
