@@ -3,29 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تطبيق المراسلة الفوري</title>
+  <title>محادثة فورية</title>
   <link rel="stylesheet" href="style.css">
-  <!-- استدعاء مكتبة Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="chat-container">
-    <header class="chat-header">
+    <div class="chat-header">
       <h2>محادثة فورية</h2>
       <div class="user-inputs">
         <input type="text" id="username" placeholder="اسمي (مثل: محمد)">
         <input type="text" id="receiver" placeholder="اسم المستقبل (مثل: أحمد)">
       </div>
-    </header>
-
-    <div class="messages-box" id="messagesBox">
-      <!-- ستظهر الرسائل هنا -->
     </div>
 
-    <footer class="chat-footer">
-      <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." maxlength="100">
+    <div id="messagesBox" class="messages-box"></div>
+
+    <div class="chat-footer">
+      <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." autocomplete="off">
       <button id="sendBtn">إرسال</button>
-    </footer>
+    </div>
   </div>
 
   <script src="app.js"></script>
