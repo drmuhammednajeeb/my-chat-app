@@ -294,7 +294,16 @@ async function enterApp(user){
  try{state.profile=await ensureProfile(user)}catch(e){console.error(e);toast('تعذر إعداد ملفك الشخصي: '+e.message);return}
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar');
- await loadConversations();await loadDirectory();startPresence();
+ const conversationsLoaded=await loadConversations();
+ // Restore the latest conversation after every sign-in or page reload.
+ setSidebarView('chats');
+ if(conversationsLoaded&&state.conversations.length){
+  const latest=state.conversations[0];
+  await openConversation(latest);
+ }else if(conversationsLoaded){
+  $('chatTitle').textContent='لا توجد محادثات بعد';$('chatSub').textContent='ابدأ محادثة من دليل المستخدمين';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>لا توجد محادثات بعد</h2><p>اختر مستخدماً من دليل المستخدمين لبدء محادثة جديدة.</p></div>';
+ }
+ await loadDirectory();startPresence();
 }
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
 $('authForm').addEventListener('submit',async e=>{
@@ -563,7 +572,24 @@ $('sendBtn').onclick=sendMessage;$('search').oninput=()=>{
   state.directorySearchTimer=setTimeout(()=>loadDirectory(true),300);
  }else renderConversations();
 };$('search').onkeydown=e=>{if(e.key==='Escape'&&state.sidebarView==='users'){$('search').value='';state.directorySearch='';loadDirectory(true)}};
-$('refreshBtn').onclick=loadConversations;
+$('refreshBtn').onclick=async()=>{
+ $('refreshBtn').disabled=true;
+ try{
+  const ok=await loadConversations();
+  if(!ok)return;
+  // If the active conversation disappeared from local state, restore the most recent valid one.
+  const active=state.active&&state.conversations.find(c=>c.id===state.active.id);
+  const target=active||state.conversations[0]||null;
+  if(target)await openConversation(target);
+  else{
+   state.active=null;state.messageIds.clear();state.messageLoadVersion++;
+   $('chatTitle').textContent='لا توجد محادثات بعد';$('chatSub').textContent='ابدأ محادثة من دليل المستخدمين';
+   $('messageInput').disabled=true;resizeComposer();
+   $('messages').innerHTML='<div class="welcome"><h2>لا توجد محادثات بعد</h2><p>ابدأ محادثة جديدة من دليل المستخدمين.</p></div>';
+  }
+ }catch(error){console.error('Chat refresh failed:',error);toast('تعذر تحديث المحادثات. حاول مرة أخرى')}
+ finally{$('refreshBtn').disabled=false}
+};
 $('chatsTab').onclick=()=>setSidebarView('chats');$('usersTab').onclick=()=>setSidebarView('users');$('refreshDirectory').onclick=()=>loadDirectory(true);$('loadMoreUsers').onclick=()=>loadDirectory(false);
 document.querySelectorAll('.directory-filter').forEach(button=>button.addEventListener('click',()=>{state.directoryFilter=button.dataset.directoryFilter;document.querySelectorAll('.directory-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});loadDirectory(true)}));
 document.querySelectorAll('.chat-filter').forEach(button=>button.addEventListener('click',()=>{state.conversationFilter=button.dataset.filter;document.querySelectorAll('.chat-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});renderConversations()}));
