@@ -113,7 +113,7 @@ $('authForm').addEventListener('submit',async e=>{
    const username=slug($('username').value),display=$('displayName').value.trim();
    if(username.length<3)throw new Error('اسم المستخدم يجب أن يتكون من 3 إلى 24 حرفاً إنجليزياً أو رقماً أو _');
    if(!display)throw new Error('أدخل الاسم الظاهر');
-   const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{username,display_name:display}}});
+   const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0],data:{username,display_name:display}}});
    if(error)throw error;
    if(data.session)await enterApp(data.user);else authError('تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد التسجيل، ثم سجّل الدخول.');
   }else{
