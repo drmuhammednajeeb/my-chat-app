@@ -17,6 +17,8 @@ REVOKE ALL ON TABLE app_private.channel_invites FROM PUBLIC, anon, authenticated
 CREATE INDEX IF NOT EXISTS channel_invites_conversation_active_idx
   ON app_private.channel_invites(conversation_id, expires_at)
   WHERE revoked_at IS NULL;
+CREATE INDEX IF NOT EXISTS channel_invites_created_by_idx
+  ON app_private.channel_invites(created_by);
 
 CREATE OR REPLACE FUNCTION app_private.create_private_channel(p_title text, p_description text DEFAULT '')
 RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path TO ''
