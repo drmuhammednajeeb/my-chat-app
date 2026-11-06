@@ -587,11 +587,12 @@ async function openConversation(c){
 }
 
 async function loadMessageReactions(conversationId,messages){
- const ids=(messages||[]).filter(m=>!m.deleted_at).map(m=>m.id);if(!ids.length){state.reactions=new Map();return true}
+ const ids=(messages||[]).filter(m=>!m.deleted_at).map(m=>m.id);if(!ids.length)return true;
  try{
   const {data,error}=await supabaseClient.from('message_reactions').select('message_id,user_id,reaction_type').eq('conversation_id',conversationId).in('message_id',ids);
   if(error)throw error;
-  const next=new Map();(data||[]).forEach(r=>{const list=next.get(r.message_id)||[];list.push(r);next.set(r.message_id,list)});
+  const next=new Map(state.reactions||[]);ids.forEach(id=>next.delete(id));
+  (data||[]).forEach(r=>{const list=next.get(r.message_id)||[];list.push(r);next.set(r.message_id,list)});
   state.reactions=next;return true;
  }catch(error){console.warn('Message reactions could not be loaded:',error?.message||error);return false}
 }
