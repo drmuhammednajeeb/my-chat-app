@@ -176,8 +176,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
  .messages{overscroll-behavior-y:contain}
  .message{max-width:90%}
  .bubble{border-radius:9px 9px 9px 2px}
- .mine .bubble{border-radius:9px 9px 2px 9px}
- .composer-hint{display:none}
+ .mine .bubble{border-radius:9px 9px 2px 9px} .composer-hint{display:none}
 }
 @media(prefers-reduced-motion:reduce){.message{animation:none}}
 
@@ -204,6 +203,13 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 .directory-summary{padding:8px 17px;color:#86949c;font-size:10px;border-bottom:1px solid #f0f2f5}
 .directory-empty{margin:22px 12px;padding:22px 15px;text-align:center;border:1px dashed #dce2e5;border-radius:12px;color:#667781;font-size:12px;line-height:1.8}
 @media(max-width:760px){.sidebar-tabs{padding-top:7px}.directory-user{min-height:66px}}
+
+/* Direct messaging actions in the user directory */
+.directory-user{gap:10px}
+.directory-message-btn{flex:none;border:0;border-radius:18px;background:#d9fdd3;color:#075e54;padding:7px 12px;font-size:11px;font-weight:800;transition:background .18s,transform .18s}
+.directory-message-btn:hover{background:#c6f3be;transform:translateY(-1px)}
+.directory-message-btn:disabled{opacity:.55;cursor:wait;transform:none}
+@media(max-width:420px){.directory-message-btn{padding:7px 9px;font-size:10px}.directory-user{gap:8px}.directory-status{display:none}}
 </style>
 </head>
 <body>
@@ -356,13 +362,13 @@ function renderDirectory(){
  if(!rows.length){const empty=document.createElement('div');empty.className='directory-empty';empty.textContent=state.directorySearch?'لا توجد حسابات تطابق «'+state.directorySearch+'».':(state.directoryFilter==='online'?'لا يوجد مستخدمون متصلون الآن.':'لا يوجد مستخدمون آخرون حتى الآن.');list.append(empty);return}
  rows.forEach(profile=>{
   const row=document.createElement('article');row.className='directory-user';
-  const avatar=document.createElement('div');renderAvatar(avatar,profile);
-  const dot=document.createElement('span');dot.className='directory-presence'+(state.onlineUsers.has(profile.id)?' online':'');dot.setAttribute('aria-label',state.onlineUsers.has(profile.id)?'متصل الآن':'غير متصل');avatar.append(dot);
+  const avatar=document.createElement('div');renderAvatar(avatar,profile);  const dot=document.createElement('span');dot.className='directory-presence'+(state.onlineUsers.has(profile.id)?' online':'');dot.setAttribute('aria-label',state.onlineUsers.has(profile.id)?'متصل الآن':'غير متصل');avatar.append(dot);
   const copy=document.createElement('div');copy.className='directory-copy';
   const name=document.createElement('strong');name.textContent=profile.display_name||profile.username||'مستخدم';
   const handle=document.createElement('small');handle.textContent='@'+(profile.username||'user');copy.append(name,handle);
   const status=document.createElement('span');status.className='directory-status'+(state.onlineUsers.has(profile.id)?' online':'');status.textContent=state.onlineUsers.has(profile.id)?'متصل الآن':'غير متصل';
-  row.append(avatar,copy,status);list.append(row);
+  const action=document.createElement('button');action.type='button';action.className='directory-message-btn';action.textContent='مراسلة';action.setAttribute('aria-label','بدء محادثة مع '+(profile.display_name||profile.username||'المستخدم'));action.onclick=()=>openDirectConversation(profile,action);
+  row.append(avatar,copy,status,action);list.append(row);
  });
 }
 function startPresence(){
@@ -402,6 +408,47 @@ async function loadConversations(){
  state.conversations.sort((a,b)=>new Date(b.last_message?.created_at||b.created_at)-new Date(a.last_message?.created_at||a.created_at));
  renderConversations();
  if(state.active){const refreshed=state.conversations.find(c=>c.id===state.active.id);if(refreshed)state.active=refreshed}
+}
+function findDirectConversation(userId){
+ return state.conversations.find(c=>c.type==='direct'&&(c.members||[]).length===2&&c.members.some(m=>m.user_id===state.user.id)&&c.members.some(m=>m.user_id===userId))||null;
+}
+async function openDirectConversation(profile,button){
+ if(!state.user||!profile?.id||profile.id===state.user.id)return;
+ if(button?.disabled)return;
+ if(button){button.disabled=true;button.textContent='جارٍ الفتح…'}
+ try{
+  let existing=findDirectConversation(profile.id);
+  if(!existing){
+   // Refresh the signed-in user's visible conversations before creating anything.
+   await loadConversations();
+   existing=findDirectConversation(profile.id);
+  }
+  if(existing){await openConversation(existing);return}
+  const {data:conv,error:convError}=await supabaseClient.from('conversations').insert({type:'direct',title:null,created_by:state.user.id}).select().single();
+  if(convError)throw convError;
+  const {error:membersError}=await supabaseClient.from('conversation_members').insert([
+   {conversation_id:conv.id,user_id:state.user.id,role:'owner'},
+   {conversation_id:conv.id,user_id:profile.id,role:'member'}
+  ]);
+  if(membersError){
+   // Best-effort cleanup of a conversation that has no members yet.
+   await supabaseClient.from('conversations').delete().eq('id',conv.id).eq('created_by',state.user.id);
+   throw membersError;
+  }
+  const created={...conv,members:[
+   {conversation_id:conv.id,user_id:state.user.id,role:'owner',profile:state.profile},
+   {conversation_id:conv.id,user_id:profile.id,role:'member',profile}
+  ],last_message:null,last_read_at:null};
+  state.conversations=[created,...state.conversations.filter(c=>c.id!==conv.id)];
+  renderConversations();
+  await openConversation(created);
+  toast('تم فتح المحادثة الخاصة');
+ }catch(error){
+  console.error('Direct conversation failed:',error);
+  toast(error?.message||'تعذر بدء المحادثة. تحقق من صلاحيات إنشاء المحادثات وإضافة الأعضاء.');
+ }finally{
+  if(button){button.disabled=false;button.textContent='مراسلة'}
+ }
 }
 async function openConversation(c){
  state.active=c;state.messageIds.clear();renderConversations();$('chatTitle').textContent=convName(c);$('chatSub').textContent=c.type==='group'?'مجموعة · '+c.members.length+' أعضاء':'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=false;$('sendBtn').disabled=false;
