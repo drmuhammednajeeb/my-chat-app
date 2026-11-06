@@ -272,9 +272,9 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 'use strict';
 const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
-const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
+const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),messageLoadVersion:0,realtimeStatus:'CONNECTING'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -313,7 +313,7 @@ $('authForm').addEventListener('submit',async e=>{
   }
  }catch(err){authError(err.message||'حدث خطأ، حاول مرة أخرى')}finally{$('authSubmit').disabled=false}
 });
-$('logoutBtn').onclick=async()=>{await supabaseClient.auth.signOut();location.reload()};
+$('logoutBtn').onclick=async()=>{const {error}=await supabaseClient.auth.signOut({scope:'local'});if(error){toast('تعذر تسجيل الخروج من هذا الجهاز');console.error(error);return}location.reload()};
 function renderAvatar(container,profile,className='directory-avatar'){
  container.replaceChildren();container.className=className;
  const fallback=document.createElement('span');fallback.textContent=initials(profile?.display_name||profile?.username);container.append(fallback);
@@ -456,42 +456,71 @@ async function openDirectConversation(profile,button){
  }
 }
 async function openConversation(c){
- state.active=c;state.messageIds.clear();renderConversations();$('chatTitle').textContent=convName(c);$('chatSub').textContent=c.type==='group'?'مجموعة · '+c.members.length+' أعضاء':'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=false;$('sendBtn').disabled=false;
+ if(!c?.id)return;
+ state.active=c;state.messageIds.clear();state.messageLoadVersion++;renderConversations();$('chatTitle').textContent=convName(c);$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=false;resizeComposer();
  if(innerWidth<=760)$('sidebar').classList.add('closed');
- // Subscribe before the initial read so messages arriving during loading are not missed.
+ // Keep the composer available while messages and attachments load.
  subscribeConversation();await loadMessages();
 }
-async function renderMessage(m){
- if(state.messageIds.has(m.id))return;state.messageIds.add(m.id);
- const area=$('messages'),near=area.scrollHeight-area.scrollTop-area.clientHeight<100;
- const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
- const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
- const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
- const mine=m.sender_id===state.user.id,member=state.active.members.find(x=>x.user_id===m.sender_id),sender=member?.profile?.display_name||'عضو';
- const row=document.createElement('article');row.className='message'+(mine?' mine':'');row.dataset.day=day;
- const bubble=document.createElement('div');bubble.className='bubble'+(m.deleted_at?' deleted':'');
- if(!mine&&state.active.type==='group'){const label=document.createElement('div');label.className='sender';label.textContent=sender;row.append(label)}
- if(m.deleted_at){bubble.textContent='تم حذف هذه الرسالة'}else{
-  if(m.attachment_path){const {data:signed,error:signedError}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(signedError){bubble.textContent='تعذر فتح المرفق';}else if(m.attachment_type?.startsWith('image/')){const img=document.createElement('img');img.src=signed.signedUrl;img.alt='مرفق';img.onclick=()=>{$('lightboxImage').src=img.src;$('lightbox').classList.remove('hidden')};bubble.append(img)}else{const a=document.createElement('a');a.href=signed.signedUrl;a.target='_blank';a.rel='noopener';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}}
-  if(m.content){const t=document.createElement('div');t.textContent=m.content;bubble.append(t)}
+async function renderMessage(m,conversationId=state.active?.id){
+ if(!m?.id||!conversationId||state.active?.id!==conversationId||state.messageIds.has(m.id))return false;
+ state.messageIds.add(m.id);
+ try{
+  const area=$('messages'),near=area.scrollHeight-area.scrollTop-area.clientHeight<100;
+  const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
+  const activeConversation=state.active;
+  const member=(activeConversation?.members||[]).find(x=>x.user_id===m.sender_id),sender=member?.profile?.display_name||'عضو';
+  const row=document.createElement('article');row.className='message'+(m.sender_id===state.user?.id?' mine':'');row.dataset.day=day;row.dataset.messageId=m.id;
+  const bubble=document.createElement('div');bubble.className='bubble'+(m.deleted_at?' deleted':'');
+  if(m.sender_id!==state.user?.id&&activeConversation?.type==='group'){const label=document.createElement('div');label.className='sender';label.textContent=sender;row.append(label)}
+  if(m.deleted_at){bubble.textContent='تم حذف هذه الرسالة'}else{
+   if(m.attachment_path){
+    const {data:signed,error:signedError}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);
+    if(state.active?.id!==conversationId)return false;
+    if(signedError){const failed=document.createElement('span');failed.textContent='تعذر فتح المرفق';bubble.append(failed)}
+    else if(m.attachment_type?.startsWith('image/')){const img=document.createElement('img');img.src=signed.signedUrl;img.alt='مرفق';img.loading='lazy';img.onclick=()=>{$('lightboxImage').src=img.src;$('lightbox').classList.remove('hidden')};bubble.append(img)}
+    else{const a=document.createElement('a');a.href=signed.signedUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}
+   }
+   if(m.content){const t=document.createElement('div');t.textContent=m.content;bubble.append(t)}
+  }
+  const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · معدلة':'');bubble.append(meta);
+  if(m.sender_id===state.user?.id&&!m.deleted_at){const actions=document.createElement('div');actions.className='msg-actions';const edit=document.createElement('button');edit.type='button';edit.textContent='تعديل';edit.onclick=()=>editMessage(m);const del=document.createElement('button');del.type='button';del.textContent='حذف';del.onclick=()=>deleteMessage(m);actions.append(edit,del);bubble.append(actions)}
+  if(state.active?.id!==conversationId)return false;
+  const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
+  const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
+  area.append(row);if(near||m.sender_id===state.user?.id)area.scrollTop=area.scrollHeight;
+  return true;
+ }catch(error){
+  state.messageIds.delete(m.id);console.error('Message rendering failed:',error);
+  if(state.active?.id===conversationId)toast('تعذر عرض أحد المرفقات، لكن يمكنك متابعة الكتابة والإرسال');
+  return false;
  }
- const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · معدلة':'');bubble.append(meta);
- if(mine&&!m.deleted_at){const actions=document.createElement('div');actions.className='msg-actions';const edit=document.createElement('button');edit.textContent='تعديل';edit.onclick=()=>editMessage(m);const del=document.createElement('button');del.textContent='حذف';del.onclick=()=>deleteMessage(m);actions.append(edit,del);bubble.append(actions)}
- row.append(bubble);area.append(row);if(near||mine)area.scrollTop=area.scrollHeight;
 }
 async function loadMessages(){
- const area=$('messages');area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
- const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',state.active.id).order('created_at',{ascending:true}).limit(100);
- if(error){toast('تعذر تحميل الرسائل');console.error(error);return}
- const readAt=new Date().toISOString();const {error:readError}=await supabaseClient.from('conversation_members').update({last_read_at:readAt}).eq('conversation_id',state.active.id).eq('user_id',state.user.id);if(!readError){state.memberReads[state.active.id]=readAt;const current=state.conversations.find(c=>c.id===state.active.id);if(current)current.last_read_at=readAt;renderConversations()}
- area.replaceChildren();state.messageIds.clear();if(!data.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>';return}
- for(const message of data)await renderMessage(message);area.scrollTop=area.scrollHeight;
+ const conversationId=state.active?.id;if(!conversationId)return;
+ const requestId=++state.messageLoadVersion,area=$('messages');
+ area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
+ try{
+  const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).order('created_at',{ascending:true}).limit(100);
+  if(error)throw error;
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;
+  const messages=data||[];
+  area.replaceChildren();state.messageIds.clear();
+  if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
+  else{for(const message of messages){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;await renderMessage(message,conversationId)}area.scrollTop=area.scrollHeight}
+  const readAt=new Date().toISOString();
+  const {error:readError}=await supabaseClient.from('conversation_members').update({last_read_at:readAt}).eq('conversation_id',conversationId).eq('user_id',state.user.id);
+  if(!readError&&requestId===state.messageLoadVersion&&state.active?.id===conversationId){state.memberReads[conversationId]=readAt;const current=state.conversations.find(c=>c.id===conversationId);if(current)current.last_read_at=readAt;renderConversations()}
+ }catch(error){
+  console.error('Message loading failed:',error);
+  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){area.innerHTML='<div class="welcome"><h2>تعذر تحميل الرسائل</h2><p>المحادثة ما زالت مفتوحة. يمكنك إعادة المحاولة أو متابعة الكتابة.</p></div>';toast('تعذر تحميل الرسائل حالياً')}
+ }
 }
 function subscribeConversation(){
  if(state.channel)supabaseClient.removeChannel(state.channel);
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  const id=state.active.id;
- state.channel=supabaseClient.channel('chat:'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>renderMessage(p.new)).on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{const node=[...$('messages').querySelectorAll('.message')].find(x=>x.dataset?.id===p.new.id);if(!node)loadMessages()}).subscribe(s=>{$('connectionState').textContent=s==='SUBSCRIBED'?'متصل':'إعادة الاتصال…';});
+ state.channel=supabaseClient.channel('chat:'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{renderMessage(p.new,id).catch(error=>console.error('Realtime message failed:',error))}).on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id)loadMessages().catch(error=>console.error('Realtime refresh failed:',error))}).subscribe(s=>{$('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';});
  state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=(payload?.name||'عضو')+' يكتب الآن…';clearTimeout(state.typingTimer);state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
 }
 async function editMessage(m){const text=prompt('تعديل الرسالة',m.content);if(text===null||!text.trim())return;const {error}=await supabaseClient.from('chat_messages').update({content:text.trim(),edited_at:new Date().toISOString()}).eq('id',m.id);if(error)toast('تعذر تعديل الرسالة');else loadMessages()}
@@ -503,14 +532,20 @@ async function uploadAttachment(file){
  const {error}=await supabaseClient.storage.from('chat-media').upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;return {path,type:file.type};
 }
 async function sendMessage(){
- const content=$('messageInput').value.trim(),file=state.attachment;if(!state.active||(!content&&!file)||state.uploading)return;
- state.uploading=true;$('sendBtn').disabled=true;
+ const content=$('messageInput').value.trim(),file=state.attachment,conversationId=state.active?.id,userId=state.user?.id;
+ if(!conversationId||!userId||(!content&&!file)||state.uploading)return;
+ state.uploading=true;$('sendBtn').disabled=true;$('messageInput').disabled=false;
  try{
+  const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
+  if(sessionError)throw sessionError;
+  if(!session?.user?.id||session.user.id!==userId)throw new Error('انتهت جلسة الدخول. أعد تسجيل الدخول ثم حاول إرسال الرسالة مجدداً.');
   let attachment={};if(file)attachment=await uploadAttachment(file);
-  const {error}=await supabaseClient.from('chat_messages').insert({conversation_id:state.active.id,sender_id:state.user.id,content,...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})});
+  const {error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})});
   if(error)throw error;
-  $('messageInput').value='';resizeComposer();state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');await loadConversations();
- }catch(e){toast(e.message||'تعذر إرسال الرسالة')}finally{state.uploading=false;$('sendBtn').disabled=false}
+  if(state.active?.id===conversationId){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');resizeComposer()}
+  await loadConversations();
+ }catch(e){console.error('Send message failed:',e);toast(e.message||'تعذر إرسال الرسالة. بقي النص والمرفق محفوظين لإعادة المحاولة')}
+ finally{state.uploading=false;resizeComposer()}
 }
 function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';$('sendBtn').disabled=!state.active||(!n.value.trim()&&!state.attachment)}
 $('messageInput').addEventListener('input',()=>{resizeComposer();if(state.typingChannel&&Date.now()-state.typingSent>1200){state.typingSent=Date.now();state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile.display_name}})}});
@@ -545,7 +580,7 @@ $('newChat').onclick=async()=>{
 $('attachBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;state.attachment=f;$('attachmentPreview').textContent='المرفق المحدد: '+f.name+' ('+Math.ceil(f.size/1024)+' كيلوبايت)';$('attachmentPreview').classList.remove('hidden');resizeComposer()};
 $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox').onclick=e=>{if(e.target===$('lightbox'))$('lightbox').classList.add('hidden')};
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}state.onlineUsers.clear();state.user=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden')}});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
 (async()=>{const {data:{session}}=await supabaseClient.auth.getSession();if(session?.user)await enterApp(session.user)})();
 </script>
 </body></html>
