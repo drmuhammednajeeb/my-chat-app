@@ -171,6 +171,7 @@ async function loadMessages(){
  const area=$('messages');area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
  const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',state.active.id).order('created_at',{ascending:true}).limit(100);
  if(error){toast('تعذر تحميل الرسائل');console.error(error);return}
+ await supabaseClient.from('conversation_members').update({last_read_at:new Date().toISOString()}).eq('conversation_id',state.active.id).eq('user_id',state.user.id);
  area.replaceChildren();state.messageIds.clear();if(!data.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>';return}
  await Promise.all(data.map(renderMessage));area.scrollTop=area.scrollHeight;
 }
