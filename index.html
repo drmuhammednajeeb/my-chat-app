@@ -506,24 +506,32 @@ async function renderMessage(m,conversationId=state.active?.id){
  }
 }
 async function loadMessages(){
- const conversationId=state.active?.id;if(!conversationId)return;
+ const conversationId=state.active?.id;if(!conversationId)return false;
  const requestId=++state.messageLoadVersion,area=$('messages');
  area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
  try{
-  // Fetch the newest page first so long conversations restore their latest activity.
   const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).order('created_at',{ascending:false}).limit(100);
   if(error)throw error;
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   const messages=(data||[]).slice().reverse();
   area.replaceChildren();state.messageIds.clear();
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
-  else{for(const message of messages){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;await renderMessage(message,conversationId)}area.scrollTop=area.scrollHeight}
+  else{
+   for(const message of messages){
+    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+    await renderMessage(message,conversationId);
+   }
+   area.scrollTop=area.scrollHeight;
+  }
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   const readAt=new Date().toISOString();
   const {error:readError}=await supabaseClient.from('conversation_members').update({last_read_at:readAt}).eq('conversation_id',conversationId).eq('user_id',state.user.id);
   if(!readError&&requestId===state.messageLoadVersion&&state.active?.id===conversationId){state.memberReads[conversationId]=readAt;const current=state.conversations.find(c=>c.id===conversationId);if(current)current.last_read_at=readAt;renderConversations()}
+  return true;
  }catch(error){
   console.error('Message loading failed:',error);
-  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){area.innerHTML='<div class="welcome"><h2>تعذر تحميل الرسائل</h2><p>المحادثة ما زالت مفتوحة. يمكنك إعادة المحاولة أو متابعة الكتابة.</p></div>';toast('تعذر تحميل الرسائل حالياً')}
+  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){area.innerHTML='<div class="welcome"><h2>تعذر تحميل الرسائل</h2><p>تم إبقاء المحادثة مفتوحة. اضغط تحديث لإعادة المحاولة.</p></div>';toast('تعذر استرجاع الرسائل من قاعدة البيانات')}
+  return false;
  }
 }
 function subscribeConversation(){
@@ -545,22 +553,31 @@ async function sendMessage(){
  const content=$('messageInput').value.trim(),file=state.attachment,conversationId=state.active?.id,userId=state.user?.id;
  if(!conversationId||!userId||(!content&&!file)||state.uploading)return;
  state.uploading=true;$('sendBtn').disabled=true;$('messageInput').disabled=false;
+ let savedMessage=null;
  try{
   const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
   if(sessionError)throw sessionError;
   if(!session?.user?.id||session.user.id!==userId)throw new Error('انتهت جلسة الدخول. أعد تسجيل الدخول ثم حاول إرسال الرسالة مجدداً.');
   let attachment={};if(file)attachment=await uploadAttachment(file);
-  const {data:savedMessage,error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();
+  const {data,error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();
   if(error)throw error;
-  // Render the database-confirmed row immediately; Realtime echoes are deduplicated by message id.
-  if(state.active?.id===conversationId){
-   const rendered=await renderMessage(savedMessage,conversationId);
-   if(!rendered)await loadMessages();
-   $('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');resizeComposer();
-  }
-  await loadConversations();
- }catch(e){console.error('Send message failed:',e);toast(e.message||'تعذر إرسال الرسالة. بقي النص والمرفق محفوظين لإعادة المحاولة')}
- finally{state.uploading=false;resizeComposer()}
+  savedMessage=data;
+ }catch(error){
+  console.error('Message persistence failed:',error);
+  toast(error.message||'لم يتم تأكيد حفظ الرسالة. احتفظنا بالنص لإعادة المحاولة.');
+  state.uploading=false;resizeComposer();return;
+ }
+ // Database confirmation is the persistence boundary. Later UI failures must not turn a saved message into a reported send failure.
+ $('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');resizeComposer();
+ if(state.active?.id===conversationId){
+  const restored=await loadMessages();
+  if(!restored)toast('تم حفظ الرسالة في قاعدة البيانات، لكن تعذر تحديث العرض. اضغط تحديث المحادثة.');
+ }
+ try{
+  const refreshed=await loadConversations();
+  if(!refreshed)console.warn('Message saved; conversation list refresh did not complete.');
+ }catch(refreshError){console.error('Conversation list refresh failed after message was saved:',refreshError)}
+ state.uploading=false;resizeComposer();
 }
 function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';$('sendBtn').disabled=!state.active||(!n.value.trim()&&!state.attachment)}
 $('messageInput').addEventListener('input',()=>{resizeComposer();if(state.typingChannel&&Date.now()-state.typingSent>1200){state.typingSent=Date.now();state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile.display_name}})}});
