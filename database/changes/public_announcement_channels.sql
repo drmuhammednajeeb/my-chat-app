@@ -43,16 +43,28 @@ using (
 );
 
 drop policy if exists "Users can join public channels" on public.conversation_members;
-create policy "Users can join public channels"
+drop policy if exists "Creator adds first member" on public.conversation_members;
+create policy "Creator adds first member"
 on public.conversation_members for insert to authenticated
 with check (
-  user_id = (select auth.uid())
-  and role = 'member'
-  and exists (
-    select 1 from public.conversations c
-    where c.id = conversation_id
-      and c.type = 'channel'
-      and c.is_public = true
+  (
+    user_id = (select auth.uid())
+    and role = 'owner'
+    and app_private.is_conversation_creator(conversation_id)
+  )
+  or (
+    role = 'member'
+    and app_private.can_manage_conversation(conversation_id)
+  )
+  or (
+    user_id = (select auth.uid())
+    and role = 'member'
+    and exists (
+      select 1 from public.conversations c
+      where c.id = conversation_id
+        and c.type = 'channel'
+        and c.is_public = true
+    )
   )
 );
 
