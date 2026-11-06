@@ -838,7 +838,7 @@ $('sendBtn').onclick=sendMessage;$('search').oninput=()=>{
   state.directorySearch=$('search').value.trim().toLocaleLowerCase('ar').replace(/[^\\p{L}\\p{N}\\s@_-]/gu,'').slice(0,60);
   if(state.directorySearchTimer)clearTimeout(state.directorySearchTimer);
   state.directorySearchTimer=setTimeout(()=>loadDirectory(true),300);
- }else if(state.sidebarView==='channels'){renderChannelDirectory()}else renderConversations();
+ }else if(state.sidebarView==='channels'){renderMyChannels()}else renderConversations();
 };$('search').onkeydown=e=>{if(e.key==='Escape'&&state.sidebarView==='users'){$('search').value='';state.directorySearch='';loadDirectory(true)}else if(e.key==='Escape'&&state.sidebarView==='team'){$('search').value='';state.teamSearch='';renderTeamDashboard()}};
 $('refreshBtn').onclick=async()=>{
  $('refreshBtn').disabled=true;
