@@ -586,7 +586,7 @@ async function openDirectConversation(profile,button){
 async function openConversation(c){
  if(!c?.id)return;
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.messages=[];state.newMessageCount=0;updateNewMessagesIndicator();state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
+ state.active=c;state.messages=[];state.newMessageCount=0;updateNewMessagesIndicator();$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
  $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
@@ -661,8 +661,8 @@ async function searchActiveConversation(term){
  if(query.length<2){const p=document.createElement('p');p.textContent='اكتب حرفين على الأقل.';panel.append(p);return}
  const loading=document.createElement('p');loading.textContent='جارٍ البحث…';panel.append(loading);
  try{
-  const escaped=query.replace(/[\\%_]/g,'\\async function jumpToMessage(id){');
-  const {data,error}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,created_at,deleted_at').eq('conversation_id',conversationId).ilike('content','%'+escaped+'%').order('created_at',{ascending:false}).limit(30);
+  const pattern='%'+query+'%';
+  const {data,error}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,created_at,deleted_at').eq('conversation_id',conversationId).ilike('content',pattern).order('created_at',{ascending:false}).limit(30);
   if(error)throw error;if(request!==state.chatSearchRequest||state.active?.id!==conversationId)return;
   panel.replaceChildren();
   if(!data?.length){const p=document.createElement('p');p.textContent='لا توجد رسائل مطابقة في هذه المحادثة.';panel.append(p);return}
@@ -682,16 +682,17 @@ async function jumpToMessage(id){
   ]);
   if(beforeResult.error||afterResult.error)throw beforeResult.error||afterResult.error;
   const rows=[...(beforeResult.data||[]).reverse(),target,...(afterResult.data||[])].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-  const requestId=++state.messageLoadVersion;state.messages=rows;state.replyMessages=new Map();
+  const requestId=++state.messageLoadVersion;state.isLoadingMessages=true;state.messages=rows;state.replyMessages=new Map();
   const replyIds=[...new Set(rows.map(m=>m.reply_to).filter(x=>x&&!rows.some(m=>m.id===x)))];
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!parentError)(parents||[]).forEach(m=>state.replyMessages.set(m.id,m))}
   await loadMessageReactions(conversationId,rows);await loadMessagePins(conversationId);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;
   const area=$('messages');area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
-  for(const message of rows){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;await renderMessage(message,conversationId,requestId)}
+  for(const message of rows){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){state.isLoadingMessages=false;return}await renderMessage(message,conversationId,requestId)}
+  state.isLoadingMessages=false;
   row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);
   if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500)}
- }catch(error){console.error('Jump to message failed:',error);toast('تعذر تحميل الرسائل المحيطة بالرسالة المطلوبة')}
+ }catch(error){state.isLoadingMessages=false;console.error('Jump to message failed:',error);toast('تعذر تحميل الرسائل المحيطة بالرسالة المطلوبة')}
 }
 async function loadMessagePins(id){const {data,error}=await supabaseClient.from('message_pins').select('id,conversation_id,message_id,pinned_by,pinned_at').eq('conversation_id',id).order('pinned_at',{ascending:false});if(error){console.warn('Pinned messages load failed',error.message);state.pinnedMessages=new Map();renderPinnedBanner();return false}state.pinnedMessages=new Map((data||[]).map(x=>[x.message_id,x]));const missing=[...state.pinnedMessages.keys()].filter(mid=>!state.messages.some(m=>m.id===mid)&&!state.replyMessages.has(mid));if(missing.length){const {data:rows,error:messageError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at,attachment_path').eq('conversation_id',id).in('id',missing);if(!messageError)(rows||[]).forEach(m=>state.replyMessages.set(m.id,m))}renderPinnedBanner();return true}
 async function toggleMessagePin(m){if(!m?.id||!state.active?.id)return;const id=state.active.id,existing=state.pinnedMessages.get(m.id);try{if(existing){const {error}=await supabaseClient.from('message_pins').delete().eq('conversation_id',id).eq('message_id',m.id);if(error)throw error;state.pinnedMessages.delete(m.id);toast('تم إلغاء تثبيت الرسالة')}else{const {data,error}=await supabaseClient.from('message_pins').insert({conversation_id:id,message_id:m.id,pinned_by:state.user.id}).select().single();if(error)throw error;state.pinnedMessages.set(m.id,data);toast('تم تثبيت الرسالة')}renderPinnedBanner();const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===m.id);if(row)renderMessagePinMark(row,m)}catch(error){console.error('Pin action failed',error);toast('تعذر تغيير تثبيت الرسالة. تحقق من صلاحياتك')}}
