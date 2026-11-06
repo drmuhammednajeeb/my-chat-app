@@ -273,7 +273,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
   <button id="loadMoreUsers" class="sidebar-tab hidden" type="button" style="margin:0 12px 12px">عرض المزيد من المستخدمين</button>
   <div class="sidebar-foot"><span>Ultra Chat Pro 2.0</span><span id="connectionState">جارٍ الاتصال</span></div>
  </aside>
- <main class="chat">
+ <main id="chat" class="chat">
   <header class="chat-head">
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <div id="chatAvatar" class="avatar">U</div>
@@ -415,10 +415,10 @@ function setSidebarView(view){
  $('chatFilters').classList.toggle('hidden',users||channels||team);$('directoryFilters').classList.toggle('hidden',!users);$('conversationList').classList.toggle('hidden',users||channels||team);
  $('directoryList').classList.toggle('hidden',!users&&!channels);$('directorySummary').classList.toggle('hidden',!users);$('loadMoreUsers').classList.toggle('hidden',!users||!state.directoryHasMore);
  $('newChat').classList.toggle('hidden',users||channels||team);$('createChannelOpen').classList.toggle('hidden',!channels);$('refreshDirectory').classList.toggle('hidden',!users);
- document.querySelector('.searchbox').classList.toggle('hidden',team);
+ document.querySelector('.searchbox').classList.remove('hidden');
  $('sidebarSectionTitle').textContent=users?'دليل المستخدمين':channels?'استكشاف القنوات':team?'إدارة الفريق':'المحادثات';
- $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث عن قناة…':'ابحث في المحادثات…';
- $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في القنوات':'بحث المحادثات');$('search').value='';if(users)state.directorySearch='';
+ $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث عن قناة…':team?'ابحث عن مجموعة…':'ابحث في المحادثات…';
+ $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في القنوات':team?'البحث في المجموعات':'بحث المحادثات');$('search').value='';if(users)state.directorySearch='';
  $('teamDashboard').classList.toggle('hidden',!team);$('chat').classList.toggle('team-mode',team);
  if(team){$('diagnosticsPanel').hidden=true;renderTeamDashboard();if(!state.teamData)loadTeamDashboard(true)}
  else if(users){renderDirectory();if(!state.directoryUsers.length)loadDirectory()}
@@ -712,7 +712,7 @@ $('sendBtn').onclick=sendMessage;$('search').oninput=()=>{
   if(state.directorySearchTimer)clearTimeout(state.directorySearchTimer);
   state.directorySearchTimer=setTimeout(()=>loadDirectory(true),300);
  }else if(state.sidebarView==='channels'){renderChannelDirectory()}else renderConversations();
-};$('search').onkeydown=e=>{if(e.key==='Escape'&&state.sidebarView==='users'){$('search').value='';state.directorySearch='';loadDirectory(true)}};
+};$('search').onkeydown=e=>{if(e.key==='Escape'&&state.sidebarView==='users'){$('search').value='';state.directorySearch='';loadDirectory(true)}else if(e.key==='Escape'&&state.sidebarView==='team'){$('search').value='';state.teamSearch='';renderTeamDashboard()}};
 $('refreshBtn').onclick=async()=>{
  $('refreshBtn').disabled=true;
  try{
