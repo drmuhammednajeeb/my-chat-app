@@ -336,7 +336,7 @@ async function loadDirectory(reset=true){
  let query=supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id);
  if(term)query=query.or('display_name.ilike.%'+term+'%,username.ilike.%'+term+'%');
  if(state.directoryFilter==='online'){
-  const ids=Array.from(state.onlineUsers);if(!ids.length){if(requestId===state.directoryRequestId){state.directoryLoading=false;state.directoryUsers=[];renderDirectory();$('loadMoreUsers').classList.add('hidden')}return}
+  const ids=Array.from(state.onlineUsers);if(!ids.length){if(requestId===state.directoryRequestId){state.directoryLoading=false;state.directoryUsers=[];renderDirectory();$('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';$('loadMoreUsers').classList.add('hidden')}return}
   query=query.in('id',ids);
  }
  const {data,error}=await query.order('display_name',{ascending:true}).order('id',{ascending:true}).range(from,to);
@@ -371,7 +371,7 @@ function startPresence(){
  channel.on('presence',{event:'sync'},()=>{
   const presence=channel.presenceState(),ids=new Set();
   Object.values(presence).flat().forEach(item=>{if(item?.user_id)ids.add(item.user_id)});
-  state.onlineUsers=ids;if(state.sidebarView==='users')renderDirectory();
+  state.onlineUsers=ids;if(state.sidebarView==='users'){if(state.directoryFilter==='online')loadDirectory(true);else renderDirectory()}
  });
  channel.subscribe(async status=>{
   if(status==='SUBSCRIBED'){
