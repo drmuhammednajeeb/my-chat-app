@@ -276,7 +276,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
   <div class="profile"><div id="myAvatar" class="avatar">U</div><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
   <div class="sidebar-tabs" role="tablist" aria-label="أقسام التطبيق">
    <button type="button" id="chatsTab" class="sidebar-tab active" role="tab" aria-selected="true"><i class="ph ph-chats"></i> المحادثات</button>
-   <button type="button" id="channelsTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-megaphone"></i> القنوات</button>
+   <button type="button" id="channelsTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-megaphone"></i> قنواتي</button>
    <button type="button" id="usersTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-users-three"></i> المستخدمون</button>
    <button type="button" id="teamTab" class="sidebar-tab hidden" role="tab" aria-selected="false"><i class="ph ph-chart-line-up"></i> إدارة الفريق</button>
   </div>
@@ -298,7 +298,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <div id="chatAvatar" class="avatar">U</div>
    <div class="chat-title"><strong id="chatTitle">اختر محادثة</strong><small id="chatSub">محادثاتك الخاصة والمجموعات</small></div>
-   <div class="head-actions"><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
+   <div class="head-actions"><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
    <button id="debugBtn" class="iconbtn" type="button" title="تشخيص حالة المحادثة" aria-expanded="false"><i class="ph ph-bug"></i></button>
   </header>
   <div id="pinnedBanner" class="pinned-banner hidden" aria-live="polite"><button id="pinnedJump" type="button" class="pinned-jump"><i class="ph ph-push-pin"></i><span><small>رسالة مثبتة</small><strong id="pinnedText">—</strong></span></button><button id="pinnedUnpin" type="button" class="pinned-unpin" title="إلغاء التثبيت"><i class="ph ph-x"></i></button></div>
@@ -346,7 +346,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
   <div class="group-dialog-body">
    <label class="group-field-label" for="channelNameInput">اسم القناة</label><input id="channelNameInput" class="group-field" maxlength="80" placeholder="مثلاً: إعلانات الفريق">
    <label class="group-field-label" for="channelDescriptionInput">وصف القناة</label><textarea id="channelDescriptionInput" class="group-field" maxlength="500" rows="3" placeholder="ما نوع المحتوى الذي ستنشره هنا؟"></textarea>
-   <div class="group-hint">القناة عامة ويمكن للأعضاء العثور عليها والاشتراك فيها. أنت مالك القناة والمخوّل بالنشر فيها.</div>
+   <div class="group-hint">القناة خاصة بك ولا تظهر لأي مستخدم آخر. يمكنك مشاركة رابط دعوة آمن لمن تريد إضافته.</div>
   </div>
   <footer class="group-dialog-foot"><button id="cancelChannelCreation" class="group-cancel" type="button">إلغاء</button><button id="createChannelBtn" class="group-create" type="button" disabled>إنشاء القناة</button></footer>
  </section>
@@ -392,11 +392,13 @@ async function enterApp(user){
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar');
  const conversationsLoaded=await loadConversations();
+ let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
+ if(inviteToken){try{const {data,error}=await supabaseClient.rpc('join_channel_by_invite',{p_token:inviteToken});if(error)throw error;invitedChannelId=data;await loadConversations();toast('تم الانضمام إلى القناة بنجاح');}catch(error){console.error('Channel invite join failed:',error);toast(error.message||'رابط الدعوة غير صالح أو منتهي الصلاحية')}finally{const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('invite');history.replaceState({},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)}}
  await loadTeamDashboard(true);
  // Restore the latest conversation after every sign-in or page reload.
  setSidebarView('chats');
  if(conversationsLoaded&&state.conversations.length){
-  const latest=state.conversations[0];
+  const latest=(invitedChannelId&&state.conversations.find(c=>c.id===invitedChannelId))||state.conversations[0];
   await openConversation(latest);
  }else if(conversationsLoaded){
   $('chatTitle').textContent='لا توجد محادثات بعد';$('chatSub').textContent='ابدأ محادثة من دليل المستخدمين';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>لا توجد محادثات بعد</h2><p>اختر مستخدماً من دليل المستخدمين لبدء محادثة جديدة.</p></div>';
@@ -437,13 +439,13 @@ function setSidebarView(view){
  $('directoryList').classList.toggle('hidden',!users&&!channels);$('directorySummary').classList.toggle('hidden',!users);$('loadMoreUsers').classList.toggle('hidden',!users||!state.directoryHasMore);
  $('newChat').classList.toggle('hidden',users||channels||team);$('createChannelOpen').classList.toggle('hidden',!channels);$('refreshDirectory').classList.toggle('hidden',!users);
  document.querySelector('.searchbox').classList.toggle('hidden',team);
- $('sidebarSectionTitle').textContent=users?'دليل المستخدمين':channels?'استكشاف القنوات':team?'إدارة الفريق':'المحادثات';
- $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث عن قناة…':team?'ابحث عن مجموعة…':'ابحث في المحادثات…';
- $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في القنوات':team?'البحث في المجموعات':'بحث المحادثات');$('search').value='';if(users)state.directorySearch='';
+ $('sidebarSectionTitle').textContent=users?'دليل المستخدمين':channels?'قنواتي':team?'إدارة الفريق':'المحادثات';
+ $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث في قنواتك…':team?'ابحث عن مجموعة…':'ابحث في المحادثات…';
+ $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في قنواتك':team?'البحث في المجموعات':'بحث المحادثات');$('search').value='';if(users)state.directorySearch='';
  $('teamDashboard').classList.toggle('hidden',!team);$('chat').classList.toggle('team-mode',team);
  if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');renderTeamDashboard();if(!state.teamData)loadTeamDashboard(true)}
  else if(users){renderDirectory();if(!state.directoryUsers.length)loadDirectory()}
- else if(channels){loadPublicChannels()}else renderConversations();
+ else if(channels){renderMyChannels()}else renderConversations();
 }
 async function loadDirectory(reset=true){
  if(!state.user||(!reset&&state.directoryLoading))return;
@@ -571,7 +573,7 @@ async function openDirectConversation(profile,button){
 async function openConversation(c){
  if(!c?.id)return;
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.messages=[];state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
+ state.active=c;state.messages=[];state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
  stopMessagePolling();subscribeConversation();await loadMessages();if(state.active?.id===c.id)startMessagePolling(c.id);
@@ -962,43 +964,23 @@ async function changeTeamMemberRole(member,role){if(!['member','admin'].includes
 async function removeTeamMember(member){const name=member.profile?.display_name||member.profile?.username||'هذا العضو';if(!confirm('هل تريد إزالة '+name+' من المجموعة؟'))return;const {error}=await supabaseClient.from('conversation_members').delete().eq('conversation_id',member.conversation_id).eq('user_id',member.user_id);if(error){console.error(error);toast('تعذر إزالة العضو');return}toast('تمت إزالة العضو من المجموعة');await refreshTeamDashboard()}
 async function addTeamMember(){const groupId=state.teamSelectedGroupId,userId=$('teamAddMemberSelect').value;if(!groupId||!userId)return;const group=(state.teamData?.groups||[]).find(g=>g.id===groupId);if(Number(group?.member_count||0)>=200){toast('المجموعة وصلت إلى الحد الأقصى: 200 عضو');return}$('teamAddMemberBtn').disabled=true;const {error}=await supabaseClient.from('conversation_members').insert({conversation_id:groupId,user_id:userId,role:'member'});if(error){console.error(error);toast(error.code==='23514'?'المجموعة وصلت إلى الحد الأقصى: 200 عضو':error.message||'تعذر إضافة العضو');$('teamAddMemberBtn').disabled=false;return}toast('تمت إضافة العضو إلى المجموعة');await refreshTeamDashboard()}
 $('teamRefreshBtn').onclick=refreshTeamDashboard;$('teamGroupSearch').oninput=()=>{state.teamSearch=$('teamGroupSearch').value.trim().toLocaleLowerCase('ar');renderTeamGroups()};$('teamBackBtn').onclick=()=>{setSidebarView('chats');$('sidebar').classList.remove('closed')};$('teamGroupSelect').onchange=()=>{state.teamSelectedGroupId=$('teamGroupSelect').value;state.teamMembers=[];state.teamMembersLoadedFor='';renderTeamGroups();loadTeamMembers()};$('teamMemberSearch').oninput=renderTeamMembers;$('teamActivityFilter').onchange=renderTeamMembers;$('teamAddMemberSelect').onchange=()=>{const g=(state.teamData?.groups||[]).find(x=>x.id===state.teamSelectedGroupId);$('teamAddMemberBtn').disabled=!$('teamAddMemberSelect').value||Number(g?.member_count||0)>=200};$('teamAddMemberBtn').onclick=addTeamMember;
-async function loadPublicChannels(){
- const request=++channelDirectoryRequest;const list=$('directoryList');list.replaceChildren();
- const loading=document.createElement('div');loading.className='channel-empty';loading.textContent='جارٍ تحميل القنوات العامة…';list.append(loading);
- try{
-  const {data,error}=await supabaseClient.from('conversations').select('id,title,description,created_by,created_at').eq('type','channel').eq('is_public',true).order('created_at',{ascending:false}).limit(100);
-  if(error)throw error;if(request!==channelDirectoryRequest)return;
-  publicChannelsCache=data||[];renderChannelDirectory();
- }catch(error){if(request===channelDirectoryRequest){list.replaceChildren();const p=document.createElement('div');p.className='channel-empty';p.textContent='تعذر تحميل القنوات. تحقق من الاتصال ثم أعد فتح القسم.';list.append(p);console.error('Public channels load failed:',error)}}
-}
-function renderChannelDirectory(){
+function renderMyChannels(){
  const list=$('directoryList');if(!list||state.sidebarView!=='channels')return;list.replaceChildren();
  const q=$('search').value.trim().toLocaleLowerCase('ar');
- const rows=publicChannelsCache.filter(c=>((c.title||'')+' '+(c.description||'')).toLocaleLowerCase('ar').includes(q));
- if(!rows.length){const empty=document.createElement('div');empty.className='channel-empty';empty.textContent=q?'لا توجد قنوات تطابق البحث.':'لا توجد قنوات عامة بعد. أنشئ أول قناة وابدأ مشاركة الإعلانات مع الفريق.';list.append(empty);return}
+ const rows=(state.conversations||[]).filter(c=>c.type==='channel'&&((c.title||'')+' '+(c.description||'')).toLocaleLowerCase('ar').includes(q));
+ if(!rows.length){const empty=document.createElement('div');empty.className='channel-empty';empty.textContent=q?'لا توجد قناة تطابق البحث.':'لا توجد قنوات في مساحتك بعد. أنشئ قناة خاصة أو افتح رابط دعوة للانضمام إلى قناة.';list.append(empty);return}
  rows.forEach(channel=>{
-  const joined=state.conversations.find(c=>c.id===channel.id);
   const card=document.createElement('article');card.className='channel-card';
   const top=document.createElement('div');top.className='channel-card-top';
-  const icon=document.createElement('div');icon.className='channel-card-icon';icon.innerHTML='<i class="ph ph-megaphone"></i>';
+  const icon=document.createElement('div');icon.className='channel-card-icon';icon.innerHTML='<i class="ph ph-lock-key"></i>';
   const copy=document.createElement('div');copy.className='channel-card-copy';
   const title=document.createElement('strong');title.textContent=channel.title||'قناة بدون اسم';
-  const meta=document.createElement('small');meta.textContent=joined?'مشترك في القناة':'قناة عامة · يمكن للجميع الاشتراك';
+  const mine=channel.created_by===state.user.id||(channel.members||[]).some(m=>m.user_id===state.user.id&&m.role==='owner');
+  const meta=document.createElement('small');meta.textContent=mine?'قناتك الخاصة · أنت المالك':'قناة مشتركة معك عبر دعوة';
   copy.append(title,meta);top.append(icon,copy);card.append(top);
   if(channel.description){const desc=document.createElement('p');desc.textContent=channel.description;card.append(desc)}
-  const action=document.createElement('button');action.type='button';action.textContent=joined?'فتح القناة':'اشتراك في القناة';if(joined)action.className='secondary';
-  action.onclick=async()=>{
-   action.disabled=true;action.textContent=joined?'جارٍ الفتح…':'جارٍ الاشتراك…';
-   try{
-    if(joined){await openConversation(joined);return}
-    const {error}=await supabaseClient.from('conversation_members').insert({conversation_id:channel.id,user_id:state.user.id,role:'member'});
-    if(error&&error.code!=='23505')throw error;
-    await loadConversations();const membership=state.conversations.find(c=>c.id===channel.id);
-    if(!membership)throw new Error('تم الاشتراك لكن تعذر تحميل عضوية القناة. أعد تحديث المحادثات.');
-    renderChannelDirectory();await openConversation(membership);toast('تم الاشتراك في القناة بنجاح');
-   }catch(error){console.error('Channel join/open failed:',error);toast(error.message||'تعذر الاشتراك في القناة');action.disabled=false;action.textContent=joined?'فتح القناة':'اشتراك في القناة'}
-  };
-  card.append(action);list.append(card);
+  const action=document.createElement('button');action.type='button';action.textContent='فتح القناة';
+  action.onclick=()=>openConversation(channel);card.append(action);list.append(card);
  });
 }
 function openChannelModal(){
@@ -1014,12 +996,23 @@ $('createChannelBtn').onclick=async()=>{
  if(!title)return toast('اكتب اسم القناة أولاً');if(title.length>80||description.length>500)return toast('تحقق من طول الاسم والوصف');
  button.disabled=true;button.textContent='جارٍ إنشاء القناة…';
  try{
-  const {data,error}=await supabaseClient.rpc('create_public_channel',{p_title:title,p_description:description});
+  const {data,error}=await supabaseClient.rpc('create_private_channel',{p_title:title,p_description:description});
   if(error)throw error;
   closeChannelModal();await loadConversations();const created=state.conversations.find(c=>c.id===data);
-  if(created)await openConversation(created);setSidebarView('channels');toast('تم إنشاء القناة بنجاح. أنت مالك القناة ومشرف النشر.');
+  if(created)await openConversation(created);setSidebarView('channels');toast('تم إنشاء قناتك الخاصة. شارك رابط الدعوة مع من تريد.');
  }catch(error){console.error('Channel creation failed:',error);toast(error.message||'تعذر إنشاء القناة')}
  finally{button.textContent='إنشاء القناة';button.disabled=!$('channelNameInput').value.trim()}
+};
+$('shareChannelBtn').onclick=async()=>{
+ const channel=state.active;if(!channel||channel.type!=='channel')return;
+ const button=$('shareChannelBtn');button.disabled=true;
+ try{
+  const {data,error}=await supabaseClient.rpc('create_channel_invite',{p_conversation_id:channel.id});if(error)throw error;
+  const url=new URL(location.href);url.searchParams.set('invite',data);url.hash='';const link=url.toString();
+  try{await navigator.clipboard.writeText(link);toast('تم نسخ رابط الدعوة. صالح لمدة 7 أيام، وإنشاء رابط جديد يلغي السابق.');}
+  catch(_e){prompt('انسخ رابط الدعوة الخاص بالقناة:',link)}
+ }catch(error){console.error('Channel invite creation failed:',error);toast(error.message||'تعذر إنشاء رابط الدعوة')}
+ finally{button.disabled=false}
 };
 function openGroupModal(){
  if(!state.user)return toast('سجّل الدخول أولاً');
