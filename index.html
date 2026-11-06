@@ -183,7 +183,7 @@ function subscribeConversation(){
  state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=(payload?.name||'عضو')+' يكتب الآن…';clearTimeout(state.typingTimer);state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
 }
 async function editMessage(m){const text=prompt('تعديل الرسالة',m.content);if(text===null||!text.trim())return;const {error}=await supabaseClient.from('chat_messages').update({content:text.trim(),edited_at:new Date().toISOString()}).eq('id',m.id);if(error)toast('تعذر تعديل الرسالة');else loadMessages()}
-async function deleteMessage(m){if(!confirm('هل تريد حذف هذه الرسالة؟'))return;const {error}=await supabaseClient.from('chat_messages').update({deleted_at:new Date().toISOString(),content:'',attachment_path:null}).eq('id',m.id);if(error)toast('تعذر حذف الرسالة');else loadMessages()}
+async function deleteMessage(m){if(!confirm('هل تريد حذف هذه الرسالة؟'))return;const {error}=await supabaseClient.from('chat_messages').update({deleted_at:new Date().toISOString(),content:'تم حذف الرسالة',attachment_path:null}).eq('id',m.id);if(error)toast('تعذر حذف الرسالة');else loadMessages()}
 async function uploadAttachment(file){
  if(!state.active)throw new Error('اختر محادثة أولاً');
  if(file.size>12*1024*1024)throw new Error('الحد الأقصى لحجم الملف 12 ميجابايت');
