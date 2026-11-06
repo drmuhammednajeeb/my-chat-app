@@ -274,7 +274,7 @@ const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const $=id=>document.getElementById(id);
-const state={user:null,profile:null,conversations:[],memberReads:{},conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
+const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,authMode:'login',messageIds:new Set(),realtimeStatus:'CONNECTING'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -468,7 +468,8 @@ async function openDirectConversation(profile,button){
 async function openConversation(c){
  state.active=c;state.messageIds.clear();renderConversations();$('chatTitle').textContent=convName(c);$('chatSub').textContent=c.type==='group'?'مجموعة · '+c.members.length+' أعضاء':'محادثة خاصة';$('chatAvatar').textContent=initials(convName(c));$('messageInput').disabled=false;$('sendBtn').disabled=false;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
- await loadMessages();subscribeConversation();
+ // Subscribe before the initial read so messages arriving during loading are not missed.
+ subscribeConversation();await loadMessages();
 }
 async function renderMessage(m){
  if(state.messageIds.has(m.id))return;state.messageIds.add(m.id);
