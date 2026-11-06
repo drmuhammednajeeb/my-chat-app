@@ -156,7 +156,7 @@ async function renderMessage(m){
  const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
  const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
  const mine=m.sender_id===state.user.id,member=state.active.members.find(x=>x.user_id===m.sender_id),sender=member?.profile?.display_name||'عضو';
- const row=document.createElement('article');row.className='message'+(mine?' mine':'');
+ const row=document.createElement('article');row.className='message'+(mine?' mine':'');row.dataset.day=day;
  const bubble=document.createElement('div');bubble.className='bubble'+(m.deleted_at?' deleted':'');
  if(!mine&&state.active.type==='group'){const label=document.createElement('div');label.className='sender';label.textContent=sender;row.append(label)}
  if(m.deleted_at){bubble.textContent='تم حذف هذه الرسالة'}else{
@@ -173,7 +173,7 @@ async function loadMessages(){
  if(error){toast('تعذر تحميل الرسائل');console.error(error);return}
  await supabaseClient.from('conversation_members').update({last_read_at:new Date().toISOString()}).eq('conversation_id',state.active.id).eq('user_id',state.user.id);
  area.replaceChildren();state.messageIds.clear();if(!data.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>';return}
- await Promise.all(data.map(renderMessage));area.scrollTop=area.scrollHeight;
+ for(const message of data)await renderMessage(message);area.scrollTop=area.scrollHeight;
 }
 function subscribeConversation(){
  if(state.channel)supabaseClient.removeChannel(state.channel);
