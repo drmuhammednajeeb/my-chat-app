@@ -20,7 +20,9 @@ self.addEventListener("install", event => {
     await cache.addAll([
       new URL("./", base).href,
       new URL("./manifest.json", base).href,
-      new URL("./icon-512.png", base).href,\n      new URL("./icon-1024.png", base).href,\n      new URL("./apple-touch-icon.png", base).href
+      new URL("./icon-512.png", base).href,
+      new URL("./icon-1024.png", base).href,
+      new URL("./apple-touch-icon.png", base).href
     ]);
     await self.skipWaiting();
   })());
