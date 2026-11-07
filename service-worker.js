@@ -52,10 +52,18 @@ self.addEventListener("fetch", event => {
         }
         return response;
       });
-      return cached || network.catch(() => new Response("", {
-        status: 503,
-        statusText: "Offline static asset unavailable"
-      }));
+      if (cached) {
+        network.catch(() => {});
+        return cached;
+      }
+      try {
+        return await network;
+      } catch {
+        return new Response("", {
+          status: 503,
+          statusText: "Offline static asset unavailable"
+        });
+      }
     })());
     return;
   }
