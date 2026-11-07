@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101a2a"><meta name="description" content="Ultra Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.json"><link rel="icon" href="./icons/ultra-chat.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./icons/ultra-chat.svg">
 <title>Ultra Chat Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,6 +17,10 @@
 .sidebar{border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0;background:#0e1929}
 .brand{padding:23px 22px 18px;display:flex;align-items:center;gap:12px}.brandmark{width:44px;height:44px;border-radius:15px;background:linear-gradient(145deg,#55d5bd,#258e8a);display:grid;place-items:center;color:#062b2a;font-size:24px;box-shadow:0 8px 24px #2cb5a33b}.brand h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.1px}.brand p{font-size:11px;margin:1px 0 0;color:var(--muted)}
 .profile{margin:0 15px 17px;padding:11px;border:1px solid var(--line);background:var(--panel);border-radius:16px;display:flex;align-items:center;gap:10px}.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#294d69,#327e83);display:grid;place-items:center;overflow:hidden;font-weight:800;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.profile-info{min-width:0;flex:1}.profile-info strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profile-info small{color:var(--muted);font-size:11px}.iconbtn{width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--muted);display:grid;place-items:center;font-size:18px;transition:.2s}.iconbtn:hover{color:var(--text);border-color:#49627e}
+.install-app-btn{width:auto;min-width:40px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:7px;color:var(--accent);font-size:12px;font-weight:800;white-space:nowrap}
+.install-app-btn svg{width:17px;height:17px;flex:none}
+.install-app-btn[hidden]{display:none!important}
+@media(max-width:520px){.install-app-btn{width:38px;min-width:38px;padding:0}.install-app-label{display:none}}
 .searchbox{margin:0 15px 13px;position:relative}.searchbox i{position:absolute;right:13px;top:12px;color:var(--muted)}.searchbox input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:10px 38px 10px 12px;color:var(--text);outline:none}.searchbox input:focus,.field:focus{border-color:var(--accent)}
 .sectionhead{padding:8px 19px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:700}.sectionhead button{border:0;background:none;color:var(--accent);font-size:19px}
 .sectionhead .new-group-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border:0;border-radius:10px;background:#d9fdd3;color:#075e54;font-size:11px;font-weight:800;white-space:nowrap;transition:background .18s,transform .18s}.sectionhead .new-group-btn:hover{background:#c6f3be;transform:translateY(-1px)}.sectionhead .new-group-btn i{font-size:15px}
@@ -298,7 +304,7 @@ html,body{height:100%;min-height:100%;overflow:hidden}
 #chat.chat{height:100%;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column}
 #chat>.chat-head{flex:0 0 auto;min-height:66px}
 #chat>#chatSearchPanel,#chat>#pinnedBanner,#chat>#diagnosticsPanel{flex:0 0 auto}
-#chat>#messages.messages{flex:1 1 0%;min-height:0;max-height:none;overscroll-behavior:contain;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+#chat>#messages.messages{flex:1 1 0%;min-height:0;max-height:none;overscroll-behavior:contain;padding-bottom:max(80px,env(safe-area-inset-bottom))}
 #chat>#typing.typing{flex:0 0 23px;min-height:23px}
 #chat>.composer-wrap{
  position:sticky;
@@ -320,7 +326,7 @@ html,body{height:100%;min-height:100%;overflow:hidden}
 @media(max-width:760px){
  #app.app{height:100dvh;height:100svh;height:100dvh;min-height:0}
  #chat.chat{min-height:0;height:100%;padding-bottom:0}
- #chat>#messages.messages{padding:14px 12px max(26px,env(safe-area-inset-bottom))}
+ #chat>#messages.messages{padding:14px 12px max(80px,env(safe-area-inset-bottom))}
  #chat>.composer-wrap{padding:8px 10px calc(8px + env(safe-area-inset-bottom));}
  #chat .composer{gap:7px;padding:7px;border-radius:16px}
  #chat .composer textarea{min-height:40px;max-height:120px;padding:8px 6px}
@@ -399,7 +405,7 @@ html,body{height:100%;min-height:100%;overflow:hidden}
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <div id="chatAvatar" class="avatar">U</div>
    <div class="chat-title"><strong id="chatTitle">اختر محادثة</strong><small id="chatSub">محادثاتك الخاصة والمجموعات</small></div>
-   <div class="head-actions"><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
+   <div class="head-actions"><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت Ultra Chat Pro" aria-label="تثبيت التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
    <button id="debugBtn" class="iconbtn" type="button" title="تشخيص حالة المحادثة" aria-expanded="false"><i class="ph ph-bug"></i></button>
   </header>
   <div id="chatSearchPanel" class="chat-search-panel hidden"><div class="chat-search-top"><input id="chatSearchInput" type="search" placeholder="ابحث في رسائل هذه المحادثة…" autocomplete="off"><button id="chatSearchClose" type="button" title="إغلاق البحث"><i class="ph ph-x"></i></button></div><div id="chatSearchResults" class="chat-search-results"><p>اكتب كلمة للبحث داخل المحادثة الحالية.</p></div></div>
@@ -465,6 +471,27 @@ const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
+let deferredInstallPrompt=null;
+const installAppButton=$('installAppBtn');
+if(installAppButton&&(window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true))installAppButton.hidden=true;
+window.addEventListener('beforeinstallprompt',event=>{
+ event.preventDefault();deferredInstallPrompt=event;
+ if(installAppButton)installAppButton.hidden=false;
+});
+window.addEventListener('appinstalled',()=>{
+ deferredInstallPrompt=null;if(installAppButton)installAppButton.hidden=true;
+});
+installAppButton?.addEventListener('click',async()=>{
+ if(!deferredInstallPrompt){toast('لتثبيت التطبيق: افتح قائمة المتصفح ثم اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».');return}
+ const promptEvent=deferredInstallPrompt;deferredInstallPrompt=null;
+ try{await promptEvent.prompt();await promptEvent.userChoice;}catch(error){console.warn('PWA install prompt:',error)}
+ if(installAppButton)installAppButton.hidden=true;
+});
+if('serviceWorker' in navigator&&location.protocol==='https:'){
+ window.addEventListener('load',()=>{
+  navigator.serviceWorker.register('./service-worker.js').catch(error=>console.warn('Service worker registration failed:',error));
+ });
+}
 const groupSelectedProfiles=new Map();let groupSearchTimer=null;let groupSearchRequest=0;let publicChannelsCache=[];let channelDirectoryRequest=0;
 let messagesScrollFrame=0;
 function showListSkeleton(container,count=5){
