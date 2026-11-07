@@ -683,7 +683,6 @@ function recordPerf(metric,duration,details={}){
  const network={supabase_resource_count:resources.length,reported_transfer_bytes:resources.reduce((sum,item)=>sum+(item.transferSize||0),0),reported_encoded_bytes:resources.reduce((sum,item)=>sum+(item.encodedBodySize||0),0),avg_resource_ms:resources.length?Math.round(resources.reduce((sum,item)=>sum+item.duration,0)/resources.length):0,bytes_may_be_zero_when_cross_origin_timing_is_restricted:true};
  const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
  return {metrics,percentile_method:'nearest-rank',network,connection:connection?{effectiveType:connection.effectiveType||null,downlink_mbps:connection.downlink||null,rtt_ms:connection.rtt||null,saveData:!!connection.saveData}:null,long_tasks:perfSamples.filter(x=>x.metric==='long_task').slice(-10).map(x=>({ms:x.ms,at:x.at})),stored_samples:perfSamples.length,storage:'local browser only'};
-}ll,rtt_ms:connection.rtt||null,saveData:!!connection.saveData}:null,long_tasks:perfSamples.filter(x=>x.metric==='long_task').slice(-10).map(x=>({ms:x.ms,at:x.at})),stored_samples:perfSamples.length,storage:'local browser only'};
 }
 if(typeof PerformanceObserver!=='undefined'){try{const longTaskObserver=new PerformanceObserver(list=>list.getEntries().forEach(entry=>recordPerf('long_task',entry.duration)));longTaskObserver.observe({type:'longtask',buffered:true})}catch(_e){}}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
