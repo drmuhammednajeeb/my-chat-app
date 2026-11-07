@@ -672,14 +672,19 @@ function recordPerf(metric,duration,details={}){
  const sample={metric,ms:Math.round(Math.max(0,Number(duration)||0)*10)/10,at:Date.now(),...details};
  perfSamples.push(sample);if(perfSamples.length>80)perfSamples.splice(0,perfSamples.length-80);
  // Batch storage writes so instrumentation does not add synchronous I/O to message rendering.
- if(perfunction performanceSummary(){
+ if(perfPersistTimer)clearTimeout(perfPersistTimer);
+ perfPersistTimer=setTimeout(persistPerfSamples,1200);
+ if(!$('diagnosticsPanel')?.hidden)updateDiagnostics();
+}
+window.addEventListener('pagehide',persistPerfSamples,{capture:true});
+function performanceSummary(){
  const metrics={};
  const percentile=(sorted,p)=>sorted.length?sorted[Math.max(0,Math.ceil(sorted.length*p)-1)]:null;
  for(const metric of ['profile_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total']){
   const values=perfSamples.filter(x=>x.metric===metric).slice(-50).map(x=>x.ms).sort((a,b)=>a-b);
   if(values.length)metrics[metric]={samples:values.length,avg_ms:Math.round(values.reduce((a,b)=>a+b,0)/values.length),p50_ms:percentile(values,.50),p95_ms:percentile(values,.95),max_ms:values[values.length-1]};
  }
- const resources=performance.getEntriesByType('resource').filter(entry=>/supabase\\.co\\/(rest|storage|auth|realtime)/i.test(entry.name)).slice(-100);
+ const resources=performance.getEntriesByType('resource').filter(entry=>/supabase\.co\/(rest|storage|auth|realtime)/i.test(entry.name)).slice(-100);
  const network={supabase_resource_count:resources.length,reported_transfer_bytes:resources.reduce((sum,item)=>sum+(item.transferSize||0),0),reported_encoded_bytes:resources.reduce((sum,item)=>sum+(item.encodedBodySize||0),0),avg_resource_ms:resources.length?Math.round(resources.reduce((sum,item)=>sum+item.duration,0)/resources.length):0,bytes_may_be_zero_when_cross_origin_timing_is_restricted:true};
  const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
  return {metrics,percentile_method:'nearest-rank',network,connection:connection?{effectiveType:connection.effectiveType||null,downlink_mbps:connection.downlink||null,rtt_ms:connection.rtt||null,saveData:!!connection.saveData}:null,long_tasks:perfSamples.filter(x=>x.metric==='long_task').slice(-10).map(x=>({ms:x.ms,at:x.at})),stored_samples:perfSamples.length,storage:'local browser only'};
