@@ -7,7 +7,7 @@
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script>
@@ -53,7 +53,32 @@ html.auth-booting #auth,html.auth-booting #app{visibility:hidden!important}
 .day-divider{align-self:center;padding:6px 13px;border:1px solid var(--line);background:#142238;color:var(--muted);border-radius:30px;font-size:10px;margin:15px 0}
 .message{max-width:min(75%,600px);display:flex;flex-direction:column;gap:4px;align-self:flex-start}.message.mine{align-self:flex-end}.sender{font-size:10px;color:var(--accent);padding:0 7px}.bubble{position:relative;padding:10px 13px 7px;border:1px solid var(--line);border-radius:17px 5px 17px 17px;background:var(--bubble);font-size:14px;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap}.mine .bubble{background:linear-gradient(145deg,#176d68,#145b5b);border-color:#2a827a;border-radius:5px 17px 17px 17px}.bubble.deleted{color:var(--muted);font-style:italic}.bubble img{display:block;max-width:100%;max-height:300px;border-radius:11px;margin-bottom:7px;cursor:zoom-in}.meta{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:9px;color:#b6c8d0a8;margin-top:2px}.msg-actions{display:flex;gap:5px;opacity:0;position:absolute;top:-15px;left:3px}.message:hover .msg-actions{opacity:1}.msg-actions button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;padding:3px 6px;font-size:10px}
 .typing{height:23px;padding:0 26px;color:var(--muted);font-size:11px;flex:none}
-.composer-wrap{padding:10px clamp(12px,4vw,58px) max(16px,env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--bg) 70%,transparent)}.composer{display:flex;align-items:flex-end;gap:9px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:19px;box-shadow:var(--shadow)}.composer textarea{flex:1;resize:none;max-height:130px;min-height:40px;padding:9px 8px;background:transparent;border:0;outline:none;color:var(--text);line-height:1.5}.send{width:42px;height:42px;border:0;border-radius:14px;background:var(--accent);color:#062a28;font-size:19px;display:grid;place-items:center}.attach{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px}.voice-record-btn{width:40px;height:40px;flex:none;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:20px;display:grid;place-items:center;cursor:pointer}.voice-record-btn.recording{background:#fee2e2;color:#b91c1c;animation:voicePulse 1.25s ease-in-out infinite}.voice-record-btn:disabled{opacity:.4;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.voice-record-btn.recording{animation:none}}.voice-cancel-btn{color:#dc5555}@keyframes voicePulse{50%{box-shadow:0 0 0 6px #ef444422}}.message-audio{display:block;width:min(280px,65vw);max-width:100%;height:40px;margin:5px 0;accent-color:var(--accent)}.composer-hint{text-align:center;color:#71849b;font-size:10px;margin-top:7px}
+.composer-wrap{padding:10px clamp(12px,4vw,58px) max(16px,env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--bg) 70%,transparent)}.composer{display:flex;align-items:flex-end;gap:9px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:19px;box-shadow:var(--shadow)}.composer textarea{flex:1;resize:none;max-height:130px;min-height:40px;padding:9px 8px;background:transparent;border:0;outline:none;color:var(--text);line-height:1.5}.send{width:42px;height:42px;border:0;border-radius:14px;background:var(--accent);color:#062a28;font-size:19px;display:grid;place-items:center}.attach{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px}.voice-record-btn{width:40px;height:40px;flex:none;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:20px;display:grid;place-items:center;cursor:pointer}.voice-record-btn.recording{background:#fee2e2;color:#b91c1c;animation:voicePulse 1.25s ease-in-out infinite}.voice-record-btn:disabled{opacity:.4;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.voice-record-btn.recording{animation:none}}.voice-cancel-btn{color:#dc5555}@keyframes voicePulse{50%{box-shadow:0 0 0 6px #ef444422}}
+/* WhatsApp-inspired dark voice recorder */
+.composer.voice-recording-active{gap:9px;padding:7px 9px;min-height:60px;background:#101b2a;border:1px solid #26394b;border-radius:18px;box-shadow:inset 0 1px 0 #ffffff08}
+.composer.voice-recording-active #voiceRecordBtn,.composer.voice-recording-active #voiceCancelBtn,.composer.voice-recording-active #attachBtn,.composer.voice-recording-active #messageInput{display:none}
+.voice-recording-controls{display:flex;align-items:center;gap:clamp(8px,2vw,15px);flex:1;min-width:0;direction:rtl}
+.voice-recording-controls.hidden{display:none!important}
+.voice-control-btn{width:40px;height:40px;min-width:40px;flex:none;border:1px solid transparent;border-radius:50%;display:grid;place-items:center;font-size:20px;transition:transform .16s ease,background .16s ease,border-color .16s ease}
+.voice-control-btn:active{transform:scale(.93)}
+.voice-pause-btn{background:#26384b;color:#e6edf4;border-color:#354b61}
+.voice-pause-btn:hover{background:#31475d}
+.voice-trash-btn{width:38px;height:38px;min-width:38px;background:#2b2028;color:#ff737d;border-color:#55303a}
+.voice-trash-btn:hover{background:#3b252e;border-color:#75404b}
+.voice-recording-time{min-width:54px;color:#f1f5f9;font-family:"Cairo",sans-serif;font-size:15px;font-weight:800;letter-spacing:.4px;font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
+.voice-recording-meta{display:flex;flex-direction:column;justify-content:center;gap:5px;flex:1;min-width:0}
+.voice-recording-status{display:flex;align-items:center;gap:6px;color:#a9bac9;font-family:"Cairo",sans-serif;font-size:10px;font-weight:700;white-space:nowrap}
+.voice-recording-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#ff5b66;box-shadow:0 0 0 3px #ff5b6620;animation:voiceDotPulse 1.3s ease-in-out infinite}
+.voice-recording-controls.is-paused .voice-recording-dot{background:#91a3b5;box-shadow:0 0 0 3px #91a3b520;animation:none}
+.voice-waveform{height:25px;display:flex;align-items:center;justify-content:space-between;gap:2px;overflow:hidden;min-width:0}
+.voice-waveform span{display:block;width:3px;min-width:2px;height:var(--bar-height);max-height:23px;border-radius:5px;background:#31c5a6;opacity:.92;transform:scaleY(.58);animation:voiceWave .85s ease-in-out infinite alternate;animation-delay:calc(var(--bar-index)*-55ms)}
+.voice-recording-controls.is-paused .voice-waveform span{animation-play-state:paused;opacity:.48;transform:scaleY(.45)}
+.composer.voice-recording-active #sendBtn{width:46px;height:46px;min-width:46px;border:0;border-radius:50%;background:#00a884;color:#06231d;font-size:21px;box-shadow:0 5px 16px #00a88435}
+.composer.voice-recording-active #sendBtn:hover{background:#10b995}
+@keyframes voiceWave{from{transform:scaleY(.32)}to{transform:scaleY(1)}}
+@keyframes voiceDotPulse{50%{box-shadow:0 0 0 6px #ff5b6618}}
+@media(max-width:480px){.composer.voice-recording-active{gap:6px;padding:6px 7px}.voice-control-btn{width:36px;height:36px;min-width:36px;font-size:18px}.voice-trash-btn{width:34px;height:34px;min-width:34px}.voice-recording-time{min-width:48px;font-size:13px}.voice-recording-controls{gap:7px}.voice-waveform{gap:1px}.voice-waveform span{width:2px;min-width:2px}}
+@media(prefers-reduced-motion:reduce){.voice-waveform span,.voice-recording-dot{animation:none!important}.voice-control-btn{transition:none}}.message-audio{display:block;width:min(280px,65vw);max-width:100%;height:40px;margin:5px 0;accent-color:var(--accent)}.composer-hint{text-align:center;color:#71849b;font-size:10px;margin-top:7px}
 .auth-screen{min-height:100dvh;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 20% 15%,#1a786c2b,transparent 40%),radial-gradient(ellipse at 80% 90%,#2855a52a,transparent 40%),var(--bg)}
 .auth-card{width:min(100%,440px);padding:34px;background:#111e30;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:27px}.auth-brand .brandmark{width:52px;height:52px}.auth-card h2{font-size:25px;margin:0 0 7px}.auth-card>p{color:var(--muted);font-size:13px;margin:0 0 24px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);padding:4px;border-radius:12px;margin-bottom:20px}.tabs button{border:0;background:none;color:var(--muted);padding:9px;border-radius:9px}.tabs button.active{background:var(--panel3);color:var(--text)}.form-row{margin:13px 0}.form-row label{display:block;font-size:12px;color:#b5c4d6;margin-bottom:7px}.field{width:100%;border:1px solid var(--line);background:#0d1726;border-radius:12px;padding:12px 13px;color:var(--text);outline:none}.primary{width:100%;border:0;border-radius:12px;background:linear-gradient(110deg,#56d5bb,#2da999);color:#052d2a;padding:13px;font-weight:800;margin-top:12px}.auth-note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:17px}.alert{padding:10px 12px;border-radius:10px;background:#502c36;color:#ffc4c4;font-size:12px;margin:10px 0}.auth-status{padding:10px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px;line-height:1.7;margin:10px 0}.auth-status[hidden]{display:none!important}.reset-password-wrap{margin-top:12px;text-align:center}.reset-password-link{border:0;background:none;color:#62d8c0;font-size:12px;font-weight:700;cursor:pointer;padding:7px 10px}.reset-password-link:disabled{opacity:.5;cursor:not-allowed}.reset-countdown{font-size:12px;color:var(--muted);line-height:1.8;margin-top:5px}.reset-countdown strong{color:#62d8c0;font-variant-numeric:tabular-nums}.hidden{display:none!important}.mobile-back{display:none}
 @media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:absolute;inset:0;z-index:4;transition:transform .25s}.sidebar.closed{transform:translateX(105%)}.chat{grid-column:1}.mobile-back{display:grid}.chat-head{height:66px;padding:0 12px}.messages{padding:16px 12px}.message{max-width:88%}.head-actions .optional{display:none}.brand{padding-top:max(16px,env(safe-area-inset-top))}.composer-wrap{padding-left:10px;padding-right:10px}.auth-card{padding:25px 20px}}
@@ -490,6 +515,12 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
    <button id="voiceRecordBtn" class="voice-record-btn" type="button" title="تسجيل رسالة صوتية" aria-label="تسجيل رسالة صوتية"><i class="ph ph-microphone"></i></button><button id="voiceCancelBtn" class="voice-record-btn voice-cancel-btn hidden" type="button" title="إلغاء التسجيل" aria-label="إلغاء التسجيل"><i class="ph ph-x"></i></button><button id="attachBtn" class="attach" title="إرفاق صورة أو ملف"><i class="ph ph-paperclip"></i></button>
    <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" class="hidden">
    <textarea id="messageInput" rows="1" maxlength="5000" placeholder="اكتب رسالتك هنا…" aria-label="رسالة جديدة" disabled></textarea>
+   <div id="voiceRecordingControls" class="voice-recording-controls hidden" role="group" aria-label="التحكم في التسجيل الصوتي">
+    <button id="voicePauseBtn" class="voice-control-btn voice-pause-btn" type="button" aria-label="إيقاف مؤقت" title="إيقاف مؤقت"><i class="ph ph-pause"></i></button>
+    <strong id="voiceRecordingTime" class="voice-recording-time" dir="ltr" aria-live="off">٠٠:٠٠</strong>
+    <div class="voice-recording-meta"><div class="voice-recording-status"><span class="voice-recording-dot"></span><span id="voiceRecordingStatus">جارٍ التسجيل</span></div><div class="voice-waveform" aria-hidden="true"><span style="--bar-height:7px;--bar-index:0"></span><span style="--bar-height:12px;--bar-index:1"></span><span style="--bar-height:17px;--bar-index:2"></span><span style="--bar-height:9px;--bar-index:3"></span><span style="--bar-height:21px;--bar-index:4"></span><span style="--bar-height:13px;--bar-index:5"></span><span style="--bar-height:25px;--bar-index:6"></span><span style="--bar-height:10px;--bar-index:7"></span><span style="--bar-height:16px;--bar-index:8"></span><span style="--bar-height:22px;--bar-index:9"></span><span style="--bar-height:8px;--bar-index:10"></span><span style="--bar-height:18px;--bar-index:11"></span><span style="--bar-height:26px;--bar-index:12"></span><span style="--bar-height:12px;--bar-index:13"></span><span style="--bar-height:20px;--bar-index:14"></span><span style="--bar-height:9px;--bar-index:15"></span><span style="--bar-height:15px;--bar-index:16"></span><span style="--bar-height:23px;--bar-index:17"></span><span style="--bar-height:11px;--bar-index:18"></span><span style="--bar-height:19px;--bar-index:19"></span><span style="--bar-height:8px;--bar-index:20"></span><span style="--bar-height:24px;--bar-index:21"></span><span style="--bar-height:14px;--bar-index:22"></span><span style="--bar-height:10px;--bar-index:23"></span></div></div>
+    <button id="voiceTrashBtn" class="voice-control-btn voice-trash-btn" type="button" aria-label="حذف التسجيل" title="حذف التسجيل"><i class="ph ph-trash"></i></button>
+   </div>
    <button id="sendBtn" class="send" disabled title="إرسال"><i class="ph ph-paper-plane-tilt"></i></button>
   </div><div id="attachmentPreview" class="hidden" style="font-size:11px;color:var(--muted);padding:7px 12px"></div><div class="composer-hint">Enter لإضافة سطر جديد · زر الإرسال لإرسال الرسالة</div></div>
   <section id="teamDashboard" class="team-dashboard hidden" aria-label="لوحة إدارة الفريق">
@@ -611,7 +642,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
 const perfSamples=(()=>{try{const value=JSON.parse(localStorage.getItem(PERF_STORAGE_KEY)||'[]');return Array.isArray(value)?value.slice(-80):[]}catch(_e){return []}})();
@@ -1583,17 +1614,56 @@ function subscribeConversation(){
 }
 async function editMessage(m){beginEditMessage(m)}
 async function deleteMessage(m){if(m.sender_id!==state.user?.id||m.deleted_at)return;if(!confirm('هل تريد حذف هذه الرسالة؟'))return;const {error}=await supabaseClient.from('chat_messages').update({deleted_at:new Date().toISOString(),content:'تم حذف الرسالة',attachment_path:null,attachment_type:null}).eq('id',m.id).eq('sender_id',state.user.id);if(error){toast('تعذر حذف الرسالة');return}if(state.replyTarget?.id===m.id)cancelComposerContext();await loadMessages()}
-function formatVoiceDuration(seconds){const total=Math.max(0,Math.floor(seconds||0));return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0')}
+function formatVoiceDuration(seconds){
+ const total=Math.max(0,Math.floor(seconds||0)),minutes=String(Math.floor(total/60)).padStart(2,'0'),secs=String(total%60).padStart(2,'0');
+ return (minutes+':'+secs).replace(/\\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+}
+function currentVoiceElapsedMs(){
+ return Math.max(0,state.voiceElapsedMs+(state.voicePaused||!state.voiceSegmentStartedAt?0:Date.now()-state.voiceSegmentStartedAt));
+}
+function updateVoiceRecordingUI(){
+ const controls=$('voiceRecordingControls'),time=$('voiceRecordingTime'),pause=$('voicePauseBtn'),status=$('voiceRecordingStatus');
+ if(!controls||!state.voiceRecorder)return;
+ const elapsed=Math.floor(currentVoiceElapsedMs()/1000);
+ if(time)time.textContent=formatVoiceDuration(elapsed);
+ controls.classList.toggle('is-paused',!!state.voicePaused);
+ if(status)status.textContent=state.voicePaused?'متوقف مؤقتاً':'جارٍ التسجيل';
+ if(pause){pause.innerHTML=state.voicePaused?'<i class="ph ph-play"></i>':'<i class="ph ph-pause"></i>';pause.setAttribute('aria-label',state.voicePaused?'استئناف التسجيل':'إيقاف مؤقت');pause.title=state.voicePaused?'استئناف التسجيل':'إيقاف مؤقت'}
+}
 function clearVoiceTimer(){if(state.voiceTimer){clearInterval(state.voiceTimer);state.voiceTimer=null}}
-function clearVoiceTimer(){if(state.voiceTimer){clearInterval(state.voiceTimer);state.voiceTimer=null}}
+function setVoiceComposerActive(active){
+ const composer=$('voiceRecordBtn')?.closest('.composer');
+ composer?.classList.toggle('voice-recording-active',!!active);
+ $('voiceRecordingControls')?.classList.toggle('hidden',!active);
+ if(!active){
+  const send=$('sendBtn');if(send)send.innerHTML='<i class="ph ph-paper-plane-tilt"></i>';
+ }
+}
 function cleanupVoiceCapture(){
  clearVoiceTimer();
  if(state.voiceAudioProcessor){try{state.voiceAudioProcessor.disconnect()}catch(_e){}state.voiceAudioProcessor=null}
  if(state.voiceAudioSource){try{state.voiceAudioSource.disconnect()}catch(_e){}state.voiceAudioSource=null}
  if(state.voiceAudioContext){const context=state.voiceAudioContext;state.voiceAudioContext=null;if(context.state!=='closed')context.close().catch(()=>{})}
  if(state.voiceStream){state.voiceStream.getTracks().forEach(track=>track.stop());state.voiceStream=null}
- state.voiceRecorder=null;state.voiceChunks=[];state.voiceStartedAt=null;
- $('voiceRecordBtn').classList.remove('recording');$('voiceRecordBtn').innerHTML='<i class="ph ph-microphone"></i>';$('voiceRecordBtn').title='تسجيل رسالة صوتية';$('voiceCancelBtn').classList.add('hidden')
+ state.voiceRecorder=null;state.voiceChunks=[];state.voiceStartedAt=null;state.voiceElapsedMs=0;state.voiceSegmentStartedAt=null;state.voicePaused=false;
+ $('voiceRecordBtn').classList.remove('recording');$('voiceRecordBtn').innerHTML='<i class="ph ph-microphone"></i>';$('voiceRecordBtn').title='تسجيل رسالة صوتية';$('voiceCancelBtn').classList.add('hidden');
+ setVoiceComposerActive(false);
+}
+function pauseVoiceRecording(){
+ const recorder=state.voiceRecorder;if(!recorder||state.voicePaused||recorder.state!=='recording'||typeof recorder.pause!=='function')return;
+ try{recorder.pause();if(state.voiceSegmentStartedAt)state.voiceElapsedMs+=Date.now()-state.voiceSegmentStartedAt;state.voiceSegmentStartedAt=null;state.voicePaused=true;updateVoiceRecordingUI()}catch(error){console.warn('Voice pause failed:',error);toast('تعذر إيقاف التسجيل مؤقتاً في هذا المتصفح')}
+}
+function resumeVoiceRecording(){
+ const recorder=state.voiceRecorder;if(!recorder||!state.voicePaused||recorder.state!=='paused'||typeof recorder.resume!=='function')return;
+ try{recorder.resume();state.voicePaused=false;state.voiceSegmentStartedAt=Date.now();updateVoiceRecordingUI()}catch(error){console.warn('Voice resume failed:',error);toast('تعذر استئناف التسجيل')}
+}
+function toggleVoicePause(){if(state.voicePaused)resumeVoiceRecording();else pauseVoiceRecording()}
+function sendVoiceRecording(){
+ if(!state.voiceRecorder)return;
+ state.voiceSendOnStop=true;
+ const send=$('sendBtn');if(send)send.disabled=true;
+ if(state.voicePaused){state.voicePaused=false;state.voiceSegmentStartedAt=null}
+ stopVoiceRecording();
 }
 function encodeVoiceWav(chunks,sampleRate){
  const total=chunks.reduce((sum,chunk)=>sum+chunk.length,0),input=new Float32Array(total);let offset=0;
@@ -1613,7 +1683,7 @@ async function createFallbackVoiceRecorder(stream){
  const source=context.createMediaStreamSource(stream),processor=context.createScriptProcessor(4096,1,1),chunks=[];
  processor.onaudioprocess=event=>{if(!state.voiceRecorder||state.voiceRecorder.state!=='recording')return;chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));event.outputBuffer.getChannelData(0).fill(0)};
  source.connect(processor);processor.connect(context.destination);state.voiceAudioSource=source;state.voiceAudioProcessor=processor;
- return {state:'recording',mimeType:'audio/wav',onstop:null,stop(){if(this.state==='inactive')return;this.state='inactive';state.voiceChunks=[encodeVoiceWav(chunks,context.sampleRate)];if(typeof this.onstop==='function')this.onstop()}};
+ return {state:'recording',mimeType:'audio/wav',onstop:null,pause(){if(this.state==='recording')this.state='paused'},resume(){if(this.state==='paused')this.state='recording'},stop(){if(this.state==='inactive')return;this.state='inactive';state.voiceChunks=[encodeVoiceWav(chunks,context.sampleRate)];if(typeof this.onstop==='function')this.onstop()}};
 }
 function showAttachmentPreview(file,label){const preview=$('attachmentPreview');preview.replaceChildren();const text=document.createElement('span');text.textContent=label||('المرفق المحدد: '+file.name+' ('+Math.ceil(file.size/1024)+' كيلوبايت)');preview.append(text);const clear=document.createElement('button');clear.type='button';clear.textContent='إزالة';clear.style.cssText='margin-inline-start:12px;border:0;background:transparent;color:#dc5555;cursor:pointer;font:inherit';clear.onclick=()=>{state.attachment=null;state.voiceDuration=0;$('fileInput').value='';preview.classList.add('hidden');preview.replaceChildren();resizeComposer()};preview.append(clear);preview.classList.remove('hidden')}
 async function startVoiceRecording(){
@@ -1628,7 +1698,7 @@ async function startVoiceRecording(){
   try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
   catch(firstError){if(firstError?.name==='NotAllowedError'||firstError?.name==='SecurityError')throw firstError;stream=await navigator.mediaDevices.getUserMedia({audio:true})}
   if(state.active?.id!==recordingConversationId||state.user?.id!==recordingUserId){stream.getTracks().forEach(track=>track.stop());toast('تغيرت المحادثة قبل بدء التسجيل');return}
-  state.voiceStream=stream;state.voiceChunks=[];state.cancelVoiceOnStop=false;state.voiceStartedAt=Date.now();
+  state.voiceStream=stream;state.voiceChunks=[];state.cancelVoiceOnStop=false;state.voiceSendOnStop=false;state.voiceElapsedMs=0;state.voiceSegmentStartedAt=Date.now();state.voicePaused=false;state.voiceStartedAt=Date.now();
   let recorder=null,supported=null;
   if(typeof MediaRecorder!=='undefined'){
    const ua=navigator.userAgent||'',preferMp4=/iPhone|iPad|iPod/i.test(ua);
@@ -1641,19 +1711,22 @@ async function startVoiceRecording(){
   recorder.ondataavailable=event=>{if(event.data?.size)state.voiceChunks.push(event.data)};
   recorder.onerror=event=>{console.error('Voice recording failed:',event.error||event);toast('تعذر تسجيل الصوت. تحقق من إذن الميكروفون ثم حاول مجدداً.');cleanupVoiceCapture()};
   recorder.onstop=()=>{
-   const cancelled=state.cancelVoiceOnStop,elapsed=state.voiceStartedAt?Math.round((Date.now()-state.voiceStartedAt)/1000):0,chunks=state.voiceChunks.slice();
-   const mime=(recorder.mimeType||supported||'audio/wav').split(';')[0].toLowerCase();cleanupVoiceCapture();
-   if(cancelled){state.cancelVoiceOnStop=false;return}
-   const blob=new Blob(chunks,{type:mime});if(!blob.size){toast('لم يتم التقاط صوت. تحقق من إذن الميكروفون وحاول مرة أخرى.');return}
-   if(blob.size>12*1024*1024){toast('حجم التسجيل تجاوز الحد الأقصى 12 ميجابايت');return}
+   const cancelled=state.cancelVoiceOnStop,shouldSend=state.voiceSendOnStop;
+   if(state.voiceSegmentStartedAt)state.voiceElapsedMs+=Date.now()-state.voiceSegmentStartedAt;
+   const elapsed=Math.round(state.voiceElapsedMs/1000),chunks=state.voiceChunks.slice();
+   const mime=(recorder.mimeType||supported||'audio/wav').split(';')[0].toLowerCase();
+   state.voiceSendOnStop=false;cleanupVoiceCapture();
+   if(cancelled){state.cancelVoiceOnStop=false;state.voiceElapsedMs=0;return}
+   const blob=new Blob(chunks,{type:mime});if(!blob.size){toast('لم يتم التقاط صوت. تحقق من إذن الميكروفون وحاول مرة أخرى.');resizeComposer();return}
+   if(blob.size>12*1024*1024){toast('حجم التسجيل تجاوز الحد الأقصى 12 ميجابايت');resizeComposer();return}
    const ext=mime==='audio/mp4'?'m4a':mime==='audio/ogg'?'ogg':mime==='audio/mpeg'?'mp3':mime==='audio/wav'?'wav':'webm';
    const file=new File([blob],'voice-'+Date.now()+'.'+ext,{type:mime});state.attachment=file;state.voiceDuration=elapsed;
    showAttachmentPreview(file,'رسالة صوتية · '+formatVoiceDuration(elapsed)+' · '+Math.ceil(file.size/1024)+' كيلوبايت');resizeComposer();
+   if(shouldSend){setTimeout(()=>{if(state.attachment===file)sendMessage()},0)}
   };
   if(recorder instanceof (window.MediaRecorder||Function)){recorder.start()}
-  $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').innerHTML='<i class="ph ph-stop-circle"></i><span class="sr-only">إيقاف التسجيل</span>';$('voiceRecordBtn').title='إيقاف التسجيل';
-  $('voiceCancelBtn').classList.remove('hidden');
-  state.voiceTimer=setInterval(()=>{const elapsed=Math.floor((Date.now()-state.voiceStartedAt)/1000);$('voiceRecordBtn').title='إيقاف التسجيل · '+formatVoiceDuration(elapsed);if(elapsed>=180)stopVoiceRecording()},1000);
+  $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').title='التسجيل الصوتي جارٍ';$('voiceCancelBtn').classList.add('hidden');setVoiceComposerActive(true);$('sendBtn').disabled=false;updateVoiceRecordingUI();
+  state.voiceTimer=setInterval(()=>{const elapsed=Math.floor(currentVoiceElapsedMs()/1000);updateVoiceRecordingUI();if(elapsed>=180){state.voiceSendOnStop=false;stopVoiceRecording()}},250);
  }catch(error){
   if(stream){stream.getTracks().forEach(track=>track.stop())}
   if(state.voiceStream===stream)cleanupVoiceCapture();
@@ -1662,7 +1735,9 @@ async function startVoiceRecording(){
  }
 }
 function stopVoiceRecording(){if(state.voiceRecorder&&state.voiceRecorder.state!=='inactive')state.voiceRecorder.stop()}
-function cancelVoiceRecording(){if(!state.voiceRecorder)return;state.cancelVoiceOnStop=true;stopVoiceRecording()}
+function cancelVoiceRecording(){if(!state.voiceRecorder)return;state.cancelVoiceOnStop=true;state.voiceSendOnStop=false;state.voiceElapsedMs=0;state.voiceSegmentStartedAt=null;stopVoiceRecording()}
+$('voicePauseBtn').onclick=toggleVoicePause;
+$('voiceTrashBtn').onclick=()=>{if(state.voiceRecorder){cancelVoiceRecording();toast('تم حذف التسجيل وإعادة ضبط المؤقت')}};
 async function uploadAttachment(file,conversationId=state.active?.id,userId=state.user?.id){
  if(!conversationId||!userId)throw new Error('اختر محادثة أولاً');
  if(file.size>12*1024*1024)throw new Error('الحد الأقصى لحجم الملف 12 ميجابايت');
@@ -1727,7 +1802,7 @@ $('messages').addEventListener('scroll',()=>{
  if(state.loadingOlderMessages||!state.hasMoreMessages||state.isLoadingMessages)return;
  if(area.scrollTop<=110){if(!state.historyScrollFrame){state.historyScrollFrame=requestAnimationFrame(()=>{state.historyScrollFrame=0;if(area.scrollTop<=140)loadOlderMessages()})}}
 },{passive:true});
-$('sendBtn').onclick=sendMessage;$('search').oninput=()=>{
+$('sendBtn').onclick=()=>state.voiceRecorder?sendVoiceRecording():sendMessage();$('search').oninput=()=>{
  if(state.sidebarView==='team'){state.teamSearch=$('search').value.trim().toLocaleLowerCase('ar');renderTeamDashboard()}
  else if(state.sidebarView==='users'){
   state.directorySearch=$('search').value.trim().toLocaleLowerCase('ar').replace(/[^\\p{L}\\p{N}\\s@_-]/gu,'').slice(0,60);
