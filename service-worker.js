@@ -3,7 +3,7 @@
  * Never cache Supabase/API requests, authenticated data, or user messages.
  */
 const CACHE_PREFIX = "ultra-chat-pro";
-const CACHE_VERSION = "v19";
+const CACHE_VERSION = "v20";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const CDN_CACHE = `${CACHE_PREFIX}-cdn-${CACHE_VERSION}`;
 const CDN_ORIGINS = new Set([
@@ -30,6 +30,7 @@ self.addEventListener("install", event => {
       new URL("./app.js", base).href,
       new URL("./workspace.js", base).href,
       new URL("./modules/core.js", base).href,
+      new URL("./modules/theme.js", base).href,
       new URL("./modules/auth.js", base).href,
       new URL("./modules/notifications.js", base).href,
       new URL("./modules/conversations.js", base).href,
