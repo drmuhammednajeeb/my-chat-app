@@ -47,14 +47,6 @@ const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
 const perfSamples=(()=>{try{const value=JSON.parse(localStorage.getItem(PERF_STORAGE_KEY)||'[]');return Array.isArray(value)?value.slice(-80):[]}catch(_e){return []}})();
 let perfPersistTimer=null;
 
-){
- const sample={metric,ms:Math.round(Math.max(0,Number(duration)||0)*10)/10,at:Date.now(),...details};
- perfSamples.push(sample);if(perfSamples.length>80)perfSamples.splice(0,perfSamples.length-80);
- // Batch storage writes so instrumentation does not add synchronous I/O to message rendering.
- if(perfPersistTimer)clearTimeout(perfPersistTimer);
- perfPersistTimer=setTimeout(persistPerfSamples,1200);
- if(!$('diagnosticsPanel')?.hidden)updateDiagnostics();
-}
 window.addEventListener('pagehide',persistPerfSamples,{capture:true});
 
 if(typeof PerformanceObserver!=='undefined'){try{const longTaskObserver=new PerformanceObserver(list=>list.getEntries().forEach(entry=>recordPerf('long_task',entry.duration)));longTaskObserver.observe({type:'longtask',buffered:true})}catch(_e){}}
@@ -72,7 +64,6 @@ $('closeNotifications').onclick=()=>{$('notificationsPanel').classList.add('hidd
 $('markAllNotificationsRead').onclick=markAllNotificationsRead;$('notificationUnreadTab').onclick=()=>{state.notificationFilter='unread';renderNotifications()};$('notificationAllTab').onclick=()=>{state.notificationFilter='all';renderNotifications()};
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('notificationsPanel').classList.contains('hidden')){$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false')}});
 
-){const d=state.diagnostics;d.events.push({at:new Date().toLocaleTimeString('en-GB'),event,details});if(d.events.length>18)d.events.shift();updateDiagnostics()}
 
 $('debugBtn').onclick=()=>{const panel=$('diagnosticsPanel'),show=panel.hidden;panel.hidden=!show;$('debugBtn').setAttribute('aria-expanded',String(show));updateDiagnostics()};
 $('testComposerFocus').onclick=()=>{const input=$('messageInput');input.focus();diagLog('composer-focus-test',{focused:document.activeElement===input,disabled:input.disabled,readOnly:input.readOnly})};
