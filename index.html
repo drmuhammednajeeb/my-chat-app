@@ -884,22 +884,57 @@ function renderConversations(){
  });
  if(!rows.length){const p=document.createElement('p');p.textContent=state.conversationFilter==='archived'?'لا توجد محادثات مؤرشفة':q?'لا توجد نتائج':'لا توجد محادثات بعد';p.style.cssText='text-align:center;color:var(--muted);font-size:12px;padding:30px 8px';list.append(p);return}
  rows.forEach(c=>{
-  const b=document.createElement('button'),pref=state.chatPrefs.get(c.id)||{};
-  b.className='conversation'+(state.active?.id===c.id?' active':'')+(pref.is_archived?' archived-row':'');
+  const pref=state.chatPrefs.get(c.id)||{},archived=!!pref.is_archived;
+  const shell=document.createElement('div');shell.className='conversation-swipe-shell'+(archived?' is-archived':'');
+  const action=document.createElement('button');action.type='button';action.className='conversation-swipe-action'+(archived?' restore-action':' archive-action');
+  action.innerHTML=archived?'<i class="ph ph-archive-restore"></i><span>استعادة</span>':'<i class="ph ph-archive-box"></i><span>أرشفة</span>';
+  action.setAttribute('aria-label',archived?'استعادة المحادثة':'أرشفة المحادثة');
+  const row=document.createElement('button');row.type='button';
+  row.className='conversation swipe-conversation'+(state.active?.id===c.id?' active':'')+(archived?' archived-row':'');
   const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at))&&(!pref.cleared_before||new Date(c.last_message.created_at)>new Date(pref.cleared_before)));
-  b.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));
+  row.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));
   const person=c.type==='direct'?otherMember(c):null;
-  const avatar=person?.avatar_url&&/^https:\/\//i.test(person.avatar_url)?'<img src="'+esc(person.avatar_url)+'" alt="" loading="lazy">':(c.type==='group'?'<i class="ph ph-users-three"></i>':c.type==='channel'?'<i class="ph ph-megaphone"></i>':esc(initials(convName(c))));
-  b.innerHTML='<div class="conv-avatar">'+avatar+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+(pref.is_shortcut?'<i class="ph ph-push-pin conv-shortcut-mark" title="اختصار مثبت"></i>':'')+(pref.is_archived?'<i class="ph ph-archive-box conversation-archive-mark" title="مؤرشفة"></i>':'')+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';
-  let start=null,longTimer=null,suppressClick=false;
-  b.addEventListener('pointerdown',event=>{start={x:event.clientX,y:event.clientY};suppressClick=false;longTimer=setTimeout(()=>{suppressClick=true;archiveConversation(c,!pref.is_archived)},650)});
-  const cancelGesture=()=>{clearTimeout(longTimer);longTimer=null;start=null};
-  b.addEventListener('pointerup',event=>{if(!start)return;const dx=event.clientX-start.x,dy=event.clientY-start.y;clearTimeout(longTimer);longTimer=null;if(Math.abs(dx)>76&&Math.abs(dx)>Math.abs(dy)*1.25){suppressClick=true;archiveConversation(c,dx<0?!pref.is_archived:!!pref.is_archived)}start=null});
-  b.addEventListener('pointercancel',cancelGesture);b.addEventListener('pointerleave',()=>{if(longTimer){clearTimeout(longTimer);longTimer=null}});
-  b.onclick=()=>{if(suppressClick){suppressClick=false;return}openConversation(c)};
-  list.append(b);
+  const avatar=person?.avatar_url&&/^https:\/\//i.test(person.avatar_url)?'<img src="'+esc(person.avatar_url)+'" alt="" loading="lazy">':c.type==='group'?'<i class="ph ph-users-three"></i>':c.type==='channel'?'<i class="ph ph-megaphone"></i>':esc(initials(convName(c)));
+  row.innerHTML='<div class="conv-avatar">'+avatar+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+(pref.is_shortcut?'<i class="ph ph-push-pin conv-shortcut-mark" title="اختصار مثبت"></i>':'')+(archived?'<i class="ph ph-archive-box conversation-archive-mark" title="مؤرشفة"></i>':'')+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';
+  bindConversationSwipe(shell,row,action,c,archived,list);
+  shell.append(action,row);list.append(shell);
  });
 }
+function bindConversationSwipe(shell,row,action,conversation,archived,list){
+ let startX=0,startY=0,tracking=false,suppressClick=false;
+ const direction=archived?1:-1;
+ const close=()=>{shell.classList.remove('swipe-open');row.style.transform=''};
+ action.addEventListener('click',event=>{event.stopPropagation();close();archiveConversation(conversation,!archived)});
+ row.addEventListener('pointerdown',event=>{
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  startX=event.clientX;startY=event.clientY;tracking=true;row.style.transition='none';
+ });
+ row.addEventListener('pointermove',event=>{
+  if(!tracking)return;
+  const dx=event.clientX-startX,dy=event.clientY-startY;
+  if(Math.abs(dy)>Math.abs(dx)*1.2&&Math.abs(dy)>8){tracking=false;row.style.transition='';return}
+  const offset=Math.max(0,Math.min(88,dx*direction));
+  row.style.transform='translateX('+(direction*offset)+'px)';
+ });
+ row.addEventListener('pointerup',event=>{
+  if(!tracking)return;
+  tracking=false;row.style.transition='';
+  const dx=event.clientX-startX,dy=event.clientY-startY;
+  if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)*1.15&&Math.sign(dx)===direction){
+   list.querySelectorAll('.conversation-swipe-shell.swipe-open').forEach(item=>{
+    if(item!==shell){item.classList.remove('swipe-open');const other=item.querySelector('.swipe-conversation');if(other)other.style.transform=''}
+   });
+   shell.classList.add('swipe-open');row.style.transform='translateX('+(direction*88)+'px)';suppressClick=true;
+  }else if(Math.abs(dx)>16){close();suppressClick=true}
+ });
+ row.addEventListener('pointercancel',()=>{tracking=false;row.style.transition='';close()});
+ row.addEventListener('click',()=>{
+  if(suppressClick){suppressClick=false;return}
+  if(shell.classList.contains('swipe-open')){close();return}
+  openConversation(conversation);
+ });
+}
+
 async function loadConversations(){
  state.conversationsLoading=true;
  if(!state.conversations.length){showListSkeleton($('conversationList'),6);showListSkeleton($('directoryList'),4)}
@@ -1702,5 +1737,19 @@ $('profileSaveBtn').onclick=async()=>{
 /* Profile center and personal archive */
 .chat-profile-title{border:0;background:transparent;color:inherit;text-align:right;padding:0;cursor:pointer}.chat-profile-title strong{font:inherit;font-size:15px}.profile-open-trigger{border:0;padding:0;cursor:pointer;flex:none}
 .profile-modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;padding:16px;background:#07111dcc;backdrop-filter:blur(5px)}.profile-modal.open{display:grid}.profile-dialog{width:min(100%,440px);max-height:90dvh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 80px #0005;direction:rtl}.profile-dialog-head{display:flex;align-items:center;justify-content:space-between;padding:17px 19px;border-bottom:1px solid var(--line)}.profile-dialog-head h2{margin:0;font-size:18px}.profile-dialog-head p{margin:4px 0 0;color:var(--muted);font-size:11px}.profile-dialog-body{padding:19px;display:flex;flex-direction:column;gap:9px}.profile-modal-avatar-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:8px}.profile-modal-avatar{width:92px;height:92px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--panel2);font-size:30px;font-weight:800}.profile-modal-avatar img{width:100%;height:100%;object-fit:cover}.profile-secondary-btn,.profile-cancel-btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700}.profile-field-label{font-size:12px;color:var(--muted);font-weight:700;margin-top:4px}.profile-field{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);padding:11px 12px;outline:none;resize:vertical}.profile-field[readonly]{opacity:.75}.profile-dialog-actions{display:flex;gap:9px;margin-top:10px}.profile-save-btn{flex:1;border:0;border-radius:10px;background:var(--accent);color:#06352e;padding:11px;font-weight:800}.profile-readonly-note{margin:0;color:var(--muted);font-size:11px;text-align:center}.conversation.archived-row{opacity:.84}.conversation .conv-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}.conversation .conv-avatar{overflow:hidden;border-radius:50%}.conversation-archive-mark{font-size:11px;color:#b38a35;margin-inline-start:5px}
+
+/* WhatsApp-like swipe actions for archive / restore */
+.conversation-swipe-shell{position:relative;width:100%;overflow:hidden;border-radius:14px;margin:2px 0;isolation:isolate;background:var(--panel2);touch-action:pan-y}
+.conversation-swipe-action{position:absolute;top:0;bottom:0;width:88px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;z-index:1;transition:filter .18s ease}
+.conversation-swipe-action i{font-size:22px}
+.conversation-swipe-action.archive-action{right:0;background:linear-gradient(145deg,#168a70,#0c6b5b)}
+.conversation-swipe-action.restore-action{left:0;background:linear-gradient(145deg,#3979b8,#285b91)}
+.conversation.swipe-conversation{position:relative;z-index:2;margin:0;border-radius:14px;min-height:68px;background:var(--sidebar,var(--bg));transform:translateX(0);transition:transform .24s cubic-bezier(.2,.8,.2,1),background .18s ease;will-change:transform;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.conversation.swipe-conversation:hover{background:var(--panel2)}
+.conversation.swipe-conversation.active{background:#1b3344}
+.conversation-swipe-shell.swipe-open .swipe-conversation{cursor:grab}
+.conversation-swipe-shell.is-archived .swipe-conversation{background:var(--sidebar,var(--bg))}
+.conversation-swipe-shell.is-archived .swipe-conversation.active{background:#1b3344}
+@media(prefers-reduced-motion:reduce){.conversation.swipe-conversation,.conversation-swipe-action{transition:none}}
 </style>
 <div id="profileModal" class="profile-modal" aria-hidden="true"><section class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle"><header class="profile-dialog-head"><div><h2 id="profileModalTitle">الملف الشخصي</h2><p id="profileModalSubtitle">بيانات الحساب</p></div><button id="profileModalClose" type="button" class="iconbtn" aria-label="إغلاق"><i class="ph ph-x"></i></button></header><div class="profile-dialog-body"><div class="profile-modal-avatar-wrap"><div id="profileModalAvatar" class="profile-modal-avatar">U</div><button id="profilePhotoBtn" type="button" class="profile-secondary-btn"><i class="ph ph-camera"></i> تغيير الصورة</button></div><label class="profile-field-label" for="profileDisplayName">الاسم الظاهر</label><input id="profileDisplayName" class="profile-field" maxlength="48"><label class="profile-field-label" for="profileUsername">اسم المستخدم</label><input id="profileUsername" class="profile-field" readonly><label class="profile-field-label" for="profileBio">نبذة تعريفية</label><textarea id="profileBio" class="profile-field" rows="3" maxlength="240" placeholder="اكتب نبذة مختصرة عنك"></textarea><div class="profile-dialog-actions"><button id="profileSaveBtn" type="button" class="profile-save-btn">حفظ التغييرات</button><button id="profileModalCancel" type="button" class="profile-cancel-btn">إغلاق</button></div><p id="profileReadOnlyNote" class="profile-readonly-note hidden">هذا الملف الشخصي للعرض فقط.</p></div></section></div></body></html>
