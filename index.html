@@ -715,6 +715,7 @@ window.addEventListener('unhandledrejection',e=>{state.diagnostics.lastRenderErr
 function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'انضم إلى مساحة تواصل أكثر تنظيماً.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden')}
 function authError(msg){$('authStatus').hidden=true;$('authError').textContent=msg;$('authError').classList.remove('hidden')}
 function authProgress(msg){$('authError').classList.add('hidden');$('authStatus').textContent=msg;$('authStatus').hidden=false}
+function withAuthTimeout(promise,label,ms=20000){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label)),ms)})]).finally(()=>clearTimeout(timer))}
 function slug(s){return String(s||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'').slice(0,24)}
 async function ensureProfile(user){
  const meta=user.user_metadata||{};let username=slug(meta.username||user.email?.split('@')[0]||'user');
@@ -725,7 +726,7 @@ async function ensureProfile(user){
 }
 async function enterApp(user){
  state.user=user;
- try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await ensureProfile(user)}catch(e){console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
+ try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.')}catch(e){console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');
  const conversationsLoaded=await loadConversations();
@@ -766,7 +767,7 @@ $('authForm').addEventListener('submit',async e=>{
    else authError('تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد التسجيل، ثم سجّل الدخول.');
   }else{
    btn.disabled=true;btn.textContent='جارٍ تسجيل الدخول...';authProgress('جارٍ التحقق من بيانات الدخول مع الخادم...');
-   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+   const {data,error}=await withAuthTimeout(supabaseClient.auth.signInWithPassword({email,password}),'لم يستجب خادم تسجيل الدخول خلال 20 ثانية. تحقق من الاتصال وحاول مجدداً.');
    if(error)throw error;
    if(!data?.user)throw new Error('تم الاتصال بالخادم لكن لم يتم استلام بيانات المستخدم. أعد المحاولة.');
    authProgress('تم قبول بيانات الدخول. جارٍ تجهيز حسابك وفتح التطبيق...');
