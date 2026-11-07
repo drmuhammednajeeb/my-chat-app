@@ -1143,7 +1143,8 @@ function renderConversations(section=state.sidebarView==='groups'?'groups':'dire
   const pref=state.chatPrefs.get(c.id)||{},archived=!!pref.is_archived;
   if(section==='groups'&&archived)return false;
   if(section==='direct'&&(state.conversationFilter==='archived'?!archived:archived))return false;
-  const matchesSearch=(convName(c)+' '+convPreview(c)+' '+(otherMember(c)?.username||'')).toLowerCase().includes(q);\n  if(state.activeListId&&!state.chatListItems.get(c.id)?.has(state.activeListId))return false;
+  const matchesSearch=(convName(c)+' '+convPreview(c)+' '+(otherMember(c)?.username||'')).toLowerCase().includes(q);
+  if(state.activeListId&&!state.chatListItems.get(c.id)?.has(state.activeListId))return false;
   const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at))&&(!pref.cleared_before||new Date(c.last_message.created_at)>new Date(pref.cleared_before)));
   const matchesFilter=section==='groups'||state.conversationFilter==='all'||state.conversationFilter==='archived'||(state.conversationFilter==='unread'&&unread);
   return matchesSearch&&matchesFilter;
