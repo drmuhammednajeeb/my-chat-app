@@ -486,7 +486,7 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
    <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" class="hidden">
    <textarea id="messageInput" rows="1" maxlength="5000" placeholder="اكتب رسالتك هنا…" aria-label="رسالة جديدة" disabled></textarea>
    <button id="sendBtn" class="send" disabled title="إرسال"><i class="ph ph-paper-plane-tilt"></i></button>
-  </div><div id="attachmentPreview" class="hidden" style="font-size:11px;color:var(--muted);padding:7px 12px"></div><div class="composer-hint">Enter للإرسال · Shift + Enter لسطر جديد</div></div>
+  </div><div id="attachmentPreview" class="hidden" style="font-size:11px;color:var(--muted);padding:7px 12px"></div><div class="composer-hint">Enter لإضافة سطر جديد · زر الإرسال لإرسال الرسالة</div></div>
   <section id="teamDashboard" class="team-dashboard hidden" aria-label="لوحة إدارة الفريق">
    <header class="team-dashboard-head"><div><span class="team-eyebrow">ULTRA CHAT PRO · TEAM CONTROL</span><h1>لوحة إدارة الفريق</h1><p>متابعة الأعضاء والمجموعات والتفاعل من مكان واحد</p></div><div class="team-head-actions"><button id="teamBackBtn" class="team-refresh team-back" type="button"><i class="ph ph-list"></i> القائمة</button><button id="teamRefreshBtn" class="team-refresh" type="button"><i class="ph ph-arrows-clockwise"></i> تحديث البيانات</button></div></header>
    <div id="teamGeneratedAt" class="team-generated"></div><div id="teamKpis" class="team-kpis" aria-live="polite"></div>
@@ -1584,7 +1584,7 @@ async function sendMessage(){
 function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
 $('messageInput').addEventListener('input',()=>{resizeComposer();if($('messageInput').value.trim())publishTyping(true);else publishTyping(false)});
 $('messageInput').addEventListener('blur',()=>publishTyping(false));
-$('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendMessage()}});
+$('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.stopPropagation();requestAnimationFrame(resizeComposer)}});
 $('composerContextCancel').onclick=()=>{if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}cancelComposerContext();resizeComposer()};
 $('newMessagesJump').onclick=jumpToLatestMessages;
 $('chatSearchBtn').onclick=()=>{closeChatHeaderMenu();$('chatSearchPanel').classList.toggle('hidden');if(!$('chatSearchPanel').classList.contains('hidden'))$('chatSearchInput').focus()};
