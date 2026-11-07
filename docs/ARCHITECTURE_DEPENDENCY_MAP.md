@@ -213,3 +213,22 @@ A phase is complete only when:
 
 ---
 This document is an engineering plan and inventory. It does not itself authorize database changes, production deployment, merging, or broad refactoring.
+
+
+## 11. Modularization implementation — phase 1
+
+**Branch:** `refactor/modular-app-entrypoints`  
+**Base:** `2cbe07dcb78e4d7c6780a5a40692c37ea929be1f`
+
+This phase moves the two large inline application scripts into same-origin classic JavaScript assets without changing their source bodies or execution order:
+
+- `app.js`: the main application runtime (Supabase client, shared state, authentication, conversations, messages, groups, channels, realtime and UI handlers).
+- `workspace.js`: conversation workspace, labels/classification, private notes/documents and private-reply context.
+
+The HTML keeps both scripts at their original parser positions as blocking classic scripts. Preload hints start their downloads from the document head; they are deliberately **not** marked `async` or `defer`, so existing initialization order and global bindings remain intact. The Supabase UMD script remains before `app.js`, and `membership.js` remains after `workspace.js`.
+
+The service worker precaches both new same-origin assets and advances its shell cache to `v18`. It continues to exclude authenticated API responses and user content.
+
+**Scope boundary:** this is an entry-point extraction, not yet a complete feature-module split. The next phases should extract low-coupling services (diagnostics/notifications/settings) and then progressively isolate conversations, message lifecycle, realtime, groups/channels, media and administration behind explicit interfaces. Do not split shared state mechanically; document ownership and dependencies first.
+
+**Verification performed for this phase:** source-boundary checks confirm the extracted blocks are the original complete script bodies, the Supabase-before-app and app-before-workspace ordering is preserved, both preload hints and service-worker precache entries exist, and the cache version advances. No browser runtime, authenticated multi-account E2E or Vercel Preview test is claimed by this static verification.
