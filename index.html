@@ -771,11 +771,20 @@ async function sendPasswordReset(){
 function withAuthTimeout(promise,label,ms=20000){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label)),ms)})]).finally(()=>clearTimeout(timer))}
 function slug(s){return String(s||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'').slice(0,24)}
 async function ensureProfile(user){
- const meta=user.user_metadata||{};let username=slug(meta.username||user.email?.split('@')[0]||'user');
+ // Read first: existing profiles must never be overwritten by auth metadata on login.
+ const {data:existing,error:readError}=await supabaseClient.from('profiles').select('*').eq('id',user.id).maybeSingle();
+ if(readError)throw readError;
+ if(existing)return existing;
+ const meta=user.user_metadata||{};
+ let username=slug(meta.username||user.email?.split('@')[0]||'user');
  if(username.length<3)username='user_'+user.id.slice(0,8);
  const display=(meta.display_name||user.email?.split('@')[0]||'مستخدم').slice(0,48);
- const {data,error}=await supabaseClient.from('profiles').upsert({id:user.id,username,display_name:display},{onConflict:'id'}).select().single();
- if(error){const retry=await supabaseClient.from('profiles').select('*').eq('id',user.id).maybeSingle();if(retry.data)return retry.data;throw error}return data;
+ const {data:created,error:createError}=await supabaseClient.from('profiles').insert({id:user.id,username,display_name:display}).select('*').single();
+ if(!createError&&created)return created;
+ // A concurrent sign-in may have created the row after the initial read.
+ const {data:retry,error:retryError}=await supabaseClient.from('profiles').select('*').eq('id',user.id).maybeSingle();
+ if(retry)return retry;
+ throw createError||retryError||new Error('تعذر إنشاء الملف الشخصي');
 }
 let authLifecycleVersion=0,appEntryPromise=null,appEntryUserId=null;
 async function enterApp(user){
@@ -797,15 +806,17 @@ async function enterAppInternal(user,lifecycleVersion){
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');
  const conversationsLoaded=await loadConversations();
  if(lifecycleVersion!==authLifecycleVersion)return false;
- try{await ensureSelfConversation()}catch(selfChatError){console.error('Self chat initialization failed:',selfChatError);toast('تعذر تجهيز مساحة مراسلة نفسك. يمكنك إعادة تحميل قائمة المحادثات لاحقاً')}
  let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
  if(inviteToken){try{const {data,error}=await supabaseClient.rpc('join_channel_by_invite',{p_token:inviteToken});if(error)throw error;invitedChannelId=data;await loadConversations();toast('تم الانضمام إلى القناة بنجاح');}catch(error){console.error('Channel invite join failed:',error);toast(error.message||'رابط الدعوة غير صالح أو منتهي الصلاحية')}finally{const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('invite');history.replaceState({},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)}}
- subscribeNotifications();await loadNotifications();
  if(lifecycleVersion!==authLifecycleVersion)return false;
- await loadTeamDashboard(true);
- if(lifecycleVersion!==authLifecycleVersion)return false;
- // Restore the latest conversation after every sign-in or page reload.
+ // Non-critical profile, notification, and admin data load in parallel after the chat shell is ready.
+ void Promise.allSettled([
+  (async()=>{try{await ensureSelfConversation();if(lifecycleVersion===authLifecycleVersion)renderConversations()}catch(error){console.error('Self chat initialization failed:',error);toast('تعذر تجهيز مساحة مراسلة نفسك. يمكنك إعادة تحميل قائمة المحادثات لاحقاً')}})(),
+  (async()=>{subscribeNotifications();await loadNotifications()})(),
+  loadTeamDashboard(true)
+ ]);
  setSidebarView('chats');
+ // Restore the latest chat immediately; do not wait for notifications, team stats, or the user directory.
  if(conversationsLoaded&&state.conversations.length){
   const latest=(invitedChannelId&&state.conversations.find(c=>c.id===invitedChannelId))||state.conversations[0];
   await openConversation(latest);
@@ -813,8 +824,6 @@ async function enterAppInternal(user,lifecycleVersion){
  }else if(conversationsLoaded){
   $('chatTitle').textContent='لا توجد محادثات بعد';$('chatSub').textContent='ابدأ محادثة من دليل المستخدمين';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>لا توجد محادثات بعد</h2><p>اختر مستخدماً من دليل المستخدمين لبدء محادثة جديدة.</p></div>';
  }
- await loadDirectory();
- if(lifecycleVersion!==authLifecycleVersion)return false;
  startPresence();return true;
 }
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
@@ -862,13 +871,27 @@ function renderAvatar(container,profile,className='directory-avatar'){
  container.replaceChildren();container.className=className;
  const fallback=document.createElement('span');fallback.textContent=initials(profile?.display_name||profile?.username);container.append(fallback);
  const raw=profile?.avatar_url;
- if(raw){try{const url=new URL(raw);if(url.protocol==='https:'){const img=document.createElement('img');img.src=url.href;img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>container.replaceChildren(fallback);container.replaceChildren(img)}}catch(_e){}}
+ if(raw){try{const url=new URL(raw);if(url.protocol==='https:'){const img=document.createElement('img');img.src=url.href;img.alt='';img.loading=container.id==='myAvatar'?'eager':'lazy';img.decoding='async';img.fetchPriority=container.id==='myAvatar'?'high':'low';img.width=48;img.height=48;img.referrerPolicy='no-referrer';img.onerror=()=>container.replaceChildren(fallback);container.replaceChildren(img)}}catch(_e){}}
 }
 function renderChatAvatar(conversation){
  const target=$('chatAvatar');
  if(conversation?.type==='direct'){const profile=otherMember(conversation);renderAvatar(target,profile,'avatar');return}
  target.className='avatar';target.replaceChildren();
  const icon=document.createElement('i');icon.className='ph '+(isSelfConversation(conversation)?'ph-note-pencil':conversation?.type==='channel'?'ph-megaphone':'ph-users-three');target.append(icon);
+}
+async function prepareAvatarImage(file){
+ if(typeof createImageBitmap!=='function')return {blob:file,type:file.type};
+ const bitmap=await createImageBitmap(file);
+ const scale=Math.min(1,512/Math.max(bitmap.width,bitmap.height));
+ const width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale));
+ const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ const context=canvas.getContext('2d',{alpha:false});
+ if(!context){bitmap.close?.();return {blob:file,type:file.type}}
+ context.drawImage(bitmap,0,0,width,height);bitmap.close?.();
+ const webp=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.82));
+ if(webp)return {blob:webp,type:'image/webp'};
+ const jpeg=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.84));
+ return jpeg?{blob:jpeg,type:'image/jpeg'}:{blob:file,type:file.type};
 }
 async function uploadProfileAvatar(file){
  if(!state.user||!file)return;
@@ -877,8 +900,9 @@ async function uploadProfileAvatar(file){
  if(file.size>3*1024*1024){toast('الحد الأقصى للصورة الشخصية 3 ميجابايت');return}
  const input=$('avatarInput');if(input)input.disabled=true;
  try{
+  const prepared=await prepareAvatarImage(file);
   const path=state.user.id+'/avatar';
-  const {error:uploadError}=await supabaseClient.storage.from('avatars').upload(path,file,{upsert:true,contentType:file.type,cacheControl:'3600'});
+  const {error:uploadError}=await supabaseClient.storage.from('avatars').upload(path,prepared.blob,{upsert:true,contentType:prepared.type,cacheControl:'31536000'});
   if(uploadError)throw uploadError;
   const {data:publicData}=supabaseClient.storage.from('avatars').getPublicUrl(path);
   const avatarUrl=publicData.publicUrl+'?v='+Date.now();
@@ -888,7 +912,7 @@ async function uploadProfileAvatar(file){
   renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');
   if($('profileModal')?.classList.contains('open'))renderAvatar($('profileModalAvatar'),data,'profile-modal-avatar');
   if(state.active?.type==='direct'&&otherMember(state.active)?.id===state.user.id)renderChatAvatar(state.active);
-  toast('تم تحديث صورتك الشخصية بنجاح');
+  toast('تم تحديث الصورة الشخصية وتحسين حجمها');
  }catch(error){console.error('Profile avatar upload failed:',error);toast(error.message||'تعذر تحديث الصورة الشخصية')}
  finally{if(input){input.disabled=false;input.value=''}}
 }
