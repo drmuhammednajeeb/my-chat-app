@@ -903,12 +903,12 @@ function renderConversations(){
   b.addEventListener('pointermove',event=>{
    if(!tracking)return;const dx=event.clientX-startX,dy=event.clientY-startY;
    if(Math.abs(dy)>Math.abs(dx)*1.15&&Math.abs(dy)>8){tracking=false;b.style.transition='';return}
-   if(Math.abs(dx)>8){moved=true;const direction=archived?1:-1;const reveal=direction* Math.max(0,Math.min(94,Math.abs(dx)));b.style.transform='translateX('+(direction*reveal)+'px')}
+   if(Math.abs(dx)>8){moved=true;const direction=archived?1:-1;const reveal=Math.max(0,Math.min(88,dx*direction));b.style.transform='translateX('+(direction*reveal)+'px')}
   });
   const finishSwipe=event=>{
    if(!tracking)return;tracking=false;b.style.transition='';
    const dx=event.clientX-startX,dy=event.clientY-startY,direction=archived?1:-1;
-   if(Math.abs(dx)>Math.abs(dy)*1.15&&Math.abs(dx)>48&&Math.sign(dx)===direction){shell.classList.add('swipe-open');b.style.transform='translateX('+(direction*88)+'px)'}
+   if(Math.abs(dx)>Math.abs(dy)*1.15&&Math.abs(dx)>48&&Math.sign(dx)===direction){list.querySelectorAll('.conversation-swipe-shell.swipe-open').forEach(open=>{if(open!==shell){open.classList.remove('swipe-open');const row=open.querySelector('.swipe-conversation');if(row)row.style.transform=''}});shell.classList.add('swipe-open');b.style.transform='translateX('+(direction*88)+'px)'}
    else if(Math.abs(dx)>20){closeSwipe()}
   };
   b.addEventListener('pointerup',finishSwipe);b.addEventListener('pointercancel',()=>{tracking=false;closeSwipe()});
