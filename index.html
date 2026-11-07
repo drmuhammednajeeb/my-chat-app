@@ -2409,9 +2409,9 @@ async function loadUserConversationSettings(conversationId){
 }
 async function saveUserConversationSettings(patch){
  const c=state.active;if(!c||!state.user)return false;
- const current=state.userConversationSettings.get(c.id)||{is_muted:false,notification_tone:'default'};
+ const current=state.userConversationSettings.get(c.id)||{is_muted:false,notification_tone:'default',is_favorite:false};
  const next={...current,...patch,user_id:state.user.id,conversation_id:c.id,updated_at:new Date().toISOString()};
- const {data,error}=await supabaseClient.from('user_conversation_settings').upsert(next,{onConflict:'user_id,conversation_id'}).select('is_muted,notification_tone').single();
+ const {data,error}=await supabaseClient.from('user_conversation_settings').upsert(next,{onConflict:'user_id,conversation_id'}).select('is_muted,notification_tone,is_favorite').single();
  if(error){console.error(error);toast('تعذر حفظ إعداد الإشعارات');return false}
  state.userConversationSettings.set(c.id,data);updateConversationMenu();return true;
 }
@@ -2531,7 +2531,7 @@ async function toggleFavoriteConversation(){
  if(await saveUserConversationSettings({is_favorite:!current})){updateConversationMenu();renderConversations();toast(current?'أزيلت من المفضلة':'أضيفت إلى المفضلة')}
 }
 async function toggleMuteConversation(){
- const current=state.userConversationSettings.get(state.active?.id)||{is_muted:false,notification_tone:'default'};
+ const current=state.userConversationSettings.get(state.active?.id)||{is_muted:false,notification_tone:'default',is_favorite:false};
  const next=!current.is_muted;
  if(await saveUserConversationSettings({is_muted:next})){toast(next?'تم كتم إشعارات هذه المحادثة':'تم إلغاء كتم الإشعارات')}
 }
