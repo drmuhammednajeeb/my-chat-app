@@ -865,7 +865,7 @@ async function clearDirectChatForMe(){
  if(!confirm('سيتم إخفاء الرسائل السابقة من حسابك فقط. لن تُحذف الرسائل من قاعدة البيانات ولن تتأثر لدى الطرف الآخر. هل تريد المتابعة؟'))return;
  const cutoff=new Date().toISOString();
  if(!await saveDirectChatPreference({cleared_before:cutoff}))return;
- state.messages=[];state.messageIds.clear();state.renderingMessageIds.clear();state.replyMessages=new Map();state.reactions=new Map();state.pinnedMessages=new Map();state.newMessageCount=0;updateNewMessagesIndicator();renderPinnedBanner();$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>تم مسح سجل الدردشة من طرفك</h2><p>ستظهر هنا الرسائل الجديدة فقط. لا يزال السجل السابق متاحاً للطرف الآخر.</p></div>';
+ state.messages=[];state.hasMoreMessages=false;state.messageIds.clear();state.renderingMessageIds.clear();state.replyMessages=new Map();state.reactions=new Map();state.pinnedMessages=new Map();state.newMessageCount=0;updateNewMessagesIndicator();renderPinnedBanner();$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>تم مسح سجل الدردشة من طرفك</h2><p>ستظهر هنا الرسائل الجديدة فقط. لا يزال السجل السابق متاحاً للطرف الآخر.</p></div>';
  toast('تم إخفاء الرسائل السابقة من حسابك فقط');
 }
 $('directThemeBtn').onclick=toggleDirectChatTheme;
@@ -1077,7 +1077,7 @@ async function loadOlderMessages(){
  const oldHeight=area.scrollHeight,oldTop=area.scrollTop,requestId=state.messageLoadVersion;
  const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
  try{
-  const {data,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',oldest.created_at).order('created_at',{ascending:false}).limit(50);
+  let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',oldest.created_at);if(state.activeChatPreference?.cleared_before)olderQuery=olderQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await olderQuery.order('created_at',{ascending:false}).limit(50);
   if(error)throw error;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   const older=(data||[]).slice().reverse();
