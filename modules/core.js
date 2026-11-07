@@ -5,16 +5,7 @@
  * Extracted function bodies are preserved verbatim.
  */
 
-function applyAppTheme(theme,save=false){
- const resolved=theme==='system'?(appThemeMedia?.matches?'dark':'light'):theme;
- const root=document.documentElement;
- root.classList.toggle('dark',resolved==='dark');
- root.classList.toggle('light',resolved==='light');
- root.dataset.theme=resolved;root.style.colorScheme=resolved;
- if(save){appThemePreference=theme;try{if(theme==='system')localStorage.removeItem(APP_THEME_KEY);else localStorage.setItem(APP_THEME_KEY,theme)}catch(error){console.warn('Theme preference storage unavailable:',error)}}
- const button=$('appThemeToggle');
- if(button){button.innerHTML=resolved==='dark'?'<i class="ph ph-sun"></i>':'<i class="ph ph-moon"></i>';button.title=resolved==='dark'?'التبديل إلى الوضع الساطع':'التبديل إلى الوضع المظلم';button.setAttribute('aria-label',button.title);button.setAttribute('aria-pressed',String(resolved==='dark'))}
-}
+function applyAppTheme(theme,save=false){return themeService.apply(theme,save)}
 
 async function loadUserSettings(){
  const userId=state.user?.id;if(!userId)return false;
@@ -24,7 +15,7 @@ async function loadUserSettings(){
   if(state.user?.id!==userId)return false;
   const settings=data?.settings&&typeof data.settings==='object'&&!Array.isArray(data.settings)?data.settings:{};
   state.userSettings=settings;
-  if(['dark','light','system'].includes(settings.theme)){appThemePreference=settings.theme;applyAppTheme(settings.theme,true)}
+  if(['dark','light','system'].includes(settings.theme))themeService.apply(settings.theme,true)
   return true;
  }catch(error){console.warn('Account settings could not be loaded:',error?.message||error);return false}
 }
@@ -38,12 +29,7 @@ async function saveUserSetting(key,value){
  return true;
 }
 
-function toggleAppTheme(){
- const current=document.documentElement.dataset.theme||'light';
- const next=current==='dark'?'light':'dark';
- applyAppTheme(next,true);
- void saveUserSetting('theme',next).catch(error=>{console.warn('Theme preference sync failed:',error);toast('تم تغيير المظهر على هذا الجهاز، وتعذرت مزامنته مع حسابك')});
-}
+function toggleAppTheme(){return themeService.toggle()}
 
 function showListSkeleton(container,count=5){
  if(!container)return;container.replaceChildren();const stack=document.createElement('div');stack.className='loading-stack';stack.setAttribute('aria-label','جارٍ تحميل البيانات');
