@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="./membership.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
@@ -551,11 +552,14 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
   <div id="signupFields" class="hidden">
    <div class="form-row"><label for="displayName">الاسم الظاهر</label><input id="displayName" class="field" maxlength="48" autocomplete="name" placeholder="اسمك الذي سيظهر للآخرين"></div>
    <div class="form-row"><label for="username">اسم المستخدم</label><input id="username" class="field" maxlength="24" pattern="[a-zA-Z0-9_]{3,24}" autocomplete="username" placeholder="username"></div>
+   <div class="form-row"><label for="membershipNumber">رقم العضوية الرسمي</label><input id="membershipNumber" class="field" maxlength="12" inputmode="numeric" autocomplete="off" placeholder="971001726361"></div>
+   <div class="form-row"><label for="membershipInviteCode">رمز الدعوة الخاص</label><input id="membershipInviteCode" class="field" maxlength="36" autocomplete="off" spellcheck="false" placeholder="أدخل رمز الدعوة الذي استلمته"></div>
+   <p class="auth-note" style="margin:4px 0 10px">التسجيل متاح بدعوة معتمدة فقط. يجب أن يطابق البريد الإلكتروني الدعوة وأن يتم توثيقه قبل الدخول.</p>
   </div>
   <div class="form-row"><label for="email">البريد الإلكتروني</label><input id="email" type="email" class="field" required autocomplete="email" placeholder="name@example.com"></div>
   <div class="form-row"><label for="password">كلمة المرور</label><input id="password" type="password" class="field" required minlength="8" autocomplete="current-password" placeholder="8 أحرف على الأقل"></div>
   <div id="authError" class="alert hidden" role="alert" aria-live="assertive"></div>
-  <div id="authStatus" class="auth-status" role="status" aria-live="polite" hidden></div>
+  <div id="authStatus" class="auth-status" role="status" aria-live="polite" hidden></div><div id="resendSignupVerification" class="hidden" style="margin-top:8px"><button id="resendSignupVerificationBtn" type="button" class="reset-password-link">إعادة إرسال رسالة توثيق البريد</button></div>
   <div id="resetPasswordWrap" class="reset-password-wrap"><button id="resetPasswordBtn" class="reset-password-link" type="button">نسيت كلمة المرور؟</button><div id="resetCountdown" class="reset-countdown" role="status" aria-live="polite" hidden></div></div>
   <button id="authSubmit" class="primary" type="submit">تسجيل الدخول</button>
   <div class="auth-note">باستخدامك للمنصة، أنت مسؤول عن حماية بيانات دخولك واحترام خصوصية الآخرين.</div>
@@ -613,6 +617,18 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
   <section id="teamDashboard" class="team-dashboard hidden" aria-label="لوحة إدارة الفريق">
    <header class="team-dashboard-head"><div><span class="team-eyebrow">ULTRA CHAT PRO · TEAM CONTROL</span><h1>لوحة إدارة الفريق</h1><p>متابعة الأعضاء والمجموعات والتفاعل من مكان واحد</p></div><div class="team-head-actions"><button id="teamBackBtn" class="team-refresh team-back" type="button"><i class="ph ph-list"></i> القائمة</button><button id="teamRefreshBtn" class="team-refresh" type="button"><i class="ph ph-arrows-clockwise"></i> تحديث البيانات</button></div></header>
    <div id="teamGeneratedAt" class="team-generated"></div><div id="teamKpis" class="team-kpis" aria-live="polite"></div>
+   <section id="membershipAdminPanel" class="team-panel membership-admin-panel" aria-label="إدارة العضويات الرسمية">
+    <div class="team-panel-head"><div><h2>العضويات الرسمية والدعوات</h2><p>التسجيل بالدعوة فقط · أرقام ثابتة تبدأ بـ 971 · لا حاجة إلى SMS</p></div><span class="team-panel-icon"><i class="ph ph-identification-card"></i></span></div>
+    <div class="membership-invite-grid">
+     <label class="membership-invite-field" for="memberInviteEmails">إنشاء دعوات للأعضاء — بريد واحد في كل سطر<textarea id="memberInviteEmails" rows="5" maxlength="100000" placeholder="member1@example.com&#10;member2@example.com"></textarea></label>
+     <div class="membership-invite-actions"><button id="createMembershipInvitesBtn" type="button"><i class="ph ph-user-plus"></i> إنشاء الدعوات</button><button id="downloadMembershipInvitesBtn" type="button" disabled><i class="ph ph-download-simple"></i> تنزيل ملف الدعوات CSV</button><small>حتى 1,000 دعوة في الدفعة الواحدة. رمز الدعوة يظهر مرة واحدة عند الإنشاء؛ احتفظ به وشاركه مع صاحبه فقط.</small></div>
+    </div>
+    <div id="membershipInviteResults" class="membership-invite-results" aria-live="polite"></div>
+    <div class="membership-admin-subhead"><strong>الدعوات المعلقة</strong><button id="refreshMembershipAdminBtn" type="button"><i class="ph ph-arrows-clockwise"></i> تحديث</button></div>
+    <div id="membershipPendingInvites" class="membership-list"><div class="team-empty">جارٍ تحميل الدعوات…</div></div>
+    <div class="membership-admin-subhead"><strong>الأعضاء المسجلون</strong><span id="membershipMemberCount" class="membership-count">—</span></div>
+    <div id="membershipMembersList" class="membership-list"><div class="team-empty">جارٍ تحميل الأعضاء…</div></div>
+   </section>
    <div class="team-grid"><section class="team-panel"><div class="team-panel-head"><div><h2>نشاط الرسائل</h2><p>عدد الرسائل يومياً خلال آخر 7 أيام</p></div><span class="team-panel-icon"><i class="ph ph-chart-line-up"></i></span></div><div id="teamDailyChart" class="team-daily-chart"></div><div id="teamMessageTotals" class="team-message-totals"></div></section>
     <section class="team-panel"><div class="team-panel-head"><div><h2>المجموعات</h2><p>سعة كل مجموعة حتى 200 عضو</p></div><span class="team-panel-icon"><i class="ph ph-users-three"></i></span></div><input id="teamGroupSearch" class="team-group-search" type="search" placeholder="ابحث باسم المجموعة…"><div id="teamGroupsList" class="team-groups-list"></div></section></div>
    <section class="team-panel team-members-panel"><div class="team-panel-head"><div><h2>إدارة العضويات</h2><p>إضافة الأعضاء وتغيير دورهم أو إزالتهم من المجموعة</p></div><span class="team-panel-icon"><i class="ph ph-user-gear"></i></span></div>
@@ -911,7 +927,7 @@ $('messageInput').addEventListener('input',()=>{if(!$('diagnosticsPanel')?.hidde
 new MutationObserver(()=>{state.diagnostics.lastComposerChange={at:new Date().toLocaleTimeString('en-GB'),disabled:$('messageInput').disabled,readOnly:$('messageInput').readOnly};diagLog('composer-attributes-changed',state.diagnostics.lastComposerChange)}).observe($('messageInput'),{attributes:true,attributeFilter:['disabled','readonly']});
 window.addEventListener('error',e=>{state.diagnostics.lastRenderError='JS: '+(e.message||'unknown');diagLog('window-error',{message:e.message,source:e.filename,line:e.lineno})});
 window.addEventListener('unhandledrejection',e=>{state.diagnostics.lastRenderError='Promise: '+String(e.reason?.message||e.reason||'unknown');diagLog('unhandled-rejection',{message:state.diagnostics.lastRenderError})});
-function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'انضم إلى مساحة تواصل أكثر تنظيماً.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
+function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'التسجيل متاح للأعضاء الذين لديهم دعوة ورقم عضوية رسمي فقط.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden');$('resendSignupVerification')?.classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
 function authError(msg){$('authStatus').hidden=true;$('authError').textContent=msg;$('authError').classList.remove('hidden')}
 function authProgress(msg){$('authError').classList.add('hidden');$('authStatus').textContent=msg;$('authStatus').hidden=false}
 const RESET_COOLDOWN_MS=10*60*1000;
@@ -989,11 +1005,16 @@ async function enterApp(user){
  try{return await appEntryPromise}finally{if(appEntryUserId===user.id){appEntryPromise=null;appEntryUserId=null}}
 }
 async function enterAppInternal(user,lifecycleVersion){
+ if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
+ const {data:membershipState,error:membershipStateError}=await supabaseClient.rpc('get_my_membership_state');
+ if(membershipStateError){console.error('Membership state check failed:',membershipStateError);authError('تعذر التحقق من حالة العضوية. تحقق من الاتصال وحاول مجدداً.');return false;}
+ if(membershipState?.membership_status!=='active'||!/^971[0-9]{9}$/.test(membershipState?.membership_number||'')){await supabaseClient.auth.signOut({scope:'local'});authError('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');return false;}
  state.user=user;state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.activeListId=null;state.starredMessageIds.clear();state.groupSettings=null;state.selectedMessageIds.clear();state.selectionMode=false;subscribePersonalChatData();
  const profileStarted=performance.now();try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.');recordPerf('profile_load',performance.now()-profileStarted,{success:true})}catch(e){recordPerf('profile_load',performance.now()-profileStarted,{success:false});console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
  if(lifecycleVersion!==authLifecycleVersion)return false;
+ if(state.profile.membership_status!=='active'||!/^971[0-9]{9}$/.test(state.profile.membership_number||''))throw new Error('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
- $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');void loadUserSettings();
+ $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username+' · '+(state.profile.membership_number||'');renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');void loadUserSettings();
  const conversationsLoaded=await loadConversations();
  if(lifecycleVersion!==authLifecycleVersion)return false;
  let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
@@ -1019,6 +1040,17 @@ async function enterAppInternal(user,lifecycleVersion){
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
 $('resetPasswordBtn').addEventListener('click',async()=>{try{await sendPasswordReset()}catch(error){console.error('Password reset request failed:',error);authError(error.message||'تعذر إرسال رابط الاستعادة. حاول مرة أخرى.')}});
 $('email').addEventListener('input',updateResetCooldown);
+$('resendSignupVerificationBtn')?.addEventListener('click',async()=>{
+ const email=$('email').value.trim();
+ if(!email||!$('email').checkValidity()){authError('أدخل البريد الإلكتروني المستخدم في الدعوة أولاً.');return}
+ const button=$('resendSignupVerificationBtn');button.disabled=true;
+ try{
+  const {error}=await supabaseClient.auth.resend({type:'signup',email,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0]}});
+  if(error)throw error;
+  authProgress('تم طلب إعادة إرسال رابط التوثيق. تحقق من البريد الوارد والرسائل غير المرغوب فيها.');
+ }catch(error){authError(error.message||'تعذر إعادة إرسال رسالة التوثيق. حاول لاحقاً.')}
+ finally{button.disabled=false}
+});
 if(readResetExpiry($('email').value.trim())>Date.now()){resetCountdownTimer=setInterval(updateResetCooldown,1000)}updateResetCooldown();
 $('authForm').addEventListener('submit',async e=>{
  e.preventDefault();
@@ -1033,13 +1065,16 @@ $('authForm').addEventListener('submit',async e=>{
   if(state.authMode==='signup'){
    if(password.length<8)throw new Error('كلمة المرور يجب ألا تقل عن 8 أحرف.');
    const username=slug($('username').value),display=$('displayName').value.trim();
+   const membershipNumber=$('membershipNumber').value.trim(),membershipInviteCode=$('membershipInviteCode').value.trim();
    if(username.length<3)throw new Error('اسم المستخدم يجب أن يتكون من 3 إلى 24 حرفاً إنجليزياً أو رقماً أو _');
    if(!display)throw new Error('أدخل الاسم الظاهر');
+   if(!/^971[0-9]{9}$/.test(membershipNumber))throw new Error('أدخل رقم العضوية الرسمي المكوّن من 12 رقماً ويبدأ بـ 971.');
+   if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(membershipInviteCode))throw new Error('رمز الدعوة غير صحيح. استخدم الرمز الذي أنشأه مسؤول التطبيق.');
    btn.disabled=true;btn.textContent='جارٍ إنشاء الحساب...';authProgress('جارٍ إنشاء حسابك والتحقق من البيانات...');
-   const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0],data:{username,display_name:display}}});
+   const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0],data:{username,display_name:display,membership_number:membershipNumber,membership_invite_code:membershipInviteCode}}});
    if(error)throw error;
    if(data.session){authProgress('تم إنشاء الحساب. جارٍ فتح مساحة المحادثات...');await enterApp(data.user)}
-   else authError('تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد التسجيل، ثم سجّل الدخول.');
+   else{authProgress('تم إنشاء الحساب. أرسلنا رابط توثيق إلى بريدك الإلكتروني. افتح الرسالة ثم سجّل الدخول بعد التوثيق.');$('resendSignupVerification').classList.remove('hidden');}
   }else{
    btn.disabled=true;btn.textContent='جارٍ تسجيل الدخول...';authProgress('جارٍ التحقق من بيانات الدخول مع الخادم...');
    const {data,error}=await withAuthTimeout(supabaseClient.auth.signInWithPassword({email,password}),'لم يستجب خادم تسجيل الدخول خلال 20 ثانية. تحقق من الاتصال وحاول مجدداً.');
@@ -1105,7 +1140,7 @@ async function uploadProfileAvatar(file){
   const updateResult=await withProfileTimeout(supabaseClient.from('profiles').update({avatar_url:avatarUrl,updated_at:new Date().toISOString()}).eq('id',state.user.id).select('*').single(),'حفظ رابط الصورة',20000);
   if(updateResult.error)throw updateResult.error;
   const data=updateResult.data;if(!data)throw new Error('لم يتم استلام بيانات الملف الشخصي بعد الحفظ');
-  state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user');
+  state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user')+' · '+(data.membership_number||'');
   renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');
   if($('profileModal')?.classList.contains('open'))renderAvatar($('profileModalAvatar'),data,'profile-modal-avatar');
   state.conversations.forEach(conv=>(conv.members||[]).forEach(member=>{if(member.user_id===data.id)member.profile={...(member.profile||{}),...data}}));
@@ -1144,7 +1179,7 @@ async function loadDirectory(reset=true){
  state.directoryLoading=true;$('loadMoreUsers').disabled=true;$('loadMoreUsers').textContent='جارٍ تحميل المستخدمين…';
  if(reset)showListSkeleton($('directoryList'),5);
  const from=state.directoryOffset,to=from+49,term=state.directorySearch;
- let query=supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id);
+ let query=supabaseClient.from('profiles').select('id,username,display_name,avatar_url,membership_number').neq('id',state.user.id);
  if(term)query=query.or('display_name.ilike.%'+term+'%,username.ilike.%'+term+'%');
  if(state.directoryFilter==='online'){
   const ids=Array.from(state.onlineUsers);if(!ids.length){if(requestId===state.directoryRequestId){state.directoryLoading=false;state.directoryUsers=[];renderDirectory();$('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';$('loadMoreUsers').classList.add('hidden')}return}
@@ -1173,7 +1208,7 @@ function renderDirectory(){
   const avatar=document.createElement('div');renderAvatar(avatar,profile);  const dot=document.createElement('span');dot.className='directory-presence'+(state.onlineUsers.has(profile.id)?' online':'');dot.setAttribute('aria-label',state.onlineUsers.has(profile.id)?'متصل الآن':'غير متصل');avatar.append(dot);
   const copy=document.createElement('div');copy.className='directory-copy';
   const name=document.createElement('strong');name.textContent=profile.display_name||profile.username||'مستخدم';
-  const handle=document.createElement('small');handle.textContent='@'+(profile.username||'user');copy.append(name,handle);
+  const handle=document.createElement('small');handle.textContent='@'+(profile.username||'user')+' · '+(profile.membership_number||'');copy.append(name,handle);
   const status=document.createElement('span');status.className='directory-status'+(state.onlineUsers.has(profile.id)?' online':'');status.textContent=state.onlineUsers.has(profile.id)?'متصل الآن':'غير متصل';
   const action=document.createElement('button');action.type='button';action.className='directory-message-btn';action.textContent='مراسلة';action.setAttribute('aria-label','بدء محادثة مع '+(profile.display_name||profile.username||'المستخدم'));action.onclick=()=>openDirectConversation(profile,action);
   row.append(avatar,copy,status,action);list.append(row);
@@ -1817,7 +1852,7 @@ function subscribeProfileUpdates(conversation){
  let channel=supabaseClient.channel('profile-updates:'+state.user.id);
  channel=channel.on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles'},payload=>{
   const updated=payload.new;if(!updated?.id)return;
-  if(updated.id===state.user?.id){state.profile={...(state.profile||{}),...updated};$('myName').textContent=updated.display_name||updated.username;$('myHandle').textContent='@'+updated.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit')}
+  if(updated.id===state.user?.id){state.profile={...(state.profile||{}),...updated};$('myName').textContent=updated.display_name||updated.username;$('myHandle').textContent='@'+updated.username+' · '+(updated.membership_number||state.profile?.membership_number||'');renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit')}
   state.conversations.forEach(conv=>(conv.members||[]).forEach(member=>{if(member.user_id===updated.id)member.profile={...(member.profile||{}),...updated}}));
   state.directoryUsers=state.directoryUsers.map(profile=>profile.id===updated.id?{...profile,...updated}:profile);
   if(state.active?.type==='direct'&&otherMember(state.active)?.id===updated.id){$('chatTitle').textContent=convName(state.active);renderChatAvatar(state.active)}
@@ -2400,7 +2435,7 @@ $('profileSaveBtn').onclick=async()=>{
  try{
   const result=await withProfileTimeout(supabaseClient.from('profiles').update({display_name:display,bio,updated_at:new Date().toISOString()}).eq('id',state.user.id).select('*').single(),'حفظ بيانات الملف الشخصي',20000);
   if(result.error)throw result.error;if(!result.data)throw new Error('لم يتم استلام بيانات الملف الشخصي بعد الحفظ');
-  const data=result.data;state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user');
+  const data=result.data;state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user')+' · '+(data.membership_number||'');
   state.conversations.forEach(conv=>(conv.members||[]).forEach(member=>{if(member.user_id===data.id)member.profile={...(member.profile||{}),...data}}));
   if(state.active?.type==='direct'&&otherMember(state.active)?.id===data.id)$('chatTitle').textContent=convName(state.active);
   renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');renderAvatar($('profileModalAvatar'),data,'profile-modal-avatar');renderConversations();closeProfileModal();toast('تم تحديث بيانات ملفك الشخصي');
@@ -3010,4 +3045,5 @@ async function loadPrivateReplyContexts(id,messages){state.privateReplyContexts=
 function renderPrivateReplyQuote(messageId,context){const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId),bubble=row?.querySelector('.bubble');if(!bubble||bubble.querySelector('.private-reply-quote'))return;const quote=document.createElement('div'),who=document.createElement('strong'),preview=document.createElement('span');quote.className='reply-quote private-reply-quote';who.textContent='رد خاص من مجموعة';preview.textContent=context?.quoted_content||'رسالة مقتبسة';quote.append(who,preview);const meta=bubble.querySelector('.meta');if(meta)bubble.insertBefore(quote,meta);else bubble.append(quote)}
 
 </script>
+<script src="./membership.js"></script>
 </body></html>

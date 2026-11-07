@@ -1,0 +1,39 @@
+/* Private membership administration */
+.membership-admin-panel{margin:0 0 18px;min-width:0}
+.membership-invite-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,.8fr);gap:14px;align-items:end;margin:14px 0}
+.membership-invite-field{display:grid;gap:8px;color:var(--text);font-size:13px;font-weight:700}
+.membership-invite-field textarea{width:100%;min-height:118px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel2);color:var(--text);font:inherit;line-height:1.7;direction:ltr;text-align:left}
+.membership-invite-actions{display:grid;gap:8px}
+.membership-invite-actions button,.membership-admin-subhead button{min-height:40px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--accent);color:#062b2a;font-weight:800}
+.membership-invite-actions button:disabled{opacity:.45;cursor:not-allowed}
+.membership-invite-actions button+button{background:var(--panel2);color:var(--text)}
+.membership-invite-actions small{font-size:11px;line-height:1.7;color:var(--muted)}
+.membership-invite-results{display:grid;gap:8px;margin:10px 0}
+.membership-result-note,.membership-message{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--muted);font-size:12px;line-height:1.7}
+.membership-message.error{color:var(--danger)}
+.membership-generated-row,.membership-list-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);min-width:0}
+.membership-generated-info,.membership-list-info{display:grid;gap:4px;min-width:0}
+.membership-generated-info strong,.membership-list-info strong{font-size:13px;overflow-wrap:anywhere}
+.membership-generated-info small,.membership-list-info small{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+.membership-secret-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.membership-invite-code{direction:ltr;unicode-bidi:isolate;font-size:11px;overflow-wrap:anywhere;color:var(--accent)}
+.membership-copy-btn,.membership-danger-btn,.membership-activate-btn{border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text);padding:7px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.membership-danger-btn{border-color:#b84d4d66;color:#ff9b9b}
+.membership-activate-btn{border-color:#269b7866;color:#61d8b5}
+.membership-admin-subhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 9px}
+.membership-admin-subhead strong{font-size:14px}
+.membership-admin-subhead button{min-height:32px;padding:5px 10px;font-size:11px;background:var(--panel2);color:var(--text)}
+.membership-list{display:grid;gap:8px;min-width:0}
+.membership-member-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.membership-status{border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800;white-space:nowrap}
+.membership-status.active{background:#1a8f6630;color:#63d8b4}
+.membership-status.suspended{background:#c0444430;color:#ff9b9b}
+.membership-number-label{direction:ltr;text-align:right;unicode-bidi:isolate}
+.membership-count{font-size:11px;color:var(--muted)}
+@media(max-width:760px){
+ .membership-invite-grid{grid-template-columns:1fr}
+ .membership-generated-row,.membership-list-row{align-items:flex-start;flex-direction:column}
+ .membership-secret-wrap{width:100%}
+ .membership-member-controls{width:100%;justify-content:space-between}
+ .membership-member-controls button{flex:1}
+}
