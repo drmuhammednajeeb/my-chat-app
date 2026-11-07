@@ -1144,7 +1144,7 @@ function renderConversations(section=state.sidebarView==='groups'?'groups':'dire
   if(section==='groups'&&archived)return false;
   if(section==='direct'&&(state.conversationFilter==='archived'?!archived:archived))return false;
   const matchesSearch=(convName(c)+' '+convPreview(c)+' '+(otherMember(c)?.username||'')).toLowerCase().includes(q);
-  if(state.activeListId&&!state.chatListItems.get(c.id)?.has(state.activeListId))return false;
+  if(state.activeListId==='__favorites__'&&!state.userConversationSettings.get(c.id)?.is_favorite)return false;if(state.activeListId&&state.activeListId!=='__favorites__'&&!state.chatListItems.get(c.id)?.has(state.activeListId))return false;
   const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at))&&(!pref.cleared_before||new Date(c.last_message.created_at)>new Date(pref.cleared_before)));
   const matchesFilter=section==='groups'||state.conversationFilter==='all'||state.conversationFilter==='archived'||(state.conversationFilter==='unread'&&unread);
   return matchesSearch&&matchesFilter;
@@ -1162,7 +1162,7 @@ function renderConversations(section=state.sidebarView==='groups'?'groups':'dire
   row.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));
   const person=c.type==='direct'?otherMember(c):null;
   const avatar=person?.avatar_url&&/^https:\/\//i.test(person.avatar_url)?'<img src="'+esc(person.avatar_url)+'" alt="" loading="lazy">':c.type==='group'?'<i class="ph ph-users-three"></i>':c.type==='channel'?'<i class="ph ph-megaphone"></i>':esc(initials(convName(c)));
-  row.innerHTML='<div class="conv-avatar">'+avatar+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+(pref.is_shortcut?'<i class="ph ph-push-pin conv-shortcut-mark" title="اختصار مثبت"></i>':'')+(archived?'<i class="ph ph-archive-box conversation-archive-mark" title="مؤرشفة"></i>':'')+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';
+  row.innerHTML='<div class="conv-avatar">'+avatar+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+(pref.is_shortcut?'<i class="ph ph-push-pin conv-shortcut-mark" title="اختصار مثبت"></i>':'')+(state.userConversationSettings.get(c.id)?.is_favorite?'<i class="ph ph-heart conv-shortcut-mark" title="مفضلة"></i>':'')+(archived?'<i class="ph ph-archive-box conversation-archive-mark" title="مؤرشفة"></i>':'')+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';
   bindConversationSwipe(shell,row,action,c,archived,list);
   shell.append(action,row);list.append(shell);
  });
@@ -1268,7 +1268,7 @@ async function loadDirectChatPreferences(){
  if(!state.user)return;
  const ids=state.conversations.map(c=>c.id);
  if(!ids.length){state.chatPrefs=new Map();return}
- const {data,error}=await supabaseClient.from('user_chat_preferences').select('conversation_id,theme,cleared_before,is_shortcut,is_archived,is_favorite').eq('user_id',state.user.id).in('conversation_id',ids);
+ const {data,error}=await supabaseClient.from('user_chat_preferences').select('conversation_id,theme,cleared_before,is_shortcut,is_archived').eq('user_id',state.user.id).in('conversation_id',ids);
  if(error){console.warn('Chat preferences unavailable:',error.message);return}
  state.chatPrefs=new Map((data||[]).map(p=>[p.conversation_id,p]));
 }
@@ -2323,7 +2323,7 @@ async function loadCustomLists(){
   if(lists.error)throw lists.error;if(items.error)throw items.error;
   state.customLists=lists.data||[];state.chatListItems=new Map();
   (items.data||[]).forEach(x=>{const set=state.chatListItems.get(x.conversation_id)||new Set();set.add(x.list_id);state.chatListItems.set(x.conversation_id,set)});
-  if(state.activeListId&&!state.customLists.some(x=>x.id===state.activeListId))state.activeListId=null;
+  if(state.activeListId&&state.activeListId!=='__favorites__'&&!state.customLists.some(x=>x.id===state.activeListId))state.activeListId=null;
   renderCustomLists();
  }catch(error){console.warn('Custom chat lists could not be loaded:',error?.message||error)}
 }
@@ -2333,7 +2333,7 @@ function renderCustomLists(){
  panel.classList.toggle('hidden',!visible);
  if(!visible)return;
  items.replaceChildren();
- const all=document.createElement('button');all.type='button';all.className='custom-list-chip'+(!state.activeListId?' active':'');all.textContent='الكل';all.onclick=()=>{state.activeListId=null;renderCustomLists();renderConversations()};items.append(all);
+ const all=document.createElement('button');all.type='button';all.className='custom-list-chip'+(!state.activeListId?' active':'');all.textContent='الكل';all.onclick=()=>{state.activeListId=null;renderCustomLists();renderConversations()};items.append(all);const favorites=document.createElement('button');favorites.type='button';favorites.className='custom-list-chip'+(state.activeListId==='__favorites__'?' active':'');favorites.textContent='♥ المفضلة';favorites.onclick=()=>{state.activeListId='__favorites__';renderCustomLists();renderConversations()};items.append(favorites);
  state.customLists.forEach(list=>{
   const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.gap='3px';
   const b=document.createElement('button');b.type='button';b.className='custom-list-chip'+(state.activeListId===list.id?' active':'');b.textContent=list.name;b.onclick=()=>{state.activeListId=list.id;renderCustomLists();renderConversations()};
@@ -2399,12 +2399,12 @@ function updateGroupComposerPermission(){
  $('messageInput').disabled=!!(blocked||channelBlocked);$('sendBtn').disabled=!!(blocked||channelBlocked);
  $('messageInput').placeholder=blocked?'الإرسال متاح لمشرفي المجموعة فقط':channelBlocked?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';
 }
-async function loadAllUserConversationSettings(){if(!state.user)return;const ids=state.conversations.map(c=>c.id);if(!ids.length)return;const {data,error}=await supabaseClient.from('user_conversation_settings').select('conversation_id,is_muted,notification_tone').eq('user_id',state.user.id).in('conversation_id',ids);if(error){console.warn('Conversation notification preferences unavailable:',error.message);return}(data||[]).forEach(x=>state.userConversationSettings.set(x.conversation_id,x))}
+async function loadAllUserConversationSettings(){if(!state.user)return;const ids=state.conversations.map(c=>c.id);if(!ids.length)return;const {data,error}=await supabaseClient.from('user_conversation_settings').select('conversation_id,is_muted,notification_tone,is_favorite').eq('user_id',state.user.id).in('conversation_id',ids);if(error){console.warn('Conversation notification preferences unavailable:',error.message);return}(data||[]).forEach(x=>state.userConversationSettings.set(x.conversation_id,x))}
 async function loadUserConversationSettings(conversationId){
  if(!state.user||!conversationId)return;
- const {data,error}=await supabaseClient.from('user_conversation_settings').select('is_muted,notification_tone').eq('user_id',state.user.id).eq('conversation_id',conversationId).maybeSingle();
+ const {data,error}=await supabaseClient.from('user_conversation_settings').select('is_muted,notification_tone,is_favorite').eq('user_id',state.user.id).eq('conversation_id',conversationId).maybeSingle();
  if(error){console.warn('Conversation notification settings unavailable:',error.message);return}
- state.userConversationSettings.set(conversationId,data||{is_muted:false,notification_tone:'default'});
+ state.userConversationSettings.set(conversationId,data||{is_muted:false,notification_tone:'default',is_favorite:false});
  updateConversationMenu();
 }
 async function saveUserConversationSettings(patch){
@@ -2422,7 +2422,7 @@ function updateConversationMenu(){
  ['groupInfoBtn','selectMessagesBtn','muteNotificationsBtn','notificationSettingsBtn','disappearingBtn','starredMessagesBtn','groupThemeBtn','favoriteConversationBtn','addToCustomListBtn','exportConversationBtn','closeConversationBtn','clearConversationBtn','leaveGroupBtn'].forEach(id=>show(id,true));
  show('groupInfoBtn',group);show('disappearingBtn',group);show('groupThemeBtn',group);show('leaveGroupBtn',group);
  $('muteNotificationsBtn').innerHTML=settings.is_muted?'<i class="ph ph-bell"></i><span>إلغاء كتم الإشعارات</span>':'<i class="ph ph-bell-slash"></i><span>كتم الإشعارات</span>';
- const favorite=!!state.chatPrefs.get(c.id)?.is_favorite;
+ const favorite=!!state.userConversationSettings.get(c.id)?.is_favorite;
  $('notificationSettingsBtn').classList.remove('hidden');
  $('favoriteConversationBtn').innerHTML=favorite?'<i class="ph ph-heart-break"></i><span>إزالة من المفضلة</span>':'<i class="ph ph-heart"></i><span>إضافة إلى المفضلة</span>';
 }
@@ -2527,8 +2527,8 @@ async function leaveActiveGroup(){
  toast('غادرت المجموعة');await loadConversations();await closeActiveConversation();
 }
 async function toggleFavoriteConversation(){
- const current=!!state.chatPrefs.get(state.active?.id)?.is_favorite;
- if(await saveDirectChatPreference({is_favorite:!current})){updateConversationMenu();renderConversations();toast(current?'أزيلت من المفضلة':'أضيفت إلى المفضلة')}
+ const current=!!state.userConversationSettings.get(state.active?.id)?.is_favorite;
+ if(await saveUserConversationSettings({is_favorite:!current})){updateConversationMenu();renderConversations();toast(current?'أزيلت من المفضلة':'أضيفت إلى المفضلة')}
 }
 async function toggleMuteConversation(){
  const current=state.userConversationSettings.get(state.active?.id)||{is_muted:false,notification_tone:'default'};
@@ -2576,7 +2576,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  const originalSetSidebarView=setSidebarView;
  setSidebarView=function(view){originalSetSidebarView(view);renderCustomLists()};
  const originalRenderConversations=renderConversations;
- renderConversations=function(section){originalRenderConversations(section);if(state.activeListId){const list=state.customLists.find(x=>x.id===state.activeListId);if(list){const title=$('sidebarSectionTitle');if(title)title.textContent=list.name+' · '+(state.sidebarView==='groups'?'المجموعات':'المحادثات')}}};
+ renderConversations=function(section){originalRenderConversations(section);if(state.activeListId){const list=state.customLists.find(x=>x.id===state.activeListId);if(state.activeListId==='__favorites__'){$('sidebarSectionTitle').textContent='المفضلة'}else if(list){const title=$('sidebarSectionTitle');if(title)title.textContent=list.name+' · '+(state.sidebarView==='groups'?'المجموعات':'المحادثات')}}};
  const originalOpenConversation=openConversation;
  openConversation=async function(c){await originalOpenConversation(c);if(state.active?.id===c.id){applyGroupComposerOnOpen();updateConversationMenu()}};
  const originalLoadConversations=loadConversations;
