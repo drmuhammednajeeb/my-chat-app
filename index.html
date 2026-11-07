@@ -91,7 +91,7 @@ html,body{background:#d1d7db;color:var(--text)}
 .sectionhead{padding:10px 18px;color:#667781;font-size:12px}
 .sectionhead button{color:#00a884}
 .conversation-list{padding:0}
-.conversation{position:relative;gap:12px;padding:12px 16px;border-radius:0;margin:0;min-height:76px;border-bottom:1px solid #f1f2f3}
+.conversation{position:relative;touch-action:pan-y;gap:12px;padding:12px 16px;border-radius:0;margin:0;min-height:76px;border-bottom:1px solid #f1f2f3}
 .conversation:hover{background:#f5f6f6}
 .conversation.active{background:#f0f2f5;box-shadow:none}
 .conv-avatar{width:49px;height:49px;border-radius:50%;background:#dce8e3;color:#087e68;font-size:19px}
@@ -782,13 +782,14 @@ async function uploadProfileAvatar(file){
   if(error)throw error;
   state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user');
   renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');
+  if($('profileModal')?.classList.contains('open'))renderAvatar($('profileModalAvatar'),data,'profile-modal-avatar');
   if(state.active?.type==='direct'&&otherMember(state.active)?.id===state.user.id)renderChatAvatar(state.active);
   toast('تم تحديث صورتك الشخصية بنجاح');
  }catch(error){console.error('Profile avatar upload failed:',error);toast(error.message||'تعذر تحديث الصورة الشخصية')}
  finally{if(input){input.disabled=false;input.value=''}}
 }
 $('myAvatar').onclick=()=>openProfileModal(state.profile,true);
-$('myAvatar').addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();$('avatarInput').click()}});
+$('myAvatar').addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openProfileModal(state.profile,true)}});
 $('avatarInput').addEventListener('change',event=>uploadProfileAvatar(event.target.files?.[0]));
 
 function setSidebarView(view){
@@ -992,7 +993,7 @@ async function archiveConversation(conversation,archive=true){
  const {data,error}=await supabaseClient.from('user_chat_preferences').upsert(payload,{onConflict:'user_id,conversation_id'}).select('conversation_id,theme,cleared_before,is_shortcut,is_archived').single();
  if(error){console.error('Archive update failed:',error);toast('تعذرت أرشفة المحادثة');return}
  state.chatPrefs.set(conversation.id,data);
- if(state.active?.id===conversation.id){state.activeChatPreference=data;applyDirectChatTheme();if(archive){state.active=null;stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);$('chatTitle').textContent='تمت أرشفة المحادثة';$('chatSub').textContent='يمكنك استعادتها من قسم المؤرشفة';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-archive-box"></i></div><h2>تمت الأرشفة</h2><p>المحادثة ورسائلها محفوظة ويمكن استعادتها في أي وقت.</p></div>'}}
+ if(state.active?.id===conversation.id){state.activeChatPreference=data;if(archive){state.active=null;applyDirectChatTheme();stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);$('chatTitle').textContent='تمت أرشفة المحادثة';$('chatSub').textContent='يمكنك استعادتها من قسم المؤرشفة';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-archive-box"></i></div><h2>تمت الأرشفة</h2><p>المحادثة ورسائلها محفوظة ويمكن استعادتها في أي وقت.</p></div>'}}
  renderConversations();toast(archive?'تمت أرشفة المحادثة في حسابك فقط':'تمت استعادة المحادثة إلى القائمة');
 }
 $('archiveConversationBtn').onclick=()=>{if(state.active)archiveConversation(state.active,!state.activeChatPreference?.is_archived)};
