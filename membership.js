@@ -116,30 +116,69 @@
       const info = make("div", "membership-list-info");
       info.append(make("strong", "", item.display_name || item.username || "عضو"));
       info.append(make("small", "", item.email || "—"));
-      info.append(make("small", "membership-number-label", item.membership_number + " · @" + item.username));
-      const status = make("span", item.membership_status === "active" ? "membership-status active" : "membership-status suspended",
-        item.membership_status === "active" ? "نشط" : "موقوف");
-      const toggle = make("button", item.membership_status === "active" ? "membership-danger-btn" : "membership-activate-btn",
-        item.membership_status === "active" ? "إيقاف العضوية" : "إعادة التفعيل");
-      toggle.type = "button";
-      toggle.addEventListener("click", async () => {
-        const next = item.membership_status === "active" ? "suspended" : "active";
-        const action = next === "suspended" ? "إيقاف" : "إعادة تفعيل";
-        if (!confirm(action + " عضوية " + (item.display_name || item.email) + "؟")) return;
-        toggle.disabled = true;
-        const { error } = await supabaseClient.rpc("admin_update_membership_status", {
-          p_user_id: item.user_id, p_status: next
-        });
-        if (error) {
-          toggle.disabled = false;
-          if (typeof toast === "function") toast(error.message || "تعذر تحديث العضوية");
-          return;
-        }
-        if (typeof toast === "function") toast("تم تحديث حالة العضوية");
-        await loadMembershipAdmin();
-      });
+      info.append(make("small", "membership-number-label",
+        item.membership_number_verified
+          ? "رقم فوريفر الرسمي: " + item.membership_number + " · @" + item.username
+          : "رقم العضوية الرسمي غير معتمد بعد · @" + item.username));
+
+      const isVerified = item.membership_number_verified === true;
+      const statusText = !isVerified ? "بانتظار الرقم الرسمي"
+        : item.membership_status === "active" ? "نشط" : "موقوف";
+      const status = make("span",
+        isVerified && item.membership_status === "active" ? "membership-status active" : "membership-status suspended",
+        statusText);
       const controls = make("div", "membership-member-controls");
-      controls.append(status, toggle);
+
+      if (!isVerified) {
+        const verify = make("button", "membership-activate-btn", "اعتماد رقم فوريفر");
+        verify.type = "button";
+        verify.addEventListener("click", async () => {
+          const officialNumber = prompt(
+            "أدخل رقم العضوية الرسمي لهذا العضو (971001 متبوعاً بستة أرقام):",
+            ""
+          );
+          if (officialNumber === null) return;
+          const normalized = officialNumber.trim();
+          if (!/^971001[0-9]{6}$/.test(normalized)) {
+            if (typeof toast === "function") toast("رقم غير صحيح. المطلوب 12 رقماً بالصيغة 971001XXXXXX");
+            return;
+          }
+          verify.disabled = true;
+          const { error } = await supabaseClient.rpc("admin_set_member_official_number", {
+            p_user_id: item.user_id,
+            p_membership_number: normalized
+          });
+          if (error) {
+            verify.disabled = false;
+            if (typeof toast === "function") toast(error.message || "تعذر اعتماد رقم العضوية");
+            return;
+          }
+          if (typeof toast === "function") toast("تم اعتماد رقم العضوية الرسمية");
+          await loadMembershipAdmin();
+        });
+        controls.append(status, verify);
+      } else {
+        const toggle = make("button", item.membership_status === "active" ? "membership-danger-btn" : "membership-activate-btn",
+          item.membership_status === "active" ? "إيقاف العضوية" : "إعادة التفعيل");
+        toggle.type = "button";
+        toggle.addEventListener("click", async () => {
+          const next = item.membership_status === "active" ? "suspended" : "active";
+          const action = next === "suspended" ? "إيقاف" : "إعادة تفعيل";
+          if (!confirm(action + " عضوية " + (item.display_name || item.email) + "؟")) return;
+          toggle.disabled = true;
+          const { error } = await supabaseClient.rpc("admin_update_membership_status", {
+            p_user_id: item.user_id, p_status: next
+          });
+          if (error) {
+            toggle.disabled = false;
+            if (typeof toast === "function") toast(error.message || "تعذر تحديث العضوية");
+            return;
+          }
+          if (typeof toast === "function") toast("تم تحديث حالة العضوية");
+          await loadMembershipAdmin();
+        });
+        controls.append(status, toggle);
+      }
       row.append(info, controls);
       target.append(row);
     });
@@ -167,31 +206,56 @@
   async function createInvites() {
     const input = byId("memberInviteEmails");
     const button = byId("createMembershipInvitesBtn");
-    const emails = input.value.split(/[\n,;]+/).map(value => value.trim().toLowerCase()).filter(Boolean);
-    if (!emails.length) {
-      if (typeof toast === "function") toast("أدخل بريداً إلكترونياً واحداً على الأقل");
+    const lines = input.value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
+    const members = [];
+    for (const line of lines) {
+      const parts = line.split(/[\t,;]+/).map(value => value.trim());
+      if (parts.length !== 2) {
+        if (typeof toast === "function") toast("كل سطر يجب أن يحتوي البريد الإلكتروني ثم رقم فوريفر الرسمي، مفصولين بفاصلة");
+        return;
+      }
+      const email = parts[0].toLowerCase();
+      const membership_number = parts[1];
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (typeof toast === "function") toast("بريد إلكتروني غير صحيح: " + email);
+        return;
+      }
+      if (!/^971001[0-9]{6}$/.test(membership_number)) {
+        if (typeof toast === "function") toast("رقم فوريفر غير صحيح: " + membership_number + " — المطلوب 971001XXXXXX");
+        return;
+      }
+      members.push({ email, membership_number });
+    }
+    if (!members.length) {
+      if (typeof toast === "function") toast("أدخل البريد ورقم العضوية الرسمية لكل عضو");
       return;
     }
-    if (emails.length > 1000) {
+    if (members.length > 1000) {
       if (typeof toast === "function") toast("الحد الأقصى 1,000 دعوة في الدفعة الواحدة");
       return;
     }
+    const emails = members.map(item => item.email);
+    const numbers = members.map(item => item.membership_number);
+    if (new Set(emails).size !== emails.length || new Set(numbers).size !== numbers.length) {
+      if (typeof toast === "function") toast("توجد عناوين بريد أو أرقام عضوية مكررة في القائمة");
+      return;
+    }
     button.disabled = true;
-    button.innerHTML = '<i class="ph ph-spinner-gap"></i> جارٍ إنشاء الدعوات…';
+    button.innerHTML = '<i class="ph ph-spinner-gap"></i> جارٍ التحقق وإنشاء الدعوات…';
     try {
-      const { data, error } = await supabaseClient.rpc("admin_create_member_invites", { p_emails: emails });
+      const { data, error } = await supabaseClient.rpc("admin_create_official_member_invites", { p_members: members });
       if (error) throw error;
       latestInvites = data || [];
       renderGeneratedInvites(latestInvites);
       input.value = "";
-      if (typeof toast === "function") toast("تم إنشاء " + latestInvites.length + " دعوة عضوية");
+      if (typeof toast === "function") toast("تم إنشاء " + latestInvites.length + " دعوة بأرقام فوريفر الرسمية");
       await loadMembershipAdmin();
     } catch (error) {
-      console.error("Membership invitation creation failed:", error);
+      console.error("Official membership invitation creation failed:", error);
       if (typeof toast === "function") toast(error.message || "تعذر إنشاء الدعوات");
     } finally {
       button.disabled = false;
-      button.innerHTML = '<i class="ph ph-user-plus"></i> إنشاء الدعوات';
+      button.innerHTML = '<i class="ph ph-user-plus"></i> إنشاء الدعوات الرسمية';
     }
   }
 
