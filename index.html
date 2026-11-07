@@ -1392,18 +1392,18 @@ async function deleteMessage(m){if(m.sender_id!==state.user?.id||m.deleted_at)re
 function formatVoiceDuration(seconds){const total=Math.max(0,Math.floor(seconds||0));return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0')}
 function clearVoiceTimer(){if(state.voiceTimer){clearInterval(state.voiceTimer);state.voiceTimer=null}}
 function cleanupVoiceCapture(){clearVoiceTimer();if(state.voiceStream){state.voiceStream.getTracks().forEach(track=>track.stop());state.voiceStream=null}state.voiceRecorder=null;state.voiceChunks=[];state.voiceStartedAt=null;$('voiceRecordBtn').classList.remove('recording');$('voiceRecordBtn').innerHTML='<i class="ph ph-microphone"></i>';$('voiceRecordBtn').title='تسجيل رسالة صوتية';$('voiceCancelBtn').classList.add('hidden')}
-function showAttachmentPreview(file,label){const preview=$('attachmentPreview');preview.replaceChildren();const text=document.createElement('span');text.textContent=label||('المرفق المحدد: '+file.name+' ('+Math.ceil(file.size/1024)+' كيلوبايت)');preview.append(text);const clear=document.createElement('button');clear.type='button';clear.textContent='إزالة';clear.style.cssText='margin-inline-start:12px;border:0;background:transparent;color:#dc5555;cursor:pointer;font:inherit';clear.onclick=()=>{state.attachment=null;$('fileInput').value='';preview.classList.add('hidden');preview.replaceChildren();resizeComposer()};preview.append(clear);preview.classList.remove('hidden')}
+function showAttachmentPreview(file,label){const preview=$('attachmentPreview');preview.replaceChildren();const text=document.createElement('span');text.textContent=label||('المرفق المحدد: '+file.name+' ('+Math.ceil(file.size/1024)+' كيلوبايت)');preview.append(text);const clear=document.createElement('button');clear.type='button';clear.textContent='إزالة';clear.style.cssText='margin-inline-start:12px;border:0;background:transparent;color:#dc5555;cursor:pointer;font:inherit';clear.onclick=()=>{state.attachment=null;state.voiceDuration=0;$('fileInput').value='';preview.classList.add('hidden');preview.replaceChildren();resizeComposer()};preview.append(clear);preview.classList.remove('hidden')}
 async function startVoiceRecording(){
  if(!state.active||state.uploading||state.attachment)return;
- const recordingConversationId=state.active.id,recordingUserId=state.user?.id;
+ const recordingConversationId=state.active.id,recordingUserId=state.user?.id;let pendingVoiceStream=null;
  const role=(state.active.members||[]).find(m=>m.user_id===state.user?.id)?.role;if(state.active.type==='channel'&&!['owner','admin'].includes(role)){toast('التسجيل في هذه القناة مخصص للمشرفين');return}
  if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined'){toast('تسجيل الصوت غير مدعوم في هذا المتصفح');return}
  try{
-  const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-  if(state.active?.id!==recordingConversationId||state.user?.id!==recordingUserId){stream.getTracks().forEach(track=>track.stop());toast('تغيرت المحادثة قبل بدء التسجيل');return}
+  const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});pendingVoiceStream=stream;
+  if(state.active?.id!==recordingConversationId||state.user?.id!==recordingUserId){stream.getTracks().forEach(track=>track.stop());pendingVoiceStream=null;toast('تغيرت المحادثة قبل بدء التسجيل');return}
   const supported=['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus','audio/webm'].find(type=>MediaRecorder.isTypeSupported?.(type));
   let recorder;try{recorder=new MediaRecorder(stream,supported?{mimeType:supported}:undefined)}catch(_){recorder=new MediaRecorder(stream)}
-  state.voiceStream=stream;state.voiceRecorder=recorder;state.voiceChunks=[];state.cancelVoiceOnStop=false;state.voiceStartedAt=Date.now();
+  state.voiceStream=stream;pendingVoiceStream=null;state.voiceRecorder=recorder;state.voiceChunks=[];state.cancelVoiceOnStop=false;state.voiceStartedAt=Date.now();
   recorder.ondataavailable=event=>{if(event.data?.size)state.voiceChunks.push(event.data)};
   recorder.onerror=event=>{console.error('Voice recording failed:',event.error||event);toast('حدث خطأ أثناء تسجيل الصوت');cleanupVoiceCapture()};
   recorder.onstop=()=>{
@@ -1414,7 +1414,7 @@ async function startVoiceRecording(){
   };
   recorder.start(1000);$('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').innerHTML='<i class="ph ph-stop-circle"></i><span class="sr-only">إيقاف التسجيل</span>';$('voiceRecordBtn').title='إيقاف التسجيل';$('voiceCancelBtn').classList.remove('hidden');
   state.voiceTimer=setInterval(()=>{const elapsed=Math.floor((Date.now()-state.voiceStartedAt)/1000);$('voiceRecordBtn').title='إيقاف التسجيل · '+formatVoiceDuration(elapsed);if(elapsed>=180)stopVoiceRecording()},1000);
- }catch(error){console.error('Microphone access failed:',error);toast(error?.name==='NotAllowedError'?'اسمح للمتصفح باستخدام الميكروفون لتسجيل رسالة صوتية':'تعذر تشغيل الميكروفون. تحقق من صلاحية المتصفح')}
+ }catch(error){pendingVoiceStream?.getTracks().forEach(track=>track.stop());console.error('Microphone access failed:',error);toast(error?.name==='NotAllowedError'?'اسمح للمتصفح باستخدام الميكروفون لتسجيل رسالة صوتية':'تعذر تشغيل الميكروفون. تحقق من صلاحية المتصفح')}
 }
 function stopVoiceRecording(){if(state.voiceRecorder&&state.voiceRecorder.state!=='inactive')state.voiceRecorder.stop()}
 function cancelVoiceRecording(){if(!state.voiceRecorder)return;state.cancelVoiceOnStop=true;stopVoiceRecording()}
