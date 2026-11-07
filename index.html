@@ -966,27 +966,36 @@ async function prepareAvatarImage(file){
  const jpeg=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.84));
  return jpeg?{blob:jpeg,type:'image/jpeg'}:{blob:file,type:file.type};
 }
+async function withProfileTimeout(task,label,timeoutMs=20000){
+ let timer;
+ try{return await Promise.race([Promise.resolve(task),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' استغرق وقتاً أطول من المتوقع. تحقق من الاتصال ثم أعد المحاولة.')),timeoutMs)})])}
+ finally{clearTimeout(timer)}
+}
 async function uploadProfileAvatar(file){
- if(!state.user||!file)return;
+ if(!state.user||!file)throw new Error('اختر صورة أولاً');
  const allowed=['image/jpeg','image/png','image/webp'];
- if(!allowed.includes(file.type)){toast('اختر صورة بصيغة JPG أو PNG أو WebP');return}
- if(file.size>3*1024*1024){toast('الحد الأقصى للصورة الشخصية 3 ميجابايت');return}
+ if(!allowed.includes(file.type))throw new Error('اختر صورة بصيغة JPG أو PNG أو WebP');
+ if(file.size>3*1024*1024)throw new Error('الحد الأقصى للصورة الشخصية 3 ميجابايت');
  const input=$('avatarInput');if(input)input.disabled=true;
  try{
-  const prepared=await prepareAvatarImage(file);
+  const prepared=await withProfileTimeout(prepareAvatarImage(file),'تجهيز الصورة',15000);
   const path=state.user.id+'/avatar';
-  const {error:uploadError}=await supabaseClient.storage.from('avatars').upload(path,prepared.blob,{upsert:true,contentType:prepared.type,cacheControl:'31536000'});
-  if(uploadError)throw uploadError;
+  const uploadResult=await withProfileTimeout(supabaseClient.storage.from('avatars').upload(path,prepared.blob,{upsert:true,contentType:prepared.type,cacheControl:'31536000'}),'رفع الصورة',25000);
+  if(uploadResult.error)throw uploadResult.error;
   const {data:publicData}=supabaseClient.storage.from('avatars').getPublicUrl(path);
+  if(!publicData?.publicUrl)throw new Error('تعذر إنشاء رابط الصورة');
   const avatarUrl=publicData.publicUrl+'?v='+Date.now();
-  const {data,error}=await supabaseClient.from('profiles').update({avatar_url:avatarUrl}).eq('id',state.user.id).select('*').single();
-  if(error)throw error;
+  const updateResult=await withProfileTimeout(supabaseClient.from('profiles').update({avatar_url:avatarUrl,updated_at:new Date().toISOString()}).eq('id',state.user.id).select('*').single(),'حفظ رابط الصورة',20000);
+  if(updateResult.error)throw updateResult.error;
+  const data=updateResult.data;if(!data)throw new Error('لم يتم استلام بيانات الملف الشخصي بعد الحفظ');
   state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user');
   renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');
   if($('profileModal')?.classList.contains('open'))renderAvatar($('profileModalAvatar'),data,'profile-modal-avatar');
+  state.conversations.forEach(conv=>(conv.members||[]).forEach(member=>{if(member.user_id===data.id)member.profile={...(member.profile||{}),...data}}));
   if(state.active?.type==='direct'&&otherMember(state.active)?.id===state.user.id)renderChatAvatar(state.active);
-  toast('تم تحديث الصورة الشخصية وتحسين حجمها');
- }catch(error){console.error('Profile avatar upload failed:',error);toast(error.message||'تعذر تحديث الصورة الشخصية')}
+  toast('تم اعتماد الصورة الشخصية وحفظها');
+  return data;
+ }catch(error){console.error('Profile avatar upload failed:',error);throw error}
  finally{if(input){input.disabled=false;input.value=''}}
 }
 $('myAvatar').onclick=()=>openProfileModal(state.profile,true);
@@ -2083,33 +2092,69 @@ $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox
 supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){authLifecycleVersion++;diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
 (async()=>{try{const {data,error}=await supabaseClient.auth.getSession();if(error)throw error;const session=data?.session;if(session?.user){await enterApp(session.user)}else{state.user=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden')}}catch(error){console.error('Initial auth session check failed:',error);$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد تحميل التطبيق.')}finally{document.documentElement.classList.remove('auth-booting')}})();
 
-// Profile Center: self-edit and read-only participant profiles
-let profileModalEditable=false;
+// Profile Center: resilient editing, explicit photo approval and recoverable close controls
+let profileModalEditable=false,profilePendingPhoto=null,profilePhotoPreviewUrl=null,profilePhotoBusy=false,profileSaveBusy=false;
+function resetProfilePhotoSelection(){
+ if(profilePhotoPreviewUrl){URL.revokeObjectURL(profilePhotoPreviewUrl);profilePhotoPreviewUrl=null}
+ profilePendingPhoto=null;
+ const approve=$('profilePhotoApprove'),cancel=$('profilePhotoCancel'),status=$('profilePhotoStatus'),input=$('avatarInput');
+ if(approve){approve.classList.add('hidden');approve.disabled=false;approve.textContent='موافقة على الصورة'}
+ if(cancel)cancel.classList.add('hidden');
+ if(status){status.classList.add('hidden');status.textContent=''}
+ if(input){input.value='';input.disabled=false}
+}
 function openProfileModal(profile,editable=false){
  if(!profile)return;const profileModalStarted=performance.now();profileModalEditable=!!editable;
+ resetProfilePhotoSelection();
  $('profileModalTitle').textContent=editable?'ملفي الشخصي':'الملف الشخصي';$('profileModalSubtitle').textContent=editable?'إدارة بيانات حسابك':'معلومات المستخدم';
  $('profileDisplayName').value=profile.display_name||'';$('profileUsername').value=profile.username?'@'+profile.username:'';$('profileBio').value=profile.bio||'';
  renderAvatar($('profileModalAvatar'),profile,'profile-modal-avatar');$('profileDisplayName').readOnly=!editable;$('profileBio').readOnly=!editable;
  $('profilePhotoBtn').classList.toggle('hidden',!editable);$('profileSaveBtn').classList.toggle('hidden',!editable);$('profileReadOnlyNote').classList.toggle('hidden',editable);
- $('profileModal').classList.add('open');$('profileModal').setAttribute('aria-hidden','false');recordPerf('profile_modal_open',performance.now()-profileModalStarted);
+ $('profileModal').classList.add('open');$('profileModal').setAttribute('aria-hidden','false');document.body.classList.add('profile-modal-open');recordPerf('profile_modal_open',performance.now()-profileModalStarted);
 }
-function closeProfileModal(){$('profileModal').classList.remove('open');$('profileModal').setAttribute('aria-hidden','true')}
+function closeProfileModal(){
+ $('profileModal').classList.remove('open');$('profileModal').setAttribute('aria-hidden','true');document.body.classList.remove('profile-modal-open');
+ if(!profilePhotoBusy)resetProfilePhotoSelection();
+}
 $('profileModalClose').onclick=closeProfileModal;$('profileModalCancel').onclick=closeProfileModal;
 $('profileModal').addEventListener('click',e=>{if(e.target===$('profileModal'))closeProfileModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('profileModal')?.classList.contains('open')){e.preventDefault();closeProfileModal()}});
 $('myAvatar').onclick=()=>openProfileModal(state.profile,true);$('myName').onclick=()=>openProfileModal(state.profile,true);$('myName').style.cursor='pointer';
-$('profilePhotoBtn').onclick=()=>$('avatarInput').click();
+$('profilePhotoBtn').onclick=()=>{if(profileModalEditable&&!profilePhotoBusy)$('avatarInput').click()};
+$('avatarInput').addEventListener('change',event=>{
+ const file=event.target.files?.[0];if(!file)return;
+ const allowed=['image/jpeg','image/png','image/webp'];
+ if(!allowed.includes(file.type)){toast('اختر صورة بصيغة JPG أو PNG أو WebP');event.target.value='';return}
+ if(file.size>3*1024*1024){toast('الحد الأقصى للصورة الشخصية 3 ميجابايت');event.target.value='';return}
+ resetProfilePhotoSelection();profilePendingPhoto=file;profilePhotoPreviewUrl=URL.createObjectURL(file);
+ renderAvatar($('profileModalAvatar'),{avatar_url:profilePhotoPreviewUrl},'profile-modal-avatar');
+ $('profilePhotoApprove').classList.remove('hidden');$('profilePhotoCancel').classList.remove('hidden');
+ $('profilePhotoStatus').textContent='معاينة الصورة — اضغط موافقة لحفظها';$('profilePhotoStatus').classList.remove('hidden');
+});
+$('profilePhotoCancel').onclick=()=>{resetProfilePhotoSelection();renderAvatar($('profileModalAvatar'),state.profile,'profile-modal-avatar')};
+$('profilePhotoApprove').onclick=async()=>{
+ if(!profileModalEditable||!profilePendingPhoto||profilePhotoBusy)return;
+ profilePhotoBusy=true;const approve=$('profilePhotoApprove'),cancel=$('profilePhotoCancel'),status=$('profilePhotoStatus');
+ approve.disabled=true;cancel.disabled=true;approve.textContent='جارٍ الحفظ…';status.textContent='يتم تجهيز الصورة ورفعها وحفظها…';status.classList.remove('hidden');
+ try{await uploadProfileAvatar(profilePendingPhoto);resetProfilePhotoSelection()}
+ catch(error){toast(error.message||'تعذر حفظ الصورة. يمكنك المحاولة مرة أخرى');approve.disabled=false;approve.textContent='إعادة المحاولة';cancel.disabled=false;status.textContent=error.message||'فشل حفظ الصورة — أعد المحاولة أو اختر صورة أخرى'}
+ finally{profilePhotoBusy=false;cancel.disabled=false}
+};
 $('chatAvatar').onclick=()=>{if(state.active?.type==='direct')openProfileModal(otherMember(state.active),false)};
 $('chatProfileOpen').onclick=()=>{if(state.active?.type==='direct')openProfileModal(otherMember(state.active),false)};
 $('profileSaveBtn').onclick=async()=>{
- if(!profileModalEditable||!state.user)return;const display=$('profileDisplayName').value.trim(),bio=$('profileBio').value.trim();if(!display)return toast('أدخل الاسم الظاهر');
- const btn=$('profileSaveBtn');btn.disabled=true;
+ if(!profileModalEditable||!state.user||profileSaveBusy)return;
+ const display=$('profileDisplayName').value.trim(),bio=$('profileBio').value.trim();if(!display)return toast('أدخل الاسم الظاهر');
+ const btn=$('profileSaveBtn');profileSaveBusy=true;btn.disabled=true;btn.textContent='جارٍ حفظ التغييرات…';
  try{
-  const {data,error}=await supabaseClient.from('profiles').update({display_name:display,bio,updated_at:new Date().toISOString()}).eq('id',state.user.id).select('*').single();if(error)throw error;
-  state.profile=data;$('myName').textContent=data.display_name;$('myHandle').textContent='@'+data.username;
+  const result=await withProfileTimeout(supabaseClient.from('profiles').update({display_name:display,bio,updated_at:new Date().toISOString()}).eq('id',state.user.id).select('*').single(),'حفظ بيانات الملف الشخصي',20000);
+  if(result.error)throw result.error;if(!result.data)throw new Error('لم يتم استلام بيانات الملف الشخصي بعد الحفظ');
+  const data=result.data;state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user');
   state.conversations.forEach(conv=>(conv.members||[]).forEach(member=>{if(member.user_id===data.id)member.profile={...(member.profile||{}),...data}}));
   if(state.active?.type==='direct'&&otherMember(state.active)?.id===data.id)$('chatTitle').textContent=convName(state.active);
-  renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');renderAvatar($('profileModalAvatar'),data,'profile-modal-avatar');renderConversations();closeProfileModal();toast('تم تحديث ملفك الشخصي');
- }catch(error){console.error('Profile update failed:',error);toast(error.message||'تعذر حفظ الملف الشخصي')}finally{btn.disabled=false}
+  renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');renderAvatar($('profileModalAvatar'),data,'profile-modal-avatar');renderConversations();closeProfileModal();toast('تم تحديث بيانات ملفك الشخصي');
+ }catch(error){console.error('Profile update failed:',error);toast(error.message||'تعذر حفظ الملف الشخصي. حاول مرة أخرى')}
+ finally{profileSaveBusy=false;btn.disabled=false;btn.textContent='حفظ التغييرات'}
 };
 </script>
 <style>
@@ -2143,7 +2188,7 @@ $('profileSaveBtn').onclick=async()=>{
 .conversation-swipe-shell.is-archived .swipe-conversation.active{background:#1b3344}
 @media(prefers-reduced-motion:reduce){.conversation.swipe-conversation,.conversation-swipe-action{transition:none}}
 </style>
-<div id="profileModal" class="profile-modal" aria-hidden="true"><section class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle"><header class="profile-dialog-head"><div><h2 id="profileModalTitle">الملف الشخصي</h2><p id="profileModalSubtitle">بيانات الحساب</p></div><button id="profileModalClose" type="button" class="iconbtn" aria-label="إغلاق"><i class="ph ph-x"></i></button></header><div class="profile-dialog-body"><div class="profile-modal-avatar-wrap"><div id="profileModalAvatar" class="profile-modal-avatar">U</div><button id="profilePhotoBtn" type="button" class="profile-secondary-btn"><i class="ph ph-camera"></i> تغيير الصورة</button></div><label class="profile-field-label" for="profileDisplayName">الاسم الظاهر</label><input id="profileDisplayName" class="profile-field" maxlength="48"><label class="profile-field-label" for="profileUsername">اسم المستخدم</label><input id="profileUsername" class="profile-field" readonly><label class="profile-field-label" for="profileBio">نبذة تعريفية</label><textarea id="profileBio" class="profile-field" rows="3" maxlength="240" placeholder="اكتب نبذة مختصرة عنك"></textarea><div class="profile-dialog-actions"><button id="profileSaveBtn" type="button" class="profile-save-btn">حفظ التغييرات</button><button id="profileModalCancel" type="button" class="profile-cancel-btn">إغلاق</button></div><p id="profileReadOnlyNote" class="profile-readonly-note hidden">هذا الملف الشخصي للعرض فقط.</p></div></section></div>
+<div id="profileModal" class="profile-modal" aria-hidden="true"><section class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle"><header class="profile-dialog-head"><div><h2 id="profileModalTitle">الملف الشخصي</h2><p id="profileModalSubtitle">بيانات الحساب</p></div><button id="profileModalClose" type="button" class="iconbtn" aria-label="إغلاق"><i class="ph ph-x"></i></button></header><div class="profile-dialog-body"><div class="profile-modal-avatar-wrap"><div id="profileModalAvatar" class="profile-modal-avatar">U</div><button id="profilePhotoBtn" type="button" class="profile-secondary-btn"><i class="ph ph-camera"></i> اختيار صورة</button><div id="profilePhotoStatus" class="profile-photo-status hidden" role="status" aria-live="polite"></div><div class="profile-photo-actions"><button id="profilePhotoApprove" type="button" class="profile-photo-approve hidden"><i class="ph ph-check"></i> موافقة على الصورة</button><button id="profilePhotoCancel" type="button" class="profile-cancel-btn hidden">إلغاء الاختيار</button></div></div><label class="profile-field-label" for="profileDisplayName">الاسم الظاهر</label><input id="profileDisplayName" class="profile-field" maxlength="48"><label class="profile-field-label" for="profileUsername">اسم المستخدم</label><input id="profileUsername" class="profile-field" readonly><label class="profile-field-label" for="profileBio">نبذة تعريفية</label><textarea id="profileBio" class="profile-field" rows="3" maxlength="240" placeholder="اكتب نبذة مختصرة عنك"></textarea><div class="profile-dialog-actions"><button id="profileSaveBtn" type="button" class="profile-save-btn">حفظ التغييرات</button><button id="profileModalCancel" type="button" class="profile-cancel-btn">إغلاق</button></div><p id="profileReadOnlyNote" class="profile-readonly-note hidden">هذا الملف الشخصي للعرض فقط.</p></div></section></div>
 <style>
 /* WhatsApp-style contextual menus: keep chat chrome clean until requested. */
 .chat-head{position:relative}
@@ -2294,5 +2339,5 @@ html.dark .new-messages-jump{background:#153c36;color:#b8f3d6;border-color:#276b
  .conversation,.notification-item,.chat-search-result{transition:none!important}
 }
 
-</style>
+.profile-photo-status{font-size:11px;color:var(--muted);text-align:center;max-width:100%;overflow-wrap:anywhere}.profile-photo-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.profile-photo-approve{border:0;border-radius:10px;padding:10px 16px;background:#00a884;color:#fff;font-size:12px;font-weight:800;cursor:pointer}.profile-photo-approve:disabled{opacity:.6;cursor:wait}.profile-photo-approve.hidden,.profile-photo-actions .hidden{display:none!important}.profile-modal-open{overflow:hidden}.profile-dialog button{touch-action:manipulation}.profile-modal{overscroll-behavior:contain}.profile-dialog{overscroll-behavior:contain}</style>
 </body></html>
