@@ -756,7 +756,7 @@ function startPresence(){
 }
 function otherMember(conv){return (conv.members||[]).find(m=>m.user_id!==state.user.id)?.profile}
 function convName(c){if(c.type==='group')return c.title||'مجموعة جديدة';if(c.type==='channel')return c.title||'قناة بدون اسم';const p=otherMember(c);return p?.display_name||p?.username||'محادثة خاصة'}
-function convPreview(c){return c.last_message?.content||'ابدأ المحادثة الآن'}
+function convPreview(c){const cleared=state.chatPrefs.get(c.id)?.cleared_before;if(c.type==='direct'&&cleared&&c.last_message?.created_at&&new Date(c.last_message.created_at)<=new Date(cleared))return 'تم مسح السجل من طرفك';return c.last_message?.content||'ابدأ المحادثة الآن'}
 function renderConversations(){
  const q=$('search').value.trim().toLowerCase(),list=$('conversationList');
  if(state.conversationsLoading&&!state.conversations.length){showListSkeleton(list,6);return}
@@ -939,7 +939,7 @@ function renderComposerContext(){const target=state.editTarget||state.replyTarge
 function beginReply(m){if(!m||m.deleted_at)return;if(state.editTarget)$('messageInput').value='';state.editTarget=null;$('attachBtn').disabled=false;state.replyTarget=m;renderComposerContext();resizeComposer();$('messageInput').focus()}
 function beginEditMessage(m){if(!m||m.sender_id!==state.user?.id||m.deleted_at)return;state.editTarget=m;state.replyTarget=null;$('attachBtn').disabled=true;$('messageInput').value=m.content||'';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');renderComposerContext();resizeComposer();$('messageInput').focus();$('messageInput').setSelectionRange($('messageInput').value.length,$('messageInput').value.length)}
 function cancelComposerContext(){state.replyTarget=null;state.editTarget=null;renderComposerContext()}
-function renderPinnedBanner(){const box=$('pinnedBanner');if(!box)return;const pins=[...state.pinnedMessages.values()].sort((a,b)=>new Date(b.pinned_at)-new Date(a.pinned_at)),latest=pins[0];if(!latest){box.classList.add('hidden');return}const message=state.messages.find(m=>m.id===latest.message_id)||state.replyMessages.get(latest.message_id);box.classList.remove('hidden');$('pinnedText').textContent=messagePreview(message);const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;$('pinnedUnpin').classList.toggle('hidden',latest.pinned_by!==state.user?.id&&!['owner','admin'].includes(role)&&!state.isTeamAdmin);$('pinnedJump').onclick=()=>jumpToMessage(latest.message_id);$('pinnedUnpin').onclick=()=>toggleMessagePin(message||{id:latest.message_id,conversation_id:state.active?.id})}
+function renderPinnedBanner(){const box=$('pinnedBanner');if(!box)return;const cutoff=state.activeChatPreference?.cleared_before,pins=[...state.pinnedMessages.values()].filter(pin=>{const message=state.messages.find(m=>m.id===pin.message_id)||state.replyMessages.get(pin.message_id);return !cutoff||(message?.created_at&&new Date(message.created_at)>new Date(cutoff))}).sort((a,b)=>new Date(b.pinned_at)-new Date(a.pinned_at)),latest=pins[0];if(!latest){box.classList.add('hidden');return}const message=state.messages.find(m=>m.id===latest.message_id)||state.replyMessages.get(latest.message_id);box.classList.remove('hidden');$('pinnedText').textContent=messagePreview(message);const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;$('pinnedUnpin').classList.toggle('hidden',latest.pinned_by!==state.user?.id&&!['owner','admin'].includes(role)&&!state.isTeamAdmin);$('pinnedJump').onclick=()=>jumpToMessage(latest.message_id);$('pinnedUnpin').onclick=()=>toggleMessagePin(message||{id:latest.message_id,conversation_id:state.active?.id})}
 async function searchActiveConversation(term){
  const panel=$('chatSearchResults'),conversationId=state.active?.id,query=String(term||'').trim();
  const request=++state.chatSearchRequest;if(!panel)return;
@@ -950,7 +950,7 @@ async function searchActiveConversation(term){
  const loading=document.createElement('p');loading.textContent='جارٍ البحث…';panel.append(loading);
  try{
   const pattern='%'+query+'%';
-  const {data,error}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,created_at,deleted_at').eq('conversation_id',conversationId).ilike('content',pattern).order('created_at',{ascending:false}).limit(30);
+  let searchQuery=supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,created_at,deleted_at').eq('conversation_id',conversationId).ilike('content',pattern);if(state.activeChatPreference?.cleared_before)searchQuery=searchQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await searchQuery.order('created_at',{ascending:false}).limit(30);
   if(error)throw error;if(request!==state.chatSearchRequest||state.active?.id!==conversationId)return;
   panel.replaceChildren();
   if(!data?.length){const p=document.createElement('p');p.textContent='لا توجد رسائل مطابقة في هذه المحادثة.';panel.append(p);return}
@@ -962,10 +962,10 @@ async function jumpToMessage(id){
  if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500);return}
  const conversationId=state.active?.id;if(!conversationId)return;
  try{
-  const {data:target,error}=await supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).eq('id',id).maybeSingle();
+  let targetQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).eq('id',id);if(state.activeChatPreference?.cleared_before)targetQuery=targetQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data:target,error}=await targetQuery.maybeSingle();
   if(error||!target){toast('تعذر العثور على الرسالة المثبتة');return}
   const [beforeResult,afterResult]=await Promise.all([
-   supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',target.created_at).order('created_at',{ascending:false}).limit(40),
+   supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',target.created_at).gt('created_at',state.activeChatPreference?.cleared_before||'1970-01-01T00:00:00.000Z').order('created_at',{ascending:false}).limit(40),
    supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).gt('created_at',target.created_at).order('created_at',{ascending:true}).limit(40)
   ]);
   if(beforeResult.error||afterResult.error)throw beforeResult.error||afterResult.error;
