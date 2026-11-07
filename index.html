@@ -446,7 +446,7 @@ async function loadNotifications(){
    supabaseClient.from('user_notifications').select('id',{count:'exact',head:true}).eq('recipient_id',state.user.id).is('read_at',null)
   ]);
   if(rows.error)throw rows.error;if(countResult.error)throw countResult.error;
-  state.notifications=rows.data||[];state.notificationUnread=countResult.count||0;renderNotifications();return true;
+  const merged=new Map((rows.data||[]).map(item=>[item.id,item]));let liveUnread=0;(state.notifications||[]).forEach(item=>{if(!merged.has(item.id)){merged.set(item.id,item);if(!item.read_at)liveUnread++}});state.notifications=Array.from(merged.values()).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,60);state.notificationUnread=(countResult.count||0)+liveUnread;renderNotifications();return true;
  }catch(error){console.warn('Notification loading failed:',error?.message||error);const list=$('notificationList');if(list){list.replaceChildren();const empty=document.createElement('div');empty.className='notification-empty';empty.textContent='تعذر تحميل الإشعارات. تحقق من الاتصال ثم أعد المحاولة.';list.append(empty)}return false}
  finally{state.notificationLoading=false}
 }
@@ -457,8 +457,8 @@ function subscribeNotifications(){
  const channel=supabaseClient.channel('user-notifications:'+userId)
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'user_notifications',filter:'recipient_id=eq.'+userId},payload=>{
    const item=payload.new;if(!item||item.recipient_id!==state.user?.id)return;
-   if(!state.notifications.some(existing=>existing.id===item.id))state.notifications.unshift(item);
-   if(!item.read_at)state.notificationUnread++;
+   const alreadyKnown=state.notifications.some(existing=>existing.id===item.id);
+   if(!alreadyKnown){state.notifications.unshift(item);if(!item.read_at)state.notificationUnread++;}
    state.notifications=state.notifications.slice(0,60);renderNotifications();
    if($('notificationsPanel').classList.contains('hidden'))toast(item.title||'لديك إشعار جديد');
   })
