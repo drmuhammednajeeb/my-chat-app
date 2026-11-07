@@ -19,6 +19,7 @@
  const systemDark=!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
  const theme=preference||(systemDark?'dark':'light');
  const root=document.documentElement;
+ root.classList.add('auth-booting');
  root.classList.toggle('dark',theme==='dark');
  root.classList.toggle('light',theme==='light');
  root.dataset.theme=theme;
@@ -27,6 +28,7 @@
 })();
 </script>
 <style>
+html.auth-booting #auth,html.auth-booting #app{visibility:hidden!important}
 :root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--panel2:#17243a;--panel3:#1d2d46;--line:#263852;--text:#edf3fb;--muted:#8da0b8;--accent:#45c5b0;--accent2:#249b8d;--danger:#ef7777;--bubble:#1b2a40;--mine:#146e68;--shadow:0 22px 70px #02081770}
 *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI","Tajawal",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
 .app{height:100dvh;width:100%;display:grid;grid-template-columns:340px minmax(0,1fr);max-width:1440px;margin:auto;background:var(--panel);overflow:hidden}
@@ -769,25 +771,44 @@ async function ensureProfile(user){
  const {data,error}=await supabaseClient.from('profiles').upsert({id:user.id,username,display_name:display},{onConflict:'id'}).select().single();
  if(error){const retry=await supabaseClient.from('profiles').select('*').eq('id',user.id).maybeSingle();if(retry.data)return retry.data;throw error}return data;
 }
+let authLifecycleVersion=0,appEntryPromise=null,appEntryUserId=null;
 async function enterApp(user){
+ if(!user?.id)return false;
+ if(appEntryPromise){
+  if(appEntryUserId===user.id)return appEntryPromise;
+  try{await appEntryPromise}catch(_){}
+ }
+ const lifecycleVersion=authLifecycleVersion;
+ appEntryUserId=user.id;
+ appEntryPromise=enterAppInternal(user,lifecycleVersion);
+ try{return await appEntryPromise}finally{if(appEntryUserId===user.id){appEntryPromise=null;appEntryUserId=null}}
+}
+async function enterAppInternal(user,lifecycleVersion){
  state.user=user;
  try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.')}catch(e){console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
+ if(lifecycleVersion!==authLifecycleVersion)return false;
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');
  const conversationsLoaded=await loadConversations();
+ if(lifecycleVersion!==authLifecycleVersion)return false;
  let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
  if(inviteToken){try{const {data,error}=await supabaseClient.rpc('join_channel_by_invite',{p_token:inviteToken});if(error)throw error;invitedChannelId=data;await loadConversations();toast('تم الانضمام إلى القناة بنجاح');}catch(error){console.error('Channel invite join failed:',error);toast(error.message||'رابط الدعوة غير صالح أو منتهي الصلاحية')}finally{const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('invite');history.replaceState({},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)}}
  subscribeNotifications();await loadNotifications();
+ if(lifecycleVersion!==authLifecycleVersion)return false;
  await loadTeamDashboard(true);
+ if(lifecycleVersion!==authLifecycleVersion)return false;
  // Restore the latest conversation after every sign-in or page reload.
  setSidebarView('chats');
  if(conversationsLoaded&&state.conversations.length){
   const latest=(invitedChannelId&&state.conversations.find(c=>c.id===invitedChannelId))||state.conversations[0];
   await openConversation(latest);
+  if(lifecycleVersion!==authLifecycleVersion)return false;
  }else if(conversationsLoaded){
   $('chatTitle').textContent='لا توجد محادثات بعد';$('chatSub').textContent='ابدأ محادثة من دليل المستخدمين';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>لا توجد محادثات بعد</h2><p>اختر مستخدماً من دليل المستخدمين لبدء محادثة جديدة.</p></div>';
  }
- await loadDirectory();startPresence();return true;
+ await loadDirectory();
+ if(lifecycleVersion!==authLifecycleVersion)return false;
+ startPresence();return true;
 }
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
 $('resetPasswordBtn').addEventListener('click',async()=>{try{await sendPasswordReset()}catch(error){console.error('Password reset request failed:',error);authError(error.message||'تعذر إرسال رابط الاستعادة. حاول مرة أخرى.')}});
@@ -1811,8 +1832,8 @@ $('voiceCancelBtn').onclick=cancelVoiceRecording;
 $('attachBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;if(state.voiceRecorder)cancelVoiceRecording();state.attachment=f;showAttachmentPreview(f);resizeComposer()};
 $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox').onclick=e=>{if(e.target===$('lightbox'))$('lightbox').classList.add('hidden')};
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
-(async()=>{const {data:{session}}=await supabaseClient.auth.getSession();if(session?.user)await enterApp(session.user)})();
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){authLifecycleVersion++;diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+(async()=>{try{const {data,error}=await supabaseClient.auth.getSession();if(error)throw error;const session=data?.session;if(session?.user){await enterApp(session.user)}else{state.user=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden')}}catch(error){console.error('Initial auth session check failed:',error);$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد تحميل التطبيق.')}finally{document.documentElement.classList.remove('auth-booting')}})();
 
 // Profile Center: self-edit and read-only participant profiles
 let profileModalEditable=false;
