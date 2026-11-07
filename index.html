@@ -908,7 +908,7 @@ async function loadConversations(){
  state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')renderMyChannels();return true}
  const {data:convs,error:ce}=await supabaseClient.from('conversations').select('*').in('id',ids).order('last_message_at',{ascending:false});
  if(ce){state.conversationsLoading=false;toast('تعذر قراءة المحادثات');console.error(ce);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
- const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url)').in('conversation_id',ids);
+ const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url,bio)').in('conversation_id',ids);
  if(me){state.conversationsLoading=false;toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  const {data:latest,error:le}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
  if(le){state.conversationsLoading=false;toast('تعذر تحميل معاينة الرسائل');console.error(le);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
