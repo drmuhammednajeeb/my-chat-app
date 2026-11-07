@@ -727,9 +727,11 @@ function updateResetCooldown(){
  if(remaining>0){
   btn.disabled=true;btn.textContent='يمكنك إعادة الإرسال بعد';label.hidden=false;
   label.innerHTML='يرجى الانتظار <strong>'+formatResetRemaining(remaining)+'</strong> قبل طلب رابط جديد.';
+  if(!resetCountdownTimer)resetCountdownTimer=setInterval(updateResetCooldown,1000);
  }else{
   btn.disabled=false;btn.textContent='نسيت كلمة المرور؟';label.hidden=true;label.textContent='';
   if(expiry){try{localStorage.removeItem(resetCooldownKey(email))}catch(e){}}
+  if(resetCountdownTimer){clearInterval(resetCountdownTimer);resetCountdownTimer=null}
  }
 }
 function startResetCooldown(email){
