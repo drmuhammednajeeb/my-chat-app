@@ -1,12 +1,12 @@
 # Feature Module Dependency Audit
 
 **Branch:** `refactor/modular-app-entrypoints`  
-**Scope:** Static source audit after the 186-function extraction and syntax repairs.  
-**Status:** Inventory only; no runtime behavior or database changes.
+**Scope:** Static source audit after the 186-function extraction, syntax repairs and isolated theme-service extraction.  
+**Status:** Inventory plus one bounded frontend service extraction; no database changes.
 
 ## 1. Current architecture boundary
 
-The ten feature files are currently classic scripts, not isolated ES modules. They are loaded synchronously before `app.js`, and their function bodies resolve shared top-level lexical bindings when called.
+The ten feature files are currently classic scripts, not isolated ES modules. They are loaded synchronously before `app.js`, and their function bodies resolve shared top-level lexical bindings when called. A separate `modules/theme.js` service now owns theme preference, system-theme media-query synchronization and local storage synchronization behind a small `themeService` API. `core.js` retains compatibility wrappers for existing callers.
 
 The current shared runtime remains in `app.js`:
 
@@ -22,7 +22,8 @@ This compatibility boundary is intentional for the extraction stage. It preserve
 
 | Module | Primary responsibility | Main shared state areas | Important cross-feature dependencies | Coupling |
 |---|---|---|---|---|
-| `core.js` | Theme, shared UI skeletons, scroll helpers, performance and diagnostics | theme preference, diagnostics, message-scroll state, performance samples | Auth settings, conversation receipts, message indicators | Medium |
+| `core.js` | Shared UI skeletons, scroll helpers, performance and diagnostics; theme compatibility facade | diagnostics, message-scroll state, performance samples | Auth settings, conversation receipts, message indicators, `themeService` facade | Medium |
+| `theme.js` | Theme preference ownership, system-theme synchronization, cross-tab storage sync and visual application | Theme preference and media-query state held privately in the service closure | Browser DOM/storage/media APIs; account preference persistence via the existing `saveUserSetting` service | Low |
 | `auth.js` | Sign-in, sign-up, password reset, profile bootstrap and app entry | auth mode, user, profile, account settings, startup lifecycle | Conversations, notifications, presence, Team Dashboard, settings | Critical |
 | `notifications.js` | Notification loading, rendering, read state and navigation | notifications, unread count, notification channel/filter | Conversation navigation, message jump, mute and notification settings | High |
 | `conversations.js` | Conversation directory, direct chats, sidebar, preferences and active-chat lifecycle | conversations, active conversation, directory, chat preferences, member state, workspace state | Messages, realtime subscriptions, groups, channels, notifications, workspace | Critical |
@@ -45,12 +46,12 @@ A lexical reference scan confirms recurring dependencies on:
 
 The `state` object has broad ownership overlap. Examples include conversation and message modules both changing active-conversation/message lifecycle fields; realtime mutating message and conversation state; media changing composer and upload state; and auth initiating several feature loaders after session validation.
 
-This is why a mechanical move of state fields would be unsafe.
+This is why a mechanical move of state fields would be unsafe. The theme service is a deliberately small exception: it owns only theme preference and browser theme synchronization, while account persistence still uses the existing settings function.
 
 ## 4. Recommended decoupling sequence
 
 1. **Define a stable runtime context.** Introduce one explicit context contract for the Supabase client, DOM helpers, shared UI helpers, state access and diagnostics. Do not create a second Supabase client.
-2. **Assign state ownership before moving fields.** Document each state field's owner, readers, writers and lifecycle. Start with bounded areas such as theme/preferences and notifications.
+2. **Assign state ownership before moving fields.** Document each state field's owner, readers, writers and lifecycle. Theme preference is the first bounded domain now isolated behind `themeService`; notifications remain a later candidate.
 3. **Move one bounded service at a time.** Convert direct calls into named service interfaces only where the dependency boundary is clear. Keep a temporary compatibility facade for existing callers.
 4. **Separate orchestration from feature logic.** Authentication/startup and active-conversation orchestration should call feature services; feature modules should not initialize themselves during script evaluation.
 5. **Only then consider ES modules or bundling.** Preserve the existing script-order and PWA-cache contracts until a deliberate migration replaces them.
