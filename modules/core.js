@@ -74,7 +74,15 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
 
 function persistPerfSamples(){try{localStorage.setItem(PERF_STORAGE_KEY,JSON.stringify(perfSamples))}catch(_e){}perfPersistTimer=null}
 
-function recordPerf(metric,duration,details={}
+function recordPerf(metric,duration,details={}){
+ const sample={metric,ms:Math.round(Math.max(0,Number(duration)||0)*10)/10,at:Date.now(),...details};
+ perfSamples.push(sample);if(perfSamples.length>80)perfSamples.splice(0,perfSamples.length-80);
+ // Batch storage writes so instrumentation does not add synchronous I/O to message rendering.
+ if(perfPersistTimer)clearTimeout(perfPersistTimer);
+ perfPersistTimer=setTimeout(persistPerfSamples,1200);
+ if(!$('diagnosticsPanel')?.hidden)updateDiagnostics();
+}
+
 
 function performanceSummary(){
  const metrics={};
@@ -88,7 +96,10 @@ function performanceSummary(){
  return {metrics,network,connection:connection?{effectiveType:connection.effectiveType||null,downlink_mbps:connection.downlink||null,rtt_ms:connection.rtt||null,saveData:!!connection.saveData}:null,long_tasks:perfSamples.filter(x=>x.metric==='long_task').slice(-10).map(x=>({ms:x.ms,at:x.at})),stored_samples:perfSamples.length,storage:'local browser only'};
 }
 
-function diagLog(event,details={}
+function diagLog(event,details={}){
+ const d=state.diagnostics;d.events.push({at:new Date().toLocaleTimeString('en-GB'),event,details});if(d.events.length>18)d.events.shift();updateDiagnostics()
+}
+
 
 function updateDiagnostics(){const panel=$('diagnosticsPanel');if(!panel||panel.hidden)return;const input=$('messageInput'),wrap=document.querySelector('.composer-wrap'),rect=input?.getBoundingClientRect();let hit=null;if(rect&&rect.width&&rect.height){const el=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);hit=el?{tag:el.tagName,id:el.id||'',className:typeof el.className==='string'?el.className:'',isComposer:!!wrap?.contains(el)}:null}state.diagnostics.lastHitTest={inputRect:rect?{x:Math.round(rect.x),y:Math.round(rect.y),width:Math.round(rect.width),height:Math.round(rect.height)}:null,hit,computed:input?{display:getComputedStyle(input).display,visibility:getComputedStyle(input).visibility,pointerEvents:getComputedStyle(input).pointerEvents,zIndex:getComputedStyle(input).zIndex}:null};const active=state.active?.id||'none';const out={activeConversation:active==='none'?'none':active.slice(0,8)+'…',userSession:!!state.user,loadedMessages:state.messages?.length||0,renderedMessageNodes:$('messages')?.querySelectorAll('.message').length||0,messageIds:state.messageIds?.size||0,composer:{disabled:!!input?.disabled,readOnly:!!input?.readOnly,valueLength:input?.value?.length||0,focused:document.activeElement===input},composerHitTest:state.diagnostics.lastHitTest,composerInteractions:state.diagnostics.composerInteractions,realtime:{status:state.realtimeStatus,lastEvent:state.diagnostics.lastRealtimeEvent,at:state.diagnostics.lastRealtimeAt},polling:{active:!!state.messagePollTimer,busy:state.messagePollBusy,generation:state.messagePollGeneration,lastAt:state.diagnostics.lastPollAt},fetch:{at:state.diagnostics.lastFetchAt,count:state.diagnostics.lastFetchCount,error:state.diagnostics.lastFetchError},render:{at:state.diagnostics.lastRenderAt,error:state.diagnostics.lastRenderError},lastComposerChange:state.diagnostics.lastComposerChange,performance:performanceSummary(),events:state.diagnostics.events};$('diagnosticsOutput').textContent=JSON.stringify(out,null,2)}
 
