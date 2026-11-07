@@ -1337,7 +1337,7 @@ async function openConversation(c){
  $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
- stopMessagePolling();subscribeConversation();subscribeProfileUpdates(c);await loadMessages();await loadStarredMessageIds(c.id);recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:state.active?.id===c.id});if(state.active?.id===c.id)startMessagePolling(c.id);
+ stopMessagePolling();subscribeConversation();subscribeProfileUpdates(c);await loadStarredMessageIds(c.id);await loadMessages();recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:state.active?.id===c.id});if(state.active?.id===c.id)startMessagePolling(c.id);
 }
 
 async function loadMessageReactions(conversationId,messages){
@@ -2349,7 +2349,7 @@ async function createCustomList(){
  state.customLists.push(data);renderCustomLists();toast('تم إنشاء القائمة');
 }
 async function manageCustomList(list){
- const choice=prompt('اكتب: 1 لتغيير الاسم، 2 لحذف القائمة.\\nلن يؤدي حذف القائمة إلى حذف أي محادثة.', '1');if(choice===null)return;
+ const choice=prompt('اكتب: 1 لتغيير الاسم، 2 لحذف القائمة.\nلن يؤدي حذف القائمة إلى حذف أي محادثة.', '1');if(choice===null)return;
  if(choice.trim()==='1'){const name=prompt('الاسم الجديد للقائمة:',list.name);if(name===null)return;const clean=name.trim();if(!clean||clean.length>40)return toast('اسم القائمة غير صالح');const {data,error}=await supabaseClient.from('chat_lists').update({name:clean,updated_at:new Date().toISOString()}).eq('id',list.id).eq('user_id',state.user.id).select().single();if(error)return toast('تعذر تعديل اسم القائمة');Object.assign(list,data);renderCustomLists();toast('تم تعديل القائمة')}
  else if(choice.trim()==='2'&&confirm('حذف القائمة "'+list.name+'"؟ لن يتم حذف المحادثات.')){const {error}=await supabaseClient.from('chat_lists').delete().eq('id',list.id).eq('user_id',state.user.id);if(error)return toast('تعذر حذف القائمة');state.customLists=state.customLists.filter(x=>x.id!==list.id);if(state.activeListId===list.id)state.activeListId=null;await loadCustomLists();renderConversations();toast('تم حذف القائمة')}
 }
@@ -2538,7 +2538,7 @@ async function toggleMuteConversation(){
 async function setNotificationTone(){
  const current=state.userConversationSettings.get(state.active?.id)||{notification_tone:'default'};
  const options=[['default','الافتراضي'],['soft','هادئ'],['bell','جرس'],['chime','رنين'],['silent','صامت']];
- const answer=prompt('اختر نغمة الإشعار:\\n'+options.map((x,i)=>(i+1)+' - '+x[1]).join('\\n'),String(Math.max(1,options.findIndex(x=>x[0]===current.notification_tone)+1)));
+ const answer=prompt('اختر نغمة الإشعار:\n'+options.map((x,i)=>(i+1)+' - '+x[1]).join('\n'),String(Math.max(1,options.findIndex(x=>x[0]===current.notification_tone)+1)));
  if(answer===null)return;const choice=options[Number(answer)-1];if(!choice)return toast('اختيار غير صالح');
  if(await saveUserConversationSettings({notification_tone:choice[0]})){playNotificationTone(choice[0]);toast('تم تحديث نغمة الإشعار')}
 }
