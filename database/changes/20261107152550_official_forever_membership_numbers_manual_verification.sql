@@ -263,8 +263,8 @@ as $function$ select app_private.admin_list_memberships_impl(); $function$;
 revoke all on function public.admin_list_memberships() from public,anon;
 grant execute on function public.admin_list_memberships() to authenticated;
 
-create or replace function public.get_my_membership_state()
-returns jsonb language sql stable security invoker set search_path=''
+create or replace function app_private.get_my_membership_state_impl()
+returns jsonb language sql stable security definer set search_path=''
 as $function$
  select coalesce((select jsonb_build_object(
   'membership_number',p.membership_number,
@@ -275,5 +275,11 @@ as $function$
  ),jsonb_build_object('membership_number',null,'membership_number_verified',false,
   'membership_status',null,'email_verified',false));
 $function$;
+revoke all on function app_private.get_my_membership_state_impl() from public,anon;
+grant execute on function app_private.get_my_membership_state_impl() to authenticated;
+
+create or replace function public.get_my_membership_state()
+returns jsonb language sql stable security invoker set search_path=''
+as $function$ select app_private.get_my_membership_state_impl(); $function$;
 revoke all on function public.get_my_membership_state() from public,anon;
 grant execute on function public.get_my_membership_state() to authenticated;
