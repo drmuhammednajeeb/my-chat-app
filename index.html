@@ -1005,10 +1005,10 @@ async function enterApp(user){
  try{return await appEntryPromise}finally{if(appEntryUserId===user.id){appEntryPromise=null;appEntryUserId=null}}
 }
 async function enterAppInternal(user,lifecycleVersion){
+ if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
  state.user=user;state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.activeListId=null;state.starredMessageIds.clear();state.groupSettings=null;state.selectedMessageIds.clear();state.selectionMode=false;subscribePersonalChatData();
  const profileStarted=performance.now();try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.');recordPerf('profile_load',performance.now()-profileStarted,{success:true})}catch(e){recordPerf('profile_load',performance.now()-profileStarted,{success:false});console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
  if(lifecycleVersion!==authLifecycleVersion)return false;
- if(!user.email_confirmed_at)throw new Error('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');
  if(state.profile.membership_status!=='active'||!/^971[0-9]{9}$/.test(state.profile.membership_number||''))throw new Error('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username+' · '+(state.profile.membership_number||'');renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');void loadUserSettings();
