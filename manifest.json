@@ -1,0 +1,30 @@
+{
+  "id": "./",
+  "name": "Ultra Chat Pro",
+  "short_name": "Ultra Chat",
+  "description": "منصة محادثات حديثة وآمنة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0b1220",
+  "theme_color": "#101a2a",
+  "categories": ["social", "communication"],
+  "icons": [
+    {
+      "src": "./icons/ultra-chat.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/ultra-chat.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
