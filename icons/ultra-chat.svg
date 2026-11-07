@@ -1,8 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0b1220"/>
-  <rect x="66" y="88" width="380" height="286" rx="76" fill="#17243a" stroke="#45c5b0" stroke-width="18"/>
-  <path d="M160 374v48l76-48" fill="#17243a" stroke="#45c5b0" stroke-width="18" stroke-linejoin="round"/>
-  <path d="M158 208h196M158 264h132" fill="none" stroke="#edf3fb" stroke-width="28" stroke-linecap="round"/>
-  <circle cx="358" cy="330" r="54" fill="#249b8d" stroke="#0b1220" stroke-width="14"/>
-  <path d="m333 330 17 17 34-38" fill="none" stroke="#fff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#171b1e"/><stop offset=".52" stop-color="#30363a"/><stop offset="1" stop-color="#111619"/></linearGradient><linearGradient id="gold" x2="1" y2="1"><stop stop-color="#f5dfc7"/><stop offset=".48" stop-color="#9a7964"/><stop offset="1" stop-color="#e2c5a9"/></linearGradient><linearGradient id="silver" x2="1" y2="1"><stop stop-color="#fff"/><stop offset=".48" stop-color="#aeb4b5"/><stop offset="1" stop-color="#e1e3df"/></linearGradient><filter id="shadow"><feGaussianBlur stdDeviation="5"/></filter></defs>
+<rect width="512" height="512" rx="34" fill="url(#bg)"/><rect x="13" y="13" width="486" height="486" rx="26" fill="none" stroke="#737b7e" stroke-width="2"/>
+<text x="252" y="300" text-anchor="middle" font-family="Georgia,Times New Roman,serif" font-size="236" font-weight="bold" letter-spacing="-32" fill="#000" opacity=".45" filter="url(#shadow)">BZ</text>
+<text x="245" y="292" text-anchor="middle" font-family="Georgia,Times New Roman,serif" font-size="236" font-weight="bold" letter-spacing="-32" fill="url(#gold)">B</text><text x="286" y="292" text-anchor="middle" font-family="Georgia,Times New Roman,serif" font-size="236" font-weight="bold" letter-spacing="-32" fill="url(#silver)">Z</text>
+<text x="256" y="426" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" letter-spacing="3" fill="url(#gold)">BIZMINDMAKERS</text></svg>
