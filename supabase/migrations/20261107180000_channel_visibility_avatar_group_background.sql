@@ -129,7 +129,7 @@ begin
   return query
   select c.id,c.title,c.description,c.avatar_path,
          count(m.user_id)::bigint,
-         bool_or(m.user_id = actor) filter (where m.user_id is not null) is true,
+         coalesce(bool_or(m.user_id = actor),false),
          c.created_at,c.is_public
     from public.conversations c
     left join public.conversation_members m on m.conversation_id = c.id
@@ -257,5 +257,3 @@ grant execute on function app_private.can_access_channel_avatar(uuid) to authent
 grant execute on function public.create_channel(text,text,boolean) to authenticated;
 grant execute on function public.discover_public_channels(text,integer,integer) to authenticated;
 grant execute on function public.join_public_channel(uuid) to authenticated;
-
-commit;
