@@ -172,6 +172,8 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 .team-loading-panel .loading-block{height:10px;width:44%;margin-bottom:18px}
 .team-loading-panel .loading-block:nth-child(2){height:110px;width:100%}
 .team-dashboard[aria-busy="true"] .team-dashboard-head{opacity:.82}
+.team-kpis:has(.team-loading-grid){display:block}
+.team-loading-grid .team-loading-card{display:block}
 .loading-fade-in{animation:loadingFadeIn .18s ease-out both}
 @keyframes loadingFadeIn{from{opacity:.45}to{opacity:1}}
 @media(max-width:900px){.team-loading-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.team-loading-panels{grid-template-columns:1fr}}
@@ -740,14 +742,14 @@ async function loadConversations(){
  state.conversationsLoading=true;
  if(!state.conversations.length){showListSkeleton($('conversationList'),6);showListSkeleton($('directoryList'),4)}
  const {data:members,error}=await supabaseClient.from('conversation_members').select('conversation_id,role,last_read_at').eq('user_id',state.user.id);
- if(error){state.conversationsLoading=false;toast('تعذر تحميل المحادثات');console.error(error);return false}
+ if(error){state.conversationsLoading=false;toast('تعذر تحميل المحادثات');console.error(error);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')renderMyChannels();return true}
  const {data:convs,error:ce}=await supabaseClient.from('conversations').select('*').in('id',ids).order('last_message_at',{ascending:false});
- if(ce){state.conversationsLoading=false;toast('تعذر قراءة المحادثات');console.error(ce);return false}
+ if(ce){state.conversationsLoading=false;toast('تعذر قراءة المحادثات');console.error(ce);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url)').in('conversation_id',ids);
- if(me){state.conversationsLoading=false;toast('تعذر قراءة أعضاء المحادثات');console.error(me);return false}
+ if(me){state.conversationsLoading=false;toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  const {data:latest,error:le}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
- if(le){state.conversationsLoading=false;toast('تعذر تحميل معاينة الرسائل');console.error(le);return false}
+ if(le){state.conversationsLoading=false;toast('تعذر تحميل معاينة الرسائل');console.error(le);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  state.conversations=(convs||[]).map(c=>({...c,last_read_at:state.memberReads[c.id]||null,members:(allMembers||[]).filter(m=>m.conversation_id===c.id).map(m=>({...m,profile:m.profiles})),last_message:(latest||[]).find(m=>m.conversation_id===c.id)}));
  state.conversations.sort((a,b)=>new Date(b.last_message?.created_at||b.created_at)-new Date(a.last_message?.created_at||a.created_at));
  state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')renderMyChannels();
