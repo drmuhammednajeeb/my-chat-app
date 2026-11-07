@@ -3,7 +3,7 @@
  * Never cache Supabase/API requests, authenticated data, or user messages.
  */
 const CACHE_PREFIX = "ultra-chat-pro";
-const CACHE_VERSION = "v14";
+const CACHE_VERSION = "v15";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const CDN_CACHE = `${CACHE_PREFIX}-cdn-${CACHE_VERSION}`;
 const CDN_ORIGINS = new Set([
@@ -25,7 +25,8 @@ self.addEventListener("install", event => {
       new URL("./icon-1024.png", base).href,
       new URL("./apple-touch-icon.png", base).href,
       new URL("./membership.js", base).href,
-      new URL("./membership.css", base).href
+      new URL("./membership.css", base).href,
+      new URL("./app.css", base).href
     ]);
     await self.skipWaiting();
   })());
