@@ -7,14 +7,8 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY
 const __supabaseResource=performance.getEntriesByType('resource').find(entry=>entry.name.includes('supabase.min.js'));
 window.__BIZMIND_BOOT_TIMINGS__={mainScriptStarted:__bootMainScriptStarted,supabaseScriptMs:__supabaseResource?Math.round(__supabaseResource.duration):null,clientReady:performance.now()};
 const $=id=>document.getElementById(id);
-const APP_THEME_KEY='bizmindmakers-chat-theme';
-let appThemePreference=window.__BIZMIND_THEME_PREFERENCE__||'system';
-let appThemeMedia=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
-
 $('appThemeToggle')?.addEventListener('click',toggleAppTheme);
-if(appThemeMedia){const onSystemThemeChange=()=>{if(appThemePreference==='system')applyAppTheme('system',false)};if(appThemeMedia.addEventListener)appThemeMedia.addEventListener('change',onSystemThemeChange);else if(appThemeMedia.addListener)appThemeMedia.addListener(onSystemThemeChange)}
-window.addEventListener('storage',event=>{if(event.key===APP_THEME_KEY){const next=event.newValue==='dark'||event.newValue==='light'?event.newValue:'system';appThemePreference=next;applyAppTheme(next,false)}});
-applyAppTheme(appThemePreference,false);
+themeService.init();
 
 let deferredInstallPrompt=null;
 const installAppButton=$('installAppBtn');
