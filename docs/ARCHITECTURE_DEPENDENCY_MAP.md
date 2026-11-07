@@ -243,8 +243,8 @@ Function declarations have been separated into feature-oriented classic-script m
 - `modules/core.js`: 17 functions
 - `modules/auth.js`: 14 functions
 - `modules/notifications.js`: 11 functions
-- `modules/conversations.js`: 35 functions
-- `modules/messages.js`: 36 functions
+- `modules/conversations.js`: 36 functions
+- `modules/messages.js`: 37 functions
 - `modules/realtime.js`: 12 functions
 - `modules/groups.js`: 15 functions
 - `modules/channels.js`: 6 functions

@@ -438,3 +438,5 @@ async function toggleFavoriteConversation(){
  const current=!!state.userConversationSettings.get(state.active?.id)?.is_favorite;
  if(await saveUserConversationSettings({is_favorite:!current})){updateConversationMenu();renderConversations();toast(current?'أزيلت من المفضلة':'أضيفت إلى المفضلة')}
 }
+
+function closeChatHeaderMenu(){const menu=$('chatHeaderMenu'),button=$('chatHeaderMenuBtn');menu?.classList.add('hidden');button?.setAttribute('aria-expanded','false')}

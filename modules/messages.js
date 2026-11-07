@@ -406,3 +406,5 @@ async function exportActiveConversation(){
  if(error){toast('تعذر تصدير الدردشة');return}
  downloadMessages(data||[],(c.title||convName(c)).replace(/[\\/:*?"<>|]/g,'_')+'.txt');toast('تم تجهيز ملف تصدير الدردشة');
 }
+
+function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
