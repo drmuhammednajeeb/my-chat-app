@@ -399,7 +399,7 @@ function recordPerf(metric,duration,details={}){
 window.addEventListener('pagehide',persistPerfSamples,{capture:true});
 function performanceSummary(){
  const metrics={};
- for(const metric of ['startup_supabase_script','startup_get_session','startup_membership_check','profile_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total']){
+ for(const metric of ['startup_supabase_script','startup_get_session','startup_membership_check','profile_load','startup_shell_reveal','startup_conversations_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total']){
   const values=perfSamples.filter(x=>x.metric===metric).slice(-50).map(x=>x.ms).sort((a,b)=>a-b);
   if(values.length)metrics[metric]={samples:values.length,avg_ms:Math.round(values.reduce((a,b)=>a+b,0)/values.length),p50_ms:values[Math.floor((values.length-1)*.5)],p95_ms:values[Math.floor((values.length-1)*.95)],max_ms:values[values.length-1]};
  }
@@ -632,8 +632,14 @@ async function enterAppInternal(user,lifecycleVersion){
  if(lifecycleVersion!==authLifecycleVersion)return false;
  if(state.profile.membership_status!=='active'||!/^971[0-9]{9}$/.test(state.profile.membership_number||''))throw new Error('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
+ const shellRevealAt=performance.now();
+ if(window.__BIZMIND_BOOT_TIMINGS__){window.__BIZMIND_BOOT_TIMINGS__.shellRevealed=shellRevealAt;window.__BIZMIND_BOOT_TIMINGS__.authReadyMs=Math.round(shellRevealAt-(window.__BIZMIND_BOOT_TIMINGS__.mainScriptStarted||shellRevealAt))}
+ recordPerf('startup_shell_reveal',shellRevealAt-(window.__BIZMIND_BOOT_TIMINGS__?.mainScriptStarted||shellRevealAt),{authenticated:true});
+ document.documentElement.classList.remove('auth-booting');
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username+' · '+(state.profile.membership_number||'');renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');void loadUserSettings();
+ const conversationsStarted=performance.now();
  const conversationsLoaded=await loadConversations();
+ recordPerf('startup_conversations_load',performance.now()-conversationsStarted,{success:true});
  if(lifecycleVersion!==authLifecycleVersion)return false;
  let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
  if(inviteToken){try{const {data,error}=await supabaseClient.rpc('join_channel_by_invite',{p_token:inviteToken});if(error)throw error;invitedChannelId=data;await loadConversations();toast('تم الانضمام إلى القناة بنجاح');}catch(error){console.error('Channel invite join failed:',error);toast(error.message||'رابط الدعوة غير صالح أو منتهي الصلاحية')}finally{const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('invite');history.replaceState({},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)}}
