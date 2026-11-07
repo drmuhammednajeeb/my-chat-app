@@ -1,64 +1,111 @@
-# Ultra Chat Pro 2.0
+# BizmindMakers Chat Pro
 
-Modern Arabic-first real-time chat app built on GitHub Pages + Supabase Auth, Postgres RLS, Realtime and private Storage.
+تطبيق محادثات عربي أولاً، مبني كواجهة ويب ثابتة تعتمد على Supabase للمصادقة وقاعدة البيانات وسياسات RLS والتحديثات الفورية والتخزين الخاص.
 
-## Current architecture
+## بيئة النشر الحالية
 
-- Static single-page frontend in `index.html` (no build step).
-- Supabase Auth email/password sessions.
-- `profiles`: public in-app profile directory (no email addresses stored here).
-- `conversations` + `conversation_members`: direct and group membership.
-- `chat_messages`: authenticated conversation messages, edits and soft deletes.
-- Private `chat-media` Storage bucket. The app creates short-lived signed URLs for attachments.
-- RLS is enabled on all chat tables. Anonymous table access is revoked.
-- The legacy `public.messages` table is retained for rollback/data preservation but has no usable anonymous grants/policy.
+- **منصة النشر المعتمدة للمشروع:** Vercel.
+- **رابط الإنتاج المعروف للمشروع:** https://my-chat-app-tan-seven.vercel.app/
+- **المصدر:** مستودع GitHub هذا، والفرع `main` هو الفرع المرجعي للإنتاج.
+- **نوع التطبيق في المستودع:** Static frontend؛ ملف الدخول `index.html` في جذر المستودع.
+- **أداة البناء:** لا يوجد في جذر النسخة الموثقة `package.json` أو Vite config أو `vercel.json`. لذلك لا توجد حالياً خطوة build موثقة داخل المستودع؛ يفترض أن تُقدَّم ملفات الجذر كما هي من Vercel.
+- **GitHub Pages:** ليس مسار النشر المعتمد حالياً. أي إعداد قديم أو وصف سابق له لا ينبغي استخدامه لتحديث الإنتاج.
 
-## Supabase project
+> ملاحظة تحقق تشغيلي: إعدادات مشروع Vercel (Production Branch، Root Directory، Framework Preset، Build Command، Output Directory، Install Command، والنطاقات) محفوظة في لوحة Vercel وليست كلها ممثلة بملفات داخل هذا المستودع. يجب على مالك المشروع تأكيدها من لوحة Vercel قبل تغيير إعدادات النشر. الإعداد المتوقع لتطبيق static root هو Root Directory = `./`، Framework Preset = `Other`، دون Build Command، وOutput Directory = جذر المشروع؛ لا تعتبر هذه القيم مؤكدة حتى تُراجع في لوحة المشروع.
 
-The frontend uses the project's publishable key only. Never put a service-role or secret key in browser code.
+### مسار النشر الآمن
 
-### Required Auth URL configuration
+1. تطوير التغييرات على فرع مستقل.
+2. مراجعة التغييرات والاختبارات على Pull Request.
+3. التحقق من Vercel Preview Deployment قبل الدمج.
+4. دمج التغيير المعتمد إلى `main` فقط بعد الموافقة.
+5. التحقق من Production Deployment ورابط الإنتاج بعد الدمج.
+6. إذا فشل النشر أو ظهرت مشكلة، أوقف أي تغييرات إضافية وارجع إلى آخر نسخة سليمة وفق سجل Git/Vercel.
 
-In Supabase Dashboard → Authentication → URL Configuration:
+لا ترفع أسرار Supabase أو مفاتيح الخدمة إلى GitHub. ولا تعتبر نجاح GitHub Actions أو Preview دليلاً على نجاح الإنتاج.
 
-- Site URL: `https://drmuhammednajeeb.github.io/my-chat-app/`
-- Add the same URL to Redirect URLs.
+## البنية الحالية
 
-Email confirmation may be enabled. If enabled, users must confirm their email before signing in. The signup flow sends the confirmation redirect back to the GitHub Pages app.
+- `index.html`: هيكل الصفحة والواجهة الرئيسية ومنطق التطبيق الحالي.
+- `membership.js`: وحدة إدارة العضويات والدعوات الإدارية.
+- `membership.css`: تنسيقات إدارة العضويات.
+- `service-worker.js`: Service Worker للتخزين المؤقت ودعم PWA.
+- `manifest.json` وملفات الأيقونات: بيانات تثبيت التطبيق.
+- `supabase/`: ملفات migrations الخاصة بتطور قاعدة البيانات.
+- `database/`: ملفات تغييرات/مواد SQL تاريخية؛ يجب مراجعة مصدرها وترتيبها قبل استخدامها في بيئة جديدة.
+- `docs/ARCHITECTURE_DEPENDENCY_MAP.md`: خريطة الاعتماديات، تصنيف المخاطر، ترتيب إعادة الهيكلة، وخطة اختبارات الانحدار.
 
-### Data API
+الواجهة حالياً تطبيق Static Single Page، ويُحمّل Supabase JS UMD من CDN. لا تُضف bundler أو ES modules أو تغيّر ترتيب تحميل السكربتات ضمن عملية استخراج عادية؛ يتطلب ذلك مرحلة انتقال مخططة واختبارات بدء تشغيل كاملة.
 
-Grant access is deliberately least-privilege:
-- `authenticated`: access to profiles, conversations, memberships and chat_messages as required by the app.
-- `anon`: no table access.
-- Row access is still constrained by RLS.
+## Supabase
 
-If the project Data API has an explicit exposed-table allowlist, expose only:
-`profiles`, `conversations`, `conversation_members`, `chat_messages`.
-Do not expose the legacy `messages` table.
+تستخدم الواجهة رابط المشروع ومفتاحاً عاماً قابلاً للنشر (publishable/anon) فقط. **يُمنع وضع service-role key أو أي سر إداري في كود المتصفح أو المستودع.**
 
-### Storage
+### إعدادات Auth المطلوبة
 
-The `chat-media` bucket is private. RLS policies permit only conversation members to read or upload files within their conversation folder. The app uses signed URLs for reading.
+من Supabase Dashboard → Authentication → URL Configuration:
 
-## Database migrations
+- اضبط Site URL على رابط الإنتاج الفعلي في Vercel.
+- أضف رابط الإنتاج إلى Redirect URLs.
+- أضف Preview URLs الضرورية فقط وبنطاقات محددة؛ لا تستخدم wildcard واسعاً دون حاجة ومراجعة أمنية.
 
-The migration files in `supabase/migrations/` document the changes applied to the linked Supabase project. Apply them in order for a fresh environment.
+الرابط المعروف حالياً للإنتاج هو:
 
-## Deployment
+`https://my-chat-app-tan-seven.vercel.app/`
 
-GitHub Pages serves the repository root from the configured branch. Merge the approved upgrade branch into `main` to publish the new frontend. After deployment, test:
-1. Sign up with a new email and confirm it.
-2. Sign in and create a second test account.
-3. Start a direct conversation by username.
-4. Create a group and send messages.
-5. Upload and open an image/PDF.
-6. Verify an unauthenticated browser cannot read any chat tables.
+يجب تأكيد أن هذا النطاق ما زال النطاق الأساسي النشط في Vercel قبل تحديث إعدادات Auth. لا تستخدم رابط GitHub Pages القديم.
 
-## Known next-stage items
+### مبادئ الوصول والأمان
 
-- Password recovery UI and account profile editing.
-- Presence, unread counters, push notifications.
-- Voice notes and WebRTC calls.
-- Rate limiting, abuse reporting and moderation tooling.
-- Automated browser/end-to-end tests.
+- وصول الجداول محكوم بسياسات RLS.
+- لا تعتمد على إخفاء عناصر الواجهة كوسيلة حماية؛ يجب أن تفرض قاعدة البيانات وRPC الصلاحيات.
+- يجب أن تبقى الملاحظات والوثائق الخاصة وبيانات العضوية ضمن حدود الملكية والصلاحيات.
+- لا تضع بيانات الرسائل أو استجابات Supabase الخاصة في Cache الخاص بالـ Service Worker.
+
+## قاعدة البيانات والتغييرات
+
+- توجد ملفات SQL تحت `supabase/migrations/` ومواد إضافية تحت `database/`.
+- لا تفترض أن كل الملفات في المجلدين migrations قابلة لإعادة التشغيل أو أنها مرتبة معاً.
+- قبل إنشاء بيئة جديدة أو تنفيذ تغيير على قاعدة البيانات، قارن الملفات مع schema الفعلي، وحدد تسلسل migration canonical واحداً.
+- لا تنفذ SQL أو تعدل RLS أو Storage أو RPC في الإنتاج كجزء من إعادة هيكلة الواجهة دون موافقة مستقلة.
+
+## Service Worker وPWA
+
+- راجع `service-worker.js` عند إضافة أو إعادة تسمية أي ملف ثابت.
+- أضف الملفات التي يجب أن تعمل دون اتصال إلى precache حسب الحاجة.
+- ارفع `CACHE_VERSION` عند تغيير shell assets لضمان التخلص من النسخ القديمة.
+- لا تخزّن استجابات Auth أو REST أو Realtime أو الرسائل أو الوثائق الخاصة في Cache API.
+- اختبر التحديث من نسخة PWA قديمة إلى النسخة الجديدة، لا الاكتفاء بفتح تبويب جديد.
+
+## الاختبارات قبل اعتماد أي تغيير
+
+### اختبارات أساسية
+1. تسجيل الدخول والخروج واستعادة الجلسة بعد إعادة التحميل.
+2. تعديل الملف الشخصي واختيار الصورة وحفظها وإلغاء العملية.
+3. إنشاء محادثة مباشرة وإرسال واستقبال الرسائل.
+4. إنشاء مجموعة وإدارة الأعضاء والأدوار والصلاحيات.
+5. إنشاء قناة عامة وخاصة واختبار الاكتشاف والانضمام والوصول.
+6. رفع المرفقات وفتحها والتحقق من صلاحيات Storage.
+7. اختبار التفاعلات في المحادثات المباشرة والمجموعات والقنوات.
+8. اختبار PWA والعمل دون اتصال وتحديث Cache.
+
+### اختبار Realtime بحسابين
+يجب استخدام حسابين تجريبيين مستقلين في متصفحين/ملفي متصفح منفصلين:
+- يرسل الحساب A رسالة إلى B ويتحقق B من وصولها دون تحديث الصفحة.
+- يرد B ويتحقق A من وصول الرد.
+- يختبر الطرفان التفاعلات وتعديل/حذف الرسائل والإيصالات ومؤشر الكتابة.
+- يعاد الاختبار داخل مجموعة وقناة.
+- يختبر انقطاع الاتصال والعودة، مع التأكد من عدم تكرار الرسائل.
+- يستخدم حساب ثالث غير عضو للتأكد من منع الوصول غير المصرح به.
+
+الاختبارات اليدوية أو الساكنة لا تُعد بديلاً عن E2E مصادق بين حسابين مستقلين.
+
+## التطوير وإعادة الهيكلة
+
+قبل نقل أي كود، راجع `docs/ARCHITECTURE_DEPENDENCY_MAP.md`. تعتمد الخطة على فصل تدريجي دون تغيير السلوك، مع فرع مستقل واختبارات لكل مرحلة. لا تدمج إلى `main` قبل مراجعة Pull Request وموافقة المالك.
+
+## الأمان والنسخ الاحتياطي
+
+- لا تضع ملفات `.env` أو مفاتيح سرية أو رموز دعوات أو بيانات اعتماد في Git.
+- احتفظ بنسخة Git mirror مستقلة ونسخة عمل محلية.
+- نسخة Git لا تتضمن تلقائياً قاعدة بيانات Supabase أو ملفات Storage أو إعدادات Vercel؛ يلزم تصدير ونسخ احتياطي منفصل لهذه الخدمات.
