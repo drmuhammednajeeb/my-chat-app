@@ -52,7 +52,7 @@
 .typing{height:23px;padding:0 26px;color:var(--muted);font-size:11px;flex:none}
 .composer-wrap{padding:10px clamp(12px,4vw,58px) max(16px,env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--bg) 70%,transparent)}.composer{display:flex;align-items:flex-end;gap:9px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:19px;box-shadow:var(--shadow)}.composer textarea{flex:1;resize:none;max-height:130px;min-height:40px;padding:9px 8px;background:transparent;border:0;outline:none;color:var(--text);line-height:1.5}.send{width:42px;height:42px;border:0;border-radius:14px;background:var(--accent);color:#062a28;font-size:19px;display:grid;place-items:center}.attach{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px}.voice-record-btn{width:40px;height:40px;flex:none;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:20px;display:grid;place-items:center;cursor:pointer}.voice-record-btn.recording{background:#fee2e2;color:#b91c1c;animation:voicePulse 1.25s ease-in-out infinite}.voice-record-btn:disabled{opacity:.4;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.voice-record-btn.recording{animation:none}}.voice-cancel-btn{color:#dc5555}@keyframes voicePulse{50%{box-shadow:0 0 0 6px #ef444422}}.message-audio{display:block;width:min(280px,65vw);max-width:100%;height:40px;margin:5px 0;accent-color:var(--accent)}.composer-hint{text-align:center;color:#71849b;font-size:10px;margin-top:7px}
 .auth-screen{min-height:100dvh;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 20% 15%,#1a786c2b,transparent 40%),radial-gradient(ellipse at 80% 90%,#2855a52a,transparent 40%),var(--bg)}
-.auth-card{width:min(100%,440px);padding:34px;background:#111e30;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:27px}.auth-brand .brandmark{width:52px;height:52px}.auth-card h2{font-size:25px;margin:0 0 7px}.auth-card>p{color:var(--muted);font-size:13px;margin:0 0 24px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);padding:4px;border-radius:12px;margin-bottom:20px}.tabs button{border:0;background:none;color:var(--muted);padding:9px;border-radius:9px}.tabs button.active{background:var(--panel3);color:var(--text)}.form-row{margin:13px 0}.form-row label{display:block;font-size:12px;color:#b5c4d6;margin-bottom:7px}.field{width:100%;border:1px solid var(--line);background:#0d1726;border-radius:12px;padding:12px 13px;color:var(--text);outline:none}.primary{width:100%;border:0;border-radius:12px;background:linear-gradient(110deg,#56d5bb,#2da999);color:#052d2a;padding:13px;font-weight:800;margin-top:12px}.auth-note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:17px}.alert{padding:10px 12px;border-radius:10px;background:#502c36;color:#ffc4c4;font-size:12px;margin:10px 0}.auth-status{padding:10px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px;line-height:1.7;margin:10px 0}.auth-status[hidden]{display:none!important}.hidden{display:none!important}.mobile-back{display:none}
+.auth-card{width:min(100%,440px);padding:34px;background:#111e30;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:27px}.auth-brand .brandmark{width:52px;height:52px}.auth-card h2{font-size:25px;margin:0 0 7px}.auth-card>p{color:var(--muted);font-size:13px;margin:0 0 24px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);padding:4px;border-radius:12px;margin-bottom:20px}.tabs button{border:0;background:none;color:var(--muted);padding:9px;border-radius:9px}.tabs button.active{background:var(--panel3);color:var(--text)}.form-row{margin:13px 0}.form-row label{display:block;font-size:12px;color:#b5c4d6;margin-bottom:7px}.field{width:100%;border:1px solid var(--line);background:#0d1726;border-radius:12px;padding:12px 13px;color:var(--text);outline:none}.primary{width:100%;border:0;border-radius:12px;background:linear-gradient(110deg,#56d5bb,#2da999);color:#052d2a;padding:13px;font-weight:800;margin-top:12px}.auth-note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:17px}.alert{padding:10px 12px;border-radius:10px;background:#502c36;color:#ffc4c4;font-size:12px;margin:10px 0}.auth-status{padding:10px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px;line-height:1.7;margin:10px 0}.auth-status[hidden]{display:none!important}.reset-password-wrap{margin-top:12px;text-align:center}.reset-password-link{border:0;background:none;color:#62d8c0;font-size:12px;font-weight:700;cursor:pointer;padding:7px 10px}.reset-password-link:disabled{opacity:.5;cursor:not-allowed}.reset-countdown{font-size:12px;color:var(--muted);line-height:1.8;margin-top:5px}.reset-countdown strong{color:#62d8c0;font-variant-numeric:tabular-nums}.hidden{display:none!important}.mobile-back{display:none}
 @media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:absolute;inset:0;z-index:4;transition:transform .25s}.sidebar.closed{transform:translateX(105%)}.chat{grid-column:1}.mobile-back{display:grid}.chat-head{height:66px;padding:0 12px}.messages{padding:16px 12px}.message{max-width:88%}.head-actions .optional{display:none}.brand{padding-top:max(16px,env(safe-area-inset-top))}.composer-wrap{padding-left:10px;padding-right:10px}.auth-card{padding:25px 20px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
@@ -436,6 +436,7 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
   <div class="form-row"><label for="password">كلمة المرور</label><input id="password" type="password" class="field" required minlength="8" autocomplete="current-password" placeholder="8 أحرف على الأقل"></div>
   <div id="authError" class="alert hidden" role="alert" aria-live="assertive"></div>
   <div id="authStatus" class="auth-status" role="status" aria-live="polite" hidden></div>
+  <div id="resetPasswordWrap" class="reset-password-wrap"><button id="resetPasswordBtn" class="reset-password-link" type="button">نسيت كلمة المرور؟</button><div id="resetCountdown" class="reset-countdown" role="status" aria-live="polite" hidden></div></div>
   <button id="authSubmit" class="primary" type="submit">تسجيل الدخول</button>
   <div class="auth-note">باستخدامك للمنصة، أنت مسؤول عن حماية بيانات دخولك واحترام خصوصية الآخرين.</div>
  </form>
@@ -712,9 +713,51 @@ $('messageInput').addEventListener('input',()=>diagLog('composer-input',{length:
 new MutationObserver(()=>{state.diagnostics.lastComposerChange={at:new Date().toLocaleTimeString('en-GB'),disabled:$('messageInput').disabled,readOnly:$('messageInput').readOnly};diagLog('composer-attributes-changed',state.diagnostics.lastComposerChange)}).observe($('messageInput'),{attributes:true,attributeFilter:['disabled','readonly']});
 window.addEventListener('error',e=>{state.diagnostics.lastRenderError='JS: '+(e.message||'unknown');diagLog('window-error',{message:e.message,source:e.filename,line:e.lineno})});
 window.addEventListener('unhandledrejection',e=>{state.diagnostics.lastRenderError='Promise: '+String(e.reason?.message||e.reason||'unknown');diagLog('unhandled-rejection',{message:state.diagnostics.lastRenderError})});
-function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'انضم إلى مساحة تواصل أكثر تنظيماً.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden')}
+function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'انضم إلى مساحة تواصل أكثر تنظيماً.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
 function authError(msg){$('authStatus').hidden=true;$('authError').textContent=msg;$('authError').classList.remove('hidden')}
 function authProgress(msg){$('authError').classList.add('hidden');$('authStatus').textContent=msg;$('authStatus').hidden=false}
+const RESET_COOLDOWN_MS=10*60*1000;
+const RESET_COOLDOWN_PREFIX='bizmindmakers-password-reset-until:';
+let resetCountdownTimer=null;
+function resetCooldownKey(email){return RESET_COOLDOWN_PREFIX+String(email||'').trim().toLowerCase()}
+function readResetExpiry(email){try{return Number(localStorage.getItem(resetCooldownKey(email))||0)||0}catch(e){return 0}}
+function formatResetRemaining(ms){const total=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0')}
+function updateResetCooldown(){
+ const email=$('email').value.trim(),expiry=readResetExpiry(email),remaining=expiry-Date.now(),btn=$('resetPasswordBtn'),label=$('resetCountdown');
+ if(remaining>0){
+  btn.disabled=true;btn.textContent='يمكنك إعادة الإرسال بعد';label.hidden=false;
+  label.innerHTML='يرجى الانتظار <strong>'+formatResetRemaining(remaining)+'</strong> قبل طلب رابط جديد.';
+ }else{
+  btn.disabled=false;btn.textContent='نسيت كلمة المرور؟';label.hidden=true;label.textContent='';
+  if(expiry){try{localStorage.removeItem(resetCooldownKey(email))}catch(e){}}
+ }
+}
+function startResetCooldown(email){
+ try{localStorage.setItem(resetCooldownKey(email),String(Date.now()+RESET_COOLDOWN_MS))}catch(e){throw new Error('تعذر حفظ مؤقت الحماية في المتصفح. فعّل التخزين المحلي ثم أعد المحاولة.')}
+ updateResetCooldown();
+ if(resetCountdownTimer)clearInterval(resetCountdownTimer);
+ resetCountdownTimer=setInterval(updateResetCooldown,1000);
+}
+async function sendPasswordReset(){
+ const email=$('email').value.trim();
+ if(!email)throw new Error('أدخل بريدك الإلكتروني أولاً.');
+ if(!$('email').checkValidity())throw new Error('تحقق من صيغة البريد الإلكتروني.');
+ const existing=readResetExpiry(email);
+ if(existing>Date.now()){updateResetCooldown();return}
+ const btn=$('resetPasswordBtn');btn.disabled=true;btn.textContent='جارٍ إرسال رابط الاستعادة...';
+ $('authError').classList.add('hidden');authProgress('جارٍ إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني...');
+ try{
+  const redirectTo=window.location.origin+window.location.pathname;
+  const {error}=await withAuthTimeout(supabaseClient.auth.resetPasswordForEmail(email,{redirectTo}),'لم يستجب خادم استعادة كلمة المرور خلال 20 ثانية. حاول مجدداً.');
+  if(error)throw error;
+  startResetCooldown(email);
+  authProgress('إذا كان البريد مسجلاً لدينا، فستصلك رسالة تحتوي على رابط آمن لإعادة تعيين كلمة المرور. تحقق من صندوق الوارد والرسائل غير المرغوب فيها.');
+ }catch(error){
+  btn.disabled=false;btn.textContent='نسيت كلمة المرور؟';
+  throw error;
+ }
+}
+
 function withAuthTimeout(promise,label,ms=20000){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label)),ms)})]).finally(()=>clearTimeout(timer))}
 function slug(s){return String(s||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'').slice(0,24)}
 async function ensureProfile(user){
@@ -745,6 +788,9 @@ async function enterApp(user){
  await loadDirectory();startPresence();return true;
 }
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
+$('resetPasswordBtn').addEventListener('click',async()=>{try{await sendPasswordReset()}catch(error){console.error('Password reset request failed:',error);authError(error.message||'تعذر إرسال رابط الاستعادة. حاول مرة أخرى.')}});
+$('email').addEventListener('input',updateResetCooldown);
+if(readResetExpiry($('email').value.trim())>Date.now()){resetCountdownTimer=setInterval(updateResetCooldown,1000)}updateResetCooldown();
 $('authForm').addEventListener('submit',async e=>{
  e.preventDefault();
  if($('authSubmit').disabled)return;
