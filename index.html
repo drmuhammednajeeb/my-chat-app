@@ -559,7 +559,7 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
   <div class="form-row"><label for="email">البريد الإلكتروني</label><input id="email" type="email" class="field" required autocomplete="email" placeholder="name@example.com"></div>
   <div class="form-row"><label for="password">كلمة المرور</label><input id="password" type="password" class="field" required minlength="8" autocomplete="current-password" placeholder="8 أحرف على الأقل"></div>
   <div id="authError" class="alert hidden" role="alert" aria-live="assertive"></div>
-  <div id="authStatus" class="auth-status" role="status" aria-live="polite" hidden></div>
+  <div id="authStatus" class="auth-status" role="status" aria-live="polite" hidden></div><div id="resendSignupVerification" class="hidden" style="margin-top:8px"><button id="resendSignupVerificationBtn" type="button" class="reset-password-link">إعادة إرسال رسالة توثيق البريد</button></div>
   <div id="resetPasswordWrap" class="reset-password-wrap"><button id="resetPasswordBtn" class="reset-password-link" type="button">نسيت كلمة المرور؟</button><div id="resetCountdown" class="reset-countdown" role="status" aria-live="polite" hidden></div></div>
   <button id="authSubmit" class="primary" type="submit">تسجيل الدخول</button>
   <div class="auth-note">باستخدامك للمنصة، أنت مسؤول عن حماية بيانات دخولك واحترام خصوصية الآخرين.</div>
@@ -927,7 +927,7 @@ $('messageInput').addEventListener('input',()=>{if(!$('diagnosticsPanel')?.hidde
 new MutationObserver(()=>{state.diagnostics.lastComposerChange={at:new Date().toLocaleTimeString('en-GB'),disabled:$('messageInput').disabled,readOnly:$('messageInput').readOnly};diagLog('composer-attributes-changed',state.diagnostics.lastComposerChange)}).observe($('messageInput'),{attributes:true,attributeFilter:['disabled','readonly']});
 window.addEventListener('error',e=>{state.diagnostics.lastRenderError='JS: '+(e.message||'unknown');diagLog('window-error',{message:e.message,source:e.filename,line:e.lineno})});
 window.addEventListener('unhandledrejection',e=>{state.diagnostics.lastRenderError='Promise: '+String(e.reason?.message||e.reason||'unknown');diagLog('unhandled-rejection',{message:state.diagnostics.lastRenderError})});
-function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'التسجيل متاح للأعضاء الذين لديهم دعوة ورقم عضوية رسمي فقط.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
+function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'التسجيل متاح للأعضاء الذين لديهم دعوة ورقم عضوية رسمي فقط.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden');$('resendSignupVerification')?.classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
 function authError(msg){$('authStatus').hidden=true;$('authError').textContent=msg;$('authError').classList.remove('hidden')}
 function authProgress(msg){$('authError').classList.add('hidden');$('authStatus').textContent=msg;$('authStatus').hidden=false}
 const RESET_COOLDOWN_MS=10*60*1000;
@@ -1006,6 +1006,9 @@ async function enterApp(user){
 }
 async function enterAppInternal(user,lifecycleVersion){
  if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
+ const {data:membershipState,error:membershipStateError}=await supabaseClient.rpc('get_my_membership_state');
+ if(membershipStateError){console.error('Membership state check failed:',membershipStateError);authError('تعذر التحقق من حالة العضوية. تحقق من الاتصال وحاول مجدداً.');return false;}
+ if(membershipState?.membership_status!=='active'||!/^971[0-9]{9}$/.test(membershipState?.membership_number||'')){await supabaseClient.auth.signOut({scope:'local'});authError('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');return false;}
  state.user=user;state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.activeListId=null;state.starredMessageIds.clear();state.groupSettings=null;state.selectedMessageIds.clear();state.selectionMode=false;subscribePersonalChatData();
  const profileStarted=performance.now();try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.');recordPerf('profile_load',performance.now()-profileStarted,{success:true})}catch(e){recordPerf('profile_load',performance.now()-profileStarted,{success:false});console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
  if(lifecycleVersion!==authLifecycleVersion)return false;
@@ -1037,6 +1040,17 @@ async function enterAppInternal(user,lifecycleVersion){
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
 $('resetPasswordBtn').addEventListener('click',async()=>{try{await sendPasswordReset()}catch(error){console.error('Password reset request failed:',error);authError(error.message||'تعذر إرسال رابط الاستعادة. حاول مرة أخرى.')}});
 $('email').addEventListener('input',updateResetCooldown);
+$('resendSignupVerificationBtn')?.addEventListener('click',async()=>{
+ const email=$('email').value.trim();
+ if(!email||!$('email').checkValidity()){authError('أدخل البريد الإلكتروني المستخدم في الدعوة أولاً.');return}
+ const button=$('resendSignupVerificationBtn');button.disabled=true;
+ try{
+  const {error}=await supabaseClient.auth.resend({type:'signup',email,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0]}});
+  if(error)throw error;
+  authProgress('تم طلب إعادة إرسال رابط التوثيق. تحقق من البريد الوارد والرسائل غير المرغوب فيها.');
+ }catch(error){authError(error.message||'تعذر إعادة إرسال رسالة التوثيق. حاول لاحقاً.')}
+ finally{button.disabled=false}
+});
 if(readResetExpiry($('email').value.trim())>Date.now()){resetCountdownTimer=setInterval(updateResetCooldown,1000)}updateResetCooldown();
 $('authForm').addEventListener('submit',async e=>{
  e.preventDefault();
@@ -1060,7 +1074,7 @@ $('authForm').addEventListener('submit',async e=>{
    const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0],data:{username,display_name:display,membership_number:membershipNumber,membership_invite_code:membershipInviteCode}}});
    if(error)throw error;
    if(data.session){authProgress('تم إنشاء الحساب. جارٍ فتح مساحة المحادثات...');await enterApp(data.user)}
-   else authError('تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد التسجيل، ثم سجّل الدخول.');
+   else{authProgress('تم إنشاء الحساب. أرسلنا رابط توثيق إلى بريدك الإلكتروني. افتح الرسالة ثم سجّل الدخول بعد التوثيق.');$('resendSignupVerification').classList.remove('hidden');}
   }else{
    btn.disabled=true;btn.textContent='جارٍ تسجيل الدخول...';authProgress('جارٍ التحقق من بيانات الدخول مع الخادم...');
    const {data,error}=await withAuthTimeout(supabaseClient.auth.signInWithPassword({email,password}),'لم يستجب خادم تسجيل الدخول خلال 20 ثانية. تحقق من الاتصال وحاول مجدداً.');
