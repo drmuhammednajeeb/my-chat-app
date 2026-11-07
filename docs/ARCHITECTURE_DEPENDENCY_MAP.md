@@ -232,3 +232,27 @@ The service worker precaches both new same-origin assets and advances its shell 
 **Scope boundary:** this is an entry-point extraction, not yet a complete feature-module split. The next phases should extract low-coupling services (diagnostics/notifications/settings) and then progressively isolate conversations, message lifecycle, realtime, groups/channels, media and administration behind explicit interfaces. Do not split shared state mechanically; document ownership and dependencies first.
 
 **Verification performed for this phase:** source-boundary checks confirm the extracted blocks are the original complete script bodies, the Supabase-before-app and app-before-workspace ordering is preserved, both preload hints and service-worker precache entries exist, and the cache version advances. No browser runtime, authenticated multi-account E2E or Vercel Preview test is claimed by this static verification.
+
+
+## 12. Feature-module extraction — phase 2
+
+Branch: `refactor/modular-app-entrypoints`.
+
+Function declarations have been separated into feature-oriented classic-script modules:
+
+- `modules/core.js`: 17 functions
+- `modules/auth.js`: 14 functions
+- `modules/notifications.js`: 11 functions
+- `modules/conversations.js`: 35 functions
+- `modules/messages.js`: 36 functions
+- `modules/realtime.js`: 12 functions
+- `modules/groups.js`: 15 functions
+- `modules/channels.js`: 6 functions
+- `modules/admin.js`: 12 functions
+- `modules/media.js`: 26 functions
+
+Modules load synchronously before `app.js`, after the Supabase UMD library. The current compatibility boundary is explicit: shared state, Supabase client, DOM helpers, event wiring, auth-state subscription and startup remain owned by `app.js`; feature functions resolve these shared bindings when invoked. This is a controlled migration stage, not yet full dependency injection or independent bundling.
+
+All extracted function bodies are preserved verbatim. Top-level state and initialization side effects remain in `app.js` to avoid changing startup timing. The service-worker shell cache advances to `v19` and precaches every feature module.
+
+No database schema, RLS policy, RPC, storage object, account, or production data was changed. Static checks are required before Preview validation; no browser or authenticated multi-user E2E is claimed.
