@@ -1,6 +1,4 @@
 -- Public/private channels, protected groups, channel avatars, and shared group wallpapers.
-begin;
-
 alter table public.conversations
   add column if not exists avatar_path text;
 
