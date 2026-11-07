@@ -1426,7 +1426,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
     if(state.active?.id!==conversationId){state.messageIds.delete(m.id);return false;}
     if(signedError){const failed=document.createElement('span');failed.textContent='تعذر فتح المرفق';bubble.append(failed)}
     else if(m.attachment_type?.startsWith('image/')){const img=document.createElement('img');img.src=signed.signedUrl;img.alt='مرفق';img.loading='lazy';img.onclick=()=>{$('lightboxImage').src=img.src;$('lightbox').classList.remove('hidden')};bubble.append(img)}
-    else if(m.attachment_type?.startsWith('audio/')){const audio=document.createElement('audio');audio.className='message-audio';audio.controls=true;audio.preload='metadata';audio.src=signed.signedUrl;audio.setAttribute('aria-label','رسالة صوتية');let signedAt=Date.now(),refreshing=false,retried=false;const refreshAudioUrl=async()=>{if(refreshing)return;refreshing=true;try{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;audio.src=renewed.signedUrl;signedAt=Date.now();audio.load()}catch(error){console.warn('Audio URL refresh failed:',error?.message||error);toast('تعذر فتح الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}finally{refreshing=false}};audio.addEventListener('play',()=>{if(Date.now()-signedAt>50*60*1000)refreshAudioUrl()});audio.addEventListener('error',()=>{if(!retried){retried=true;refreshAudioUrl()}});bubble.append(audio)}
+    else if(m.attachment_type?.startsWith('audio/')){const audio=document.createElement('audio');audio.className='message-audio';audio.controls=true;audio.preload='metadata';audio.src=signed.signedUrl;audio.setAttribute('aria-label','رسالة صوتية');let signedAt=Date.now(),refreshing=false,retried=false;const refreshAudioUrl=async(resume=false)=>{if(refreshing)return;refreshing=true;try{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;audio.src=renewed.signedUrl;signedAt=Date.now();audio.load();if(resume)await audio.play().catch(()=>{})}catch(error){console.warn('Audio URL refresh failed:',error?.message||error);toast('تعذر فتح الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}finally{refreshing=false}};audio.addEventListener('play',()=>{if(Date.now()-signedAt>50*60*1000){audio.pause();refreshAudioUrl(true)}});audio.addEventListener('error',()=>{if(!retried){retried=true;refreshAudioUrl(false)}});audio.setAttribute('playsinline','');bubble.append(audio)}
     else{const a=document.createElement('a');a.href=signed.signedUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}
    }
    if(m.content){const t=document.createElement('div');t.textContent=m.content;bubble.append(t)}
@@ -1878,8 +1878,13 @@ function renderMyChannels(){
   const meta=document.createElement('small');meta.textContent=mine?'قناتك الخاصة · أنت المالك':'قناة مشتركة معك عبر دعوة';
   copy.append(title,meta);top.append(icon,copy);card.append(top);
   if(channel.description){const desc=document.createElement('p');desc.textContent=channel.description;card.append(desc)}
+  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center';
   const action=document.createElement('button');action.type='button';action.textContent='فتح القناة';
-  action.onclick=()=>openConversation(channel);card.append(action);list.append(card);
+  action.onclick=()=>openConversation(channel);actions.append(action);
+  const myMembership=(channel.members||[]).find(m=>m.user_id===state.user.id),canInvite=mine||['owner','admin'].includes(myMembership?.role);
+  if(canInvite){const invite=document.createElement('button');invite.type='button';invite.className='secondary';invite.textContent='نسخ رابط دعوة';invite.onclick=()=>shareChannelInvite(channel,invite);actions.append(invite)}
+  const memberCount=document.createElement('small');memberCount.style.cssText='color:#667781;align-self:center';memberCount.textContent=(channel.members||[]).length+' أعضاء';actions.append(memberCount);
+  card.append(actions);list.append(card);
  });
 }
 function openChannelModal(){
@@ -1891,33 +1896,27 @@ $('closeChannelModal').onclick=closeChannelModal;$('cancelChannelCreation').oncl
 $('channelModal').addEventListener('click',event=>{if(event.target===$('channelModal'))closeChannelModal()});
 $('channelNameInput').addEventListener('input',()=>{$('createChannelBtn').disabled=!$('channelNameInput').value.trim()});
 $('createChannelBtn').onclick=async()=>{
- const title=$('channelNameInput').value.trim(),description=$('channelDescriptionInput').value.trim(),button=$('createChannelBtn');
+ const title=$('channelNameInput').value.trim(),description=$('channelDescriptionInput').value.trim(),button=$('createChannelBtn');let createdId=null;
  if(!title)return toast('اكتب اسم القناة أولاً');if(title.length>80||description.length>500)return toast('تحقق من طول الاسم والوصف');
  button.disabled=true;button.textContent='جارٍ إنشاء القناة…';
  try{
   const {data,error}=await supabaseClient.rpc('create_private_channel',{p_title:title,p_description:description});
   if(error)throw error;
-  const createdId=typeof data==='string'?data:(data?.id||data?.[0]?.id||data?.[0]);
-  if(!createdId)throw new Error('تم إرسال طلب الإنشاء لكن الخادم لم يُرجع معرّف القناة. أعد المحاولة بعد تحديث الصفحة.');
+  createdId=typeof data==='string'?data:(data?.id||data?.[0]?.id||data?.[0]);
+  if(!createdId)throw new Error('لم يُرجع الخادم معرّف القناة. حدّث الصفحة وتحقق من قائمة قنواتك قبل إعادة المحاولة.');
+  closeChannelModal();
   const refreshed=await loadConversations();
-  if(!refreshed)throw new Error('تم إنشاء القناة، لكن تعذر تحديث القائمة. اضغط تحديث المحادثات ثم افتح قنواتي.');
+  if(!refreshed)throw new Error('تم إنشاء القناة بالفعل، لكن تعذر تحديث القائمة. لا تنشئ قناة أخرى؛ أعد تحميل التطبيق لعرضها.');
   const created=state.conversations.find(c=>c.id===createdId);
-  if(!created)throw new Error('تم إنشاء القناة، لكن لم تظهر عضويتك فيها. أعد تحميل الصفحة؛ لن ننشئ قناة مكررة.');
-  closeChannelModal();setSidebarView('channels');await openConversation(created);renderMyChannels();toast('تم إنشاء القناة وفتحها. يمكنك الآن مشاركة رابط الدعوة مع الأعضاء.');
- }catch(error){console.error('Channel creation failed:',error);toast(error.message||'تعذر إنشاء القناة')}
- finally{button.textContent='إنشاء القناة';button.disabled=!$('channelNameInput').value.trim()}
+  if(!created)throw new Error('تم إنشاء القناة بالفعل، لكن تعذّر تحميل عضويتك. أعد تحميل التطبيق لعرضها.');
+  setSidebarView('channels');await openConversation(created);renderMyChannels();toast('تم إنشاء القناة وفتحها. يمكنك الآن مشاركة رابط الدعوة مع الأعضاء.');
+ }catch(error){
+  console.error('Channel creation failed:',error);
+  if(createdId){closeChannelModal();setSidebarView('channels');toast(error.message||'تم إنشاء القناة. أعد تحميل التطبيق لتحديث القائمة.')}
+  else toast(error.message||'تعذر إنشاء القناة');
+ }finally{button.textContent='إنشاء القناة';button.disabled=!$('channelNameInput').value.trim()}
 };
-$('shareChannelBtn').onclick=async()=>{
- const channel=state.active;if(!channel||channel.type!=='channel')return;
- const button=$('shareChannelBtn');button.disabled=true;
- try{
-  const {data,error}=await supabaseClient.rpc('create_channel_invite',{p_conversation_id:channel.id});if(error)throw error;
-  const url=new URL(location.href);url.searchParams.set('invite',data);url.hash='';const link=url.toString();
-  try{await navigator.clipboard.writeText(link);toast('تم نسخ رابط الدعوة. صالح لمدة 7 أيام، وإنشاء رابط جديد يلغي السابق.');}
-  catch(_e){prompt('انسخ رابط الدعوة الخاص بالقناة:',link)}
- }catch(error){console.error('Channel invite creation failed:',error);toast(error.message||'تعذر إنشاء رابط الدعوة')}
- finally{button.disabled=false}
-};
+$('shareChannelBtn').onclick=()=>shareChannelInvite(state.active,$('shareChannelBtn'));
 function openGroupModal(){
  if(!state.user)return toast('سجّل الدخول أولاً');
  groupSelectedProfiles.clear();$('groupNameInput').value='';$('groupMemberSearch').value='';$('groupModal').classList.add('open');renderGroupSelection();loadGroupCandidates('');setTimeout(()=>$('groupNameInput').focus(),60);
