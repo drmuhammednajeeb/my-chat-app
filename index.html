@@ -612,6 +612,27 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
 const state={user:null,profile:null,profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+// Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
+const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
+const perfSamples=(()=>{try{const value=JSON.parse(localStorage.getItem(PERF_STORAGE_KEY)||'[]');return Array.isArray(value)?value.slice(-80):[]}catch(_e){return []}})();
+function recordPerf(metric,duration,details={}){
+ const sample={metric,ms:Math.round(Math.max(0,Number(duration)||0)*10)/10,at:Date.now(),...details};
+ perfSamples.push(sample);if(perfSamples.length>80)perfSamples.splice(0,perfSamples.length-80);
+ try{localStorage.setItem(PERF_STORAGE_KEY,JSON.stringify(perfSamples))}catch(_e){}
+ if(!$('diagnosticsPanel')?.hidden)updateDiagnostics();
+}
+function performanceSummary(){
+ const metrics={};
+ for(const metric of ['profile_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total']){
+  const values=perfSamples.filter(x=>x.metric===metric).slice(-50).map(x=>x.ms).sort((a,b)=>a-b);
+  if(values.length)metrics[metric]={samples:values.length,avg_ms:Math.round(values.reduce((a,b)=>a+b,0)/values.length),p50_ms:values[Math.floor((values.length-1)*.5)],p95_ms:values[Math.floor((values.length-1)*.95)],max_ms:values[values.length-1]};
+ }
+ const resources=performance.getEntriesByType('resource').filter(entry=>/supabase\.co\/(rest|storage|auth|realtime)/i.test(entry.name)).slice(-100);
+ const network={supabase_resource_count:resources.length,reported_transfer_bytes:resources.reduce((sum,item)=>sum+(item.transferSize||0),0),reported_encoded_bytes:resources.reduce((sum,item)=>sum+(item.encodedBodySize||0),0),avg_resource_ms:resources.length?Math.round(resources.reduce((sum,item)=>sum+item.duration,0)/resources.length):0,bytes_may_be_zero_when_cross_origin_timing_is_restricted:true};
+ const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+ return {metrics,network,connection:connection?{effectiveType:connection.effectiveType||null,downlink_mbps:connection.downlink||null,rtt_ms:connection.rtt||null,saveData:!!connection.saveData}:null,long_tasks:perfSamples.filter(x=>x.metric==='long_task').slice(-10).map(x=>({ms:x.ms,at:x.at})),stored_samples:perfSamples.length,storage:'local browser only'};
+}
+if(typeof PerformanceObserver!=='undefined'){try{const longTaskObserver=new PerformanceObserver(list=>list.getEntries().forEach(entry=>recordPerf('long_task',entry.duration)));longTaskObserver.observe({type:'longtask',buffered:true})}catch(_e){}}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -711,7 +732,7 @@ $('markAllNotificationsRead').onclick=markAllNotificationsRead;
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('notificationsPanel').classList.contains('hidden')){$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false')}});
 
 function diagLog(event,details={}){const d=state.diagnostics;d.events.push({at:new Date().toLocaleTimeString('en-GB'),event,details});if(d.events.length>18)d.events.shift();updateDiagnostics()}
-function updateDiagnostics(){const panel=$('diagnosticsPanel');if(!panel||panel.hidden)return;const input=$('messageInput'),wrap=document.querySelector('.composer-wrap'),rect=input?.getBoundingClientRect();let hit=null;if(rect&&rect.width&&rect.height){const el=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);hit=el?{tag:el.tagName,id:el.id||'',className:typeof el.className==='string'?el.className:'',isComposer:!!wrap?.contains(el)}:null}state.diagnostics.lastHitTest={inputRect:rect?{x:Math.round(rect.x),y:Math.round(rect.y),width:Math.round(rect.width),height:Math.round(rect.height)}:null,hit,computed:input?{display:getComputedStyle(input).display,visibility:getComputedStyle(input).visibility,pointerEvents:getComputedStyle(input).pointerEvents,zIndex:getComputedStyle(input).zIndex}:null};const active=state.active?.id||'none';const out={activeConversation:active==='none'?'none':active.slice(0,8)+'…',userSession:!!state.user,loadedMessages:state.messages?.length||0,renderedMessageNodes:$('messages')?.querySelectorAll('.message').length||0,messageIds:state.messageIds?.size||0,composer:{disabled:!!input?.disabled,readOnly:!!input?.readOnly,valueLength:input?.value?.length||0,focused:document.activeElement===input},composerHitTest:state.diagnostics.lastHitTest,composerInteractions:state.diagnostics.composerInteractions,realtime:{status:state.realtimeStatus,lastEvent:state.diagnostics.lastRealtimeEvent,at:state.diagnostics.lastRealtimeAt},polling:{active:!!state.messagePollTimer,busy:state.messagePollBusy,generation:state.messagePollGeneration,lastAt:state.diagnostics.lastPollAt},fetch:{at:state.diagnostics.lastFetchAt,count:state.diagnostics.lastFetchCount,error:state.diagnostics.lastFetchError},render:{at:state.diagnostics.lastRenderAt,error:state.diagnostics.lastRenderError},lastComposerChange:state.diagnostics.lastComposerChange,events:state.diagnostics.events};$('diagnosticsOutput').textContent=JSON.stringify(out,null,2)}
+function updateDiagnostics(){const panel=$('diagnosticsPanel');if(!panel||panel.hidden)return;const input=$('messageInput'),wrap=document.querySelector('.composer-wrap'),rect=input?.getBoundingClientRect();let hit=null;if(rect&&rect.width&&rect.height){const el=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);hit=el?{tag:el.tagName,id:el.id||'',className:typeof el.className==='string'?el.className:'',isComposer:!!wrap?.contains(el)}:null}state.diagnostics.lastHitTest={inputRect:rect?{x:Math.round(rect.x),y:Math.round(rect.y),width:Math.round(rect.width),height:Math.round(rect.height)}:null,hit,computed:input?{display:getComputedStyle(input).display,visibility:getComputedStyle(input).visibility,pointerEvents:getComputedStyle(input).pointerEvents,zIndex:getComputedStyle(input).zIndex}:null};const active=state.active?.id||'none';const out={activeConversation:active==='none'?'none':active.slice(0,8)+'…',userSession:!!state.user,loadedMessages:state.messages?.length||0,renderedMessageNodes:$('messages')?.querySelectorAll('.message').length||0,messageIds:state.messageIds?.size||0,composer:{disabled:!!input?.disabled,readOnly:!!input?.readOnly,valueLength:input?.value?.length||0,focused:document.activeElement===input},composerHitTest:state.diagnostics.lastHitTest,composerInteractions:state.diagnostics.composerInteractions,realtime:{status:state.realtimeStatus,lastEvent:state.diagnostics.lastRealtimeEvent,at:state.diagnostics.lastRealtimeAt},polling:{active:!!state.messagePollTimer,busy:state.messagePollBusy,generation:state.messagePollGeneration,lastAt:state.diagnostics.lastPollAt},fetch:{at:state.diagnostics.lastFetchAt,count:state.diagnostics.lastFetchCount,error:state.diagnostics.lastFetchError},render:{at:state.diagnostics.lastRenderAt,error:state.diagnostics.lastRenderError},lastComposerChange:state.diagnostics.lastComposerChange,performance:performanceSummary(),events:state.diagnostics.events};$('diagnosticsOutput').textContent=JSON.stringify(out,null,2)}
 $('debugBtn').onclick=()=>{const panel=$('diagnosticsPanel'),show=panel.hidden;panel.hidden=!show;$('debugBtn').setAttribute('aria-expanded',String(show));updateDiagnostics()};
 $('testComposerFocus').onclick=()=>{const input=$('messageInput');input.focus();diagLog('composer-focus-test',{focused:document.activeElement===input,disabled:input.disabled,readOnly:input.readOnly})};
 function recordComposerInteraction(event){if($('diagnosticsPanel')?.hidden)return;const wrap=document.querySelector('.composer-wrap'),target=event.target;if(!wrap?.contains(target))return;const item={event:event.type,target:target?.id||target?.tagName||'unknown',at:new Date().toLocaleTimeString('en-GB'),activeElement:document.activeElement?.id||document.activeElement?.tagName||'unknown',key:event.type==='keydown'?event.key:undefined};state.diagnostics.composerInteractions.push(item);if(state.diagnostics.composerInteractions.length>20)state.diagnostics.composerInteractions.shift();updateDiagnostics()}
@@ -800,7 +821,7 @@ async function enterApp(user){
 }
 async function enterAppInternal(user,lifecycleVersion){
  state.user=user;
- try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.')}catch(e){console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
+ const profileStarted=performance.now();try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.');recordPerf('profile_load',performance.now()-profileStarted,{success:true})}catch(e){recordPerf('profile_load',performance.now()-profileStarted,{success:false});console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
  if(lifecycleVersion!==authLifecycleVersion)return false;
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');
@@ -951,7 +972,8 @@ async function loadDirectory(reset=true){
   const ids=Array.from(state.onlineUsers);if(!ids.length){if(requestId===state.directoryRequestId){state.directoryLoading=false;state.directoryUsers=[];renderDirectory();$('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';$('loadMoreUsers').classList.add('hidden')}return}
   query=query.in('id',ids);
  }
- const {data,error}=await query.order('display_name',{ascending:true}).order('id',{ascending:true}).range(from,to);
+ const directoryStarted=performance.now();const {data,error}=await query.order('display_name',{ascending:true}).order('id',{ascending:true}).range(from,to);
+ recordPerf('directory_query',performance.now()-directoryStarted,{success:!error,rows:data?.length||0});
  if(requestId!==state.directoryRequestId)return;
  state.directoryLoading=false;
  if(error){console.error('Directory search failed:',error);if(reset)$('directoryList').replaceChildren();const box=document.createElement('div');box.className='directory-empty';box.textContent='تعذر تنفيذ البحث. تحقق من صلاحيات قراءة الملفات الشخصية ثم حاول مجدداً.';$('directoryList').append(box);$('directorySummary').textContent='تعذر تحميل النتائج';$('loadMoreUsers').classList.add('hidden');return}
@@ -1216,13 +1238,14 @@ $('directShortcutBtn').onclick=toggleDirectChatShortcut;
 $('directClearBtn').onclick=clearDirectChatForMe;
 async function openConversation(c){
  if(!c?.id)return;
+ const conversationOpenStarted=performance.now();
  if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
  state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};applyDirectChatTheme();state.messages=[];state.newMessageCount=0;updateNewMessagesIndicator();$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=c.type!=='channel'||myRole==='owner'||myRole==='admin';$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=isSelfConversation(c)?'مساحة شخصية · مراسلة نفسك':c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';// renderChatAvatar already renders the other participant's saved photo or initials.$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
  $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
- stopMessagePolling();subscribeConversation();subscribeProfileUpdates(c);await loadMessages();if(state.active?.id===c.id)startMessagePolling(c.id);
+ stopMessagePolling();subscribeConversation();subscribeProfileUpdates(c);await loadMessages();recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:state.active?.id===c.id});if(state.active?.id===c.id)startMessagePolling(c.id);
 }
 
 async function loadMessageReactions(conversationId,messages){
@@ -1366,7 +1389,7 @@ async function markConversationReceipt(conversationId,markRead=true){const stamp
 async function publishTyping(isTyping){if(!state.typingChannel||!state.user)return;const now=Date.now();if(isTyping&&now-state.typingSent<1000)return;state.typingSent=now;try{await state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile?.display_name||'عضو',is_typing:isTyping}})}catch(e){console.debug('Typing broadcast failed',e?.message||e)}}
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||state.messageIds.has(m.id)||state.renderingMessageIds.has(m.id))return false;
- state.renderingMessageIds.add(m.id);
+ const messageRenderStarted=performance.now();state.renderingMessageIds.add(m.id);
  try{
   const area=$('messages'),near=state.isLoadingMessages?true:isMessagesNearBottom(area,120);
   const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
@@ -1401,15 +1424,15 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
   state.messageIds.delete(m.id);state.diagnostics.lastRenderError=String(error?.message||error);console.error('Message rendering failed:',error);diagLog('render-error',{id:m.id,error:state.diagnostics.lastRenderError});
   if(state.active?.id===conversationId)toast('تعذر عرض أحد المرفقات، لكن يمكنك متابعة الكتابة والإرسال');
   return false;
- }finally{state.renderingMessageIds.delete(m.id)}
+ }finally{state.renderingMessageIds.delete(m.id);recordPerf('message_render_item',performance.now()-messageRenderStarted)}
 }
 async function loadMessages(){
  const conversationId=state.active?.id;if(!conversationId)return false;
- const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
+ const messageLoadStarted=performance.now();const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
  area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
  try{
-  let messageQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)messageQuery=messageQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await messageQuery.order('created_at',{ascending:false}).limit(50);
-  if(error)throw error;
+  const messageFetchStarted=performance.now();let messageQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)messageQuery=messageQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await messageQuery.order('created_at',{ascending:false}).limit(50);
+  recordPerf('message_fetch',performance.now()-messageFetchStarted,{success:!error,rows:data?.length||0});if(error)throw error;
   state.hasMoreMessages=(data||[]).length===50;
   state.diagnostics.lastFetchAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastFetchCount=(data||[]).length;state.diagnostics.lastFetchError=null;diagLog('fetch-success',{count:(data||[]).length,requestId});
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
@@ -1424,19 +1447,20 @@ async function loadMessages(){
   area.replaceChildren();state.messageIds.clear();
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{
-   for(const message of messages){
+   const messageRenderBatchStarted=performance.now();for(const message of messages){
     if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
     await renderMessage(message,conversationId,requestId);
    }
    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
    area.scrollTop=area.scrollHeight;
+   recordPerf('message_render_batch',performance.now()-messageRenderBatchStarted,{rows:messages.length});
   }
   state.isLoadingMessages=false;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId)await markConversationReceipt(conversationId,document.visibilityState==='visible');
-  return true;
+  recordPerf('message_load_total',performance.now()-messageLoadStarted,{success:true,rows:messages.length});return true;
  }catch(error){
-  state.diagnostics.lastFetchError=String(error?.message||error);diagLog('fetch-error',{error:state.diagnostics.lastFetchError});console.error('Message loading failed:',error);
+  recordPerf('message_load_total',performance.now()-messageLoadStarted,{success:false});state.diagnostics.lastFetchError=String(error?.message||error);diagLog('fetch-error',{error:state.diagnostics.lastFetchError});console.error('Message loading failed:',error);
   state.isLoadingMessages=false;
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){area.innerHTML='<div class="welcome"><h2>تعذر تحميل الرسائل</h2><p>تم إبقاء المحادثة مفتوحة. اضغط تحديث لإعادة المحاولة.</p></div>';toast('تعذر استرجاع الرسائل من قاعدة البيانات')}
   return false;
@@ -1899,12 +1923,12 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRES
 // Profile Center: self-edit and read-only participant profiles
 let profileModalEditable=false;
 function openProfileModal(profile,editable=false){
- if(!profile)return;profileModalEditable=!!editable;
+ if(!profile)return;const profileModalStarted=performance.now();profileModalEditable=!!editable;
  $('profileModalTitle').textContent=editable?'ملفي الشخصي':'الملف الشخصي';$('profileModalSubtitle').textContent=editable?'إدارة بيانات حسابك':'معلومات المستخدم';
  $('profileDisplayName').value=profile.display_name||'';$('profileUsername').value=profile.username?'@'+profile.username:'';$('profileBio').value=profile.bio||'';
  renderAvatar($('profileModalAvatar'),profile,'profile-modal-avatar');$('profileDisplayName').readOnly=!editable;$('profileBio').readOnly=!editable;
  $('profilePhotoBtn').classList.toggle('hidden',!editable);$('profileSaveBtn').classList.toggle('hidden',!editable);$('profileReadOnlyNote').classList.toggle('hidden',editable);
- $('profileModal').classList.add('open');$('profileModal').setAttribute('aria-hidden','false');
+ $('profileModal').classList.add('open');$('profileModal').setAttribute('aria-hidden','false');recordPerf('profile_modal_open',performance.now()-profileModalStarted);
 }
 function closeProfileModal(){$('profileModal').classList.remove('open');$('profileModal').setAttribute('aria-hidden','true')}
 $('profileModalClose').onclick=closeProfileModal;$('profileModalCancel').onclick=closeProfileModal;
