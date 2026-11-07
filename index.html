@@ -757,12 +757,21 @@ async function markNotificationRead(id){
 }
 async function markAllNotificationsRead(){
  if(!state.user||!state.notificationUnread)return;
- const button=$('markAllNotificationsRead');button.disabled=true;
+ const button=$('markAllNotificationsRead');
+ if(button)button.disabled=true;
  const stamp=new Date().toISOString();
- const {error}=await supabaseClient.from('user_notifications').update({read_at:stamp}).eq('recipient_id',state.user.id).is('read_at',null);
- if(error){console.error('Mark all notifications read failed:',error);toast('تعذر تحديث حالة الإشعارات');renderNotificationBadge();return}
- state.notifications.forEach(item=>{if(!item.read_at)item.read_at=stamp});
- state.notificationUnread=0;renderNotifications();toast('تم تحديد الإشعارات كمقروءة');
+ try{
+  const {error}=await supabaseClient.from('user_notifications').update({read_at:stamp}).eq('recipient_id',state.user.id).is('read_at',null);
+  if(error)throw error;
+  state.notifications.forEach(item=>{if(!item.read_at)item.read_at=stamp});
+  state.notificationUnread=0;renderNotifications();toast('تم تحديد الإشعارات كمقروءة');
+ }catch(error){
+  console.error('Mark all notifications read failed:',error);
+  toast('تعذر تحديث حالة الإشعارات. حاول مرة أخرى');
+  renderNotificationBadge();
+ }finally{
+  if(button)button.disabled=false;
+ }
 }
 async function openNotification(item){
  await markNotificationRead(item.id);
@@ -1000,7 +1009,7 @@ async function uploadProfileAvatar(file){
 }
 $('myAvatar').onclick=()=>openProfileModal(state.profile,true);
 $('myAvatar').addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openProfileModal(state.profile,true)}});
-$('avatarInput').addEventListener('change',event=>uploadProfileAvatar(event.target.files?.[0]));
+// Photo selection is preview-only. Upload is triggered exclusively by profilePhotoApprove.
 
 function setSidebarView(view){
  if(view==='team'&&!state.isTeamAdmin){toast('لا تملك صلاحية إدارة الفريق');return}
