@@ -1035,10 +1035,10 @@ function bindMessageGestures(row,message){
  });
  bubble.addEventListener('pointerup',event=>{
   if(!start)return;
-  const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;bubble.style.transform='';
+  const dx=event.clientX-start.x,dy=event.clientY-start.y,tapTarget=start.target;start=null;bubble.style.transform='';
   const rtl=getComputedStyle(document.documentElement).direction==='rtl';
   if(Math.abs(dx)>=58&&Math.abs(dx)>Math.abs(dy)*1.25&&(rtl?dx>0:dx<0)){beginReply(message);return}
-  if(event.pointerType==='touch'&&Math.abs(dx)<18&&Math.abs(dy)<18&&!start?.target?.closest('img')){
+  if(event.pointerType==='touch'&&Math.abs(dx)<18&&Math.abs(dy)<18&&!tapTarget?.closest('img')){
    const now=Date.now();if(now-lastTap<330){lastTap=0;row.dataset.touchDoubleAt=String(now);openMessageReactions(row)}else lastTap=now;
   }
  });
@@ -1276,6 +1276,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
 
 function subscribeProfileUpdates(conversation){
  if(state.profileChannel)supabaseClient.removeChannel(state.profileChannel);
+ if(conversation?.type!=='direct'){state.profileChannel=null;return}
  const members=(conversation?.members||[]).filter(member=>member.user_id&&member.user_id!==state.user?.id);
  if(!members.length){state.profileChannel=null;return}
  let channel=supabaseClient.channel('profile-updates:'+conversation.id);
