@@ -615,12 +615,17 @@ const state={user:null,profile:null,profileChannel:null,voiceRecorder:null,voice
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
 const perfSamples=(()=>{try{const value=JSON.parse(localStorage.getItem(PERF_STORAGE_KEY)||'[]');return Array.isArray(value)?value.slice(-80):[]}catch(_e){return []}})();
+let perfPersistTimer=null;
+function persistPerfSamples(){try{localStorage.setItem(PERF_STORAGE_KEY,JSON.stringify(perfSamples))}catch(_e){}perfPersistTimer=null}
 function recordPerf(metric,duration,details={}){
  const sample={metric,ms:Math.round(Math.max(0,Number(duration)||0)*10)/10,at:Date.now(),...details};
  perfSamples.push(sample);if(perfSamples.length>80)perfSamples.splice(0,perfSamples.length-80);
- try{localStorage.setItem(PERF_STORAGE_KEY,JSON.stringify(perfSamples))}catch(_e){}
+ // Batch storage writes so instrumentation does not add synchronous I/O to message rendering.
+ if(perfPersistTimer)clearTimeout(perfPersistTimer);
+ perfPersistTimer=setTimeout(persistPerfSamples,1200);
  if(!$('diagnosticsPanel')?.hidden)updateDiagnostics();
 }
+window.addEventListener('pagehide',persistPerfSamples,{capture:true});
 function performanceSummary(){
  const metrics={};
  for(const metric of ['profile_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total']){
