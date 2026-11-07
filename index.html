@@ -10,6 +10,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+ const KEY='bizmindmakers-chat-theme';
+ let preference=null;
+ try{preference=localStorage.getItem(KEY)}catch(_){}
+ if(preference!=='dark'&&preference!=='light')preference=null;
+ const systemDark=!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+ const theme=preference||(systemDark?'dark':'light');
+ const root=document.documentElement;
+ root.classList.toggle('dark',theme==='dark');
+ root.classList.toggle('light',theme==='light');
+ root.dataset.theme=theme;
+ root.style.colorScheme=theme;
+ window.__BIZMIND_THEME_PREFERENCE__=preference||'system';
+})();
+</script>
 <style>
 :root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--panel2:#17243a;--panel3:#1d2d46;--line:#263852;--text:#edf3fb;--muted:#8da0b8;--accent:#45c5b0;--accent2:#249b8d;--danger:#ef7777;--bubble:#1b2a40;--mine:#146e68;--shadow:0 22px 70px #02081770}
 *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI","Tajawal",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
@@ -342,6 +358,36 @@ html,body{height:100%;min-height:100%;overflow:hidden}
  #chat .composer textarea{max-height:82px;min-height:36px}
 }
 
+
+/* Global light theme: all application surfaces inherit the root palette. */
+html.light{color-scheme:light;--bg:#f3f6fa;--panel:#ffffff;--panel2:#f7f9fc;--panel3:#edf2f8;--line:#dce4ee;--text:#182437;--muted:#64748b;--accent:#148b7b;--accent2:#0f766e;--danger:#dc5555;--bubble:#ffffff;--mine:#14776d;--shadow:0 18px 55px #26364b18}
+html.dark{color-scheme:dark}
+html.light body,html.light #app,html.light #auth{background:var(--bg);color:var(--text)}
+html.light .sidebar,html.light .chat,html.light .chat-head,html.light .composer-wrap,html.light .profile,html.light .auth-card,html.light .group-dialog,html.light .notification-panel,html.light .team-panel,html.light .chat-search-panel{background:var(--panel);color:var(--text);border-color:var(--line)}
+html.light .brand,html.light .sidebar-foot,html.light .sidebar-tabs,html.light .searchbox,html.light .directory-filters,html.light .composer,html.light .field,html.light input,html.light textarea,html.light select{background-color:var(--panel2);color:var(--text);border-color:var(--line)}
+html.light input::placeholder,html.light textarea::placeholder{color:#8795a8}
+html.light .iconbtn,html.light .sidebar-tab,html.light .directory-filter,html.light .conv-item,html.light .notification-item,html.light .group-member-row,html.light .team-group-row{color:var(--text);border-color:var(--line)}
+html.light .iconbtn,html.light .sidebar-tab,html.light .directory-filter{background:var(--panel2)}
+html.light .conv-item:hover,html.light .sidebar-tab:hover,html.light .iconbtn:hover,html.light .notification-item:hover{background:var(--panel3)}
+html.light .conv-item.active,html.light .sidebar-tab.active,html.light .directory-filter.active{background:#e4f2ef;color:#11685f;border-color:#b7ddd5}
+html.light .chat-title strong,html.light .profile-info strong,html.light .brand h1,html.light .auth-card h2,html.light .group-dialog h2{color:var(--text)}
+html.light .chat-title small,html.light .profile-info small,html.light .brand p,html.light .auth-card p,html.light .sidebar-foot,html.light .muted{color:var(--muted)}
+html.light .messages{background:var(--bg)}
+html.light .bubble{background:var(--bubble);color:var(--text);border-color:var(--line)}
+html.light .mine .bubble{background:linear-gradient(145deg,#177d72,#11685f);color:#fff;border-color:#258c80}
+html.light .composer-wrap{background:var(--bg);border-color:var(--line)}
+html.light .composer{background:var(--panel);border-color:var(--line)}
+html.light .primary,html.light .group-create{color:#fff}
+html.light .direct-chat-control{background:var(--panel2);color:var(--muted);border-color:var(--line)}
+html.light #chat.chat[data-chat-theme="dark"]{--bg:#0b1220;--panel:#111c2d;--panel2:#17243a;--panel3:#1d2d46;--line:#263852;--text:#edf3fb;--muted:#8da0b8;--bubble:#1b2a40}
+html.light #chat.chat[data-chat-theme="dark"] .chat-head{background:#111c2ded;color:#edf3fb;border-color:#263852}
+html.light #chat.chat[data-chat-theme="dark"] .messages{background:#0b1220}
+html.light #chat.chat[data-chat-theme="dark"] .composer-wrap{background:#0b1220;border-color:#263852}
+html.light #chat.chat[data-chat-theme="dark"] .composer{background:#111c2d;border-color:#263852}
+html.light #chat.chat[data-chat-theme="dark"] #messageInput{color:#edf3fb}
+.theme-toggle-btn{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:11px;background:var(--panel2);color:var(--text);font-size:18px;flex:0 0 auto}
+.theme-toggle-btn:hover{border-color:var(--accent);color:var(--accent)}
+@media(prefers-reduced-motion:no-preference){html,body,#app,#auth,.sidebar,.chat,.chat-head,.composer-wrap,.composer,.auth-card{transition:background-color .18s ease,color .18s ease,border-color .18s ease}}
 </style>
 <style>
 .channel-card{display:flex;flex-direction:column;gap:9px;margin:10px 12px;padding:13px;border:1px solid #e9edef;border-radius:13px;background:#fff;color:#111b21}.channel-card-top{display:flex;align-items:center;gap:9px}.channel-card-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:#d9fdd3;color:#075e54;font-size:19px;flex:none}.channel-card-copy{min-width:0;flex:1}.channel-card-copy strong{display:block;font-size:13px}.channel-card-copy small{display:block;margin-top:3px;color:#667781;font-size:10px}.channel-card p{margin:0;color:#667781;font-size:11px;line-height:1.6;overflow-wrap:anywhere}.channel-card button{align-self:flex-start;border:0;border-radius:9px;padding:7px 12px;background:#d9fdd3;color:#075e54;font-size:11px;font-weight:800}.channel-card button:disabled{opacity:.6}.channel-empty{padding:26px 15px;text-align:center;color:#667781;font-size:12px;line-height:1.8}.channel-card button.secondary{background:#24384b;color:#d9fdd3}
@@ -405,7 +451,7 @@ html,body{height:100%;min-height:100%;overflow:hidden}
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <div id="chatAvatar" class="avatar">U</div>
    <div class="chat-title"><strong id="chatTitle">اختر محادثة</strong><small id="chatSub">محادثاتك الخاصة والمجموعات</small></div>
-   <div class="head-actions"><button id="directThemeBtn" class="direct-chat-control hidden" type="button" title="تغيير سمة هذه المحادثة"><i class="ph ph-sun"></i></button><button id="directShortcutBtn" class="direct-chat-control hidden" type="button" title="إضافة اختصار للمحادثة"><i class="ph ph-push-pin"></i></button><button id="directClearBtn" class="direct-chat-control hidden" type="button" title="مسح محتوى الدردشة من طرفك"><i class="ph ph-broom"></i></button><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت BizmindMakers Chat Pro" aria-label="تثبيت التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
+   <div class="head-actions"><button id="appThemeToggle" class="theme-toggle-btn" type="button" title="تبديل سمة التطبيق" aria-label="تبديل سمة التطبيق"><i class="ph ph-sun"></i></button><button id="directThemeBtn" class="direct-chat-control hidden" type="button" title="تغيير سمة هذه المحادثة"><i class="ph ph-sun"></i></button><button id="directShortcutBtn" class="direct-chat-control hidden" type="button" title="إضافة اختصار للمحادثة"><i class="ph ph-push-pin"></i></button><button id="directClearBtn" class="direct-chat-control hidden" type="button" title="مسح محتوى الدردشة من طرفك"><i class="ph ph-broom"></i></button><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت BizmindMakers Chat Pro" aria-label="تثبيت التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
    <button id="debugBtn" class="iconbtn" type="button" title="تشخيص حالة المحادثة" aria-expanded="false"><i class="ph ph-bug"></i></button>
   </header>
   <div id="chatSearchPanel" class="chat-search-panel hidden"><div class="chat-search-top"><input id="chatSearchInput" type="search" placeholder="ابحث في رسائل هذه المحادثة…" autocomplete="off"><button id="chatSearchClose" type="button" title="إغلاق البحث"><i class="ph ph-x"></i></button></div><div id="chatSearchResults" class="chat-search-results"><p>اكتب كلمة للبحث داخل المحادثة الحالية.</p></div></div>
@@ -471,6 +517,25 @@ const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
+const APP_THEME_KEY='bizmindmakers-chat-theme';
+let appThemePreference=window.__BIZMIND_THEME_PREFERENCE__||'system';
+let appThemeMedia=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+function applyAppTheme(theme,save=false){
+ const resolved=theme==='system'?(appThemeMedia?.matches?'dark':'light'):theme;
+ const root=document.documentElement;
+ root.classList.toggle('dark',resolved==='dark');
+ root.classList.toggle('light',resolved==='light');
+ root.dataset.theme=resolved;root.style.colorScheme=resolved;
+ if(save){appThemePreference=theme;try{if(theme==='system')localStorage.removeItem(APP_THEME_KEY);else localStorage.setItem(APP_THEME_KEY,theme)}catch(error){console.warn('Theme preference storage unavailable:',error)}}
+ const button=$('appThemeToggle');
+ if(button){button.innerHTML=resolved==='dark'?'<i class="ph ph-sun"></i>':'<i class="ph ph-moon"></i>';button.title=resolved==='dark'?'التبديل إلى الوضع الساطع':'التبديل إلى الوضع المظلم';button.setAttribute('aria-label',button.title);button.setAttribute('aria-pressed',String(resolved==='dark'))}
+}
+function toggleAppTheme(){const current=document.documentElement.dataset.theme||'dark';applyAppTheme(current==='dark'?'light':'dark',true)}
+$('appThemeToggle')?.addEventListener('click',toggleAppTheme);
+if(appThemeMedia){const onSystemThemeChange=()=>{if(appThemePreference==='system')applyAppTheme('system',false)};if(appThemeMedia.addEventListener)appThemeMedia.addEventListener('change',onSystemThemeChange);else if(appThemeMedia.addListener)appThemeMedia.addListener(onSystemThemeChange)}
+window.addEventListener('storage',event=>{if(event.key===APP_THEME_KEY){const next=event.newValue==='dark'||event.newValue==='light'?event.newValue:'system';appThemePreference=next;applyAppTheme(next,false)}});
+applyAppTheme(appThemePreference,false);
+
 let deferredInstallPrompt=null;
 const installAppButton=$('installAppBtn');
 if(installAppButton&&(window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true))installAppButton.hidden=true;
