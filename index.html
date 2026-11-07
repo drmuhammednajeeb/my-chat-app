@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101a2a"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="./manifest.json"><link rel="icon" href="./icons/ultra-chat.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./icons/ultra-chat.svg">
+<link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -407,7 +407,7 @@ html.light .message:not(.mine) .bubble{background:#fff;color:#182437;border-colo
 html.light .day-divider{background:#fff;color:var(--muted);border-color:var(--line)}
 html.light .notification-head,html.light .chat-search-top{background:var(--panel2);color:var(--text);border-color:var(--line)}
 html.light .notification-empty,html.light .team-empty{color:var(--muted)}
-</style>
+\n/* Official BizmindMakers BZ brand assets */\n.brandmark{overflow:hidden;padding:0;background:transparent!important;box-shadow:none!important;border-radius:13px!important}\n.brandmark img{display:block;width:100%;height:100%;object-fit:contain;border-radius:inherit}\n.auth-brand .brandmark{background:transparent!important}\n</style>
 <style>
 .channel-card{display:flex;flex-direction:column;gap:9px;margin:10px 12px;padding:13px;border:1px solid #e9edef;border-radius:13px;background:#fff;color:#111b21}.channel-card-top{display:flex;align-items:center;gap:9px}.channel-card-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:#d9fdd3;color:#075e54;font-size:19px;flex:none}.channel-card-copy{min-width:0;flex:1}.channel-card-copy strong{display:block;font-size:13px}.channel-card-copy small{display:block;margin-top:3px;color:#667781;font-size:10px}.channel-card p{margin:0;color:#667781;font-size:11px;line-height:1.6;overflow-wrap:anywhere}.channel-card button{align-self:flex-start;border:0;border-radius:9px;padding:7px 12px;background:#d9fdd3;color:#075e54;font-size:11px;font-weight:800}.channel-card button:disabled{opacity:.6}.channel-empty{padding:26px 15px;text-align:center;color:#667781;font-size:12px;line-height:1.8}.channel-card button.secondary{background:#24384b;color:#d9fdd3}
 .group-modal{position:fixed;inset:0;z-index:30;display:none;place-items:center;padding:16px;background:#0b141a80;backdrop-filter:blur(3px)}
@@ -428,7 +428,7 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
 <body>
 <div id="auth" class="auth-screen">
  <form id="authForm" class="auth-card" novalidate>
-  <div class="auth-brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><strong style="font-size:20px">BizmindMakers Chat Pro</strong><div style="color:var(--muted);font-size:11px">تواصل بلا حدود، بخصوصية أفضل</div></div></div>
+  <div class="auth-brand"><div class="brandmark"><img src="./icon-1024.png" alt="BZ" width="1024" height="1024" decoding="async"></div><div><strong style="font-size:20px">BizmindMakers Chat Pro</strong><div style="color:var(--muted);font-size:11px">تواصل بلا حدود، بخصوصية أفضل</div></div></div>
   <h2 id="authTitle">مرحباً بعودتك</h2><p id="authSub">سجّل الدخول لمتابعة محادثاتك.</p>
   <div class="tabs"><button type="button" id="loginTab" class="active">تسجيل الدخول</button><button type="button" id="signupTab">إنشاء حساب</button></div>
   <div id="signupFields" class="hidden">
@@ -446,7 +446,7 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
 </div>
 <div id="app" class="app hidden">
  <aside id="sidebar" class="sidebar">
-  <div class="brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><h1>BizmindMakers Chat Pro</h1><p>مساحة تواصلك الذكية</p></div></div>
+  <div class="brand"><div class="brandmark"><img src="./icon-1024.png" alt="BZ" width="1024" height="1024" decoding="async"></div><div><h1>BizmindMakers Chat Pro</h1><p>مساحة تواصلك الذكية</p></div></div>
   <div class="profile"><div id="myAvatar" class="avatar profile-avatar-edit" role="button" tabindex="0" title="تغيير الصورة الشخصية" aria-label="تغيير الصورة الشخصية">U</div><input id="avatarInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" aria-label="اختيار صورة شخصية"><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><div class="notification-bell-wrap"><button id="notificationBell" type="button" title="مركز الإشعارات" aria-label="فتح مركز الإشعارات" aria-expanded="false"><i class="ph ph-bell"></i><span id="notificationBadge" class="hidden">0</span></button></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
   <div class="sidebar-tabs" role="tablist" aria-label="أقسام التطبيق">
    <button type="button" id="chatsTab" class="sidebar-tab active" role="tab" aria-selected="true"><i class="ph ph-chats"></i> المحادثات</button>
