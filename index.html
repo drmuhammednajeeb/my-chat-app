@@ -2295,13 +2295,13 @@ function groupRole(conversation=state.active){return (conversation?.members||[])
 function isGroupAdmin(conversation=state.active){return ['owner','admin'].includes(groupRole(conversation))||!!state.isTeamAdmin}
 function ensureGroupModal(){
  if($('groupManagementModal'))return;
- document.body.insertAdjacentHTML('beforeend',\`
+ document.body.insertAdjacentHTML('beforeend',`
  <div id="groupManagementModal" class="group-management-modal" aria-hidden="true"><section class="group-management-dialog" role="dialog" aria-modal="true" aria-labelledby="groupManagementTitle">
  <header class="group-management-head"><div><h2 id="groupManagementTitle">معلومات المجموعة</h2><p id="groupManagementSubtitle"></p></div><button id="groupManagementClose" class="iconbtn" type="button" aria-label="إغلاق"><i class="ph ph-x"></i></button></header>
  <div id="groupManagementBody" class="group-management-body"></div></section></div>
  <div id="starredModal" class="starred-modal" aria-hidden="true"><section class="starred-dialog" role="dialog" aria-modal="true"><header class="starred-head"><h2>الرسائل المميزة بنجمة</h2><button id="starredClose" class="iconbtn" type="button"><i class="ph ph-x"></i></button></header><div id="starredBody" class="starred-body"></div></section></div>
  <div id="customListModal" class="custom-list-modal" aria-hidden="true"><section class="custom-list-dialog" role="dialog" aria-modal="true"><header class="custom-list-head"><h2>إضافة إلى القوائم المخصصة</h2><button id="customListClose" class="iconbtn" type="button"><i class="ph ph-x"></i></button></header><div id="customListBody" class="custom-list-body"></div></section></div>
- <div id="messageSelectionToolbar" class="message-selection-toolbar"><strong id="messageSelectionCount">0 محددة</strong><div class="group-management-row"><button id="starSelectedMessages" type="button">تمييز بنجمة</button><button id="exportSelectedMessages" type="button">تصدير المحدد</button><button id="cancelMessageSelection" type="button">إلغاء</button></div></div>\`);
+ <div id="messageSelectionToolbar" class="message-selection-toolbar"><strong id="messageSelectionCount">0 محددة</strong><div class="group-management-row"><button id="starSelectedMessages" type="button">تمييز بنجمة</button><button id="exportSelectedMessages" type="button">تصدير المحدد</button><button id="cancelMessageSelection" type="button">إلغاء</button></div></div>`);
  $('groupManagementClose').onclick=closeGroupManagement;$('groupManagementModal').addEventListener('click',e=>{if(e.target===$('groupManagementModal'))closeGroupManagement()});
  $('starredClose').onclick=()=>$('starredModal').classList.remove('open');$('customListClose').onclick=()=>$('customListModal').classList.remove('open');
  $('cancelMessageSelection').onclick=()=>setMessageSelectionMode(false);
