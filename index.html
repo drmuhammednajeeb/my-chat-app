@@ -894,7 +894,7 @@ function renderConversations(){
   const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at))&&(!pref.cleared_before||new Date(c.last_message.created_at)>new Date(pref.cleared_before)));
   b.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));
   const person=c.type==='direct'?otherMember(c):null;
-  const avatar=person?.avatar_url&&/^https:\/\//i.test(person.avatar_url)?'<img src="'+esc(person.avatar_url)+'" alt="" loading="lazy">':(c.type==='group'?'<i class="ph ph-users-three"></i>':c.type==='channel'?'<i class="ph ph-megaphone"></i>':esc(initials(convName(c))));
+  const avatar=person?.avatar_url&&/^https:\/\//i.test(person.avatar_url)?'<img src="'+esc(person.avatar_url)+'" alt="" loading="lazy">':(c.type==='group'?'<i class="ph ph-users-three"></i>':c.type==='channel'?'<i class="ph ph-megaphone"></i>':esc(initials(convName(c)))));
   b.innerHTML='<div class="conv-avatar">'+avatar+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+(pref.is_shortcut?'<i class="ph ph-push-pin conv-shortcut-mark" title="اختصار مثبت"></i>':'')+(archived?'<i class="ph ph-archive-box conversation-archive-mark" title="مؤرشفة"></i>':'')+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';
   const closeSwipe=()=>{shell.classList.remove('swipe-open');b.style.transform=''};
   action.addEventListener('click',event=>{event.stopPropagation();closeSwipe();archiveConversation(c,!archived)});
