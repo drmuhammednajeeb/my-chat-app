@@ -132,8 +132,30 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
 }
 
 </style>
+<style id="boot-screen-styles">
+#boot-screen{display:none}
+html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));background:radial-gradient(ellipse at 18% 18%,rgba(69,197,176,.16),transparent 42%),radial-gradient(ellipse at 82% 85%,rgba(54,105,190,.17),transparent 44%),#0b1220;color:#edf3fb;text-align:center}
+#boot-screen .boot-card{width:min(100%,360px);display:flex;flex-direction:column;align-items:center;gap:13px}
+#boot-screen .boot-mark{width:66px;height:66px;display:grid;place-items:center;border:1px solid rgba(112,220,199,.35);border-radius:21px;background:linear-gradient(145deg,#1d766d,#18344b);box-shadow:0 12px 36px rgba(0,0,0,.28);color:#fff;font:900 23px/1 Arial,sans-serif;letter-spacing:-1px}
+#boot-screen .boot-title{margin:3px 0 0;font:800 20px/1.4 "Tajawal","Cairo",sans-serif}
+#boot-screen .boot-subtitle{margin:0;color:#a8b8cb;font:500 13px/1.8 "Tajawal","Cairo",sans-serif}
+#boot-screen .boot-spinner{width:27px;height:27px;margin-top:9px;border:3px solid rgba(237,243,251,.18);border-top-color:#55cdb8;border-radius:50%;animation:boot-spin .85s linear infinite}
+#boot-screen .boot-status{min-height:24px;margin:0;color:#b7c8d9;font:500 12px/1.8 "Tajawal","Cairo",sans-serif}
+@keyframes boot-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#boot-screen .boot-spinner{animation:none;border-top-color:#55cdb8}}
+</style>
 </head>
 <body>
+<div id="boot-screen" role="status" aria-live="polite" aria-atomic="true">
+ <div class="boot-card">
+  <div class="boot-mark" aria-hidden="true">BZ</div>
+  <h1 class="boot-title">BizmindMakers Chat Pro</h1>
+  <p class="boot-subtitle">مساحة تواصلك الذكية</p>
+  <span class="boot-spinner" aria-hidden="true"></span>
+  <p id="bootStatus" class="boot-status">جارٍ تهيئة التطبيق والتحقق من جلسة الدخول...</p>
+ </div>
+</div>
+
 <div id="auth" class="auth-screen">
  <form id="authForm" class="auth-card" novalidate>
   <div class="auth-brand"><div class="brandmark"><img src="./icon-1024.png" alt="BZ" width="1024" height="1024" decoding="async"></div><div><strong style="font-size:20px">BizmindMakers Chat Pro</strong><div style="color:var(--muted);font-size:11px">تواصل بلا حدود، بخصوصية أفضل</div></div></div>
@@ -1965,7 +1987,32 @@ $('conversationWorkspaceBtn').onclick=()=>{closeChatHeaderMenu();openConversatio
 $('workspaceInboxTabs').addEventListener('click',e=>{const label=e.target.closest('[data-workspace-label]');if(label){state.workspaceActiveLabelId=state.workspaceActiveLabelId===label.dataset.workspaceLabel?null:label.dataset.workspaceLabel;renderWorkspaceInboxTabs();renderConversations();return}const b=e.target.closest('[data-workspace-category]');if(!b)return;state.workspaceCategory=b.dataset.workspaceCategory;state.workspaceActiveLabelId=null;renderWorkspaceInboxTabs();renderConversations()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('conversationWorkspaceModal')?.classList.contains('open'))closeConversationWorkspace()});
 supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authLifecycleVersion++;diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
-(async()=>{try{const {data,error}=await supabaseClient.auth.getSession();if(error)throw error;const session=data?.session;if(session?.user){await enterApp(session.user)}else{state.user=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden')}}catch(error){console.error('Initial auth session check failed:',error);$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد تحميل التطبيق.')}finally{document.documentElement.classList.remove('auth-booting')}})();
+(async()=>{
+ const bootStatus=document.getElementById('bootStatus');
+ const bootDelayNotice=window.setTimeout(()=>{
+  if(bootStatus)bootStatus.textContent='لا يزال التحقق جارياً. يرجى الانتظار مع التأكد من اتصال الإنترنت.';
+ },8000);
+ try{
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error)throw error;
+  const session=data?.session;
+  if(session?.user){
+   await enterApp(session.user);
+  }else{
+   state.user=null;
+   $('app').classList.add('hidden');
+   $('auth').classList.remove('hidden');
+  }
+ }catch(error){
+  console.error('Initial auth session check failed:',error);
+  $('app').classList.add('hidden');
+  $('auth').classList.remove('hidden');
+  authError('تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد تحميل التطبيق.');
+ }finally{
+  window.clearTimeout(bootDelayNotice);
+  document.documentElement.classList.remove('auth-booting');
+ }
+})();
 
 // Profile Center: resilient editing, explicit photo approval and recoverable close controls
 let profileModalEditable=false,profilePendingPhoto=null,profilePhotoPreviewUrl=null,profilePhotoBusy=false,profileSaveBusy=false;
