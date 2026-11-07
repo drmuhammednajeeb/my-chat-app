@@ -1422,7 +1422,7 @@ $('newMessagesJump').onclick=jumpToLatestMessages;
 $('chatSearchBtn').onclick=()=>{closeChatHeaderMenu();$('chatSearchPanel').classList.toggle('hidden');if(!$('chatSearchPanel').classList.contains('hidden'))$('chatSearchInput').focus()};
 function closeChatHeaderMenu(){const menu=$('chatHeaderMenu'),button=$('chatHeaderMenuBtn');menu?.classList.add('hidden');button?.setAttribute('aria-expanded','false')}
 $('chatHeaderMenuBtn').onclick=event=>{event.stopPropagation();const menu=$('chatHeaderMenu'),button=$('chatHeaderMenuBtn'),opening=menu.classList.contains('hidden');menu.classList.toggle('hidden',!opening);button.setAttribute('aria-expanded',String(opening))};
-$('chatHeaderMenu')?.addEventListener('click',event=>event.stopPropagation());
+$('chatHeaderMenu')?.addEventListener('click',event=>{event.stopPropagation();if(event.target.closest('button'))closeChatHeaderMenu()});
 document.addEventListener('click',()=>{closeChatHeaderMenu();document.querySelectorAll('.message-options-menu').forEach(menu=>menu.classList.add('hidden'));document.querySelectorAll('.message-menu-trigger').forEach(button=>button.setAttribute('aria-expanded','false'))});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeChatHeaderMenu();document.querySelectorAll('.message-options-menu').forEach(menu=>menu.classList.add('hidden'));document.querySelectorAll('.message-menu-trigger').forEach(button=>button.setAttribute('aria-expanded','false'))}});
 $('chatSearchClose').onclick=()=>{$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';$('chatSearchResults').innerHTML='<p>اكتب كلمة للبحث داخل المحادثة الحالية.</p>'};
