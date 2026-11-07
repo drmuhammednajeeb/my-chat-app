@@ -52,7 +52,7 @@
 .typing{height:23px;padding:0 26px;color:var(--muted);font-size:11px;flex:none}
 .composer-wrap{padding:10px clamp(12px,4vw,58px) max(16px,env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--bg) 70%,transparent)}.composer{display:flex;align-items:flex-end;gap:9px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:19px;box-shadow:var(--shadow)}.composer textarea{flex:1;resize:none;max-height:130px;min-height:40px;padding:9px 8px;background:transparent;border:0;outline:none;color:var(--text);line-height:1.5}.send{width:42px;height:42px;border:0;border-radius:14px;background:var(--accent);color:#062a28;font-size:19px;display:grid;place-items:center}.attach{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px}.voice-record-btn{width:40px;height:40px;flex:none;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:20px;display:grid;place-items:center;cursor:pointer}.voice-record-btn.recording{background:#fee2e2;color:#b91c1c;animation:voicePulse 1.25s ease-in-out infinite}.voice-record-btn:disabled{opacity:.4;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.voice-record-btn.recording{animation:none}}.voice-cancel-btn{color:#dc5555}@keyframes voicePulse{50%{box-shadow:0 0 0 6px #ef444422}}.message-audio{display:block;width:min(280px,65vw);max-width:100%;height:40px;margin:5px 0;accent-color:var(--accent)}.composer-hint{text-align:center;color:#71849b;font-size:10px;margin-top:7px}
 .auth-screen{min-height:100dvh;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 20% 15%,#1a786c2b,transparent 40%),radial-gradient(ellipse at 80% 90%,#2855a52a,transparent 40%),var(--bg)}
-.auth-card{width:min(100%,440px);padding:34px;background:#111e30;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:27px}.auth-brand .brandmark{width:52px;height:52px}.auth-card h2{font-size:25px;margin:0 0 7px}.auth-card>p{color:var(--muted);font-size:13px;margin:0 0 24px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);padding:4px;border-radius:12px;margin-bottom:20px}.tabs button{border:0;background:none;color:var(--muted);padding:9px;border-radius:9px}.tabs button.active{background:var(--panel3);color:var(--text)}.form-row{margin:13px 0}.form-row label{display:block;font-size:12px;color:#b5c4d6;margin-bottom:7px}.field{width:100%;border:1px solid var(--line);background:#0d1726;border-radius:12px;padding:12px 13px;color:var(--text);outline:none}.primary{width:100%;border:0;border-radius:12px;background:linear-gradient(110deg,#56d5bb,#2da999);color:#052d2a;padding:13px;font-weight:800;margin-top:12px}.auth-note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:17px}.alert{padding:10px 12px;border-radius:10px;background:#502c36;color:#ffc4c4;font-size:12px;margin:10px 0}.hidden{display:none!important}.mobile-back{display:none}
+.auth-card{width:min(100%,440px);padding:34px;background:#111e30;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:27px}.auth-brand .brandmark{width:52px;height:52px}.auth-card h2{font-size:25px;margin:0 0 7px}.auth-card>p{color:var(--muted);font-size:13px;margin:0 0 24px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);padding:4px;border-radius:12px;margin-bottom:20px}.tabs button{border:0;background:none;color:var(--muted);padding:9px;border-radius:9px}.tabs button.active{background:var(--panel3);color:var(--text)}.form-row{margin:13px 0}.form-row label{display:block;font-size:12px;color:#b5c4d6;margin-bottom:7px}.field{width:100%;border:1px solid var(--line);background:#0d1726;border-radius:12px;padding:12px 13px;color:var(--text);outline:none}.primary{width:100%;border:0;border-radius:12px;background:linear-gradient(110deg,#56d5bb,#2da999);color:#052d2a;padding:13px;font-weight:800;margin-top:12px}.auth-note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:17px}.alert{padding:10px 12px;border-radius:10px;background:#502c36;color:#ffc4c4;font-size:12px;margin:10px 0}.auth-status{padding:10px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px;line-height:1.7;margin:10px 0}.auth-status[hidden]{display:none!important}.hidden{display:none!important}.mobile-back{display:none}
 @media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:absolute;inset:0;z-index:4;transition:transform .25s}.sidebar.closed{transform:translateX(105%)}.chat{grid-column:1}.mobile-back{display:grid}.chat-head{height:66px;padding:0 12px}.messages{padding:16px 12px}.message{max-width:88%}.head-actions .optional{display:none}.brand{padding-top:max(16px,env(safe-area-inset-top))}.composer-wrap{padding-left:10px;padding-right:10px}.auth-card{padding:25px 20px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
@@ -424,7 +424,7 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
 </head>
 <body>
 <div id="auth" class="auth-screen">
- <form id="authForm" class="auth-card">
+ <form id="authForm" class="auth-card" novalidate>
   <div class="auth-brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><strong style="font-size:20px">BizmindMakers Chat Pro</strong><div style="color:var(--muted);font-size:11px">تواصل بلا حدود، بخصوصية أفضل</div></div></div>
   <h2 id="authTitle">مرحباً بعودتك</h2><p id="authSub">سجّل الدخول لمتابعة محادثاتك.</p>
   <div class="tabs"><button type="button" id="loginTab" class="active">تسجيل الدخول</button><button type="button" id="signupTab">إنشاء حساب</button></div>
@@ -434,7 +434,8 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
   </div>
   <div class="form-row"><label for="email">البريد الإلكتروني</label><input id="email" type="email" class="field" required autocomplete="email" placeholder="name@example.com"></div>
   <div class="form-row"><label for="password">كلمة المرور</label><input id="password" type="password" class="field" required minlength="8" autocomplete="current-password" placeholder="8 أحرف على الأقل"></div>
-  <div id="authError" class="alert hidden" role="alert"></div>
+  <div id="authError" class="alert hidden" role="alert" aria-live="assertive"></div>
+  <div id="authStatus" class="auth-status" role="status" aria-live="polite" hidden></div>
   <button id="authSubmit" class="primary" type="submit">تسجيل الدخول</button>
   <div class="auth-note">باستخدامك للمنصة، أنت مسؤول عن حماية بيانات دخولك واحترام خصوصية الآخرين.</div>
  </form>
@@ -712,7 +713,8 @@ new MutationObserver(()=>{state.diagnostics.lastComposerChange={at:new Date().to
 window.addEventListener('error',e=>{state.diagnostics.lastRenderError='JS: '+(e.message||'unknown');diagLog('window-error',{message:e.message,source:e.filename,line:e.lineno})});
 window.addEventListener('unhandledrejection',e=>{state.diagnostics.lastRenderError='Promise: '+String(e.reason?.message||e.reason||'unknown');diagLog('unhandled-rejection',{message:state.diagnostics.lastRenderError})});
 function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'انضم إلى مساحة تواصل أكثر تنظيماً.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden')}
-function authError(msg){$('authError').textContent=msg;$('authError').classList.remove('hidden')}
+function authError(msg){$('authStatus').hidden=true;$('authError').textContent=msg;$('authError').classList.remove('hidden')}
+function authProgress(msg){$('authError').classList.add('hidden');$('authStatus').textContent=msg;$('authStatus').hidden=false}
 function slug(s){return String(s||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'').slice(0,24)}
 async function ensureProfile(user){
  const meta=user.user_metadata||{};let username=slug(meta.username||user.email?.split('@')[0]||'user');
@@ -723,7 +725,7 @@ async function ensureProfile(user){
 }
 async function enterApp(user){
  state.user=user;
- try{state.profile=await ensureProfile(user)}catch(e){console.error(e);toast('تعذر إعداد ملفك الشخصي: '+e.message);return}
+ try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await ensureProfile(user)}catch(e){console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
  $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');
  const conversationsLoaded=await loadConversations();
@@ -739,24 +741,44 @@ async function enterApp(user){
  }else if(conversationsLoaded){
   $('chatTitle').textContent='لا توجد محادثات بعد';$('chatSub').textContent='ابدأ محادثة من دليل المستخدمين';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>لا توجد محادثات بعد</h2><p>اختر مستخدماً من دليل المستخدمين لبدء محادثة جديدة.</p></div>';
  }
- await loadDirectory();startPresence();
+ await loadDirectory();startPresence();return true;
 }
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
 $('authForm').addEventListener('submit',async e=>{
- e.preventDefault();$('authError').classList.add('hidden');$('authSubmit').disabled=true;
+ e.preventDefault();
+ if($('authSubmit').disabled)return;
+ $('authError').classList.add('hidden');$('authStatus').hidden=true;
  const email=$('email').value.trim(),password=$('password').value;
+ const btn=$('authSubmit'),defaultLabel=state.authMode==='signup'?'إنشاء الحساب':'تسجيل الدخول';
  try{
+  if(!email)throw new Error('أدخل البريد الإلكتروني.');
+  if(!$('email').checkValidity())throw new Error('صيغة البريد الإلكتروني غير صحيحة.');
+  if(!password)throw new Error('أدخل كلمة المرور.');
   if(state.authMode==='signup'){
+   if(password.length<8)throw new Error('كلمة المرور يجب ألا تقل عن 8 أحرف.');
    const username=slug($('username').value),display=$('displayName').value.trim();
    if(username.length<3)throw new Error('اسم المستخدم يجب أن يتكون من 3 إلى 24 حرفاً إنجليزياً أو رقماً أو _');
    if(!display)throw new Error('أدخل الاسم الظاهر');
+   btn.disabled=true;btn.textContent='جارٍ إنشاء الحساب...';authProgress('جارٍ إنشاء حسابك والتحقق من البيانات...');
    const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0],data:{username,display_name:display}}});
    if(error)throw error;
-   if(data.session)await enterApp(data.user);else authError('تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد التسجيل، ثم سجّل الدخول.');
+   if(data.session){authProgress('تم إنشاء الحساب. جارٍ فتح مساحة المحادثات...');await enterApp(data.user)}
+   else authError('تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد التسجيل، ثم سجّل الدخول.');
   }else{
-   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)throw error;await enterApp(data.user)
+   btn.disabled=true;btn.textContent='جارٍ تسجيل الدخول...';authProgress('جارٍ التحقق من بيانات الدخول مع الخادم...');
+   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+   if(error)throw error;
+   if(!data?.user)throw new Error('تم الاتصال بالخادم لكن لم يتم استلام بيانات المستخدم. أعد المحاولة.');
+   authProgress('تم قبول بيانات الدخول. جارٍ تجهيز حسابك وفتح التطبيق...');
+   const entered=await enterApp(data.user);
+   if(entered===false)throw new Error('تم التحقق من الحساب لكن تعذر إكمال تهيئة التطبيق. راجع رسالة الخطأ أعلاه.');
   }
- }catch(err){authError(err.message||'حدث خطأ، حاول مرة أخرى')}finally{$('authSubmit').disabled=false}
+ }catch(err){
+  console.error('Authentication flow failed:',err);
+  authError(err.message||'تعذر تسجيل الدخول. تحقق من الاتصال وحاول مرة أخرى.');
+ }finally{
+  btn.disabled=false;btn.textContent=defaultLabel;
+ }
 });
 $('logoutBtn').onclick=async()=>{const {error}=await supabaseClient.auth.signOut({scope:'local'});if(error){toast('تعذر تسجيل الخروج من هذا الجهاز');console.error(error);return}location.reload()};
 function renderAvatar(container,profile,className='directory-avatar'){
