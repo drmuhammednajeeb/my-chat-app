@@ -460,7 +460,9 @@ function subscribeNotifications(){
    const alreadyKnown=state.notifications.some(existing=>existing.id===item.id);
    if(!alreadyKnown){state.notifications.unshift(item);if(!item.read_at)state.notificationUnread++;}
    state.notifications=state.notifications.slice(0,60);renderNotifications();
-   if($('notificationsPanel').classList.contains('hidden'))toast(item.title||'لديك إشعار جديد');
+   const viewingConversation=state.active?.id===item.conversation_id&&document.visibilityState==='visible'&&isMessagesNearBottom();
+   if(viewingConversation&&!item.read_at)markNotificationRead(item.id).catch(error=>console.warn('Auto-read notification failed:',error?.message||error));
+   else if($('notificationsPanel').classList.contains('hidden'))toast(item.title||'لديك إشعار جديد');
   })
   .subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Notification realtime status:',status)});
  state.notificationChannel=channel;
@@ -1295,7 +1297,7 @@ $('createGroupBtn').onclick=async()=>{
 $('attachBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;state.attachment=f;$('attachmentPreview').textContent='المرفق المحدد: '+f.name+' ('+Math.ceil(f.size/1024)+' كيلوبايت)';$('attachmentPreview').classList.remove('hidden');resizeComposer()};
 $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox').onclick=e=>{if(e.target===$('lightbox'))$('lightbox').classList.add('hidden')};
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){diagLog('auth-signed-out');stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}state.notifications=[];state.notificationUnread=0;renderNotificationBadge();state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){diagLog('auth-signed-out');stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
 (async()=>{const {data:{session}}=await supabaseClient.auth.getSession();if(session?.user)await enterApp(session.user)})();
 </script>
 </body></html>
