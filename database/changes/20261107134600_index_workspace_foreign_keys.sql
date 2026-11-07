@@ -1,0 +1,10 @@
+create index if not exists user_classification_rules_user_idx on public.user_classification_rules(user_id);
+create index if not exists user_conversation_classifications_conversation_idx on public.user_conversation_classifications(conversation_id);
+create index if not exists user_conversation_label_items_conversation_idx on public.user_conversation_label_items(conversation_id);
+create index if not exists user_conversation_label_items_label_user_idx on public.user_conversation_label_items(label_id,user_id);
+create index if not exists private_conversation_notes_conversation_idx on public.private_conversation_notes(conversation_id);
+create index if not exists private_conversation_notes_responsible_idx on public.private_conversation_notes(responsible_user_id) where responsible_user_id is not null;
+create index if not exists private_reply_contexts_sender_idx on public.private_reply_contexts(sender_id);
+create index if not exists private_reply_contexts_source_conversation_idx on public.private_reply_contexts(source_conversation_id);
+create index if not exists private_reply_contexts_source_message_idx on public.private_reply_contexts(source_message_id);
+create index if not exists private_reply_contexts_quoted_sender_idx on public.private_reply_contexts(quoted_sender_id);
