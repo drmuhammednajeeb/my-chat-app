@@ -901,7 +901,7 @@ async function enterApp(user){
  try{return await appEntryPromise}finally{if(appEntryUserId===user.id){appEntryPromise=null;appEntryUserId=null}}
 }
 async function enterAppInternal(user,lifecycleVersion){
- state.user=user;
+ state.user=user;subscribePersonalChatData();
  const profileStarted=performance.now();try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.');recordPerf('profile_load',performance.now()-profileStarted,{success:true})}catch(e){recordPerf('profile_load',performance.now()-profileStarted,{success:false});console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
  if(lifecycleVersion!==authLifecycleVersion)return false;
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
@@ -1745,6 +1745,11 @@ function subscribeConversation(){
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_pins',filter:'conversation_id=eq.'+id},p=>handlePinRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'message_pins'},p=>handlePinRealtime(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversation_members',filter:'conversation_id=eq.'+id},p=>handleMembershipRealtime(p,id))
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_members',filter:'conversation_id=eq.'+id},async()=>{if(state.active?.id!==id)return;await loadConversations();if($('groupManagementModal')?.classList.contains('open'))await openGroupManagement()})
+  .on('postgres_changes',{event:'DELETE',schema:'public',table:'conversation_members'},async p=>{if(p.old?.conversation_id!==id||state.active?.id!==id)return;await loadConversations();if($('groupManagementModal')?.classList.contains('open'))await openGroupManagement()})
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversation_group_settings',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.groupSettings=p.new;applyGroupTheme();updateGroupComposerPermission()})
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversations',filter:'id=eq.'+id},p=>{if(state.active?.id!==id)return;Object.assign(state.active,p.new);$('chatTitle').textContent=convName(state.active);renderConversations()})
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_member_events',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id&&$('groupManagementModal')?.classList.contains('open'))openGroupManagement()})
   .subscribe(s=>{state.realtimeStatus=s;diagLog('realtime-status',{status:s});$('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';});
  state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=payload?.is_typing?(payload?.name||'عضو')+' يكتب الآن…':'';clearTimeout(state.typingTimer);if(payload?.is_typing)state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
 }
@@ -2215,7 +2220,7 @@ $('voiceCancelBtn').onclick=cancelVoiceRecording;
 $('attachBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;if(state.voiceRecorder)cancelVoiceRecording();state.attachment=f;showAttachmentPreview(f);resizeComposer()};
 $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox').onclick=e=>{if(e.target===$('lightbox'))$('lightbox').classList.add('hidden')};
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){authLifecycleVersion++;diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){authLifecycleVersion++;diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
 (async()=>{try{const {data,error}=await supabaseClient.auth.getSession();if(error)throw error;const session=data?.session;if(session?.user){await enterApp(session.user)}else{state.user=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden')}}catch(error){console.error('Initial auth session check failed:',error);$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد تحميل التطبيق.')}finally{document.documentElement.classList.remove('auth-booting')}})();
 
 // Profile Center: resilient editing, explicit photo approval and recoverable close controls
@@ -2289,7 +2294,7 @@ $('profileSaveBtn').onclick=async()=>{
 Object.assign(state,{
  customLists:[],chatListItems:new Map(),activeListId:null,groupSettings:null,
  userConversationSettings:new Map(),starredMessageIds:new Set(),
- selectionMode:false,selectedMessageIds:new Set(),membershipEvents:[]
+ selectionMode:false,selectedMessageIds:new Set(),membershipEvents:[],personalChannel:null
 });
 function groupRole(conversation=state.active){return (conversation?.members||[]).find(m=>m.user_id===state.user?.id)?.role||'member'}
 function isGroupAdmin(conversation=state.active){return ['owner','admin'].includes(groupRole(conversation))||!!state.isTeamAdmin}
@@ -2307,6 +2312,7 @@ function ensureGroupModal(){
  $('cancelMessageSelection').onclick=()=>setMessageSelectionMode(false);
  $('starSelectedMessages').onclick=starSelectedMessages;$('exportSelectedMessages').onclick=exportSelectedMessages;
 }
+function subscribePersonalChatData(){if(!state.user)return;if(state.personalChannel)supabaseClient.removeChannel(state.personalChannel);const uid=state.user.id;state.personalChannel=supabaseClient.channel('personal-chat-data:'+uid).on('postgres_changes',{event:'*',schema:'public',table:'chat_lists',filter:'user_id=eq.'+uid},()=>loadCustomLists()).on('postgres_changes',{event:'*',schema:'public',table:'chat_list_items',filter:'user_id=eq.'+uid},()=>loadCustomLists()).on('postgres_changes',{event:'*',schema:'public',table:'user_chat_preferences',filter:'user_id=eq.'+uid},async()=>{await loadDirectChatPreferences();renderConversations();updateConversationMenu()}).on('postgres_changes',{event:'*',schema:'public',table:'user_conversation_settings',filter:'user_id=eq.'+uid},p=>{const row=p.eventType==='DELETE'?p.old:p.new;if(row?.conversation_id){if(p.eventType==='DELETE')state.userConversationSettings.delete(row.conversation_id);else state.userConversationSettings.set(row.conversation_id,row);updateConversationMenu()}}).on('postgres_changes',{event:'*',schema:'public',table:'user_message_stars',filter:'user_id=eq.'+uid},()=>{if(state.active?.id)loadStarredMessageIds(state.active.id)}).subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Personal chat preferences realtime:',status)})}
 async function loadCustomLists(){
  if(!state.user)return;
  try{
