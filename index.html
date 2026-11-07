@@ -405,7 +405,7 @@ html,body{height:100%;min-height:100%;overflow:hidden}
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <div id="chatAvatar" class="avatar">U</div>
    <div class="chat-title"><strong id="chatTitle">اختر محادثة</strong><small id="chatSub">محادثاتك الخاصة والمجموعات</small></div>
-   <div class="head-actions"><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت Ultra Chat Pro" aria-label="تثبيت التطبيق" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
+   <div class="head-actions"><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت Ultra Chat Pro" aria-label="تثبيت التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
    <button id="debugBtn" class="iconbtn" type="button" title="تشخيص حالة المحادثة" aria-expanded="false"><i class="ph ph-bug"></i></button>
   </header>
   <div id="chatSearchPanel" class="chat-search-panel hidden"><div class="chat-search-top"><input id="chatSearchInput" type="search" placeholder="ابحث في رسائل هذه المحادثة…" autocomplete="off"><button id="chatSearchClose" type="button" title="إغلاق البحث"><i class="ph ph-x"></i></button></div><div id="chatSearchResults" class="chat-search-results"><p>اكتب كلمة للبحث داخل المحادثة الحالية.</p></div></div>
@@ -473,6 +473,7 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY
 const $=id=>document.getElementById(id);
 let deferredInstallPrompt=null;
 const installAppButton=$('installAppBtn');
+if(installAppButton&&(window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true))installAppButton.hidden=true;
 window.addEventListener('beforeinstallprompt',event=>{
  event.preventDefault();deferredInstallPrompt=event;
  if(installAppButton)installAppButton.hidden=false;
@@ -481,7 +482,7 @@ window.addEventListener('appinstalled',()=>{
  deferredInstallPrompt=null;if(installAppButton)installAppButton.hidden=true;
 });
 installAppButton?.addEventListener('click',async()=>{
- if(!deferredInstallPrompt)return;
+ if(!deferredInstallPrompt){toast('لتثبيت التطبيق: افتح قائمة المتصفح ثم اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».');return}
  const promptEvent=deferredInstallPrompt;deferredInstallPrompt=null;
  try{await promptEvent.prompt();await promptEvent.userChoice;}catch(error){console.warn('PWA install prompt:',error)}
  if(installAppButton)installAppButton.hidden=true;
