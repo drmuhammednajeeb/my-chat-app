@@ -236,6 +236,33 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 .swipe-reply-indicator.from-left{right:auto;left:-43px}
 .message.swipe-ready .swipe-reply-indicator{opacity:1;transform:translateY(-50%) scale(1)}
 @media(prefers-reduced-motion:reduce){.message{transition:none}.swipe-reply-indicator{transition:none}}
+
+/* Unified per-user notification center */
+.notification-bell-wrap{position:relative;flex:none}
+#notificationBell{position:relative;width:39px;height:39px;border:0;border-radius:50%;background:#f0f2f5;color:#54656f;display:grid;place-items:center;font-size:19px}
+#notificationBell:hover{background:#e5eeeb;color:#008f72}
+#notificationBadge{position:absolute;top:-3px;right:-4px;min-width:18px;height:18px;padding:0 4px;border:2px solid #fff;border-radius:12px;background:#e5484d;color:#fff;font:700 10px/14px system-ui;display:grid;place-items:center}
+#notificationBadge.hidden{display:none!important}
+#notificationsPanel{position:fixed;z-index:30;top:82px;right:18px;width:min(410px,calc(100vw - 24px));max-height:min(620px,calc(100dvh - 100px));display:flex;flex-direction:column;background:#fff;border:1px solid #e3e8eb;border-radius:17px;box-shadow:0 16px 50px #0b141a2c;color:#111b21;overflow:hidden;direction:rtl}
+#notificationsPanel.hidden{display:none!important}
+.notification-head{display:flex;align-items:center;gap:10px;padding:15px 16px;border-bottom:1px solid #e9edef}
+.notification-head h2{font-size:16px;margin:0;flex:1}
+.notification-head button{border:0;border-radius:9px;padding:8px 10px;background:#f0f2f5;color:#54656f;font-size:11px;font-weight:700}
+.notification-head button:disabled{opacity:.45}
+.notification-list{overflow:auto;padding:6px;overscroll-behavior:contain}
+.notification-item{width:100%;display:flex;align-items:flex-start;gap:11px;padding:12px 10px;border:0;border-bottom:1px solid #f0f2f4;background:#fff;text-align:right;color:#111b21;border-radius:10px;cursor:pointer}
+.notification-item:hover{background:#f5f8f7}
+.notification-item.unread{background:#f0faf6}
+.notification-item.unread:hover{background:#e7f6ef}
+.notification-icon{width:38px;height:38px;flex:none;border-radius:50%;display:grid;place-items:center;background:#e7f5ef;color:#008f72;font-size:17px}
+.notification-copy{min-width:0;flex:1}
+.notification-copy strong{display:block;font-size:12px;line-height:1.5}
+.notification-copy span{display:block;margin-top:3px;color:#667781;font-size:11px;line-height:1.6;overflow-wrap:anywhere}
+.notification-copy time{display:block;margin-top:5px;color:#98a4aa;font-size:10px}
+.notification-unread-dot{width:8px;height:8px;flex:none;margin:7px 0 0;border-radius:50%;background:#00a884}
+.notification-empty{padding:34px 18px;text-align:center;color:#8696a0;font-size:12px;line-height:1.8}
+@media(max-width:760px){#notificationsPanel{top:auto;right:8px;bottom:10px;width:calc(100vw - 16px);max-height:min(72dvh,620px);border-radius:16px}.notification-head{padding:13px}}
+
 </style>
 <style>
 .channel-card{display:flex;flex-direction:column;gap:9px;margin:10px 12px;padding:13px;border:1px solid #e9edef;border-radius:13px;background:#fff;color:#111b21}.channel-card-top{display:flex;align-items:center;gap:9px}.channel-card-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:#d9fdd3;color:#075e54;font-size:19px;flex:none}.channel-card-copy{min-width:0;flex:1}.channel-card-copy strong{display:block;font-size:13px}.channel-card-copy small{display:block;margin-top:3px;color:#667781;font-size:10px}.channel-card p{margin:0;color:#667781;font-size:11px;line-height:1.6;overflow-wrap:anywhere}.channel-card button{align-self:flex-start;border:0;border-radius:9px;padding:7px 12px;background:#d9fdd3;color:#075e54;font-size:11px;font-weight:800}.channel-card button:disabled{opacity:.6}.channel-empty{padding:26px 15px;text-align:center;color:#667781;font-size:12px;line-height:1.8}.channel-card button.secondary{background:#24384b;color:#d9fdd3}
@@ -274,7 +301,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 <div id="app" class="app hidden">
  <aside id="sidebar" class="sidebar">
   <div class="brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><h1>Ultra Chat Pro</h1><p>مساحة تواصلك الذكية</p></div></div>
-  <div class="profile"><div id="myAvatar" class="avatar">U</div><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
+  <div class="profile"><div id="myAvatar" class="avatar">U</div><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><div class="notification-bell-wrap"><button id="notificationBell" type="button" title="مركز الإشعارات" aria-label="فتح مركز الإشعارات" aria-expanded="false"><i class="ph ph-bell"></i><span id="notificationBadge" class="hidden">0</span></button></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
   <div class="sidebar-tabs" role="tablist" aria-label="أقسام التطبيق">
    <button type="button" id="chatsTab" class="sidebar-tab active" role="tab" aria-selected="true"><i class="ph ph-chats"></i> المحادثات</button>
    <button type="button" id="channelsTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-megaphone"></i> قنواتي</button>
@@ -327,6 +354,10 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
   </section>
  </main>
 </div>
+<section id="notificationsPanel" class="hidden" role="dialog" aria-modal="false" aria-labelledby="notificationsTitle">
+ <header class="notification-head"><h2 id="notificationsTitle">مركز الإشعارات</h2><button id="markAllNotificationsRead" type="button" disabled>تحديد الكل كمقروء</button><button id="closeNotifications" type="button" aria-label="إغلاق الإشعارات"><i class="ph ph-x"></i></button></header>
+ <div id="notificationList" class="notification-list" aria-live="polite"><div class="notification-empty">جارٍ تحميل الإشعارات…</div></div>
+</section>
 <div id="lightbox" class="hidden" style="position:fixed;inset:0;z-index:10;background:#000e;display:grid;place-items:center;padding:20px" role="dialog" aria-modal="true"><button id="closeLightbox" class="iconbtn" style="position:absolute;top:20px;left:20px"><i class="ph ph-x"></i></button><img id="lightboxImage" alt="معاينة المرفق" style="max-width:95vw;max-height:90vh;border-radius:14px"></div>
 
 <div id="groupModal" class="group-modal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
@@ -372,11 +403,104 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationChannel:null,notificationLoading:false,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
 const toast=(msg)=>{const n=document.createElement('div');n.textContent=msg;n.style.cssText='position:fixed;z-index:20;bottom:28px;left:50%;transform:translateX(-50%);background:#253c50;border:1px solid #426078;color:white;padding:11px 17px;border-radius:12px;font-size:12px;box-shadow:var(--shadow)';document.body.append(n);setTimeout(()=>n.remove(),3200)};
+
+
+function notificationIcon(type){
+ const icons={message:'ph-chat-circle-text',mention:'ph-at',reply:'ph-arrow-bend-up-left',group_invite:'ph-users-three',admin_change:'ph-shield-check'};
+ return icons[type]||'ph-bell';
+}
+function renderNotificationBadge(){
+ const badge=$('notificationBadge'),count=Number(state.notificationUnread||0);
+ badge.textContent=count>99?'99+':String(count);
+ badge.classList.toggle('hidden',count===0);
+ $('markAllNotificationsRead').disabled=count===0;
+ $('notificationBell').setAttribute('aria-label',count?'مركز الإشعارات، '+count+' غير مقروء':'مركز الإشعارات');
+}
+function renderNotifications(){
+ const list=$('notificationList');if(!list)return;list.replaceChildren();
+ if(!state.notifications.length){const empty=document.createElement('div');empty.className='notification-empty';empty.textContent='لا توجد إشعارات حتى الآن. ستظهر هنا الرسائل والإشارات والردود ودعوات المجموعات وتحديثات الصلاحيات.';list.append(empty);renderNotificationBadge();return}
+ state.notifications.forEach(item=>{
+  const button=document.createElement('button');button.type='button';button.className='notification-item'+(!item.read_at?' unread':'');
+  const icon=document.createElement('span');icon.className='notification-icon';const glyph=document.createElement('i');glyph.className='ph '+notificationIcon(item.notification_type);icon.append(glyph);
+  const copy=document.createElement('span');copy.className='notification-copy';
+  const title=document.createElement('strong');title.textContent=item.title||'إشعار جديد';
+  const body=document.createElement('span');body.textContent=item.body||'';
+  const date=document.createElement('time');date.dateTime=item.created_at;date.textContent=new Date(item.created_at).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'});
+  copy.append(title,body,date);button.append(icon,copy);
+  if(!item.read_at){const dot=document.createElement('span');dot.className='notification-unread-dot';dot.setAttribute('aria-label','غير مقروء');button.append(dot)}
+  button.onclick=()=>openNotification(item);list.append(button);
+ });
+ renderNotificationBadge();
+}
+async function loadNotifications(){
+ if(!state.user||state.notificationLoading)return false;
+ state.notificationLoading=true;
+ try{
+  const [rows,countResult]=await Promise.all([
+   supabaseClient.from('user_notifications').select('id,recipient_id,actor_id,conversation_id,message_id,notification_type,title,body,created_at,read_at').eq('recipient_id',state.user.id).order('created_at',{ascending:false}).limit(60),
+   supabaseClient.from('user_notifications').select('id',{count:'exact',head:true}).eq('recipient_id',state.user.id).is('read_at',null)
+  ]);
+  if(rows.error)throw rows.error;if(countResult.error)throw countResult.error;
+  const merged=new Map((rows.data||[]).map(item=>[item.id,item]));let liveUnread=0;(state.notifications||[]).forEach(item=>{if(!merged.has(item.id)){merged.set(item.id,item);if(!item.read_at)liveUnread++}});state.notifications=Array.from(merged.values()).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,60);state.notificationUnread=(countResult.count||0)+liveUnread;renderNotifications();return true;
+ }catch(error){console.warn('Notification loading failed:',error?.message||error);const list=$('notificationList');if(list){list.replaceChildren();const empty=document.createElement('div');empty.className='notification-empty';empty.textContent='تعذر تحميل الإشعارات. تحقق من الاتصال ثم أعد المحاولة.';list.append(empty)}return false}
+ finally{state.notificationLoading=false}
+}
+function subscribeNotifications(){
+ if(!state.user)return;
+ if(state.notificationChannel)supabaseClient.removeChannel(state.notificationChannel);
+ const userId=state.user.id;
+ const channel=supabaseClient.channel('user-notifications:'+userId)
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'user_notifications',filter:'recipient_id=eq.'+userId},payload=>{
+   const item=payload.new;if(!item||item.recipient_id!==state.user?.id)return;
+   const alreadyKnown=state.notifications.some(existing=>existing.id===item.id);
+   if(!alreadyKnown){state.notifications.unshift(item);if(!item.read_at)state.notificationUnread++;}
+   state.notifications=state.notifications.slice(0,60);renderNotifications();
+   const viewingConversation=state.active?.id===item.conversation_id&&document.visibilityState==='visible'&&isMessagesNearBottom();
+   if(viewingConversation&&!item.read_at)markNotificationRead(item.id).catch(error=>console.warn('Auto-read notification failed:',error?.message||error));
+   else if($('notificationsPanel').classList.contains('hidden'))toast(item.title||'لديك إشعار جديد');
+  })
+  .subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Notification realtime status:',status)});
+ state.notificationChannel=channel;
+}
+async function markNotificationRead(id){
+ const item=state.notifications.find(row=>row.id===id);if(!item||item.read_at)return true;
+ const stamp=new Date().toISOString();
+ const {error}=await supabaseClient.from('user_notifications').update({read_at:stamp}).eq('id',id).eq('recipient_id',state.user.id);
+ if(error){console.warn('Mark notification read failed:',error.message);return false}
+ item.read_at=stamp;state.notificationUnread=Math.max(0,state.notificationUnread-1);renderNotifications();return true;
+}
+async function markAllNotificationsRead(){
+ if(!state.user||!state.notificationUnread)return;
+ const button=$('markAllNotificationsRead');button.disabled=true;
+ const stamp=new Date().toISOString();
+ const {error}=await supabaseClient.from('user_notifications').update({read_at:stamp}).eq('recipient_id',state.user.id).is('read_at',null);
+ if(error){console.error('Mark all notifications read failed:',error);toast('تعذر تحديث حالة الإشعارات');renderNotificationBadge();return}
+ state.notifications.forEach(item=>{if(!item.read_at)item.read_at=stamp});
+ state.notificationUnread=0;renderNotifications();toast('تم تحديد الإشعارات كمقروءة');
+}
+async function openNotification(item){
+ await markNotificationRead(item.id);
+ $('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');
+ if(!item.conversation_id)return;
+ let conversation=state.conversations.find(row=>row.id===item.conversation_id);
+ if(!conversation){await loadConversations();conversation=state.conversations.find(row=>row.id===item.conversation_id)}
+ if(!conversation){toast('لم تعد تملك عضوية هذه المحادثة');return}
+ await openConversation(conversation);
+ if(item.message_id)await jumpToMessage(item.message_id);
+}
+$('notificationBell').onclick=async()=>{
+ const panel=$('notificationsPanel'),opening=panel.classList.contains('hidden');
+ panel.classList.toggle('hidden',!opening);$('notificationBell').setAttribute('aria-expanded',String(opening));
+ if(opening)await loadNotifications();
+};
+$('closeNotifications').onclick=()=>{$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false')};
+$('markAllNotificationsRead').onclick=markAllNotificationsRead;
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('notificationsPanel').classList.contains('hidden')){$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false')}});
 
 function diagLog(event,details={}){const d=state.diagnostics;d.events.push({at:new Date().toLocaleTimeString('en-GB'),event,details});if(d.events.length>18)d.events.shift();updateDiagnostics()}
 function updateDiagnostics(){if(!$('diagnosticsPanel'))return;const input=$('messageInput'),wrap=document.querySelector('.composer-wrap'),rect=input?.getBoundingClientRect();let hit=null;if(rect&&rect.width&&rect.height){const el=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);hit=el?{tag:el.tagName,id:el.id||'',className:typeof el.className==='string'?el.className:'',isComposer:!!wrap?.contains(el)}:null}state.diagnostics.lastHitTest={inputRect:rect?{x:Math.round(rect.x),y:Math.round(rect.y),width:Math.round(rect.width),height:Math.round(rect.height)}:null,hit,computed:input?{display:getComputedStyle(input).display,visibility:getComputedStyle(input).visibility,pointerEvents:getComputedStyle(input).pointerEvents,zIndex:getComputedStyle(input).zIndex}:null};const active=state.active?.id||'none';const out={activeConversation:active==='none'?'none':active.slice(0,8)+'…',userSession:!!state.user,loadedMessages:state.messages?.length||0,renderedMessageNodes:$('messages')?.querySelectorAll('.message').length||0,messageIds:state.messageIds?.size||0,composer:{disabled:!!input?.disabled,readOnly:!!input?.readOnly,valueLength:input?.value?.length||0,focused:document.activeElement===input},composerHitTest:state.diagnostics.lastHitTest,composerInteractions:state.diagnostics.composerInteractions,realtime:{status:state.realtimeStatus,lastEvent:state.diagnostics.lastRealtimeEvent,at:state.diagnostics.lastRealtimeAt},polling:{active:!!state.messagePollTimer,busy:state.messagePollBusy,generation:state.messagePollGeneration,lastAt:state.diagnostics.lastPollAt},fetch:{at:state.diagnostics.lastFetchAt,count:state.diagnostics.lastFetchCount,error:state.diagnostics.lastFetchError},render:{at:state.diagnostics.lastRenderAt,error:state.diagnostics.lastRenderError},lastComposerChange:state.diagnostics.lastComposerChange,events:state.diagnostics.events};$('diagnosticsOutput').textContent=JSON.stringify(out,null,2)}
@@ -407,6 +531,7 @@ async function enterApp(user){
  const conversationsLoaded=await loadConversations();
  let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
  if(inviteToken){try{const {data,error}=await supabaseClient.rpc('join_channel_by_invite',{p_token:inviteToken});if(error)throw error;invitedChannelId=data;await loadConversations();toast('تم الانضمام إلى القناة بنجاح');}catch(error){console.error('Channel invite join failed:',error);toast(error.message||'رابط الدعوة غير صالح أو منتهي الصلاحية')}finally{const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('invite');history.replaceState({},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)}}
+ subscribeNotifications();await loadNotifications();
  await loadTeamDashboard(true);
  // Restore the latest conversation after every sign-in or page reload.
  setSidebarView('chats');
@@ -1172,7 +1297,7 @@ $('createGroupBtn').onclick=async()=>{
 $('attachBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;state.attachment=f;$('attachmentPreview').textContent='المرفق المحدد: '+f.name+' ('+Math.ceil(f.size/1024)+' كيلوبايت)';$('attachmentPreview').classList.remove('hidden');resizeComposer()};
 $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox').onclick=e=>{if(e.target===$('lightbox'))$('lightbox').classList.add('hidden')};
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){diagLog('auth-signed-out');stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){diagLog('auth-signed-out');stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
 (async()=>{const {data:{session}}=await supabaseClient.auth.getSession();if(session?.user)await enterApp(session.user)})();
 </script>
 </body></html>
