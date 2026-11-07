@@ -1916,6 +1916,17 @@ $('createChannelBtn').onclick=async()=>{
   else toast(error.message||'تعذر إنشاء القناة');
  }finally{button.textContent='إنشاء القناة';button.disabled=!$('channelNameInput').value.trim()}
 };
+async function shareChannelInvite(channel,button){
+ if(!channel||channel.type!=='channel')return;
+ if(button)button.disabled=true;
+ try{
+  const {data,error}=await supabaseClient.rpc('create_channel_invite',{p_conversation_id:channel.id});if(error)throw error;
+  const url=new URL(location.href);url.searchParams.set('invite',data);url.hash='';const link=url.toString();
+  try{await navigator.clipboard.writeText(link);toast('تم نسخ رابط الدعوة. صالح لمدة 7 أيام، وإنشاء رابط جديد يلغي السابق.')}
+  catch(_e){prompt('انسخ رابط الدعوة الخاص بالقناة:',link)}
+ }catch(error){console.error('Channel invite creation failed:',error);toast(error.message||'تعذر إنشاء رابط الدعوة')}
+ finally{if(button)button.disabled=false}
+}
 $('shareChannelBtn').onclick=()=>shareChannelInvite(state.active,$('shareChannelBtn'));
 function openGroupModal(){
  if(!state.user)return toast('سجّل الدخول أولاً');
