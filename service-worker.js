@@ -3,7 +3,7 @@
  * Never cache Supabase/API requests, authenticated data, or user messages.
  */
 const CACHE_PREFIX = "ultra-chat-pro";
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const CDN_CACHE = `${CACHE_PREFIX}-cdn-${CACHE_VERSION}`;
 const CDN_ORIGINS = new Set([
