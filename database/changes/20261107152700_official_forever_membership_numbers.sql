@@ -164,7 +164,7 @@ begin
  for v_item in select value from jsonb_array_elements(p_members) loop
   v_email:=lower(btrim(coalesce(v_item->>'email','')));
   v_number:=btrim(coalesce(v_item->>'membership_number',''));
-  if v_email !~ '^[a-z0-9.!#$%&''*+/=?^_\\`{|}~-]+@[a-z0-9.-]+\\.[a-z]{2,}$' then
+  if v_email !~ '^[a-z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}$' then
    raise exception 'صيغة البريد الإلكتروني غير صحيحة: %',v_email;
   end if;
   if v_number !~ '^971001[0-9]{6}$' then
