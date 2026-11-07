@@ -9,7 +9,7 @@ alter table public.profiles add constraint profiles_membership_number_official_f
 
 -- Do not treat previously auto-assigned values as official.
 update public.profiles
-set membership_number_verified = (id = 'adcb26d3-1a85-41e5-8efb-d7dbf3ba3dba'::uuid),
+set membership_number_verified = (membership_number = '971001726361'),
     updated_at = now();
 
 alter table app_private.member_invitations drop constraint if exists member_invitation_number_format;
