@@ -972,17 +972,8 @@ async function ensureSelfConversation(){
  if(!state.user)return null;
  let conversation=state.conversations.find(isSelfConversation);
  if(conversation)return conversation;
- const {data:created,error:createError}=await supabaseClient.from('conversations').insert({type:'group',title:'ملاحظاتي',description:SELF_CHAT_MARKER,created_by:state.user.id}).select('*').single();
- if(createError){
-  if(createError.code!=='23505')throw createError;
-  const refreshed=await loadConversations();
-  if(!refreshed)throw new Error('تعذر استرجاع مساحة مراسلة نفسك');
-  conversation=state.conversations.find(isSelfConversation);
-  if(conversation)return conversation;
-  throw createError;
- }
- const {error:memberError}=await supabaseClient.from('conversation_members').insert({conversation_id:created.id,user_id:state.user.id,role:'owner'});
- if(memberError)throw memberError;
+ const {data:conversationId,error:createError}=await supabaseClient.rpc('ensure_self_chat');
+ if(createError)throw createError;
  const refreshed=await loadConversations();
  if(!refreshed)throw new Error('تم إنشاء مساحة مراسلة نفسك، لكن تعذر تحديث قائمة المحادثات');
  conversation=state.conversations.find(isSelfConversation);
