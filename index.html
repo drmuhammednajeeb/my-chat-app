@@ -720,7 +720,7 @@ async function enterApp(user){
  state.user=user;
  try{state.profile=await ensureProfile(user)}catch(e){console.error(e);toast('تعذر إعداد ملفك الشخصي: '+e.message);return}
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
- $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar');
+ $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');
  const conversationsLoaded=await loadConversations();
  let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
  if(inviteToken){try{const {data,error}=await supabaseClient.rpc('join_channel_by_invite',{p_token:inviteToken});if(error)throw error;invitedChannelId=data;await loadConversations();toast('تم الانضمام إلى القناة بنجاح');}catch(error){console.error('Channel invite join failed:',error);toast(error.message||'رابط الدعوة غير صالح أو منتهي الصلاحية')}finally{const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('invite');history.replaceState({},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)}}
@@ -781,7 +781,7 @@ async function uploadProfileAvatar(file){
   const {data,error}=await supabaseClient.from('profiles').update({avatar_url:avatarUrl}).eq('id',state.user.id).select('*').single();
   if(error)throw error;
   state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user');
-  renderAvatar($('myAvatar'),data,'avatar');
+  renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');
   if(state.active?.type==='direct'&&otherMember(state.active)?.id===state.user.id)renderChatAvatar(state.active);
   toast('تم تحديث صورتك الشخصية بنجاح');
  }catch(error){console.error('Profile avatar upload failed:',error);toast(error.message||'تعذر تحديث الصورة الشخصية')}
@@ -1016,16 +1016,17 @@ function renderReactionBar(row,message){
  row.append(bar);row.classList.toggle('reactions-open',wasOpen);
 }
 function openMessageReactions(row){
- if(!row||row.classList.contains('deleted'))return;
+ if(!row||row.querySelector('.bubble.deleted'))return;
  document.querySelectorAll('.message.reactions-open').forEach(item=>{if(item!==row)item.classList.remove('reactions-open')});
  row.classList.toggle('reactions-open');
 }
+document.addEventListener('pointerdown',event=>{if(!event.target.closest('.message.reactions-open'))document.querySelectorAll('.message.reactions-open').forEach(row=>row.classList.remove('reactions-open'))},true);
 function bindMessageGestures(row,message){
  const bubble=row.querySelector('.bubble');if(!bubble||message.deleted_at)return;
  let start=null,lastTap=0;
  bubble.addEventListener('pointerdown',event=>{
-  if(event.target.closest('button,a,img,.reply-quote'))return;
-  start={x:event.clientX,y:event.clientY,id:event.pointerId};
+  if(event.target.closest('button,a,.reply-quote'))return;
+  start={x:event.clientX,y:event.clientY,id:event.pointerId,target:event.target};
  });
  bubble.addEventListener('pointermove',event=>{
   if(!start||start.id!==event.pointerId)return;
@@ -1037,12 +1038,12 @@ function bindMessageGestures(row,message){
   const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;bubble.style.transform='';
   const rtl=getComputedStyle(document.documentElement).direction==='rtl';
   if(Math.abs(dx)>=58&&Math.abs(dx)>Math.abs(dy)*1.25&&(rtl?dx>0:dx<0)){beginReply(message);return}
-  if(Math.abs(dx)<18&&Math.abs(dy)<18){
-   const now=Date.now();if(now-lastTap<330){lastTap=0;openMessageReactions(row)}else lastTap=now;
+  if(event.pointerType==='touch'&&Math.abs(dx)<18&&Math.abs(dy)<18&&!start?.target?.closest('img')){
+   const now=Date.now();if(now-lastTap<330){lastTap=0;row.dataset.touchDoubleAt=String(now);openMessageReactions(row)}else lastTap=now;
   }
  });
  bubble.addEventListener('pointercancel',()=>{start=null;bubble.style.transform=''});
- bubble.addEventListener('dblclick',event=>{if(event.target.closest('button,a,img,.reply-quote'))return;event.preventDefault();openMessageReactions(row)});
+ bubble.addEventListener('dblclick',event=>{if(event.target.closest('button,a,.reply-quote,img'))return;if(Date.now()-Number(row.dataset.touchDoubleAt||0)<500)return;event.preventDefault();openMessageReactions(row)});
 }
 async function toggleMessageReaction(message,reactionType,button){
  const conversationId=message.conversation_id||state.active?.id,userId=state.user?.id;if(!conversationId||!userId||state.active?.id!==conversationId)return;
