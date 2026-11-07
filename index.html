@@ -1616,7 +1616,7 @@ async function editMessage(m){beginEditMessage(m)}
 async function deleteMessage(m){if(m.sender_id!==state.user?.id||m.deleted_at)return;if(!confirm('هل تريد حذف هذه الرسالة؟'))return;const {error}=await supabaseClient.from('chat_messages').update({deleted_at:new Date().toISOString(),content:'تم حذف الرسالة',attachment_path:null,attachment_type:null}).eq('id',m.id).eq('sender_id',state.user.id);if(error){toast('تعذر حذف الرسالة');return}if(state.replyTarget?.id===m.id)cancelComposerContext();await loadMessages()}
 function formatVoiceDuration(seconds){
  const total=Math.max(0,Math.floor(seconds||0)),minutes=String(Math.floor(total/60)).padStart(2,'0'),secs=String(total%60).padStart(2,'0');
- return (minutes+':'+secs).replace(/\\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+ return (minutes+':'+secs).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 function currentVoiceElapsedMs(){
  return Math.max(0,state.voiceElapsedMs+(state.voicePaused||!state.voiceSegmentStartedAt?0:Date.now()-state.voiceSegmentStartedAt));
@@ -1709,14 +1709,14 @@ async function startVoiceRecording(){
   if(!recorder)recorder=await createFallbackVoiceRecorder(stream);
   state.voiceRecorder=recorder;
   recorder.ondataavailable=event=>{if(event.data?.size)state.voiceChunks.push(event.data)};
-  recorder.onerror=event=>{console.error('Voice recording failed:',event.error||event);toast('تعذر تسجيل الصوت. تحقق من إذن الميكروفون ثم حاول مجدداً.');cleanupVoiceCapture()};
+  recorder.onerror=event=>{console.error('Voice recording failed:',event.error||event);state.voiceSendOnStop=false;toast('تعذر تسجيل الصوت. تحقق من إذن الميكروفون ثم حاول مجدداً.');cleanupVoiceCapture();resizeComposer()};
   recorder.onstop=()=>{
    const cancelled=state.cancelVoiceOnStop,shouldSend=state.voiceSendOnStop;
    if(state.voiceSegmentStartedAt)state.voiceElapsedMs+=Date.now()-state.voiceSegmentStartedAt;
    const elapsed=Math.round(state.voiceElapsedMs/1000),chunks=state.voiceChunks.slice();
    const mime=(recorder.mimeType||supported||'audio/wav').split(';')[0].toLowerCase();
    state.voiceSendOnStop=false;cleanupVoiceCapture();
-   if(cancelled){state.cancelVoiceOnStop=false;state.voiceElapsedMs=0;return}
+   if(cancelled){state.cancelVoiceOnStop=false;state.voiceElapsedMs=0;resizeComposer();return}
    const blob=new Blob(chunks,{type:mime});if(!blob.size){toast('لم يتم التقاط صوت. تحقق من إذن الميكروفون وحاول مرة أخرى.');resizeComposer();return}
    if(blob.size>12*1024*1024){toast('حجم التسجيل تجاوز الحد الأقصى 12 ميجابايت');resizeComposer();return}
    const ext=mime==='audio/mp4'?'m4a':mime==='audio/ogg'?'ogg':mime==='audio/mpeg'?'mp3':mime==='audio/wav'?'wav':'webm';
