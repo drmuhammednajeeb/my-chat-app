@@ -13,7 +13,7 @@ begin
  end if;
  foreach v_email in array p_emails loop
   v_email:=lower(btrim(coalesce(v_email,'')));
-  if v_email !~ '^[a-z0-9.!#$%&''*+/=?^_\`{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}$' then
+  if v_email !~ '^[a-z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}$' then
    raise exception 'صيغة بريد إلكتروني غير صحيحة: %',v_email;
   end if;
   if exists(select 1 from auth.users u where lower(u.email)=v_email) then
