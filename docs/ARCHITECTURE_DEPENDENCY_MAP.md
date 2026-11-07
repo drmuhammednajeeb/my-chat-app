@@ -256,3 +256,20 @@ Modules load synchronously before `app.js`, after the Supabase UMD library. The 
 All extracted function bodies are preserved verbatim. Top-level state and initialization side effects remain in `app.js` to avoid changing startup timing. The service-worker shell cache advances to `v19` and precaches every feature module.
 
 No database schema, RLS policy, RPC, storage object, account, or production data was changed. Static checks are required before Preview validation; no browser or authenticated multi-user E2E is claimed.
+
+
+## 13. Bounded theme-service extraction — phase 3
+
+Branch: `refactor/modular-app-entrypoints`.
+
+Theme preference and browser theme synchronization have been extracted from the main runtime into `modules/theme.js`:
+
+- `themeService` privately owns the local theme preference and `matchMedia` reference.
+- It applies the selected theme, synchronizes system-theme changes, and handles cross-tab `storage` events.
+- Account-level preference persistence continues through the existing `saveUserSetting` function and existing Supabase settings RPC; no backend contract changed.
+- `core.js` retains `applyAppTheme` and `toggleAppTheme` compatibility wrappers, so existing call sites do not need a broad rewrite.
+- `app.js` now initializes the service and binds the existing theme button; the old theme preference globals were removed from that file.
+- The new script is loaded after `core.js` and before feature modules that may invoke theme/settings functions; it is preloaded and precached.
+- The service-worker shell cache advances to `v20`.
+
+This is the first bounded state-ownership extraction, not a full dependency-injection conversion. Static syntax, script-order, preload and precache checks pass. Browser behavior including theme switching, multi-tab synchronization, account preference restore and offline startup still requires Preview smoke testing.
