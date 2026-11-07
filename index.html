@@ -458,6 +458,89 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
 .workspace-inbox-tabs{display:flex;gap:6px;padding:0 13px 9px;overflow-x:auto;scrollbar-width:none}.workspace-inbox-tabs::-webkit-scrollbar{display:none}.workspace-inbox-tabs button{flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);border-radius:10px;padding:7px;background:var(--panel2);color:var(--muted);font-size:11px}.workspace-inbox-tabs button.active{background:#d9fdd3;color:#075e54}
 .workspace-modal{position:fixed;inset:0;z-index:140;display:none;place-items:center;padding:12px;background:#07111dcc}.workspace-modal.open{display:grid}.workspace-dialog{width:min(100%,700px);max-height:94dvh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;direction:rtl}.workspace-head{position:sticky;top:0;display:flex;justify-content:space-between;padding:14px;background:var(--panel);border-bottom:1px solid var(--line)}.workspace-head h2{font-size:17px;margin:0}.workspace-head small{font-size:10px;color:var(--muted)}.workspace-head button,.workspace-dialog button{border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);padding:7px 10px;font-size:11px}.workspace-body{padding:12px;display:grid;gap:10px}.workspace-body section{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}.workspace-body h3{font-size:13px;margin:0 0 8px}.workspace-body textarea,.workspace-body input,.workspace-body select{width:100%;padding:8px;margin:4px 0;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font:inherit;font-size:12px}.workspace-body textarea{min-height:70px}.workspace-actions,.workspace-grid{display:flex;gap:7px;flex-wrap:wrap}.workspace-grid label{flex:1;min-width:130px;font-size:10px;color:var(--muted)}.workspace-body button.active{border-color:var(--accent);color:var(--accent)}.workspace-body p{font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere}.workspace-body section>div:not(.workspace-actions){display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.private-reply-quote{border-inline-start:3px solid #16a085}
 </style>
+<style>
+
+/* BizmindMakers responsive RTL, layering and modal-spacing correction */
+:root{--chat-font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+html,body,button,input,textarea,select{font-family:var(--chat-font)}
+#app,#sidebar,.sidebar,.sidebar-tabs,.sidebar-tab,.sectionhead,.directory-list,.conversation-list{min-width:0}
+html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
+.sidebar-tabs{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,68px),1fr));
+ align-items:stretch;gap:6px;width:100%;min-width:0;padding:9px clamp(8px,2vw,12px) 8px;overflow:hidden;
+}
+.sidebar-tab{
+ min-width:0;min-height:48px;padding:7px 3px;gap:4px;white-space:normal;
+ flex-direction:column;justify-content:center;text-align:center;line-height:1.2;
+ font-size:clamp(9px,2.6vw,11px);overflow-wrap:anywhere;
+}
+.sidebar-tab i{flex:none;font-size:17px;line-height:1}
+.sidebar-tab:focus-visible{outline-offset:-2px}
+.sidebar-tabs .sidebar-tab.hidden{display:none!important}
+.sectionhead{gap:8px;min-width:0;flex-wrap:wrap}
+.sectionhead>span{min-width:0;flex:1 1 auto;text-align:start}
+.sectionhead>button{flex:0 0 auto}
+.conversation{min-width:0}
+.conv-top{align-items:center;min-width:0}
+.conv-top strong{min-width:0;text-align:start}
+.conv-top time,.conv-time{flex:none;direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.conv-last,.profile-info,.chat-title,.sectionhead>span{overflow-wrap:anywhere}
+.day-divider{direction:rtl;text-align:center;unicode-bidi:plaintext}
+.message .meta{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.message.reactions-open{position:relative;z-index:1100;isolation:isolate}
+.message.reactions-open .reaction-bar{
+ position:fixed!important;z-index:1101;top:auto;bottom:auto;left:auto;right:auto;
+ width:max-content;max-width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 16px);
+ overflow:visible;flex-wrap:nowrap;white-space:nowrap;
+}
+.message-options-menu{z-index:1200;max-width:calc(100vw - 16px);max-height:min(70dvh,520px);overflow-y:auto;overscroll-behavior:contain}
+.message-options-menu[role="menu"]{direction:rtl;text-align:right}
+.message-menu-option{direction:rtl;text-align:start;justify-content:flex-start;min-height:40px}
+.message-menu-option i{flex:none}
+.messages{isolation:auto}
+.group-modal,.group-management-modal,.starred-modal,.custom-list-modal,.workspace-modal{z-index:1300}
+#profileModal,.message-detail-overlay{z-index:1300}
+.group-modal{padding:clamp(8px,3vw,18px)}
+.group-dialog{width:min(100%,540px);max-height:min(90dvh,780px)}
+.group-dialog-head{gap:12px;padding:clamp(13px,3vw,18px) clamp(14px,4vw,20px)}
+.group-dialog-head h2{min-width:0;line-height:1.45;text-align:start}
+.group-dialog-body{padding:clamp(13px,3.5vw,20px);gap:14px}
+.group-dialog-foot{gap:10px;padding:13px clamp(13px,3.5vw,20px) max(13px,env(safe-area-inset-bottom))}
+.group-dialog-foot button{min-width:0;min-height:42px;padding:10px 14px;white-space:normal}
+.group-cancel,.group-create{display:inline-flex;align-items:center;justify-content:center}
+.custom-list-modal,.starred-modal,.group-management-modal{padding:clamp(8px,3vw,16px)}
+.custom-list-dialog,.starred-dialog,.group-management-dialog{width:min(100%,560px);max-height:min(90dvh,760px)}
+.custom-list-head,.starred-head,.group-management-head{padding:14px clamp(13px,3.5vw,18px);gap:10px}
+.custom-list-body,.starred-body,.group-management-body{padding:clamp(12px,3vw,18px)}
+.custom-list-option{width:100%;min-height:44px;gap:10px;padding:9px 10px;text-align:start}
+.custom-list-option input{flex:none}
+.workspace-modal{padding:clamp(8px,3vw,16px)}
+.workspace-dialog{width:min(100%,720px);max-height:min(92dvh,820px)}
+.workspace-head{position:sticky;top:0;z-index:3;align-items:center;gap:12px;padding:12px clamp(12px,3vw,18px)}
+.workspace-body{padding:clamp(10px,3vw,16px)}
+.workspace-body section{min-width:0;padding:clamp(10px,2.8vw,14px)}
+.workspace-body button{min-height:38px}
+.workspace-actions{align-items:stretch}
+.workspace-actions button{flex:1 1 auto}
+@media(max-width:760px){
+ .sidebar-tabs{gap:5px;padding-inline:8px}
+ .sidebar-tab{min-height:46px;font-size:9.5px}
+ .group-dialog{max-height:94dvh}
+ .group-dialog-foot button{min-height:44px}
+ .message-options-menu{min-width:156px}
+}
+@media(max-width:360px){
+ .sidebar-tabs{grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:4px;padding-inline:6px}
+ .sidebar-tab{padding-inline:2px;font-size:9px}
+ .sectionhead{padding-inline:12px}
+ .group-dialog-foot{gap:7px;padding-inline:10px}
+ .group-dialog-foot button{padding-inline:8px;font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+ .sidebar-tab,.group-dialog,.custom-list-dialog,.message-options-menu{transition:none!important}
+}
+
+</style>
 </head>
 <body>
 <div id="auth" class="auth-screen">
@@ -1381,8 +1464,16 @@ function renderReactionBar(row,message){
 }
 function openMessageReactions(row){
  if(!row||row.querySelector('.bubble.deleted'))return;
- document.querySelectorAll('.message.reactions-open').forEach(item=>{if(item!==row)item.classList.remove('reactions-open')});
- row.classList.toggle('reactions-open');
+ document.querySelectorAll('.message.reactions-open').forEach(item=>{if(item!==row){item.classList.remove('reactions-open');const old=item.querySelector('.reaction-bar');if(old){old.style.top='';old.style.left='';old.style.right=''}}});
+ const opening=!row.classList.contains('reactions-open');row.classList.toggle('reactions-open',opening);
+ const bar=row.querySelector('.reaction-bar');if(!bar)return;
+ if(!opening){bar.style.top='';bar.style.left='';bar.style.right='';return}
+ const anchor=row.getBoundingClientRect();const pop=bar.getBoundingClientRect(),gap=8,pad=8;
+ let top=anchor.bottom+gap;if(top+pop.height>window.innerHeight-pad)top=anchor.top-pop.height-gap;
+ top=Math.max(pad,Math.min(top,window.innerHeight-pop.height-pad));
+ let left=row.classList.contains('mine')?anchor.right-pop.width:anchor.left;
+ left=Math.max(pad,Math.min(left,window.innerWidth-pop.width-pad));
+ bar.style.top=Math.round(top)+'px';bar.style.left=Math.round(left)+'px';bar.style.right='auto';
 }
 document.addEventListener('pointerdown',event=>{if(!event.target.closest('.message.reactions-open'))document.querySelectorAll('.message.reactions-open').forEach(row=>row.classList.remove('reactions-open'))},true);
 function bindMessageGestures(row,message){
@@ -1587,8 +1678,21 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
    if(m.content){const t=document.createElement('div');t.className='message-content';t.textContent=m.content;bubble.append(t)}
   }
   const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · تم تعديلها':'');bubble.append(meta);renderMessageStatus(m,bubble);
-  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-dots-three-vertical"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false')};const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
-  if(activeConversation?.type==='group'&&m.sender_id!==state.user?.id)addOption('رد خاص','ph-chat-circle-dots',()=>replyPrivatelyToGroupMessage(m));if(m.edited_at&&(m.sender_id===state.user?.id||state.isTeamAdmin))addOption('سجل التعديلات','ph-clock-counter-clockwise',()=>openMessageEditHistory(m));trigger.onclick=event=>{event.stopPropagation();const opening=menu.classList.contains('hidden');const editOption=menu.querySelector('[data-edit-option]');if(editOption){editOption.disabled=!canEditMessage(m);editOption.querySelector('span').textContent=editOption.disabled?'انتهت مهلة التعديل':'تعديل'}document.querySelectorAll('.message-options-menu').forEach(other=>other.classList.add('hidden'));document.querySelectorAll('.message-menu-trigger').forEach(other=>other.setAttribute('aria-expanded','false'));menu.classList.toggle('hidden',!opening);trigger.setAttribute('aria-expanded',String(opening))};menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
+  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-dots-three-vertical"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
+  if(activeConversation?.type==='group'&&m.sender_id!==state.user?.id)addOption('رد خاص','ph-chat-circle-dots',()=>replyPrivatelyToGroupMessage(m));if(m.edited_at&&(m.sender_id===state.user?.id||state.isTeamAdmin))addOption('سجل التعديلات','ph-clock-counter-clockwise',()=>openMessageEditHistory(m));trigger.onclick=event=>{
+ event.stopPropagation();const opening=menu.classList.contains('hidden');
+ document.querySelectorAll('.message-options-menu').forEach(other=>{if(other!==menu){if(other._closeMenu)other._closeMenu();else other.classList.add('hidden')}});
+ document.querySelectorAll('.message-menu-trigger').forEach(other=>{if(other!==trigger)other.setAttribute('aria-expanded','false')});
+ const editOption=menu.querySelector('[data-edit-option]');if(editOption){editOption.disabled=!canEditMessage(m);editOption.querySelector('span').textContent=editOption.disabled?'انتهت مهلة التعديل':'تعديل'}
+ if(!opening){closeMenu();return}
+ menu.classList.remove('hidden');document.body.append(menu);menu.style.position='fixed';menu.style.zIndex='1200';menu.style.maxHeight='min(70dvh,520px)';menu.style.overflowY='auto';
+ const anchor=trigger.getBoundingClientRect(),box=menu.getBoundingClientRect(),pad=8;
+ let left=anchor.right-box.width;if(getComputedStyle(document.documentElement).direction!=='rtl')left=anchor.left;
+ left=Math.max(pad,Math.min(left,window.innerWidth-box.width-pad));
+ let top=anchor.bottom+4;if(top+box.height>window.innerHeight-pad)top=anchor.top-box.height-4;
+ top=Math.max(pad,Math.min(top,window.innerHeight-box.height-pad));
+ menu.style.left=Math.round(left)+'px';menu.style.top=Math.round(top)+'px';trigger.setAttribute('aria-expanded','true');
+};menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
   row.append(bubble);renderReactionBar(row,m);renderMessagePinMark(row,m);bindMessageGestures(row,m);
   if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)){state.messageIds.delete(m.id);return false;}
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
@@ -1944,8 +2048,8 @@ $('chatSearchBtn').onclick=()=>{closeChatHeaderMenu();$('chatSearchPanel').class
 function closeChatHeaderMenu(){const menu=$('chatHeaderMenu'),button=$('chatHeaderMenuBtn');menu?.classList.add('hidden');button?.setAttribute('aria-expanded','false')}
 $('chatHeaderMenuBtn').onclick=event=>{event.stopPropagation();const menu=$('chatHeaderMenu'),button=$('chatHeaderMenuBtn'),opening=menu.classList.contains('hidden');menu.classList.toggle('hidden',!opening);button.setAttribute('aria-expanded',String(opening))};
 $('chatHeaderMenu')?.addEventListener('click',event=>{event.stopPropagation();if(event.target.closest('button'))closeChatHeaderMenu()});
-document.addEventListener('click',()=>{closeChatHeaderMenu();document.querySelectorAll('.message-options-menu').forEach(menu=>menu.classList.add('hidden'));document.querySelectorAll('.message-menu-trigger').forEach(button=>button.setAttribute('aria-expanded','false'))});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeChatHeaderMenu();document.querySelectorAll('.message-options-menu').forEach(menu=>menu.classList.add('hidden'));document.querySelectorAll('.message-menu-trigger').forEach(button=>button.setAttribute('aria-expanded','false'))}});
+document.addEventListener('click',()=>{closeChatHeaderMenu();document.querySelectorAll('.message-options-menu').forEach(menu=>{if(menu._closeMenu)menu._closeMenu();else menu.classList.add('hidden')});document.querySelectorAll('.message-menu-trigger').forEach(button=>button.setAttribute('aria-expanded','false'))});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeChatHeaderMenu();document.querySelectorAll('.message-options-menu').forEach(menu=>{if(menu._closeMenu)menu._closeMenu();else menu.classList.add('hidden')});document.querySelectorAll('.message-menu-trigger').forEach(button=>button.setAttribute('aria-expanded','false'))}});
 $('chatSearchClose').onclick=()=>{$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';$('chatSearchResults').innerHTML='<p>اكتب كلمة للبحث داخل المحادثة الحالية.</p>'};
 $('chatSearchInput').addEventListener('input',()=>{if(state.chatSearchTimer)clearTimeout(state.chatSearchTimer);const term=$('chatSearchInput').value;state.chatSearchTimer=setTimeout(()=>searchActiveConversation(term),250)});
 $('chatSearchInput').addEventListener('keydown',event=>{if(event.key==='Escape')$('chatSearchPanel').classList.add('hidden')});
