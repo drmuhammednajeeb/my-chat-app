@@ -2116,6 +2116,7 @@ function closeProfileModal(){
  $('profileModal').classList.remove('open');$('profileModal').setAttribute('aria-hidden','true');document.body.classList.remove('profile-modal-open');
  if(!profilePhotoBusy)resetProfilePhotoSelection();
 }
+document.addEventListener('DOMContentLoaded',()=>{
 $('profileModalClose').onclick=closeProfileModal;$('profileModalCancel').onclick=closeProfileModal;
 $('profileModal').addEventListener('click',e=>{if(e.target===$('profileModal'))closeProfileModal()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('profileModal')?.classList.contains('open')){e.preventDefault();closeProfileModal()}});
@@ -2156,6 +2157,7 @@ $('profileSaveBtn').onclick=async()=>{
  }catch(error){console.error('Profile update failed:',error);toast(error.message||'تعذر حفظ الملف الشخصي. حاول مرة أخرى')}
  finally{profileSaveBusy=false;btn.disabled=false;btn.textContent='حفظ التغييرات'}
 };
+});
 </script>
 <style>
 /* Swipe-to-reply and deliberate reaction popover */
