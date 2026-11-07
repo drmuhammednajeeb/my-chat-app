@@ -150,6 +150,32 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 }
 
 
+/* Loading states: subtle skeletons, stable layouts and reduced-motion support */
+.loading-stack{display:flex;flex-direction:column;gap:2px;padding:4px 0}
+.loading-row{display:flex;align-items:center;gap:12px;min-height:72px;padding:11px 16px;border-bottom:1px solid #f1f2f3}
+.loading-avatar,.loading-line,.loading-block{position:relative;overflow:hidden;background:#edf1f2;border-radius:9px}
+.loading-avatar{width:48px;height:48px;flex:none;border-radius:50%}
+.loading-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:9px}
+.loading-line{height:9px;width:42%;border-radius:8px}
+.loading-line.short{width:25%}.loading-line.long{width:68%}
+.loading-avatar:after,.loading-line:after,.loading-block:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,#fff9,transparent);animation:loadingShimmer 1.35s ease-in-out infinite}
+@keyframes loadingShimmer{to{transform:translateX(100%)}}
+.loading-status{display:flex;align-items:center;gap:8px;padding:10px 16px;color:#71828a;font-size:11px}
+.loading-status:before{content:"";width:7px;height:7px;border-radius:50%;background:#00a884;box-shadow:0 0 0 4px #00a88418;animation:loadingPulse 1.2s ease-in-out infinite}
+@keyframes loadingPulse{50%{opacity:.35;transform:scale(.8)}}
+.team-loading-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:13px}
+.team-loading-card{height:112px;padding:14px;background:#fff;border:1px solid #e5ebed;border-radius:14px}
+.team-loading-card .loading-block{height:10px;width:55%;margin-bottom:17px}
+.team-loading-card .loading-block:last-child{height:25px;width:38%}
+.team-loading-panels{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.team-loading-panel{height:210px;padding:16px;background:#fff;border:1px solid #e5ebed;border-radius:14px}
+.team-loading-panel .loading-block{height:10px;width:44%;margin-bottom:18px}
+.team-loading-panel .loading-block:nth-child(2){height:110px;width:100%}
+.team-dashboard[aria-busy="true"] .team-dashboard-head{opacity:.82}
+.loading-fade-in{animation:loadingFadeIn .18s ease-out both}
+@keyframes loadingFadeIn{from{opacity:.45}to{opacity:1}}
+@media(max-width:900px){.team-loading-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.team-loading-panels{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.loading-avatar:after,.loading-line:after,.loading-block:after,.loading-status:before{animation:none}.loading-fade-in{animation:none}}
 /* Runtime diagnostics panel */
 #diagnosticsPanel{position:absolute;z-index:9;top:72px;right:14px;width:min(430px,calc(100% - 28px));max-height:calc(100dvh - 190px);overflow:auto;background:#fff;color:#15232b;border:1px solid #dce3e6;border-radius:14px;box-shadow:0 12px 40px #0b141a30;padding:14px;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;direction:ltr;text-align:left}#diagnosticsPanel[hidden]{display:none!important}#diagnosticsPanel h3{font:700 14px Tajawal,sans-serif;margin:0 0 8px;direction:rtl;text-align:right}#diagnosticsPanel pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;color:#243b46}#debugBtn{font-size:16px}
 /* Ultra Chat Pro — UI polish pass */
@@ -439,6 +465,18 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY
 const $=id=>document.getElementById(id);
 const groupSelectedProfiles=new Map();let groupSearchTimer=null;let groupSearchRequest=0;let publicChannelsCache=[];let channelDirectoryRequest=0;
 let messagesScrollFrame=0;
+function showListSkeleton(container,count=5){
+ if(!container)return;container.replaceChildren();const stack=document.createElement('div');stack.className='loading-stack';stack.setAttribute('aria-label','جارٍ تحميل البيانات');
+ for(let i=0;i<count;i++){const row=document.createElement('div');row.className='loading-row';const avatar=document.createElement('span');avatar.className='loading-avatar';const copy=document.createElement('span');copy.className='loading-copy';const first=document.createElement('span');first.className='loading-line '+(i%2?'short':'');const second=document.createElement('span');second.className='loading-line long';copy.append(first,second);row.append(avatar,copy);stack.append(row)}container.append(stack);
+}
+function showTeamDashboardSkeleton(){
+ const dashboard=$('teamDashboard');if(!dashboard)return;dashboard.setAttribute('aria-busy','true');
+ $('teamKpis').innerHTML='<div class="team-loading-grid">'+Array.from({length:5},()=>'<div class="team-loading-card"><div class="loading-block"></div><div class="loading-block"></div></div>').join('')+'</div>';
+ $('teamDailyChart').innerHTML='<div class="team-loading-panel"><div class="loading-block"></div><div class="loading-block"></div></div>';
+ $('teamGroupsList').innerHTML='<div class="team-loading-panel"><div class="loading-block"></div><div class="loading-block"></div></div>';
+ $('teamGeneratedAt').textContent='جارٍ تحميل إحصائيات الفريق…';
+}
+
 function isMessagesNearBottom(area=$('messages'),threshold=120){return !!area&&(area.scrollHeight-area.scrollTop-area.clientHeight)<=threshold}
 function updateNewMessagesIndicator(){const button=$('newMessagesJump'),label=$('newMessagesJumpText');if(!button||!label)return;const count=state.newMessageCount||0;button.classList.toggle('hidden',count===0);label.textContent=count===1?'رسالة جديدة · الانتقال للأسفل':'رسائل جديدة · '+count.toLocaleString('ar-SA');button.setAttribute('aria-label',count+' رسائل جديدة. الانتقال إلى أحدث الرسائل')}
 function clearNewMessages(markRead=false){const hadUnread=(state.newMessageCount||0)>0;state.newMessageCount=0;updateNewMessagesIndicator();if(hadUnread&&markRead&&state.active?.id&&document.visibilityState==='visible')markConversationReceipt(state.active.id,true).catch(error=>console.warn('Read receipt after jump failed:',error?.message||error))}
@@ -448,7 +486,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,conversations:[],memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationChannel:null,notificationLoading:false,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationChannel:null,notificationLoading:false,active:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -626,8 +664,8 @@ function setSidebarView(view){
  $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث في قنواتك…':team?'ابحث عن مجموعة…':'ابحث في المحادثات…';
  $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في قنواتك':team?'البحث في المجموعات':'بحث المحادثات');$('search').value='';if(users)state.directorySearch='';
  $('teamDashboard').classList.toggle('hidden',!team);$('chat').classList.toggle('team-mode',team);
- if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');renderTeamDashboard();if(!state.teamData)loadTeamDashboard(true)}
- else if(users){renderDirectory();if(!state.directoryUsers.length)loadDirectory()}
+ if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');if(state.teamData)renderTeamDashboard();else showTeamDashboardSkeleton();if(!state.teamLoading&&!state.teamData)loadTeamDashboard(true)}
+ else if(users){renderDirectory();if(!state.directoryUsers.length&&!state.directoryLoading)loadDirectory()}
  else if(channels){renderMyChannels()}else renderConversations();
 }
 async function loadDirectory(reset=true){
@@ -635,7 +673,7 @@ async function loadDirectory(reset=true){
  if(reset){state.directoryOffset=0;state.directoryUsers=[];state.directoryHasMore=false;state.directoryRequestId++}
  const requestId=state.directoryRequestId;
  state.directoryLoading=true;$('loadMoreUsers').disabled=true;$('loadMoreUsers').textContent='جارٍ تحميل المستخدمين…';
- if(reset){$('directoryList').replaceChildren();const loading=document.createElement('div');loading.className='directory-empty';loading.textContent='جارٍ البحث عن المستخدمين…';$('directoryList').append(loading)}
+ if(reset)showListSkeleton($('directoryList'),5);
  const from=state.directoryOffset,to=from+49,term=state.directorySearch;
  let query=supabaseClient.from('profiles').select('id,username,display_name,avatar_url').neq('id',state.user.id);
  if(term)query=query.or('display_name.ilike.%'+term+'%,username.ilike.%'+term+'%');
@@ -651,7 +689,9 @@ async function loadDirectory(reset=true){
  renderDirectory();$('loadMoreUsers').classList.toggle('hidden',!state.directoryHasMore||state.sidebarView!=='users');$('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';
 }
 function renderDirectory(){
- const list=$('directoryList');if(!list)return;list.replaceChildren();
+ const list=$('directoryList');if(!list)return;
+ if(state.directoryLoading&&!state.directoryUsers.length){showListSkeleton(list,5);return}
+ list.replaceChildren();
  const rows=state.directoryUsers.slice();
  const onlineCount=rows.filter(p=>state.onlineUsers.has(p.id)).length;
  const filterLabel=state.directoryFilter==='online'?' · المتصلون فقط':'';
@@ -689,24 +729,28 @@ function otherMember(conv){return (conv.members||[]).find(m=>m.user_id!==state.u
 function convName(c){if(c.type==='group')return c.title||'مجموعة جديدة';if(c.type==='channel')return c.title||'قناة بدون اسم';const p=otherMember(c);return p?.display_name||p?.username||'محادثة خاصة'}
 function convPreview(c){return c.last_message?.content||'ابدأ المحادثة الآن'}
 function renderConversations(){
- const q=$('search').value.trim().toLowerCase(),list=$('conversationList');list.replaceChildren();
+ const q=$('search').value.trim().toLowerCase(),list=$('conversationList');
+ if(state.conversationsLoading&&!state.conversations.length){showListSkeleton(list,6);return}
+ list.replaceChildren();
  const rows=state.conversations.filter(c=>{const matchesSearch=(convName(c)+' '+convPreview(c)+' '+(otherMember(c)?.username||'')).toLowerCase().includes(q);const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at)));const matchesFilter=state.conversationFilter==='all'||(state.conversationFilter==='unread'&&unread)||(state.conversationFilter==='groups'&&c.type==='group')||(state.conversationFilter==='channels'&&c.type==='channel');return matchesSearch&&matchesFilter});
  if(!rows.length){const p=document.createElement('p');p.textContent=q?'لا توجد نتائج':'لا توجد محادثات بعد';p.style.cssText='text-align:center;color:var(--muted);font-size:12px;padding:30px 8px';list.append(p);return}
  rows.forEach(c=>{const b=document.createElement('button');b.className='conversation'+(state.active?.id===c.id?' active':'');const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at)));b.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));b.innerHTML='<div class="conv-avatar">'+(c.type==='group'?'<i class="ph ph-users-three"></i>':c.type==='channel'?'<i class="ph ph-megaphone"></i>':esc(initials(convName(c))))+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';b.onclick=()=>openConversation(c);list.append(b)})
 }
 async function loadConversations(){
+ state.conversationsLoading=true;
+ if(!state.conversations.length){showListSkeleton($('conversationList'),6);showListSkeleton($('directoryList'),4)}
  const {data:members,error}=await supabaseClient.from('conversation_members').select('conversation_id,role,last_read_at').eq('user_id',state.user.id);
- if(error){toast('تعذر تحميل المحادثات');console.error(error);return false}
- state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];renderConversations();return true}
+ if(error){state.conversationsLoading=false;toast('تعذر تحميل المحادثات');console.error(error);return false}
+ state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')renderMyChannels();return true}
  const {data:convs,error:ce}=await supabaseClient.from('conversations').select('*').in('id',ids).order('last_message_at',{ascending:false});
- if(ce){toast('تعذر قراءة المحادثات');console.error(ce);return false}
+ if(ce){state.conversationsLoading=false;toast('تعذر قراءة المحادثات');console.error(ce);return false}
  const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url)').in('conversation_id',ids);
- if(me){toast('تعذر قراءة أعضاء المحادثات');console.error(me);return false}
+ if(me){state.conversationsLoading=false;toast('تعذر قراءة أعضاء المحادثات');console.error(me);return false}
  const {data:latest,error:le}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
- if(le){toast('تعذر تحميل معاينة الرسائل');console.error(le);return false}
+ if(le){state.conversationsLoading=false;toast('تعذر تحميل معاينة الرسائل');console.error(le);return false}
  state.conversations=(convs||[]).map(c=>({...c,last_read_at:state.memberReads[c.id]||null,members:(allMembers||[]).filter(m=>m.conversation_id===c.id).map(m=>({...m,profile:m.profiles})),last_message:(latest||[]).find(m=>m.conversation_id===c.id)}));
  state.conversations.sort((a,b)=>new Date(b.last_message?.created_at||b.created_at)-new Date(a.last_message?.created_at||a.created_at));
- renderConversations();
+ state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')renderMyChannels();
  if(state.active){const refreshed=state.conversations.find(c=>c.id===state.active.id);if(refreshed)state.active=refreshed}
  return true;
 }
@@ -1166,13 +1210,15 @@ function renderGroupSelection(){
 
 async function loadTeamDashboard(silent=false){
  if(!state.user)return false;
+ state.teamLoading=true;if(state.sidebarView==='team'&&!state.teamData)showTeamDashboardSkeleton();
  try{const {data,error}=await supabaseClient.rpc('get_team_dashboard_stats');if(error)throw error;state.isTeamAdmin=true;state.teamData=data||{};$('teamTab').classList.remove('hidden');if(state.sidebarView==='team')renderTeamDashboard();return true}
- catch(error){state.isTeamAdmin=false;$('teamTab').classList.add('hidden');if(!silent&&error?.code!=='42501')toast('تعذر تحميل لوحة إدارة الفريق');console.warn('Team dashboard access/load:',error?.message||error);return false}
+ catch(error){state.isTeamAdmin=false;$('teamTab').classList.add('hidden');if(state.sidebarView==='team'&&!state.teamData){$('teamKpis').innerHTML='<div class="team-empty">تعذر تحميل لوحة الفريق. حدّث الصفحة أو أعد المحاولة.</div>';$('teamDashboard').setAttribute('aria-busy','false')}if(!silent&&error?.code!=='42501')toast('تعذر تحميل لوحة إدارة الفريق');console.warn('Team dashboard access/load:',error?.message||error);return false}
+ finally{state.teamLoading=false}
 }
 function teamDate(value){if(!value)return 'لم يسجل نشاط بعد';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('ar-SA',{day:'numeric',month:'short'})}
 function teamIsActive(user){return !!user.last_active_at&&Date.now()-new Date(user.last_active_at).getTime()<=7*86400000}
 function renderTeamDashboard(){
- if(!state.isTeamAdmin||!state.teamData)return;const d=state.teamData;
+ if(!state.isTeamAdmin||!state.teamData)return;$('teamDashboard').setAttribute('aria-busy','false');const d=state.teamData;
  const kpis=[['الأعضاء المسجلون',d.registered_count,'ph-users-three','حساب مسجل'],['نشطون',d.active_7d,'ph-user-check','أرسلوا رسالة خلال 7 أيام'],['غير نشطين',d.inactive_7d,'ph-user-minus','لم يرسلوا خلال 7 أيام'],['المجموعات',d.groups_count,'ph-users-four','حد المجموعة 200 عضو'],['إجمالي الرسائل',d.messages_total,'ph-chats-circle','كل الرسائل المحفوظة']];
  $('teamKpis').replaceChildren();kpis.forEach(([label,value,icon,hint])=>{const card=document.createElement('article');card.className='team-kpi';const top=document.createElement('div');top.className='team-kpi-top';const name=document.createElement('span');name.textContent=label;const symbol=document.createElement('span');symbol.className='team-kpi-icon';symbol.innerHTML='<i class="ph '+icon+'"></i>';top.append(name,symbol);const num=document.createElement('strong');num.textContent=Number(value||0).toLocaleString('en-US');const small=document.createElement('small');small.textContent=hint;card.append(top,num,small);$('teamKpis').append(card)});
  $('teamGeneratedAt').textContent='آخر تحديث: '+new Date(d.generated_at||Date.now()).toLocaleString('ar-SA');
@@ -1194,7 +1240,7 @@ function renderTeamGroupOptions(){
 }
 async function loadTeamMembers(){
  const groupId=state.teamSelectedGroupId;if(!groupId){state.teamMembers=[];state.teamMembersLoadedFor='';renderTeamMembers();return}
- state.teamMembersLoading=true;$('teamMembersList').innerHTML='<div class="team-empty">جارٍ تحميل الأعضاء…</div>';
+ state.teamMembersLoading=true;showListSkeleton($('teamMembersList'),4);
  const {data,error}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,joined_at').eq('conversation_id',groupId).order('joined_at',{ascending:true});state.teamMembersLoading=false;
  if(error){console.error('Team memberships:',error);state.teamMembersLoadedFor=groupId;$('teamMembersList').innerHTML='<div class="team-empty">تعذر تحميل عضويات المجموعة.</div>';return}
  state.teamMembersLoadedFor=groupId;
@@ -1219,7 +1265,9 @@ async function removeTeamMember(member){const name=member.profile?.display_name|
 async function addTeamMember(){const groupId=state.teamSelectedGroupId,userId=$('teamAddMemberSelect').value;if(!groupId||!userId)return;const group=(state.teamData?.groups||[]).find(g=>g.id===groupId);if(Number(group?.member_count||0)>=200){toast('المجموعة وصلت إلى الحد الأقصى: 200 عضو');return}$('teamAddMemberBtn').disabled=true;const {error}=await supabaseClient.from('conversation_members').insert({conversation_id:groupId,user_id:userId,role:'member'});if(error){console.error(error);toast(error.code==='23514'?'المجموعة وصلت إلى الحد الأقصى: 200 عضو':error.message||'تعذر إضافة العضو');$('teamAddMemberBtn').disabled=false;return}toast('تمت إضافة العضو إلى المجموعة');await refreshTeamDashboard()}
 $('teamRefreshBtn').onclick=refreshTeamDashboard;$('teamGroupSearch').oninput=()=>{state.teamSearch=$('teamGroupSearch').value.trim().toLocaleLowerCase('ar');renderTeamGroups()};$('teamBackBtn').onclick=()=>{setSidebarView('chats');$('sidebar').classList.remove('closed')};$('teamGroupSelect').onchange=()=>{state.teamSelectedGroupId=$('teamGroupSelect').value;state.teamMembers=[];state.teamMembersLoadedFor='';renderTeamGroups();loadTeamMembers()};$('teamMemberSearch').oninput=renderTeamMembers;$('teamActivityFilter').onchange=renderTeamMembers;$('teamAddMemberSelect').onchange=()=>{const g=(state.teamData?.groups||[]).find(x=>x.id===state.teamSelectedGroupId);$('teamAddMemberBtn').disabled=!$('teamAddMemberSelect').value||Number(g?.member_count||0)>=200};$('teamAddMemberBtn').onclick=addTeamMember;
 function renderMyChannels(){
- const list=$('directoryList');if(!list||state.sidebarView!=='channels')return;list.replaceChildren();
+ const list=$('directoryList');if(!list||state.sidebarView!=='channels')return;
+ if(state.conversationsLoading&&!state.conversations.length){showListSkeleton(list,4);return}
+ list.replaceChildren();
  const q=$('search').value.trim().toLocaleLowerCase('ar');
  const rows=(state.conversations||[]).filter(c=>c.type==='channel'&&((c.title||'')+' '+(c.description||'')).toLocaleLowerCase('ar').includes(q));
  if(!rows.length){const empty=document.createElement('div');empty.className='channel-empty';empty.textContent=q?'لا توجد قناة تطابق البحث.':'لا توجد قنوات في مساحتك بعد. أنشئ قناة خاصة أو افتح رابط دعوة للانضمام إلى قناة.';list.append(empty);return}
