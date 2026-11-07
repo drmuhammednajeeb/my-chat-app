@@ -265,8 +265,8 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 /* Unread conversation indicator */
 .conv-time{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:10px;white-space:nowrap}.unread-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#00a884;box-shadow:0 0 0 3px #00a88418}.conversation:focus-visible .unread-dot{outline:2px solid #00a884;outline-offset:3px}
 /* Registered users directory */
-.sidebar-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:9px 12px 7px;background:#fff}
-.sidebar-tab{border:0;border-radius:9px;padding:9px 8px;background:#f0f2f5;color:#667781;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px}
+.sidebar-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:9px 12px 7px;background:#fff}
+.sidebar-tab{border:0;border-radius:9px;padding:9px 5px;background:#f0f2f5;color:#667781;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
 .sidebar-tab.active{background:#d9fdd3;color:#075e54}.sidebar-tab:focus-visible{outline:2px solid #00a884;outline-offset:2px}
 .directory-list{overflow:auto;flex:1;padding:2px 9px 12px}
 .directory-user{display:flex;align-items:center;gap:11px;padding:11px 10px;border-bottom:1px solid #f0f2f5;min-height:70px}
@@ -479,9 +479,9 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
   <div class="brand"><div class="brandmark"><img src="./icon-1024.png" alt="BZ" width="1024" height="1024" decoding="async"></div><div><h1>BizmindMakers Chat Pro</h1><p>مساحة تواصلك الذكية</p></div></div>
   <div class="profile"><div id="myAvatar" class="avatar profile-avatar-edit" role="button" tabindex="0" title="تغيير الصورة الشخصية" aria-label="تغيير الصورة الشخصية">U</div><input id="avatarInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" aria-label="اختيار صورة شخصية"><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><div class="notification-bell-wrap"><button id="notificationBell" type="button" title="مركز الإشعارات" aria-label="فتح مركز الإشعارات" aria-expanded="false"><i class="ph ph-bell"></i><span id="notificationBadge" class="hidden">0</span></button></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
   <div class="sidebar-tabs" role="tablist" aria-label="أقسام التطبيق">
-   <button type="button" id="chatsTab" class="sidebar-tab active" role="tab" aria-selected="true"><i class="ph ph-chats"></i> المحادثات</button>
-   <button type="button" id="channelsTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-megaphone"></i> قنواتي</button>
-   <button type="button" id="usersTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-users-three"></i> المستخدمون</button>
+   <button type="button" id="chatsTab" class="sidebar-tab active" role="tab" aria-selected="true"><i class="ph ph-chat-circle"></i> المحادثات</button>
+   <button type="button" id="groupsTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-users-three"></i> المجموعات</button>
+   <button type="button" id="channelsTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-megaphone"></i> القنوات</button>
    <button type="button" id="teamTab" class="sidebar-tab hidden" role="tab" aria-selected="false"><i class="ph ph-chart-line-up"></i> إدارة الفريق</button>
   </div>
   <div class="searchbox"><i class="ph ph-magnifying-glass"></i><input id="search" placeholder="ابحث في المحادثات…" aria-label="بحث المحادثات"></div>
@@ -490,7 +490,7 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
    <button type="button" class="directory-filter" data-directory-filter="online" aria-pressed="false"><span class="filter-online-dot"></span> المتصلون الآن</button>
   </nav>
   <nav id="chatFilters" class="chat-filters" aria-label="تصفية المحادثات"><button type="button" class="chat-filter active" data-filter="all" aria-pressed="true">الكل</button><button type="button" class="chat-filter" data-filter="unread" aria-pressed="false">غير مقروءة</button><button type="button" class="chat-filter" data-filter="groups" aria-pressed="false">المجموعات</button><button type="button" class="chat-filter" data-filter="archived" aria-pressed="false"><i class="ph ph-archive-box"></i> المؤرشفة</button></nav>
-  <div class="sectionhead"><span id="sidebarSectionTitle">المحادثات</span><button id="newChat" class="new-group-btn" type="button" title="إنشاء مجموعة جديدة"><i class="ph ph-users-three"></i><span>مجموعة جديدة</span></button><button id="createChannelOpen" class="new-group-btn hidden" type="button" title="إنشاء قناة"><i class="ph ph-megaphone"></i><span>قناة جديدة</span></button><button id="refreshDirectory" class="hidden" type="button" title="تحديث دليل المستخدمين" aria-label="تحديث دليل المستخدمين"><i class="ph ph-arrows-clockwise"></i></button></div>
+  <div class="sectionhead"><span id="sidebarSectionTitle">المحادثات</span><button id="browseUsersBtn" class="new-group-btn" type="button" title="فتح دليل المستخدمين"><i class="ph ph-user-plus"></i><span>مستخدمون</span></button><button id="newChat" class="new-group-btn hidden" type="button" title="إنشاء مجموعة جديدة"><i class="ph ph-users-three"></i><span>مجموعة جديدة</span></button><button id="createChannelOpen" class="new-group-btn hidden" type="button" title="إنشاء قناة"><i class="ph ph-megaphone"></i><span>قناة جديدة</span></button><button id="refreshDirectory" class="hidden" type="button" title="تحديث دليل المستخدمين" aria-label="تحديث دليل المستخدمين"><i class="ph ph-arrows-clockwise"></i></button></div>
   <div id="conversationList" class="conversation-list"></div>
   <div id="directorySummary" class="directory-summary hidden"></div>
   <div id="directoryList" class="directory-list hidden" aria-live="polite"></div>
@@ -995,17 +995,17 @@ $('avatarInput').addEventListener('change',event=>uploadProfileAvatar(event.targ
 
 function setSidebarView(view){
  if(view==='team'&&!state.isTeamAdmin){toast('لا تملك صلاحية إدارة الفريق');return}
- state.sidebarView=view;const users=view==='users',channels=view==='channels',team=view==='team';
+ state.sidebarView=view;const users=view==='users',channels=view==='channels',groups=view==='groups',team=view==='team',personal=view==='chats';
  if(users){state.directorySearch='';state.directoryFilter='all';document.querySelectorAll('.directory-filter').forEach(item=>{const active=item.dataset.directoryFilter==='all';item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))})}
- $('chatsTab').classList.toggle('active',!users&&!channels&&!team);$('usersTab').classList.toggle('active',users);$('channelsTab').classList.toggle('active',channels);$('teamTab').classList.toggle('active',team);
- $('chatsTab').setAttribute('aria-selected',String(!users&&!channels&&!team));$('usersTab').setAttribute('aria-selected',String(users));$('channelsTab').setAttribute('aria-selected',String(channels));$('teamTab').setAttribute('aria-selected',String(team));
- $('chatFilters').classList.toggle('hidden',users||channels||team);$('directoryFilters').classList.toggle('hidden',!users);$('conversationList').classList.toggle('hidden',users||channels||team);
+ $('chatsTab').classList.toggle('active',personal);$('groupsTab').classList.toggle('active',groups);$('channelsTab').classList.toggle('active',channels);$('teamTab').classList.toggle('active',team);
+ $('chatsTab').setAttribute('aria-selected',String(personal));$('groupsTab').setAttribute('aria-selected',String(groups));$('channelsTab').setAttribute('aria-selected',String(channels));$('teamTab').setAttribute('aria-selected',String(team));
+ $('chatFilters').classList.toggle('hidden',!personal);$('directoryFilters').classList.toggle('hidden',!users);$('conversationList').classList.toggle('hidden',!personal&&!groups);
  $('directoryList').classList.toggle('hidden',!users&&!channels);$('directorySummary').classList.toggle('hidden',!users);$('loadMoreUsers').classList.toggle('hidden',!users||!state.directoryHasMore);
- $('newChat').classList.toggle('hidden',users||channels||team);$('createChannelOpen').classList.toggle('hidden',!channels);$('refreshDirectory').classList.toggle('hidden',!users);
+ $('browseUsersBtn').classList.toggle('hidden',users||team);$('newChat').classList.toggle('hidden',!groups);$('createChannelOpen').classList.toggle('hidden',!channels);$('refreshDirectory').classList.toggle('hidden',!users);
  document.querySelector('.searchbox').classList.toggle('hidden',team);
- $('sidebarSectionTitle').textContent=users?'دليل المستخدمين':channels?'قنواتي':team?'إدارة الفريق':'المحادثات';
- $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث في قنواتك…':team?'ابحث عن مجموعة…':'ابحث في المحادثات…';
- $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في قنواتك':team?'البحث في المجموعات':'بحث المحادثات');$('search').value='';if(users)state.directorySearch='';
+ $('sidebarSectionTitle').textContent=users?'دليل المستخدمين':channels?'القنوات الإذاعية':groups?'مجموعات العمل':team?'إدارة الفريق':'المحادثات الشخصية';
+ $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث في قنواتك…':groups?'ابحث في مجموعات العمل…':team?'ابحث عن مجموعة…':'ابحث في المحادثات الشخصية…';
+ $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في القنوات':groups?'البحث في مجموعات العمل':team?'البحث في المجموعات':'بحث المحادثات الشخصية');$('search').value='';if(users)state.directorySearch='';
  $('teamDashboard').classList.toggle('hidden',!team);$('chat').classList.toggle('team-mode',team);
  if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');if(state.teamData)renderTeamDashboard();else showTeamDashboardSkeleton();if(!state.teamLoading&&!state.teamData)loadTeamDashboard(true)}
  else if(users){renderDirectory();if(!state.directoryUsers.length&&!state.directoryLoading)loadDirectory()}
@@ -1086,13 +1086,13 @@ async function ensureSelfConversation(){
 function otherMember(conv){return (conv.members||[]).find(m=>m.user_id!==state.user.id)?.profile}
 function convName(c){if(isSelfConversation(c))return (state.profile?.display_name||state.profile?.username||'أنا')+' (أنا)';if(c.type==='group')return c.title||'مجموعة جديدة';if(c.type==='channel')return c.title||'قناة بدون اسم';const p=otherMember(c);return p?.display_name||p?.username||'محادثة خاصة'}
 function convPreview(c){const cleared=state.chatPrefs.get(c.id)?.cleared_before;if(c.type==='direct'&&cleared&&c.last_message?.created_at&&new Date(c.last_message.created_at)<=new Date(cleared))return 'تم مسح السجل من طرفك';return c.last_message?.content||'ابدأ المحادثة الآن'}
-function renderConversations(){
+function renderConversations(section=state.sidebarView==='groups'?'groups':'direct'){
  const q=$('search').value.trim().toLowerCase(),list=$('conversationList');
  if(state.conversationsLoading&&!state.conversations.length){showListSkeleton(list,6);return}
  list.replaceChildren();
  const selfConversation=state.conversations.find(isSelfConversation);
  const selfPref=selfConversation?(state.chatPrefs.get(selfConversation.id)||{}):{};
- const selfVisible=!!selfConversation&&!selfPref.is_archived&&['all','groups'].includes(state.conversationFilter)&&
+ const selfVisible=section==='direct'&&!!selfConversation&&!selfPref.is_archived&&
   ((convName(selfConversation)+' أنا مراسلة نفسك ملاحظاتي '+convPreview(selfConversation)+' '+(state.profile?.username||'')).toLowerCase().includes(q));
  if(selfVisible){
   const selfRow=document.createElement('button');selfRow.type='button';
@@ -1101,15 +1101,16 @@ function renderConversations(){
   selfRow.innerHTML='<div class="conv-avatar self-chat-avatar"><i class="ph ph-note-pencil"></i></div><div class="conv-copy"><div class="conv-top"><strong>'+esc(state.profile?.display_name||state.profile?.username||'أنا')+' <span class="self-chat-tag">أنا</span></strong><span class="conv-time">'+(selfConversation.last_message?.created_at?time(selfConversation.last_message.created_at):'')+'</span></div><div class="conv-last">'+esc(convPreview(selfConversation)==='ابدأ المحادثة الآن'?'مراسلة نفسك':convPreview(selfConversation))+'</div></div>';
   selfRow.addEventListener('click',()=>openConversation(selfConversation));list.append(selfRow);
  }
- const rows=state.conversations.filter(c=>!isSelfConversation(c)).slice().sort((a,b)=>Number(!!state.chatPrefs.get(b.id)?.is_shortcut)-Number(!!state.chatPrefs.get(a.id)?.is_shortcut)).filter(c=>{
+ const rows=state.conversations.filter(c=>section==='groups'?c.type==='group'&&!isSelfConversation(c):c.type==='direct').slice().sort((a,b)=>Number(!!state.chatPrefs.get(b.id)?.is_shortcut)-Number(!!state.chatPrefs.get(a.id)?.is_shortcut)).filter(c=>{
   const pref=state.chatPrefs.get(c.id)||{},archived=!!pref.is_archived;
-  if(state.conversationFilter==='archived'?!archived:archived)return false;
+  if(section==='groups'&&archived)return false;
+  if(section==='direct'&&(state.conversationFilter==='archived'?!archived:archived))return false;
   const matchesSearch=(convName(c)+' '+convPreview(c)+' '+(otherMember(c)?.username||'')).toLowerCase().includes(q);
   const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at))&&(!pref.cleared_before||new Date(c.last_message.created_at)>new Date(pref.cleared_before)));
-  const matchesFilter=state.conversationFilter==='all'||state.conversationFilter==='archived'||(state.conversationFilter==='unread'&&unread)||(state.conversationFilter==='groups'&&c.type==='group')||(state.conversationFilter==='channels'&&c.type==='channel');
+  const matchesFilter=section==='groups'||state.conversationFilter==='all'||state.conversationFilter==='archived'||(state.conversationFilter==='unread'&&unread);
   return matchesSearch&&matchesFilter;
  });
- if(!rows.length&&!selfVisible){const p=document.createElement('p');p.textContent=state.conversationFilter==='archived'?'لا توجد محادثات مؤرشفة':q?'لا توجد نتائج':'لا توجد محادثات بعد';p.style.cssText='text-align:center;color:var(--muted);font-size:12px;padding:30px 8px';list.append(p);return}
+ if(!rows.length&&!selfVisible){const p=document.createElement('p');p.textContent=section==='groups'?(q?'لا توجد مجموعات تطابق البحث.':'لا توجد مجموعات عمل بعد. أنشئ مجموعة جديدة للبدء.'):state.conversationFilter==='archived'?'لا توجد محادثات مؤرشفة':q?'لا توجد نتائج':'لا توجد محادثات شخصية بعد';p.style.cssText='text-align:center;color:var(--muted);font-size:12px;padding:30px 8px';list.append(p);return}
  rows.forEach(c=>{
   const pref=state.chatPrefs.get(c.id)||{},archived=!!pref.is_archived;
   const shell=document.createElement('div');shell.className='conversation-swipe-shell'+(archived?' is-archived':'');
@@ -1827,7 +1828,7 @@ $('refreshBtn').onclick=async()=>{
  }catch(error){console.error('Chat refresh failed:',error);toast('تعذر تحديث المحادثات. حاول مرة أخرى')}
  finally{$('refreshBtn').disabled=false}
 };
-$('chatsTab').onclick=()=>setSidebarView('chats');$('channelsTab').onclick=()=>setSidebarView('channels');$('usersTab').onclick=()=>setSidebarView('users');$('teamTab').onclick=()=>setSidebarView('team');$('refreshDirectory').onclick=()=>loadDirectory(true);$('loadMoreUsers').onclick=()=>loadDirectory(false);
+$('chatsTab').onclick=()=>setSidebarView('chats');$('groupsTab').onclick=()=>setSidebarView('groups');$('channelsTab').onclick=()=>setSidebarView('channels');$('browseUsersBtn').onclick=()=>setSidebarView('users');$('teamTab').onclick=()=>setSidebarView('team');$('refreshDirectory').onclick=()=>loadDirectory(true);$('loadMoreUsers').onclick=()=>loadDirectory(false);
 document.querySelectorAll('.directory-filter').forEach(button=>button.addEventListener('click',()=>{state.directoryFilter=button.dataset.directoryFilter;document.querySelectorAll('.directory-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});loadDirectory(true)}));
 document.querySelectorAll('.chat-filter').forEach(button=>button.addEventListener('click',()=>{state.conversationFilter=button.dataset.filter;document.querySelectorAll('.chat-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});renderConversations()}));
 $('mobileMenu').onclick=()=>$('sidebar').classList.remove('closed');
