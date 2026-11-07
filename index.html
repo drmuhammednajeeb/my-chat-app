@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="./membership.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+
 <script>
 (function(){
  const KEY='bizmindmakers-chat-theme';
@@ -283,11 +283,15 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
  </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
+const __bootMainScriptStarted=performance.now();
 const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
+const __supabaseResource=performance.getEntriesByType('resource').find(entry=>entry.name.includes('supabase.min.js'));
+window.__BIZMIND_BOOT_TIMINGS__={mainScriptStarted:__bootMainScriptStarted,supabaseScriptMs:__supabaseResource?Math.round(__supabaseResource.duration):null,clientReady:performance.now()};
 const $=id=>document.getElementById(id);
 const APP_THEME_KEY='bizmindmakers-chat-theme';
 let appThemePreference=window.__BIZMIND_THEME_PREFERENCE__||'system';
@@ -395,7 +399,7 @@ function recordPerf(metric,duration,details={}){
 window.addEventListener('pagehide',persistPerfSamples,{capture:true});
 function performanceSummary(){
  const metrics={};
- for(const metric of ['profile_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total']){
+ for(const metric of ['startup_get_session','startup_membership_check','profile_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total']){
   const values=perfSamples.filter(x=>x.metric===metric).slice(-50).map(x=>x.ms).sort((a,b)=>a-b);
   if(values.length)metrics[metric]={samples:values.length,avg_ms:Math.round(values.reduce((a,b)=>a+b,0)/values.length),p50_ms:values[Math.floor((values.length-1)*.5)],p95_ms:values[Math.floor((values.length-1)*.95)],max_ms:values[values.length-1]};
  }
@@ -618,7 +622,9 @@ async function enterApp(user){
 }
 async function enterAppInternal(user,lifecycleVersion){
  if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
+ const membershipStarted=performance.now();
  const {data:membershipState,error:membershipStateError}=await supabaseClient.rpc('get_my_membership_state');
+ recordPerf('startup_membership_check',performance.now()-membershipStarted,{success:!membershipStateError});
  if(membershipStateError){console.error('Membership state check failed:',membershipStateError);authError('تعذر التحقق من حالة العضوية. تحقق من الاتصال وحاول مجدداً.');return false;}
  if(membershipState?.membership_status!=='active'||membershipState?.membership_number_verified!==true||!/^971001[0-9]{6}$/.test(membershipState?.membership_number||'')){await supabaseClient.auth.signOut({scope:'local'});authError('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');return false;}
  state.user=user;state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.activeListId=null;state.starredMessageIds.clear();state.groupSettings=null;state.selectedMessageIds.clear();state.selectionMode=false;subscribePersonalChatData();
@@ -1993,7 +1999,10 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRES
   if(bootStatus)bootStatus.textContent='لا يزال التحقق جارياً. يرجى الانتظار مع التأكد من اتصال الإنترنت.';
  },8000);
  try{
+  const sessionStarted=performance.now();
   const {data,error}=await supabaseClient.auth.getSession();
+  recordPerf('startup_get_session',performance.now()-sessionStarted,{success:!error});
+  if(window.__BIZMIND_BOOT_TIMINGS__){window.__BIZMIND_BOOT_TIMINGS__.getSessionMs=Math.round(performance.now()-sessionStarted);window.__BIZMIND_BOOT_TIMINGS__.authResolved=performance.now()}
   if(error)throw error;
   const session=data?.session;
   if(session?.user){
