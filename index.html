@@ -2,10 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="description" content="Ultra Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" href="./icons/ultra-chat.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./icons/ultra-chat.svg">
-<title>Ultra Chat Pro</title>
+<title>BizmindMakers Chat Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
@@ -40,7 +40,7 @@
 @media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:absolute;inset:0;z-index:4;transition:transform .25s}.sidebar.closed{transform:translateX(105%)}.chat{grid-column:1}.mobile-back{display:grid}.chat-head{height:66px;padding:0 12px}.messages{padding:16px 12px}.message{max-width:88%}.head-actions .optional{display:none}.brand{padding-top:max(16px,env(safe-area-inset-top))}.composer-wrap{padding-left:10px;padding-right:10px}.auth-card{padding:25px 20px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
-/* Ultra Chat Pro — WhatsApp-inspired interface refresh */
+/* BizmindMakers Chat Pro — WhatsApp-inspired interface refresh */
 :root{
  color-scheme:light;
  --bg:#efeae2;
@@ -186,7 +186,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 @media(prefers-reduced-motion:reduce){.loading-avatar:after,.loading-line:after,.loading-block:after,.loading-status:before{animation:none}.loading-fade-in{animation:none}}
 /* Runtime diagnostics panel */
 #diagnosticsPanel{position:absolute;z-index:9;top:72px;right:14px;width:min(430px,calc(100% - 28px));max-height:calc(100dvh - 190px);overflow:auto;background:#fff;color:#15232b;border:1px solid #dce3e6;border-radius:14px;box-shadow:0 12px 40px #0b141a30;padding:14px;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;direction:ltr;text-align:left}#diagnosticsPanel[hidden]{display:none!important}#diagnosticsPanel h3{font:700 14px Tajawal,sans-serif;margin:0 0 8px;direction:rtl;text-align:right}#diagnosticsPanel pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;color:#243b46}#debugBtn{font-size:16px}
-/* Ultra Chat Pro — UI polish pass */
+/* BizmindMakers Chat Pro — UI polish pass */
 :root{--chat-focus:#00a884;--chat-divider:#e9edef}
 *{scrollbar-width:thin;scrollbar-color:#c7d0d5 transparent}
 *::-webkit-scrollbar{width:7px;height:7px}
@@ -363,7 +363,7 @@ html,body{height:100%;min-height:100%;overflow:hidden}
 <body>
 <div id="auth" class="auth-screen">
  <form id="authForm" class="auth-card">
-  <div class="auth-brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><strong style="font-size:20px">Ultra Chat Pro</strong><div style="color:var(--muted);font-size:11px">تواصل بلا حدود، بخصوصية أفضل</div></div></div>
+  <div class="auth-brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><strong style="font-size:20px">BizmindMakers Chat Pro</strong><div style="color:var(--muted);font-size:11px">تواصل بلا حدود، بخصوصية أفضل</div></div></div>
   <h2 id="authTitle">مرحباً بعودتك</h2><p id="authSub">سجّل الدخول لمتابعة محادثاتك.</p>
   <div class="tabs"><button type="button" id="loginTab" class="active">تسجيل الدخول</button><button type="button" id="signupTab">إنشاء حساب</button></div>
   <div id="signupFields" class="hidden">
@@ -379,7 +379,7 @@ html,body{height:100%;min-height:100%;overflow:hidden}
 </div>
 <div id="app" class="app hidden">
  <aside id="sidebar" class="sidebar">
-  <div class="brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><h1>Ultra Chat Pro</h1><p>مساحة تواصلك الذكية</p></div></div>
+  <div class="brand"><div class="brandmark"><i class="ph ph-chat-circle-dots"></i></div><div><h1>BizmindMakers Chat Pro</h1><p>مساحة تواصلك الذكية</p></div></div>
   <div class="profile"><div id="myAvatar" class="avatar">U</div><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><div class="notification-bell-wrap"><button id="notificationBell" type="button" title="مركز الإشعارات" aria-label="فتح مركز الإشعارات" aria-expanded="false"><i class="ph ph-bell"></i><span id="notificationBadge" class="hidden">0</span></button></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
   <div class="sidebar-tabs" role="tablist" aria-label="أقسام التطبيق">
    <button type="button" id="chatsTab" class="sidebar-tab active" role="tab" aria-selected="true"><i class="ph ph-chats"></i> المحادثات</button>
@@ -398,20 +398,20 @@ html,body{height:100%;min-height:100%;overflow:hidden}
   <div id="directorySummary" class="directory-summary hidden"></div>
   <div id="directoryList" class="directory-list hidden" aria-live="polite"></div>
   <button id="loadMoreUsers" class="sidebar-tab hidden" type="button" style="margin:0 12px 12px">عرض المزيد من المستخدمين</button>
-  <div class="sidebar-foot"><span>Ultra Chat Pro 2.0</span><span id="connectionState">جارٍ الاتصال</span></div>
+  <div class="sidebar-foot"><span>BizmindMakers Chat Pro 2.0</span><span id="connectionState">جارٍ الاتصال</span></div>
  </aside>
  <main id="chat" class="chat">
   <header class="chat-head">
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <div id="chatAvatar" class="avatar">U</div>
    <div class="chat-title"><strong id="chatTitle">اختر محادثة</strong><small id="chatSub">محادثاتك الخاصة والمجموعات</small></div>
-   <div class="head-actions"><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت Ultra Chat Pro" aria-label="تثبيت التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
+   <div class="head-actions"><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت BizmindMakers Chat Pro" aria-label="تثبيت التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i></button></div>
    <button id="debugBtn" class="iconbtn" type="button" title="تشخيص حالة المحادثة" aria-expanded="false"><i class="ph ph-bug"></i></button>
   </header>
   <div id="chatSearchPanel" class="chat-search-panel hidden"><div class="chat-search-top"><input id="chatSearchInput" type="search" placeholder="ابحث في رسائل هذه المحادثة…" autocomplete="off"><button id="chatSearchClose" type="button" title="إغلاق البحث"><i class="ph ph-x"></i></button></div><div id="chatSearchResults" class="chat-search-results"><p>اكتب كلمة للبحث داخل المحادثة الحالية.</p></div></div>
   <div id="pinnedBanner" class="pinned-banner hidden" aria-live="polite"><button id="pinnedJump" type="button" class="pinned-jump"><i class="ph ph-push-pin"></i><span><small>رسالة مثبتة</small><strong id="pinnedText">—</strong></span></button><button id="pinnedUnpin" type="button" class="pinned-unpin" title="إلغاء التثبيت"><i class="ph ph-x"></i></button></div>
   <aside id="diagnosticsPanel" hidden aria-live="polite"><h3>تشخيص مباشر — لا يعرض محتوى الرسائل أو بيانات الدخول</h3><button id="testComposerFocus" type="button" style="margin:0 0 9px;padding:7px 10px;border:0;border-radius:8px;background:#00a884;color:#fff;cursor:pointer">اختبار التركيز على حقل الكتابة</button><pre id="diagnosticsOutput">بانتظار بيانات التشغيل…</pre></aside>
-  <section id="messages" class="messages"><div class="welcome"><div class="welcome-icon"><i class="ph ph-chats-circle"></i></div><h2>أهلاً بك في Ultra Chat</h2><p>ابدأ محادثة خاصة أو أنشئ مجموعة جديدة. تواصلك أصبح في مساحة واحدة منظمة.</p></div></section>
+  <section id="messages" class="messages"><div class="welcome"><div class="welcome-icon"><i class="ph ph-chats-circle"></i></div><h2>أهلاً بك في BizmindMakers Chat</h2><p>ابدأ محادثة خاصة أو أنشئ مجموعة جديدة. تواصلك أصبح في مساحة واحدة منظمة.</p></div></section>
   <button id="newMessagesJump" class="new-messages-jump hidden" type="button" aria-live="polite" aria-label="الانتقال إلى أحدث الرسائل"><i class="ph ph-arrow-down"></i><span id="newMessagesJumpText">رسائل جديدة</span></button>
   <div id="typing" class="typing"></div>
   <div class="composer-wrap"><div id="composerContext" class="composer-context hidden"><div class="composer-context-copy"><small id="composerContextLabel">الرد على</small><strong id="composerContextText"></strong></div><button id="composerContextCancel" type="button" title="إلغاء"><i class="ph ph-x"></i></button></div><div class="composer">

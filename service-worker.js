@@ -1,9 +1,9 @@
-/* Ultra Chat Pro service worker
+/* BizmindMakers Chat Pro service worker
  * Cache only the application shell and version-pinned static CDN assets.
  * Never cache Supabase/API requests, authenticated data, or user messages.
  */
 const CACHE_PREFIX = "ultra-chat-pro";
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const CDN_CACHE = `${CACHE_PREFIX}-cdn-${CACHE_VERSION}`;
 const CDN_ORIGINS = new Set([
@@ -85,7 +85,7 @@ self.addEventListener("fetch", event => {
       } catch {
         return (await cache.match(new URL("./index.html", scopeUrl).href))
           || (await cache.match(new URL("./", scopeUrl).href))
-          || new Response("أنت غير متصل بالإنترنت. أعد الاتصال لفتح Ultra Chat Pro.", {
+          || new Response("أنت غير متصل بالإنترنت. أعد الاتصال لفتح BizmindMakers Chat Pro.", {
             status: 503,
             headers: { "Content-Type": "text/plain; charset=utf-8" }
           });
