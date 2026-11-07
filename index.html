@@ -51,7 +51,7 @@ html.auth-booting #auth,html.auth-booting #app{visibility:hidden!important}
 #chat.chat[data-chat-theme="light"]{background:#f3f5f8;color:#172033}#chat.chat[data-chat-theme="light"] .chat-head{background:#ffffffed;border-color:#dfe4ec}#chat.chat[data-chat-theme="light"] .messages{background:#f3f5f8}#chat.chat[data-chat-theme="light"] .day-divider{background:#fff;color:#657187;border-color:#dfe4ec}#chat.chat[data-chat-theme="light"] .bubble{background:#fff;color:#172033;border-color:#e1e6ee}#chat.chat[data-chat-theme="light"] .mine .bubble{background:linear-gradient(145deg,#176d68,#145b5b);color:#fff;border-color:#2a827a}#chat.chat[data-chat-theme="light"] .welcome h2{color:#172033}#chat.chat[data-chat-theme="light"] .welcome .welcome-icon{background:#e4f1f0}#chat.chat[data-chat-theme="light"] .composer-wrap{background:#f3f5f8;border-color:#dfe4ec}#chat.chat[data-chat-theme="light"] .composer{background:#fff;border-color:#dfe4ec}#chat.chat[data-chat-theme="light"] #messageInput{color:#172033}#chat.chat[data-chat-theme="light"] .typing{color:#657187}.direct-chat-control{width:36px;height:36px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);color:var(--muted);display:grid;place-items:center;cursor:pointer}.direct-chat-control.active{color:var(--accent);border-color:var(--accent)}.direct-chat-control:disabled{opacity:.45;cursor:not-allowed}.self-conversation-row{width:100%;text-align:right;margin-bottom:7px;border:1px solid var(--border);background:var(--surface-2);cursor:pointer}.self-chat-avatar{background:linear-gradient(135deg,#168b70,#20b58b);color:#fff}.self-chat-tag{display:inline-flex;align-items:center;margin-inline-start:5px;padding:2px 7px;border-radius:10px;background:rgba(32,181,139,.14);color:#20b58b;font-size:10px;font-weight:700;vertical-align:middle}
 .conv-shortcut-mark{color:#e3b341;font-size:12px;margin-inline-start:5px} .messages{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:24px clamp(14px,5vw,70px);display:flex;flex-direction:column;gap:9px;scroll-behavior:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-gutter:stable;overflow-anchor:auto}.messages::-webkit-scrollbar{width:7px}.messages::-webkit-scrollbar-thumb{background:var(--line);border-radius:20px}.messages::-webkit-scrollbar-thumb:hover{background:var(--muted)}.messages-history-loader{align-self:center;flex:none;padding:7px 12px;margin:0 0 8px;border:1px solid var(--line);border-radius:20px;background:var(--panel);color:var(--muted);font-size:11px}.welcome{margin:auto;text-align:center;max-width:390px;color:var(--muted)}.welcome .welcome-icon{width:78px;height:78px;margin:0 auto 18px;border-radius:26px;background:#173346;color:var(--accent);display:grid;place-items:center;font-size:38px}.welcome h2{color:var(--text);font-size:23px;margin:0 0 7px}.welcome p{font-size:13px;line-height:1.8;margin:0}
 .day-divider{align-self:center;padding:6px 13px;border:1px solid var(--line);background:#142238;color:var(--muted);border-radius:30px;font-size:10px;margin:15px 0}
-.message{max-width:min(75%,600px);display:flex;flex-direction:column;gap:4px;align-self:flex-start}.message.mine{align-self:flex-end}.sender{font-size:10px;color:var(--accent);padding:0 7px}.bubble{position:relative;padding:10px 13px 7px;border:1px solid var(--line);border-radius:17px 5px 17px 17px;background:var(--bubble);font-size:14px;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap}.mine .bubble{background:linear-gradient(145deg,#176d68,#145b5b);border-color:#2a827a;border-radius:5px 17px 17px 17px}.bubble.deleted{color:var(--muted);font-style:italic}.bubble img{display:block;max-width:100%;max-height:300px;border-radius:11px;margin-bottom:7px;cursor:zoom-in}.meta{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:9px;color:#b6c8d0a8;margin-top:2px}.msg-actions{display:flex;gap:5px;opacity:0;position:absolute;top:-15px;left:3px}.message:hover .msg-actions{opacity:1}.msg-actions button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;padding:3px 6px;font-size:10px}
+.message{position:relative;max-width:min(75%,600px);display:flex;flex-direction:column;gap:4px;align-self:flex-start}.message.mine{align-self:flex-end}.sender{font-size:10px;color:var(--accent);padding:0 7px}.bubble{position:relative;padding:10px 13px 7px;border:1px solid var(--line);border-radius:17px 5px 17px 17px;background:var(--bubble);font-size:14px;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap}.mine .bubble{background:linear-gradient(145deg,#176d68,#145b5b);border-color:#2a827a;border-radius:5px 17px 17px 17px}.bubble.deleted{color:var(--muted);font-style:italic}.bubble img{display:block;max-width:100%;max-height:300px;border-radius:11px;margin-bottom:7px;cursor:zoom-in}.meta{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:9px;color:#b6c8d0a8;margin-top:2px}.msg-actions{display:flex;gap:5px;opacity:0;position:absolute;top:-15px;left:3px}.message:hover .msg-actions{opacity:1}.msg-actions button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:7px;padding:3px 6px;font-size:10px}
 .typing{height:23px;padding:0 26px;color:var(--muted);font-size:11px;flex:none}
 .composer-wrap{padding:10px clamp(12px,4vw,58px) max(16px,env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--bg) 70%,transparent)}.composer{display:flex;align-items:flex-end;gap:9px;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:19px;box-shadow:var(--shadow)}.composer textarea{flex:1;resize:none;max-height:130px;min-height:40px;padding:9px 8px;background:transparent;border:0;outline:none;color:var(--text);line-height:1.5}.send{width:42px;height:42px;border:0;border-radius:14px;background:var(--accent);color:#062a28;font-size:19px;display:grid;place-items:center}.attach{width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px}.voice-record-btn{width:40px;height:40px;flex:none;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:20px;display:grid;place-items:center;cursor:pointer}.voice-record-btn.recording{background:#fee2e2;color:#b91c1c;animation:voicePulse 1.25s ease-in-out infinite}.voice-record-btn:disabled{opacity:.4;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.voice-record-btn.recording{animation:none}}.voice-cancel-btn{color:#dc5555}@keyframes voicePulse{50%{box-shadow:0 0 0 6px #ef444422}}
 /* WhatsApp-inspired dark voice recorder */
@@ -587,11 +587,31 @@ function applyAppTheme(theme,save=false){
  const button=$('appThemeToggle');
  if(button){button.innerHTML=resolved==='dark'?'<i class="ph ph-sun"></i>':'<i class="ph ph-moon"></i>';button.title=resolved==='dark'?'التبديل إلى الوضع الساطع':'التبديل إلى الوضع المظلم';button.setAttribute('aria-label',button.title);button.setAttribute('aria-pressed',String(resolved==='dark'))}
 }
+async function loadUserSettings(){
+ const userId=state.user?.id;if(!userId)return false;
+ try{
+  const {data,error}=await supabaseClient.from('user_settings').select('settings').eq('user_id',userId).maybeSingle();
+  if(error)throw error;
+  if(state.user?.id!==userId)return false;
+  const settings=data?.settings&&typeof data.settings==='object'&&!Array.isArray(data.settings)?data.settings:{};
+  state.userSettings=settings;
+  if(['dark','light','system'].includes(settings.theme)){appThemePreference=settings.theme;applyAppTheme(settings.theme,true)}
+  return true;
+ }catch(error){console.warn('Account settings could not be loaded:',error?.message||error);return false}
+}
+async function saveUserSetting(key,value){
+ const userId=state.user?.id;if(!userId)return false;
+ const {data,error}=await supabaseClient.rpc('patch_my_user_settings',{p_patch:{[key]:value}});
+ if(error)throw error;
+ if(state.user?.id!==userId)return false;
+ state.userSettings=(data&&typeof data==='object'&&!Array.isArray(data))?data:{...(state.userSettings||{}),[key]:value};
+ return true;
+}
 function toggleAppTheme(){
  const current=document.documentElement.dataset.theme||'light';
  const next=current==='dark'?'light':'dark';
  applyAppTheme(next,true);
- try{localStorage.setItem(APP_THEME_KEY,next)}catch(_){}
+ void saveUserSetting('theme',next).catch(error=>{console.warn('Theme preference sync failed:',error);toast('تم تغيير المظهر على هذا الجهاز، وتعذرت مزامنته مع حسابك')});
 }
 $('appThemeToggle')?.addEventListener('click',toggleAppTheme);
 if(appThemeMedia){const onSystemThemeChange=()=>{if(appThemePreference==='system')applyAppTheme('system',false)};if(appThemeMedia.addEventListener)appThemeMedia.addEventListener('change',onSystemThemeChange);else if(appThemeMedia.addListener)appThemeMedia.addListener(onSystemThemeChange)}
@@ -642,7 +662,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
 const perfSamples=(()=>{try{const value=JSON.parse(localStorage.getItem(PERF_STORAGE_KEY)||'[]');return Array.isArray(value)?value.slice(-80):[]}catch(_e){return []}})();
@@ -885,7 +905,7 @@ async function enterAppInternal(user,lifecycleVersion){
  const profileStarted=performance.now();try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.');recordPerf('profile_load',performance.now()-profileStarted,{success:true})}catch(e){recordPerf('profile_load',performance.now()-profileStarted,{success:false});console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
  if(lifecycleVersion!==authLifecycleVersion)return false;
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
- $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');
+ $('myName').textContent=state.profile.display_name;$('myHandle').textContent='@'+state.profile.username;renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit');void loadUserSettings();
  const conversationsLoaded=await loadConversations();
  if(lifecycleVersion!==authLifecycleVersion)return false;
  let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
@@ -1329,14 +1349,22 @@ async function loadMessageReactions(conversationId,messages){
   state.reactions=next;return true;
  }catch(error){console.warn('Message reactions could not be loaded:',error?.message||error);return false}
 }
+const MESSAGE_REACTION_OPTIONS=[
+ {type:'like',emoji:'👍',label:'إعجاب'},
+ {type:'heart',emoji:'❤️',label:'أحببت'},
+ {type:'wow',emoji:'😮',label:'مندهش'},
+ {type:'pray',emoji:'🙏',label:'تقدير'},
+ {type:'fire',emoji:'🔥',label:'رائع'},
+ {type:'celebrate',emoji:'🎉',label:'احتفال'}
+];
 function renderReactionBar(row,message){
  const previous=row.querySelector('.reaction-bar'),wasOpen=row.classList.contains('reactions-open');if(previous)previous.remove();
  if(message.deleted_at)return;
  const reactions=state.reactions.get(message.id)||[],bar=document.createElement('div');bar.className='reaction-bar';bar.setAttribute('aria-label','التفاعلات');
- [{type:'like',emoji:'👍',label:'إعجاب'},{type:'heart',emoji:'❤️',label:'قلب أحمر'}].forEach(option=>{
+ MESSAGE_REACTION_OPTIONS.forEach(option=>{
   const matching=reactions.filter(r=>r.reaction_type===option.type),mine=matching.some(r=>r.user_id===state.user?.id);
   const button=document.createElement('button');button.type='button';button.className='reaction-btn'+(mine?' active':'');button.dataset.reaction=option.type;button.title=option.label;button.setAttribute('aria-label',option.label+' · '+matching.length);button.setAttribute('aria-pressed',String(mine));button.append(document.createTextNode(option.emoji));
-  if(matching.length){const count=document.createElement('span');count.className='reaction-count';count.textContent=matching.length.toLocaleString('en-US');button.append(count)}
+  if(matching.length){const count=document.createElement('span');count.className='reaction-count';count.textContent=matching.length.toLocaleString('en-US');count.title='عرض الأعضاء الذين تفاعلوا';count.addEventListener('click',event=>{event.stopPropagation();showReactionMembers(message,option,matching)});button.append(count)}
   button.onclick=()=>toggleMessageReaction(message,option.type,button);bar.append(button);
  });
  row.append(bar);row.classList.toggle('reactions-open',wasOpen);
@@ -1349,63 +1377,129 @@ function openMessageReactions(row){
 document.addEventListener('pointerdown',event=>{if(!event.target.closest('.message.reactions-open'))document.querySelectorAll('.message.reactions-open').forEach(row=>row.classList.remove('reactions-open'))},true);
 function bindMessageGestures(row,message){
  const bubble=row.querySelector('.bubble');if(!bubble||message.deleted_at)return;
- let start=null,lastTap=0;
+ let start=null,longPressTimer=null;
+ const cancelLongPress=()=>{if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null}};
  bubble.addEventListener('pointerdown',event=>{
-  if(event.target.closest('button,a,.reply-quote'))return;
-  start={x:event.clientX,y:event.clientY,id:event.pointerId,target:event.target};
+  if(event.target.closest('button,a,.reply-quote,.message-menu-wrap'))return;
+  start={x:event.clientX,y:event.clientY,id:event.pointerId};
+  if(event.pointerType==='touch'){cancelLongPress();longPressTimer=setTimeout(()=>{if(start)openMessageReactions(row)},520)}
  });
  bubble.addEventListener('pointermove',event=>{
   if(!start||start.id!==event.pointerId)return;
   const dx=event.clientX-start.x,dy=event.clientY-start.y;
+  if(Math.hypot(dx,dy)>12)cancelLongPress();
   if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)<110)bubble.style.transform='translateX('+Math.max(-78,Math.min(78,dx*.42))+'px)';
  });
  bubble.addEventListener('pointerup',event=>{
   if(!start)return;
-  const dx=event.clientX-start.x,dy=event.clientY-start.y,tapTarget=start.target;start=null;bubble.style.transform='';
+  const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;cancelLongPress();bubble.style.transform='';
   const rtl=getComputedStyle(document.documentElement).direction==='rtl';
-  if(Math.abs(dx)>=58&&Math.abs(dx)>Math.abs(dy)*1.25&&(rtl?dx>0:dx<0)){beginReply(message);return}
-  if(event.pointerType==='touch'&&Math.abs(dx)<18&&Math.abs(dy)<18&&!tapTarget?.closest('img')){
-   const now=Date.now();if(now-lastTap<330){lastTap=0;row.dataset.touchDoubleAt=String(now);openMessageReactions(row)}else lastTap=now;
-  }
+  if(Math.abs(dx)>=58&&Math.abs(dx)>Math.abs(dy)*1.25&&(rtl?dx>0:dx<0))beginReply(message);
  });
- bubble.addEventListener('pointercancel',()=>{start=null;bubble.style.transform=''});
- bubble.addEventListener('dblclick',event=>{if(event.target.closest('button,a,.reply-quote,img'))return;if(Date.now()-Number(row.dataset.touchDoubleAt||0)<500)return;event.preventDefault();openMessageReactions(row)});
+ bubble.addEventListener('pointercancel',()=>{start=null;cancelLongPress();bubble.style.transform=''});
+ bubble.addEventListener('click',event=>{
+  if(event.pointerType==='touch'||!event.detail||event.target.closest('button,a,.reply-quote,img,.message-menu-wrap'))return;
+  openMessageReactions(row);
+ });
 }
+const pendingReactionKeys=new Set();
 async function toggleMessageReaction(message,reactionType,button){
- const conversationId=message.conversation_id||state.active?.id,userId=state.user?.id;if(!conversationId||!userId||state.active?.id!==conversationId)return;
- const current=[...(state.reactions.get(message.id)||[])],mine=current.find(r=>r.user_id===userId);button.disabled=true;
+ const conversationId=message.conversation_id||state.active?.id,userId=state.user?.id;
+ if(!conversationId||!userId||state.active?.id!==conversationId||message.deleted_at)return;
+ const pendingKey=message.id+':'+userId;if(pendingReactionKeys.has(pendingKey))return;
+ pendingReactionKeys.add(pendingKey);
+ const current=[...(state.reactions.get(message.id)||[])],mine=current.find(r=>r.user_id===userId);
+ const next=current.filter(r=>r.user_id!==userId),removing=mine?.reaction_type===reactionType;
+ if(!removing)next.push({message_id:message.id,conversation_id:conversationId,user_id:userId,reaction_type:reactionType});
+ state.reactions.set(message.id,next);
+ const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);
+ if(row)renderReactionBar(row,message);
  try{
-  let error=null;
-  if(mine?.reaction_type===reactionType){
-   const result=await supabaseClient.from('message_reactions').delete().eq('conversation_id',conversationId).eq('message_id',message.id).eq('user_id',userId);error=result.error;
-  }else if(mine){
-   const result=await supabaseClient.from('message_reactions').update({reaction_type:reactionType}).eq('conversation_id',conversationId).eq('message_id',message.id).eq('user_id',userId);error=result.error;
-  }else{
-   const result=await supabaseClient.from('message_reactions').insert({conversation_id:conversationId,message_id:message.id,user_id:userId,reaction_type:reactionType});error=result.error;
-  }
-  if(error)throw error;
-  const next=current.filter(r=>r.user_id!==userId);if(mine?.reaction_type!==reactionType)next.push({message_id:message.id,conversation_id:conversationId,user_id:userId,reaction_type:reactionType});
-  state.reactions.set(message.id,next);const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);if(row)renderReactionBar(row,message);
- }catch(error){console.error('Message reaction failed:',error);toast('تعذر حفظ التفاعل. تحقق من اتصالك ثم حاول مجدداً')}
- finally{button.disabled=false}
+  let result;
+  if(removing)result=await supabaseClient.from('message_reactions').delete().eq('conversation_id',conversationId).eq('message_id',message.id).eq('user_id',userId);
+  else result=await supabaseClient.from('message_reactions').upsert({conversation_id:conversationId,message_id:message.id,user_id:userId,reaction_type:reactionType},{onConflict:'message_id,user_id'});
+  if(result.error)throw result.error;
+ }catch(error){
+  state.reactions.set(message.id,current);
+  const activeRow=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);
+  if(activeRow)renderReactionBar(activeRow,message);
+  console.error('Message reaction failed:',error);toast('تعذر حفظ التفاعل. أُعيدت الحالة السابقة؛ حاول مجدداً');
+ }finally{pendingReactionKeys.delete(pendingKey);if(button?.isConnected)button.disabled=false}
 }
 function handleReactionRealtime(payload,conversationId){
  if(state.active?.id!==conversationId)return;
  const incoming=payload.new,old=payload.old,event=payload.eventType;
- if((event==='DELETE'?old?.conversation_id:incoming?.conversation_id)!==conversationId)return;
  const messageId=(event==='DELETE'?old?.message_id:incoming?.message_id);if(!messageId)return;
+ const message=(state.messages||[]).find(m=>m.id===messageId);
+ const eventConversation=event==='DELETE'?(old?.conversation_id||message?.conversation_id):incoming?.conversation_id;
+ if(eventConversation!==conversationId)return;
  const current=[...(state.reactions.get(messageId)||[])],actorId=(event==='DELETE'?old?.user_id:incoming?.user_id);
  const next=current.filter(r=>r.user_id!==actorId);
  if(event!=='DELETE'&&incoming)next.push(incoming);
  state.reactions.set(messageId,next);
  const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId);
- const message=(state.messages||[]).find(m=>m.id===messageId);if(row&&message)renderReactionBar(row,message);
+ if(row&&message)renderReactionBar(row,message);
 }
 
+function showMessageDetailModal(title,contentNode){
+ document.querySelector('.message-detail-overlay')?.remove();
+ const overlay=document.createElement('div');overlay.className='message-detail-overlay';
+ const panel=document.createElement('section');panel.className='message-detail-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label',title);
+ const header=document.createElement('header');header.className='message-detail-header';
+ const heading=document.createElement('h3');heading.textContent=title;
+ const close=document.createElement('button');close.type='button';close.className='message-detail-close';close.setAttribute('aria-label','إغلاق');close.innerHTML='<i class="ph ph-x"></i>';
+ const body=document.createElement('div');body.className='message-detail-body';if(contentNode)body.append(contentNode);
+ const dismiss=()=>{overlay.remove();document.removeEventListener('keydown',onKey)};
+ const onKey=event=>{if(event.key==='Escape')dismiss()};
+ close.addEventListener('click',dismiss);overlay.addEventListener('click',event=>{if(event.target===overlay)dismiss()});
+ header.append(heading,close);panel.append(header,body);overlay.append(panel);document.body.append(overlay);
+ document.addEventListener('keydown',onKey);close.focus();
+}
+async function showReactionMembers(message,option,matching){
+ const ids=[...new Set((matching||[]).map(item=>item.user_id).filter(Boolean))];if(!ids.length)return;
+ try{
+  const {data,error}=await supabaseClient.from('profiles').select('id,display_name,username').in('id',ids);if(error)throw error;
+  const list=document.createElement('div');list.className='message-detail-list';
+  (data||[]).forEach(profile=>{const item=document.createElement('div');item.className='message-detail-person';const name=document.createElement('strong');name.textContent=profile.display_name||profile.username||'عضو';const handle=document.createElement('span');handle.textContent=profile.username?'@'+profile.username:'';item.append(name,handle);list.append(item)});
+  showMessageDetailModal(option.emoji+' '+option.label+' · '+ids.length,list);
+ }catch(error){console.error('Reaction members load failed:',error);toast('تعذر تحميل قائمة المتفاعلين')}
+}
+async function openMessageEditHistory(message){
+ if(!message?.edited_at||!(message.sender_id===state.user?.id||state.isTeamAdmin)){toast('لا تملك صلاحية الاطلاع على سجل التعديلات');return}
+ try{
+  const {data,error}=await supabaseClient.from('message_edit_history').select('revision_number,editor_id,old_content,new_content,edited_at').eq('message_id',message.id).order('revision_number',{ascending:true});if(error)throw error;
+  const list=document.createElement('div');list.className='message-history-list';
+  if(!data?.length){const empty=document.createElement('p');empty.className='message-detail-empty';empty.textContent='لا يتوفر سجل سابق لهذه الرسالة. قد يكون تعديلها قد تم قبل تفعيل سجل المراجعة.';list.append(empty)}
+  const editorIds=[...new Set((data||[]).map(row=>row.editor_id))];
+  const profilesResult=editorIds.length?await supabaseClient.from('profiles').select('id,display_name,username').in('id',editorIds):{data:[],error:null};if(profilesResult.error)throw profilesResult.error;
+  const names=new Map((profilesResult.data||[]).map(profile=>[profile.id,profile.display_name||profile.username||'عضو']));
+  (data||[]).forEach(entry=>{
+   const card=document.createElement('article');card.className='message-history-entry';
+   const top=document.createElement('div');top.className='message-history-top';
+   const revision=document.createElement('strong');revision.textContent='التعديل رقم '+entry.revision_number;
+   const when=document.createElement('time');when.textContent=new Date(entry.edited_at).toLocaleString('ar-SA');
+   const editor=document.createElement('span');editor.textContent=names.get(entry.editor_id)||'مسؤول/صاحب الرسالة';
+   top.append(revision,when,editor);
+   const oldLabel=document.createElement('small');oldLabel.textContent='النص السابق';const oldText=document.createElement('p');oldText.textContent=entry.old_content;
+   const newLabel=document.createElement('small');newLabel.textContent='النص بعد التعديل';const newText=document.createElement('p');newText.textContent=entry.new_content;
+   card.append(top,oldLabel,oldText,newLabel,newText);list.append(card);
+  });
+  showMessageDetailModal('سجل تعديلات الرسالة',list);
+ }catch(error){console.error('Message edit history load failed:',error);toast('تعذر تحميل سجل التعديلات أو لا تملك صلاحية الاطلاع عليه')}
+}
 function messagePreview(m){if(!m)return 'رسالة غير متاحة';if(m.deleted_at)return 'تم حذف هذه الرسالة';return String(m.content||(m.attachment_path?'مرفق':'رسالة')).slice(0,180)}
 function renderComposerContext(){const target=state.editTarget||state.replyTarget,box=$('composerContext');if(!box)return;if(!target){box.classList.add('hidden');$('composerContextText').textContent='';$('attachBtn').disabled=false;$('sendBtn').title='إرسال';$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';return}box.classList.remove('hidden');$('composerContextLabel').textContent=state.editTarget?'تعديل الرسالة':'الرد على الرسالة';$('composerContextText').textContent=messagePreview(target);$('sendBtn').title=state.editTarget?'حفظ التعديل':'إرسال الرد';$('sendBtn').innerHTML=state.editTarget?'<i class="ph ph-check"></i>':'<i class="ph ph-paper-plane-tilt"></i>'}
 function beginReply(m){if(!m||m.deleted_at)return;if(state.editTarget)$('messageInput').value='';state.editTarget=null;$('attachBtn').disabled=false;state.replyTarget=m;renderComposerContext();resizeComposer();$('messageInput').focus()}
-function beginEditMessage(m){if(!m||m.sender_id!==state.user?.id||m.deleted_at)return;state.editTarget=m;state.replyTarget=null;$('attachBtn').disabled=true;$('messageInput').value=m.content||'';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');renderComposerContext();resizeComposer();$('messageInput').focus();$('messageInput').setSelectionRange($('messageInput').value.length,$('messageInput').value.length)}
+function canEditMessage(m){
+ if(!m||m.deleted_at||m.sender_id!==state.user?.id||!state.active||!['direct','group'].includes(state.active.type))return false;
+ if(m.attachment_path||m.attachment_type)return false;
+ const createdAt=Date.parse(m.created_at);return Number.isFinite(createdAt)&&Date.now()<=createdAt+15*60*1000;
+}
+function beginEditMessage(m){
+ if(!m||m.sender_id!==state.user?.id||m.deleted_at){toast('يمكنك تعديل رسائلك أنت فقط');return}
+ if(!canEditMessage(m)){toast('انتهت مهلة تعديل الرسالة أو أن نوعها غير قابل للتعديل');return}
+ state.editTarget=m;state.replyTarget=null;$('attachBtn').disabled=true;$('messageInput').value=m.content||'';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');renderComposerContext();resizeComposer();$('messageInput').focus();$('messageInput').setSelectionRange($('messageInput').value.length,$('messageInput').value.length)
+}
 function cancelComposerContext(){state.replyTarget=null;state.editTarget=null;renderComposerContext()}
 function renderPinnedBanner(){const box=$('pinnedBanner');if(!box)return;const cutoff=state.activeChatPreference?.cleared_before,pins=[...state.pinnedMessages.values()].filter(pin=>{const message=state.messages.find(m=>m.id===pin.message_id)||state.replyMessages.get(pin.message_id);return !cutoff||(message?.created_at&&new Date(message.created_at)>new Date(cutoff))}).sort((a,b)=>new Date(b.pinned_at)-new Date(a.pinned_at)),latest=pins[0];if(!latest){box.classList.add('hidden');return}const message=state.messages.find(m=>m.id===latest.message_id)||state.replyMessages.get(latest.message_id);box.classList.remove('hidden');$('pinnedText').textContent=messagePreview(message);const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;$('pinnedUnpin').classList.toggle('hidden',latest.pinned_by!==state.user?.id&&!['owner','admin'].includes(role)&&!state.isTeamAdmin);$('pinnedJump').onclick=()=>jumpToMessage(latest.message_id);$('pinnedUnpin').onclick=()=>toggleMessagePin(message||{id:latest.message_id,conversation_id:state.active?.id})}
 async function searchActiveConversation(term){
@@ -1479,10 +1573,11 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
     else if(m.attachment_type?.startsWith('audio/')){const audio=document.createElement('audio');audio.className='message-audio';audio.controls=true;audio.preload='metadata';audio.src=signed.signedUrl;audio.setAttribute('aria-label','رسالة صوتية');let signedAt=Date.now(),refreshing=false,retried=false;const refreshAudioUrl=async(resume=false)=>{if(refreshing)return;refreshing=true;try{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;audio.src=renewed.signedUrl;signedAt=Date.now();audio.load();if(resume)await audio.play().catch(()=>{})}catch(error){console.warn('Audio URL refresh failed:',error?.message||error);toast('تعذر فتح الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}finally{refreshing=false}};audio.addEventListener('play',()=>{if(Date.now()-signedAt>50*60*1000){audio.pause();refreshAudioUrl(true)}});audio.addEventListener('error',()=>{if(!retried){retried=true;refreshAudioUrl(false)}});audio.setAttribute('playsinline','');bubble.append(audio)}
     else{const a=document.createElement('a');a.href=signed.signedUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}
    }
-   if(m.content){const t=document.createElement('div');t.textContent=m.content;bubble.append(t)}
+   if(m.content){const t=document.createElement('div');t.className='message-content';t.textContent=m.content;bubble.append(t)}
   }
-  const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · معدلة':'');bubble.append(meta);renderMessageStatus(m,bubble);
-  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-dots-three-vertical"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false')};const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;option.onclick=event=>{event.stopPropagation();closeMenu();if(!disabled)handler()};menu.append(option)};addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m));addOption('حذف','ph-trash',()=>deleteMessage(m))}trigger.onclick=event=>{event.stopPropagation();const opening=menu.classList.contains('hidden');document.querySelectorAll('.message-options-menu').forEach(other=>other.classList.add('hidden'));document.querySelectorAll('.message-menu-trigger').forEach(other=>other.setAttribute('aria-expanded','false'));menu.classList.toggle('hidden',!opening);trigger.setAttribute('aria-expanded',String(opening))};menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
+  const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · تم تعديلها':'');bubble.append(meta);renderMessageStatus(m,bubble);
+  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-dots-three-vertical"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false')};const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
+  if(m.edited_at&&(m.sender_id===state.user?.id||state.isTeamAdmin))addOption('سجل التعديلات','ph-clock-counter-clockwise',()=>openMessageEditHistory(m));trigger.onclick=event=>{event.stopPropagation();const opening=menu.classList.contains('hidden');const editOption=menu.querySelector('[data-edit-option]');if(editOption){editOption.disabled=!canEditMessage(m);editOption.querySelector('span').textContent=editOption.disabled?'انتهت مهلة التعديل':'تعديل'}document.querySelectorAll('.message-options-menu').forEach(other=>other.classList.add('hidden'));document.querySelectorAll('.message-menu-trigger').forEach(other=>other.setAttribute('aria-expanded','false'));menu.classList.toggle('hidden',!opening);trigger.setAttribute('aria-expanded',String(opening))};menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
   row.append(bubble);renderReactionBar(row,m);renderMessagePinMark(row,m);bindMessageGestures(row,m);
   if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)){state.messageIds.delete(m.id);return false;}
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
@@ -1615,13 +1710,34 @@ function subscribeProfileUpdates(conversation){
  });
  state.profileChannel=channel.subscribe(status=>{if(status!=='SUBSCRIBED')console.warn('Profile realtime status:',status)});
 }
+function handleMessageUpdateRealtime(payload,conversationId){
+ const incoming=payload?.new;if(!incoming?.id||state.active?.id!==conversationId)return;
+ const index=state.messages.findIndex(message=>message.id===incoming.id);
+ if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);
+ if(incoming.deleted_at){loadMessages().catch(error=>console.error('Deleted message refresh failed:',error));return}
+ const row=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===incoming.id);
+ if(row){
+  const bubble=row.querySelector('.bubble');let content=bubble?.querySelector('.message-content');
+  if(bubble&&incoming.content){
+   if(!content){content=document.createElement('div');content.className='message-content';const meta=bubble.querySelector('.meta');bubble.insertBefore(content,meta||null)}
+   content.textContent=incoming.content;
+  }
+  const meta=row.querySelector('.meta');if(meta)meta.textContent=time(incoming.created_at)+(incoming.edited_at?' · تم تعديلها':'');
+ }
+ state.messages.filter(message=>message.reply_to===incoming.id).forEach(reply=>{
+  const replyRow=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===reply.id);
+  const preview=replyRow?.querySelector('.reply-quote span');if(preview)preview.textContent=messagePreview(incoming);
+ });
+ const conversation=state.conversations.find(item=>item.id===conversationId);
+ if(conversation?.last_message?.id===incoming.id){conversation.last_message=incoming;conversation.last_message_at=incoming.created_at;renderConversations()}
+}
 function subscribeConversation(){
  if(state.channel)supabaseClient.removeChannel(state.channel);
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  const id=state.active.id;diagLog('realtime-subscribe',{conversationId:id});
  state.channel=supabaseClient.channel('chat:'+id)
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom())})
-  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id)loadMessages().catch(error=>console.error('Realtime refresh failed:',error))})
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>handleMessageUpdateRealtime(p,id))
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions'},p=>handleReactionRealtime(p,id))
@@ -1774,7 +1890,7 @@ async function sendMessage(){
   const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
   if(sessionError)throw sessionError;
   if(!session?.user?.id||session.user.id!==userId)throw new Error('انتهت جلسة الدخول. أعد تسجيل الدخول ثم حاول إرسال الرسالة مجدداً.');
-  if(state.editTarget){if(file)throw new Error('أزل المرفق قبل حفظ تعديل الرسالة');const target=state.editTarget;if(target.conversation_id!==conversationId||target.sender_id!==userId)throw new Error('لا يمكنك تعديل هذه الرسالة');const {data,error}=await supabaseClient.from('chat_messages').update({content,edited_at:new Date().toISOString()}).eq('id',target.id).eq('sender_id',userId).select('*').single();if(error)throw error;savedMessage=data}else{let attachment={};if(file)attachment=await uploadAttachment(file,conversationId,userId);const replyTo=state.replyTarget?.id||null;const {data,error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(replyTo?{reply_to:replyTo}:{}),...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();if(error)throw error;savedMessage=data}
+  if(state.editTarget){if(file)throw new Error('أزل المرفق قبل حفظ تعديل الرسالة');const target=state.editTarget;if(target.conversation_id!==conversationId||target.sender_id!==userId||!canEditMessage(target))throw new Error('انتهت مهلة التعديل أو لا تملك صلاحية تعديل الرسالة');const {data,error}=await supabaseClient.rpc('edit_message_secure',{p_message_id:target.id,p_new_content:content,p_expected_revision:Number(target.edit_revision||0)});if(error)throw error;savedMessage=Array.isArray(data)?data[0]:data;if(!savedMessage?.id)throw new Error('لم يتم تأكيد حفظ التعديل')}else{let attachment={};if(file)attachment=await uploadAttachment(file,conversationId,userId);const replyTo=state.replyTarget?.id||null;const {data,error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(replyTo?{reply_to:replyTo}:{}),...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();if(error)throw error;savedMessage=data}
  }catch(error){
   console.error('Message persistence failed:',error);
   toast(error.message||'لم يتم تأكيد حفظ الرسالة. احتفظنا بالنص لإعادة المحاولة.');
@@ -2175,11 +2291,26 @@ $('profileSaveBtn').onclick=async()=>{
 .profile-avatar-edit:after{content:"كاميرا";position:absolute;inset:auto 0 0;background:#102a28c9;color:#fff;text-align:center;font-size:8px;padding:2px 0;opacity:0;transition:opacity .16s}
 .profile-avatar-edit:hover:after,.profile-avatar-edit:focus-visible:after{opacity:1}
 .message .bubble{touch-action:pan-y;transition:transform .16s ease}
-.reaction-bar{display:none;position:absolute;z-index:6;top:100%;left:4px;min-height:34px;padding:4px 6px;border:1px solid var(--line);border-radius:20px;background:var(--panel);box-shadow:0 8px 24px #0b141a28}
+.reaction-bar{display:none;position:absolute;z-index:6;top:100%;left:4px;min-height:34px;width:max-content;max-width:calc(100vw - 32px);padding:4px 6px;border:1px solid var(--line);border-radius:20px;background:var(--panel);box-shadow:0 8px 24px #0b141a28}
 .message.reactions-open .reaction-bar{display:flex}
-.message.reactions-open{z-index:7}
+.message.reactions-open{z-index:7;margin-bottom:42px}
+.message.mine .reaction-bar{left:auto;right:4px}
 .message.reactions-open .reaction-btn{height:30px;min-width:36px}
-@media(max-width:760px){.reaction-bar{top:auto;bottom:-34px;left:0}.message.reactions-open{margin-bottom:30px}.profile-avatar-edit:after{opacity:1}}
+@media(max-width:760px){.reaction-bar{top:100%;bottom:auto;left:0}.message.mine .reaction-bar{left:auto;right:0}.profile-avatar-edit:after{opacity:1}}
+.message-detail-overlay{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:16px;background:#07111dcc;backdrop-filter:blur(5px)}
+.message-detail-panel{width:min(520px,100%);max-height:min(78vh,720px);display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:var(--panel);box-shadow:0 20px 70px #0007}
+.message-detail-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.message-detail-header h3{margin:0;color:var(--text);font-size:16px}
+.message-detail-close{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text)}
+.message-detail-body{padding:14px 16px;overflow:auto}
+.message-detail-list,.message-history-list{display:grid;gap:8px}
+.message-detail-person{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+.message-detail-person span,.message-history-top time,.message-history-top span{color:var(--muted);font-size:11px}
+.message-history-entry{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.message-history-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.message-history-entry small{display:block;color:var(--muted);font-size:11px;margin-top:8px}
+.message-history-entry p{white-space:pre-wrap;overflow-wrap:anywhere;margin:5px 0 0;padding:8px 10px;border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;line-height:1.7}
+.message-detail-empty{color:var(--muted);font-size:13px;line-height:1.8}
 
 /* Profile center and personal archive */
 .chat-profile-title{border:0;background:transparent;color:inherit;text-align:right;padding:0;cursor:pointer}.chat-profile-title strong{font:inherit;font-size:15px}.profile-open-trigger{border:0;padding:0;cursor:pointer;flex:none}
