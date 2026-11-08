@@ -183,7 +183,6 @@ $('myAvatar').addEventListener('keydown',event=>{if(event.key==='Enter'||event.k
 
 
 
-const SELF_CHAT_MARKER='bizmindmakers:self-chat:v1';
 
 
 
