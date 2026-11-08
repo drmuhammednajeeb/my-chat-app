@@ -9,14 +9,17 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const read = path => readFile(path, "utf8");
-const [conversations, messages, channels, groups, media, realtime, core] = await Promise.all([
+const [core, auth, notifications, conversations, messages, realtime, groups, channels, admin, media] = await Promise.all([
+  read("modules/core.js"),
+  read("modules/auth.js"),
+  read("modules/notifications.js"),
   read("modules/conversations.js"),
   read("modules/messages.js"),
-  read("modules/channels.js"),
-  read("modules/groups.js"),
-  read("modules/media.js"),
   read("modules/realtime.js"),
-  read("modules/core.js")
+  read("modules/groups.js"),
+  read("modules/channels.js"),
+  read("modules/admin.js"),
+  read("modules/media.js")
 ]);
 
 const hasDispatch = (source, event) =>
@@ -73,7 +76,7 @@ assert.ok(hasListener(conversations, "bizmind:render-conversations"), "conversat
 assert.ok(hasListener(conversations, "bizmind:close-chat-header-menu"), "conversations.js must own close-chat-header-menu");
 
 // Core must remain a dependency-free shared foundation.
-const moduleSources = { conversations, messages, channels, groups, media, realtime };
+const moduleSources = { auth, notifications, conversations, messages, realtime, groups, channels, admin, media };
 const declarations = new Map();
 for (const [file, source] of Object.entries(moduleSources)) {
   declarations.set(file, [...source.matchAll(/(?:^|\\n)\\s*(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\s*\\(/g)].map(m => m[1]));
