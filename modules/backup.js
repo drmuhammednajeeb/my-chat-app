@@ -20,8 +20,11 @@ const PERSONAL_TABLES=[
  'user_notifications'
 ];
 const RESTORE_TABLES=[
+ 'user_settings',
  'user_chat_preferences',
  'user_conversation_settings',
+ 'user_conversation_labels',
+ 'user_conversation_label_items',
  'user_classification_rules',
  'user_conversation_classifications',
  'private_conversation_notes',
