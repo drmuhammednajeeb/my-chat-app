@@ -228,14 +228,14 @@ async function sendMessage(){
  }
  // Clear only the exact draft that was sent, and only while its conversation remains active.
  if(state.active?.id===conversationId&&$('messageInput').value===draftValue&&state.attachment===file){
-  $('messageInput').value='';state.attachment=null;state.voiceDuration=0;$('fileInput').value='';$('attachmentPreview').replaceChildren();$('attachmentPreview').classList.add('hidden');state.replyTarget=null;state.editTarget=null;state.privateReplyPending=null;renderComposerContext();resizeComposer();publishTyping(false);
+  $('messageInput').value='';state.attachment=null;state.voiceDuration=0;$('fileInput').value='';$('attachmentPreview').replaceChildren();$('attachmentPreview').classList.add('hidden');state.replyTarget=null;state.editTarget=null;state.privateReplyPending=null;renderComposerContext();resizeComposer();window.dispatchEvent(new CustomEvent('bizmind:publish-typing',{detail:{isTyping:false}}));
  }
  if(state.active?.id===conversationId){
   const existing=state.messages.findIndex(m=>m.id===savedMessage.id);
   if(existing>=0)state.messages[existing]=savedMessage;else state.messages.push(savedMessage);
   if(editing){
    // Update the existing row in place; do not reload history or jump to its tail.
-   handleMessageUpdateRealtime({new:savedMessage},conversationId);
+   window.dispatchEvent(new CustomEvent('bizmind:message-updated',{detail:{payload:{new:savedMessage},conversationId}}));
   }else if(!state.messageIds.has(savedMessage.id)){
    const rendered=await renderMessage(savedMessage,conversationId);
    if(!rendered)toast('تم حفظ الرسالة، لكن تعذر عرضها فوراً. أعد فتح المحادثة لتحديث العرض.');
