@@ -307,7 +307,15 @@ function backupSetBusy(value){
  busy=value;
  const root=document.getElementById('backupRestoreModal');
  if(!root)return;
- root.querySelectorAll('button,input').forEach(el=>{if(el.dataset.keepEnabled!=='true')el.disabled=value});
+ root.querySelectorAll('button,input').forEach(el=>{el.disabled=value});
+ if(!value){
+  const apply=root.querySelector('#backupRestoreApply');
+  const file=root.querySelector('#backupRestoreFile')?.files?.[0];
+  const pass=root.querySelector('#backupImportPassword')?.value||'';
+  const validate=root.querySelector('#backupValidateFile');
+  if(apply)apply.disabled=!selectedBackup;
+  if(validate)validate.disabled=!(file&&pass.length>=12);
+ }
 }
 function backupSetStatus(message,isError){
  const node=document.getElementById('backupRestoreStatus');
