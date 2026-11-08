@@ -1,6 +1,14 @@
 /* Extracted from current main 66e4c2a7efd980e622768260da2eccf2baf868c7; classic-script execution retained. */
 'use strict';
 
+const SELF_CHAT_MARKER='bizmindmakers:self-chat:v1';
+
+function isSelfConversation(conversation){return !!conversation&&conversation.type==='group'&&conversation.created_by===state.user?.id&&conversation.description===SELF_CHAT_MARKER}
+
+function otherMember(conv){return (conv.members||[]).find(m=>m.user_id!==state.user.id)?.profile}
+
+function convName(c){if(isSelfConversation(c))return (state.profile?.display_name||state.profile?.username||'أنا')+' (أنا)';if(c.type==='group')return c.title||'مجموعة جديدة';if(c.type==='channel')return c.title||'قناة بدون اسم';const p=otherMember(c);return p?.display_name||p?.username||'محادثة خاصة'}
+
 function applyAppTheme(theme,save=false){
  const resolved=theme==='system'?(appThemeMedia?.matches?'dark':'light'):theme;
  const root=document.documentElement;
