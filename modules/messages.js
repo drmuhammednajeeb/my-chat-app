@@ -414,6 +414,9 @@ async function editMessage(m){beginEditMessage(m)}
 
 async function deleteMessage(m){if(m.sender_id!==state.user?.id||m.deleted_at)return;if(!confirm('هل تريد حذف هذه الرسالة؟'))return;const {error}=await supabaseClient.from('chat_messages').update({deleted_at:new Date().toISOString(),content:'تم حذف الرسالة',attachment_path:null,attachment_type:null}).eq('id',m.id).eq('sender_id',state.user.id);if(error){toast('تعذر حذف الرسالة');return}if(state.replyTarget?.id===m.id)cancelComposerContext();await loadMessages()}
 
+function clearNewMessages(markRead=false){const hadUnread=(state.newMessageCount||0)>0;state.newMessageCount=0;updateNewMessagesIndicator();if(hadUnread&&markRead&&state.active?.id&&document.visibilityState==='visible')markConversationReceipt(state.active.id,true).catch(error=>console.warn('Read receipt after jump failed:',error?.message||error))}
+function jumpToLatestMessages(){const area=$('messages');if(!area)return;const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;area.scrollTo({top:area.scrollHeight,behavior:reduced?'auto':'smooth'});clearNewMessages(true)}
+
 function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
 
 async function openStarredMessages(){
