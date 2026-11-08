@@ -19,6 +19,16 @@ const PERSONAL_TABLES=[
  'private_conversation_notes',
  'user_notifications'
 ];
+const RESTORE_COLUMNS={
+ user_chat_preferences:['user_id','conversation_id','theme','cleared_before','is_shortcut','created_at','updated_at','is_archived'],
+ user_conversation_settings:['user_id','conversation_id','is_muted','notification_tone','updated_at','is_favorite'],
+ user_conversation_labels:['id','user_id','name','color','icon','created_at','updated_at'],
+ user_conversation_label_items:['user_id','label_id','conversation_id','created_at'],
+ user_classification_rules:['id','user_id','name','enabled','priority','conditions','action','created_at','updated_at'],
+ user_conversation_classifications:['user_id','conversation_id','category','source','updated_at'],
+ private_conversation_notes:['id','user_id','conversation_id','note','order_status','financial_amount','currency','follow_up_at','responsible_user_id','created_at','updated_at'],
+ user_message_stars:['user_id','conversation_id','message_id','created_at']
+};
 const RESTORE_TABLES=[
  'user_settings',
  'user_chat_preferences',
@@ -36,6 +46,15 @@ let busy=false;
 function backupEscape(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function backupCurrentUser(){return typeof state!=='undefined'&&state.user?.id?state.user:null}
 function backupAssertRestorableTable(name){if(!RESTORE_TABLES.includes(name))throw new Error('جدول غير مسموح بالاستعادة: '+name)}
+function backupPickRestoreRow(name,row,userId){
+ backupAssertRestorableTable(name);
+ const columns=RESTORE_COLUMNS[name];
+ if(!columns)throw new Error('لا توجد خريطة حقول معتمدة للاستعادة: '+name);
+ const safe={};
+ for(const key of columns)if(Object.prototype.hasOwnProperty.call(row,key))safe[key]=row[key];
+ safe.user_id=userId;
+ return safe;
+}
 function backupToast(message){if(typeof toast==='function')toast(message);else console.info(message)}
 function backupHex(buffer){return Array.from(new Uint8Array(buffer),b=>b.toString(16).padStart(2,'0')).join('')}
 async function backupDigest(value){
@@ -171,7 +190,7 @@ async function backupRestore(backup){
   backupAssertRestorableTable(name);
   const eligible=(rows||[]).filter(row=>!filter||filter(row));
   if(!eligible.length){results.push({name,restored:0,skipped:(rows||[]).length});return}
-  const safeRows=eligible.map(row=>({...row,user_id:user.id}));
+  const safeRows=eligible.map(row=>backupPickRestoreRow(name,row,user.id));
   const {error}=await supabaseClient.from(name).upsert(safeRows,{onConflict:conflict});
   if(error)throw new Error('توقف الاسترداد عند '+name+': '+error.message);
   results.push({name,restored:safeRows.length,skipped:(rows||[]).length-safeRows.length});
@@ -196,11 +215,12 @@ async function backupRestore(backup){
   const {data:existing,error:lookupError}=await supabaseClient.from('user_conversation_labels').select('id,name,color,icon').eq('user_id',user.id).eq('name',old.name).maybeSingle();
   if(lookupError)throw new Error('تعذر مطابقة الوسوم: '+lookupError.message);
   if(existing){labelMap.set(old.id,existing.id);continue}
-  const {data:created,error}=await supabaseClient.from('user_conversation_labels').upsert({...old,user_id:user.id},{onConflict:'id'}).select('id').single();
+  const safeLabel=backupPickRestoreRow('user_conversation_labels',old,user.id);
+  const {data:created,error}=await supabaseClient.from('user_conversation_labels').upsert(safeLabel,{onConflict:'id'}).select('id').single();
   if(error)throw new Error('تعذر استعادة الوسم '+old.name+': '+error.message);
   labelMap.set(old.id,created.id);
  }
- const labelItems=personal.user_conversation_label_items.filter(row=>available.has(row.conversation_id)&&labelMap.has(row.label_id)).map(row=>({...row,user_id:user.id,label_id:labelMap.get(row.label_id)}));
+ const labelItems=personal.user_conversation_label_items.filter(row=>available.has(row.conversation_id)&&labelMap.has(row.label_id)).map(row=>({...backupPickRestoreRow('user_conversation_label_items',row,user.id),label_id:labelMap.get(row.label_id)}));
  if(labelItems.length){
   const {error}=await supabaseClient.from('user_conversation_label_items').upsert(labelItems,{onConflict:'user_id,label_id,conversation_id'});
   if(error)throw new Error('تعذر استعادة تصنيفات الوسوم: '+error.message);
