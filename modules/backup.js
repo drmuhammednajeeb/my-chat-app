@@ -217,12 +217,12 @@ async function backupDownload(backup,passphrase){
  document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function backupValidateShape(value,user){
+function backupValidateShape(value,user,expectedSchemaVersion=value?.schemaVersion){
  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('ملف النسخة غير صالح.');
  if(value.format!==BACKUP_FORMAT)throw new Error('صيغة الملف ليست نسخة احتياطية معتمدة من BizmindMakers Chat.');
  if(![1,2].includes(value.schemaVersion))throw new Error('إصدار النسخة غير مدعوم. لا يمكن المتابعة بأمان.');
  if(value.userId!==user.id)throw new Error('هذه النسخة مرتبطة بحساب آخر. لن يتم استيراد بياناتها إلى حسابك.');
- if(!value.personal||typeof value.personal!=='object'||!value.conversationArchive||typeof value.conversationArchive!=='object'||value.schemaVersion!==envelope.schemaVersion)throw new Error('بنية النسخة ناقصة أو تالفة.');
+ if(!value.personal||typeof value.personal!=='object'||!value.conversationArchive||typeof value.conversationArchive!=='object'||value.schemaVersion!==expectedSchemaVersion)throw new Error('بنية النسخة ناقصة أو تالفة.');
  const requiredTables=value.schemaVersion===1?PERSONAL_TABLES_V1:PERSONAL_TABLES;
  for(const table of requiredTables){
   const rows=value.personal[table];
@@ -272,7 +272,7 @@ async function backupParseFile(file,passphrase){
   if(plaintext.byteLength>BACKUP_MAX_PLAINTEXT_BYTES)throw new Error('Decrypted backup exceeds the safe size limit.');
   value=JSON.parse(new TextDecoder().decode(plaintext));
  }catch(_){throw new Error('تعذر فك تشفير النسخة. تحقق من كلمة المرور ومن سلامة الملف.')}
- backupValidateShape(value,user);
+ backupValidateShape(value,user,envelope.schemaVersion);
  const expected=await backupDigest(backupCanonicalPayload(value));
  if(typeof value.checksum!=='string'||value.checksum!==expected)throw new Error('فشل التحقق من بصمة SHA-256 داخل النسخة.');
  return value;
@@ -304,7 +304,7 @@ async function backupStorageObjectExists(bucket,path){
 async function backupRestoreAttachments(backup,user,available){
  let restored=0,skipped=0;
  for(const item of (backup.conversationArchive.attachments||[])){
-  if(!available.has(item.conversationId)){skipped++;continue}
+  if(item.bucket!=='avatars'&&!available.has(item.conversationId)){skipped++;continue}
   const bytes=backupFromBase64(item.data);if(bytes.byteLength!==item.sizeBytes)throw new Error('حجم المرفق لا يطابق بيانات النسخة: '+item.path);
   if(item.bucket==='avatars'){
    if(String(item.path).split('/')[0]!==user.id){skipped++;continue}
@@ -462,7 +462,7 @@ function backupOpenModal(){
  if(document.getElementById('backupRestoreModal')){document.getElementById('backupRestoreModal').classList.add('open');return}
  const modal=document.createElement('section');
  modal.id='backupRestoreModal';modal.className='backup-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','backupRestoreTitle');
- modal.innerHTML=`<div class="backup-dialog"><header><div><h2 id="backupRestoreTitle">النسخ الاحتياطي والاستعادة</h2><p>إدارة نسخة بياناتك الشخصية وأرشيف المحادثات</p></div><button type="button" id="backupRestoreClose" aria-label="إغلاق">×</button></header><div class="backup-content"><section><h3>إنشاء نسخة احتياطية مشفّرة</h3><p>تُشفّر النسخة محلياً قبل تنزيلها باستخدام AES-256-GCM. اختر كلمة مرور قوية واحتفظ بها؛ لا يمكن استعادة الملف بدونها.</p><label class="backup-secret-label">كلمة مرور التشفير<input id="backupExportPassword" type="password" minlength="12" maxlength="256" autocomplete="new-password" placeholder="12 حرفاً على الأقل"></label><label class="backup-secret-label">تأكيد كلمة المرور<input id="backupExportPasswordConfirm" type="password" minlength="12" maxlength="256" autocomplete="new-password"></label><button type="button" id="backupCreateBtn" class="backup-primary">إنشاء وتنزيل نسخة مشفّرة</button></section><section><h3>استعادة نسخة مشفّرة</h3><p>اختر ملف النسخة المشفّرة وأدخل كلمة المرور نفسها لفحصه قبل الاستعادة.</p><label class="backup-file-label">اختيار ملف النسخة<input id="backupRestoreFile" type="file" accept="application/json,.json"></label><label class="backup-secret-label">كلمة مرور النسخة<input id="backupImportPassword" type="password" minlength="12" maxlength="256" autocomplete="current-password"></label><button type="button" id="backupValidateFile" class="backup-primary" disabled>فحص النسخة ومعاينتها</button><pre id="backupRestorePreview" class="backup-preview">لم يتم اختيار ملف بعد.</pre><button type="button" id="backupRestoreApply" class="backup-primary" disabled>استعادة البيانات الشخصية</button></section><aside class="backup-warning"><strong>ضوابط الحماية</strong><ul><li>التشفير يتم داخل المتصفح ولا تُرسل كلمة المرور إلى الخادم.</li><li>لا يتم تصدير كلمات المرور أو رموز الجلسات أو مفاتيح الوصول.</li><li>الرسائل والمحادثات المشتركة محفوظة في الأرشيف فقط ولا تُعاد إلى قاعدة البيانات.</li><li>لا تُحذف أي بيانات حالية؛ الاستعادة دمج وليست استبدالاً.</li><li>ملفات المرفقات الثنائية غير مضمنة في هذه النسخة.</li><li>فقدان كلمة المرور يعني تعذّر فك تشفير النسخة.</li></ul></aside><p id="backupRestoreStatus" role="status" aria-live="polite"></p></div></div>`;
+ modal.innerHTML=`<div class="backup-dialog"><header><div><h2 id="backupRestoreTitle">النسخ الاحتياطي والاستعادة</h2><p>إدارة نسخة بياناتك الشخصية وأرشيف المحادثات</p></div><button type="button" id="backupRestoreClose" aria-label="إغلاق">×</button></header><div class="backup-content"><section><h3>إنشاء نسخة احتياطية مشفّرة</h3><p>تُشفّر النسخة محلياً قبل تنزيلها باستخدام AES-256-GCM. اختر كلمة مرور قوية واحتفظ بها؛ لا يمكن استعادة الملف بدونها.</p><label class="backup-secret-label">كلمة مرور التشفير<input id="backupExportPassword" type="password" minlength="12" maxlength="256" autocomplete="new-password" placeholder="12 حرفاً على الأقل"></label><label class="backup-secret-label">تأكيد كلمة المرور<input id="backupExportPasswordConfirm" type="password" minlength="12" maxlength="256" autocomplete="new-password"></label><button type="button" id="backupCreateBtn" class="backup-primary">إنشاء وتنزيل نسخة مشفّرة</button></section><section><h3>استعادة نسخة مشفّرة</h3><p>اختر ملف النسخة المشفّرة وأدخل كلمة المرور نفسها لفحصه قبل الاستعادة.</p><label class="backup-file-label">اختيار ملف النسخة<input id="backupRestoreFile" type="file" accept="application/json,.json"></label><label class="backup-secret-label">كلمة مرور النسخة<input id="backupImportPassword" type="password" minlength="12" maxlength="256" autocomplete="current-password"></label><button type="button" id="backupValidateFile" class="backup-primary" disabled>فحص النسخة ومعاينتها</button><pre id="backupRestorePreview" class="backup-preview">لم يتم اختيار ملف بعد.</pre><button type="button" id="backupRestoreApply" class="backup-primary" disabled>استعادة البيانات الشخصية</button></section><aside class="backup-warning"><strong>ضوابط الحماية</strong><ul><li>التشفير يتم داخل المتصفح ولا تُرسل كلمة المرور إلى الخادم.</li><li>لا يتم تصدير كلمات المرور أو رموز الجلسات أو مفاتيح الوصول.</li><li>الرسائل والمحادثات المشتركة محفوظة في الأرشيف فقط ولا تُعاد إلى قاعدة البيانات.</li><li>لا تُحذف أي بيانات حالية؛ الاستعادة دمج وليست استبدالاً.</li><li>تُضمّن المرفقات المسموح بها داخل الملف المشفّر، ضمن حدود الحجم المحددة.</li><li>فقدان كلمة المرور يعني تعذّر فك تشفير النسخة.</li></ul></aside><p id="backupRestoreStatus" role="status" aria-live="polite"></p></div></div>`;
  const close=()=>{modal.classList.remove('open');selectedBackup=null;modal.querySelector('#backupExportPassword').value='';modal.querySelector('#backupExportPasswordConfirm').value='';modal.querySelector('#backupImportPassword').value='';modal.querySelector('#backupRestoreFile').value='';modal.querySelector('#backupRestoreApply').disabled=true;modal.querySelector('#backupRestorePreview').textContent='لم يتم اختيار ملف بعد.'};
  modal.querySelector('#backupRestoreClose').addEventListener('click',()=>{if(!busy)close()});
  modal.addEventListener('click',event=>{if(event.target===modal&&!busy)close()});
