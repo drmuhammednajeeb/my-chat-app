@@ -66,3 +66,11 @@ node scripts/check-module-regressions.mjs
 ```
 
 The guard verifies that the removed direct calls stay absent and that each event producer and owning listener remains present. It also protects the current rule that `core.js` must not call feature-module functions. This complements (rather than replaces) `scripts/check-module-architecture.mjs`; it does not claim browser-level functional coverage or a compiler-grade dependency graph.
+
+
+## Additional boundary cleanup — conversation UI events
+
+- `messages.js` now publishes read-receipt list refresh through the existing synchronous `bizmind:render-conversations` event rather than calling `renderConversations()` across the module boundary.
+- Message-selection mode now publishes `bizmind:close-chat-header-menu`; `conversations.js` owns the menu-close operation.
+- Removed the unused `bizmind:render-chat-avatar` listener after checking every runtime source: there was no producer for this event. The chat-avatar renderer remains owned and called within `conversations.js`; no active media workflow depended on the orphan listener.
+- The regression guard now protects both new message/conversation event contracts and prevents the orphan listener from silently returning.
