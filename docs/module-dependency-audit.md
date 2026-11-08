@@ -74,3 +74,18 @@ The guard verifies that the removed direct calls stay absent and that each event
 - Message-selection mode now publishes `bizmind:close-chat-header-menu`; `conversations.js` owns the menu-close operation.
 - Removed the unused `bizmind:render-chat-avatar` listener after checking every runtime source: there was no producer for this event. The chat-avatar renderer remains owned and called within `conversations.js`; no active media workflow depended on the orphan listener.
 - The regression guard now protects both new message/conversation event contracts and prevents the orphan listener from silently returning.
+
+
+## Composition-root cleanup — `app.js`
+
+Removed the feature-function monkey-patching block from `app.js`. The behavior now resides with its owning modules:
+
+- Sidebar view changes refresh custom-list UI in `conversations.js`.
+- Conversation-list heading synchronization is owned by the conversation-list renderer.
+- Opening a conversation applies group composer permissions and refreshes its menu within the conversation lifecycle.
+- Conversation loading refreshes custom lists and per-user conversation settings within `loadConversations()`, including its existing failure/empty paths.
+- Saving direct-chat preferences updates the owning state and menu in `saveDirectChatPreference()`.
+- The duplicate no-op notification wrapper and redundant mute-menu wrapper were removed.
+- Message selection decoration now runs inside `renderMessage()`; the app-level MutationObserver and render wrapper were removed.
+
+The regression guard now rejects feature-function reassignment wrappers and app-level message DOM observers. `app.js` remains the composition/startup and DOM event-wiring layer; this pass does not yet convert the classic-script runtime to native ES modules.
