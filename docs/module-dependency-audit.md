@@ -142,7 +142,7 @@ The dependency scan is a name-based static heuristic rather than an AST/type-awa
 The isolated `modules/backup.js` feature is introduced on `feature/backup-restore-module`, based on the latest PR #72 head. It is intentionally not committed to PR #72.
 
 - The module owns its UI, JSON format validation, SHA-256 integrity verification, export, and restore orchestration inside a private IIFE.
-- The archive is account-bound (`userId`) and versioned (`schemaVersion`). Import rejects another account, unsupported schema versions, malformed sections, rows owned by another account, and checksum mismatches.
+- The archive is account-bound (`userId`) and versioned (`schemaVersion`). Import rejects another account, unsupported schema versions, malformed sections, rows owned by another account, and checksum mismatches. Account preferences are minimized to the supported theme value on export and restore.
 - Export is user-scoped under the existing Supabase RLS policies. It includes the signed-in user's settings, conversation preferences, classifications, labels, notes, stars, and notifications, plus a read-only archive of conversations, accessible messages, reactions, and pins.
 - Restore is merge-only and limited to the current user's personal settings and metadata. It never deletes rows. Shared conversations/messages/reactions/pins are never written back. Records tied to conversations the user can no longer access are skipped.
 - Authentication secrets, access/refresh tokens, and binary attachment files are excluded. The archive currently contains attachment-independent conversation data only; file binaries require a separate encrypted storage-export design.
