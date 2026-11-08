@@ -127,3 +127,12 @@ Revalidation results:
 - The regression assertions for the existing event boundaries and composition-root constraints pass in the source-level recheck.
 
 The dependency scan is a name-based static heuristic rather than an AST/type-aware analyzer. Its edge list is therefore used to locate candidate dependencies; the cycle above was separately checked against the direct call sites listed above. Browser-level functional testing has not been performed. CI status at this revision must be read independently of source validation; a Vercel build-rate-limit response is not evidence of a source compilation failure.
+
+
+## Conversation lifecycle boundary pass — 2026-11-08
+
+- Removed direct `conversations.js` calls into realtime-owned `stopMessagePolling()`, `subscribeConversation()`, `subscribeProfileUpdates()`, and `startMessagePolling()`.
+- Added named lifecycle command events (`bizmind:stop-message-polling`, `bizmind:subscribe-conversation`, `bizmind:subscribe-profile-updates`, `bizmind:start-message-polling`) handled by `realtime.js`.
+- Replaced the awaited `loadStarredMessageIds()` direct call with `bizmind:load-starred-message-ids`, using an explicit resolver in event detail. The conversation-opening sequence still awaits completion before `loadMessages()`, preserving the original ordering.
+- Added regression assertions for the producers, owning listeners, and absence of the old direct calls.
+- This pass targets the `conversations.js` → `realtime.js` edge only; it does not claim the complete graph is acyclic. Static and syntax checks must be repeated, and authenticated browser testing remains required.
