@@ -245,6 +245,7 @@ test("attachment upload errors are surfaced instead of silently ignored", async 
       }
     }
   };
+  failingContext.globalThis = failingContext;
   vm.runInNewContext(instrumented, failingContext, { filename: "modules/backup.js" });
   const failingApi = failingContext.__backupTestApi;
   const backup = {
