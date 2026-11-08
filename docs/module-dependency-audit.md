@@ -136,3 +136,18 @@ The dependency scan is a name-based static heuristic rather than an AST/type-awa
 - Replaced the awaited `loadStarredMessageIds()` direct call with `bizmind:load-starred-message-ids`, using an explicit resolver in event detail. The conversation-opening sequence still awaits completion before `loadMessages()`, preserving the original ordering.
 - Added regression assertions for the producers, owning listeners, and absence of the old direct calls.
 - This pass targets the `conversations.js` → `realtime.js` edge only; it does not claim the complete graph is acyclic. Static and syntax checks must be repeated, and authenticated browser testing remains required.
+
+## Independent backup and restore module — feature branch
+
+The isolated `modules/backup.js` feature is introduced on `feature/backup-restore-module`, based on the latest PR #72 head. It is intentionally not committed to PR #72.
+
+- The module owns its UI, JSON format validation, SHA-256 integrity verification, export, and restore orchestration inside a private IIFE.
+- The archive is account-bound (`userId`) and versioned (`schemaVersion`). Import rejects another account, unsupported schema versions, malformed sections, rows owned by another account, and checksum mismatches.
+- Export is user-scoped under the existing Supabase RLS policies. It includes the signed-in user's settings, conversation preferences, classifications, labels, notes, stars, and notifications, plus a read-only archive of conversations, accessible messages, reactions, and pins.
+- Restore is merge-only and limited to the current user's personal settings and metadata. It never deletes rows. Shared conversations/messages/reactions/pins are never written back. Records tied to conversations the user can no longer access are skipped.
+- Authentication secrets, access/refresh tokens, and binary attachment files are excluded. The archive currently contains attachment-independent conversation data only; file binaries require a separate encrypted storage-export design.
+- The module is loaded after app state, workspace, and membership initialization, and is included in the service-worker shell precache. The service worker continues to avoid caching Supabase/API responses or authenticated user data.
+- No SQL, migrations, schema, RLS, RPC definitions, Storage objects, or live data were modified by this feature branch. The existing `patch_my_user_settings` RPC is called only if the user explicitly confirms restore inside the application.
+- Restore spans multiple existing tables and is not a database transaction. If an individual write fails, earlier successful sections remain; the operation reports the failure and is safe to retry because it uses upserts and performs no deletes. A future server-side transactional restore would be required for all-or-nothing semantics.
+
+Validation required before merge: run the architecture and backup regression scripts, syntax checks, then authenticated Preview tests for export, tampered-file rejection, cross-account rejection, merge-only restore, missing conversation references, and offline/service-worker behavior. No browser functional test is claimed by this source change.
