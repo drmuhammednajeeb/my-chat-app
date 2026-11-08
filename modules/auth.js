@@ -93,8 +93,9 @@ async function enterApp(user){
 async function enterAppInternal(user,lifecycleVersion){
  if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
  const membershipStarted=performance.now();
- const {data:membershipState,error:membershipStateError}=await supabaseClient.rpc('get_my_membership_state');
+ const {data:membershipState,error:membershipStateError}=await withAuthTimeout(supabaseClient.rpc('get_my_membership_state'),'تأخر التحقق من حالة العضوية أكثر من 15 ثانية. تحقق من الاتصال ثم أعد المحاولة.',15000);
  recordPerf('startup_membership_check',performance.now()-membershipStarted,{success:!membershipStateError});
+ if(lifecycleVersion!==authLifecycleVersion)return false;
  if(membershipStateError){console.error('Membership state check failed:',membershipStateError);authError('تعذر التحقق من حالة العضوية. تحقق من الاتصال وحاول مجدداً.');return false;}
  if(membershipState?.membership_status!=='active'||membershipState?.membership_number_verified!==true||!/^971001[0-9]{6}$/.test(membershipState?.membership_number||'')){await supabaseClient.auth.signOut({scope:'local'});authError('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');return false;}
  state.user=user;state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.activeListId=null;state.starredMessageIds.clear();state.groupSettings=null;state.selectedMessageIds.clear();state.selectionMode=false;subscribePersonalChatData();
