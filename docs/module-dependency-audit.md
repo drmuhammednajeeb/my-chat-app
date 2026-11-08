@@ -53,3 +53,16 @@ The HTML loads Supabase UMD first, then the ten feature scripts in a fixed order
 - The current swipe/reaction issue remains explicitly deferred; this audit does not claim to fix it.
 - The static dependency scan is heuristic. It identifies direct function-name references, not every possible dynamic call or runtime dependency. Browser testing remains mandatory.
 - Do not merge PR #72 or deploy to production until the user has manually approved the preview and all required regression checks pass.
+
+
+## Regression protection — 2026-11-08
+
+Added `scripts/check-module-regressions.mjs` as a repeatable Node.js regression guard for the event boundaries already established between channels/conversations, groups/media, media/realtime/conversations, and messages/conversations.
+
+Run:
+
+```sh
+node scripts/check-module-regressions.mjs
+```
+
+The guard verifies that the removed direct calls stay absent and that each event producer and owning listener remains present. It also protects the current rule that `core.js` must not call feature-module functions. This complements (rather than replaces) `scripts/check-module-architecture.mjs`; it does not claim browser-level functional coverage or a compiler-grade dependency graph.
