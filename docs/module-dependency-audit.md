@@ -97,3 +97,11 @@ The regression guard now rejects feature-function reassignment wrappers and app-
 - Replaced `messages.js` and `conversations.js` direct calls to `ensureGroupModal()` with `bizmind:ensure-group-modal`; `groups.js` owns modal construction.
 - The calls were confirmed to be command-style operations with no consumed return value, so synchronous DOM events preserve their ordering without introducing fire-and-forget async behavior.
 - Added regression assertions for both event producers and their owning listeners.
+
+
+## Media ownership pass — avatars and voice cancellation
+
+- `conversations.js` and `realtime.js` no longer call `renderAvatar()` directly. Both publish `bizmind:render-avatar`; `media.js` owns avatar DOM rendering through its existing listener.
+- `conversations.js` no longer calls `cancelVoiceRecording()` directly when switching conversations. It publishes `bizmind:cancel-voice-recording`, handled synchronously by `media.js`.
+- These are synchronous presentation/lifecycle commands with no consumed return values. The voice cancellation listener immediately invokes the existing cancellation routine, preserving ordering before the new conversation loads.
+- Regression tests now protect the producer/listener pairs and forbid direct calls from the requesting modules.
