@@ -158,3 +158,6 @@ function groupMenuActions(){
  $('clearConversationBtn').onclick=clearActiveConversation;
  $('leaveGroupBtn').onclick=leaveActiveGroup;
 }
+
+// Async request/response contract preserves the await boundary while keeping starred-message loading group-owned.
+window.addEventListener('bizmind:load-starred-message-ids',event=>{const detail=event.detail||{};if(typeof detail.resolve!=='function')return;Promise.resolve(loadStarredMessageIds(detail.conversationId)).then(detail.resolve,error=>{console.error('Starred-message request failed:',error);detail.resolve()})});
