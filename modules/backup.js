@@ -119,6 +119,7 @@ async function backupFetchByConversation(table,conversationIds){
  }
  return rows;
 }
+function backupMimeTypeFromPath(path,fallback){const ext=String(path).split('.').pop().toLowerCase();const map={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',pdf:'application/pdf',webm:'audio/webm',ogg:'audio/ogg',m4a:'audio/mp4',mp4:'audio/mp4',mp3:'audio/mpeg',wav:'audio/wav',aac:'audio/aac'};return map[ext]||fallback||'application/octet-stream'}
 function backupStoragePathFromPublicUrl(value,bucket){
  try{const url=new URL(value),marker='/storage/v1/object/public/'+bucket+'/',index=url.pathname.indexOf(marker);if(index<0)return null;const path=decodeURIComponent(url.pathname.slice(index+marker.length));if(!path||path.startsWith('/')||path.split('/').some(part=>part==='.'||part==='..'))return null;return path}catch(_){return null}
 }
@@ -152,7 +153,7 @@ async function backupCreate(){
  }));
  const membership=await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id').eq('user_id',user.id),'عضويات المحادثات','conversation_id');
  const conversationIds=[...new Set(membership.map(row=>row.conversation_id).filter(Boolean))];
- const conversationArchive={conversationCount:conversationIds.length,conversations:[],messages:[],reactions:[],pins:[],documents:[],attachments:[]};
+ const conversationArchive={conversationCount:conversationIds.length,conversations:[],memberships:[],messages:[],reactions:[],pins:[],documents:[],groupSettings:[],membershipEvents:[],privateReplyContexts:[],messageEditHistory:[],attachments:[]};
  for(let i=0;i<conversationIds.length;i+=100){
   const ids=conversationIds.slice(i,i+100);
   conversationArchive.conversations.push(...await backupFetchAll(()=>supabaseClient.from('conversations').select('*').in('id',ids),'المحادثات','created_at'));
@@ -163,8 +164,13 @@ async function backupCreate(){
     return table==='chat_messages'?query.is('deleted_at',null):query;
    },'أرشيف '+table,table==='message_pins'?'pinned_at':'created_at'));
   }
+  conversationArchive.memberships.push(...await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id,user_id,role,joined_at,last_read_at,last_delivered_at').in('conversation_id',ids),'عضويات المحادثات',['conversation_id','user_id']));
+  conversationArchive.groupSettings.push(...await backupFetchAll(()=>supabaseClient.from('conversation_group_settings').select('*').in('conversation_id',ids),'إعدادات المجموعات','updated_at'));
+  conversationArchive.membershipEvents.push(...await backupFetchAll(()=>supabaseClient.from('conversation_member_events').select('*').in('conversation_id',ids),'سجل العضويات','created_at'));
+  conversationArchive.privateReplyContexts.push(...await backupFetchAll(()=>supabaseClient.from('private_reply_contexts').select('*').in('direct_conversation_id',ids),'سياقات الرد الخاص','created_at'));
   conversationArchive.documents.push(...await backupFetchAll(()=>supabaseClient.from('conversation_documents').select('id,owner_id,conversation_id,storage_path,file_name,mime_type,size_bytes,visibility,created_at,shared_at').in('conversation_id',ids),'مستندات المحادثات','created_at'));
  }
+ for(let i=0;i<conversationArchive.messages.length;i+=100){const ids=conversationArchive.messages.slice(i,i+100).map(row=>row.id);if(ids.length)conversationArchive.messageEditHistory.push(...await backupFetchAll(()=>supabaseClient.from('message_edit_history').select('*').in('message_id',ids),'سجل تعديلات الرسائل','edited_at'))}
  const fileRefs=new Map();
  for(const message of conversationArchive.messages){
   if(!message.attachment_path)continue;
@@ -175,6 +181,7 @@ async function backupCreate(){
  for(const doc of conversationArchive.documents){
   fileRefs.set('conversation-documents:'+doc.storage_path,{bucket:'conversation-documents',path:doc.storage_path,mimeType:doc.mime_type||'application/octet-stream',kind:'document',conversationId:doc.conversation_id,ownerId:doc.owner_id,documentId:doc.id,fileName:doc.file_name,visibility:doc.visibility});
  }
+ for(const conv of conversationArchive.conversations){if(conv.avatar_path){const path=conv.avatar_path;fileRefs.set('channel-avatars:'+path,{bucket:'channel-avatars',path,mimeType:'image/*',kind:'conversation-avatar',conversationId:conv.id,ownerId:path.split('/')[1]||null})}}
  const avatarPath=backupStoragePathFromPublicUrl(profile?.avatar_url,'avatars');
  if(avatarPath&&avatarPath.split('/')[0]===user.id)fileRefs.set('avatars:'+avatarPath,{bucket:'avatars',path:avatarPath,mimeType:'image/*',kind:'profile-avatar',ownerId:user.id});
  let binaryBytes=0;
@@ -183,7 +190,7 @@ async function backupCreate(){
   if(error||!data)throw new Error('تعذر تضمين ملف مرفق في النسخة ('+ref.path+'): '+(error?.message||'الملف غير متاح').slice(0,220));
   const bytes=new Uint8Array(await data.arrayBuffer());binaryBytes+=bytes.byteLength;
   if(binaryBytes>BACKUP_MAX_BINARY_BYTES)throw new Error('تجاوز حجم المرفقات 65 ميجابايت. أوقفنا التصدير بدلاً من إصدار نسخة ناقصة.');
-  conversationArchive.attachments.push({...ref,mimeType:data.type||ref.mimeType,sizeBytes:bytes.byteLength,data:backupBase64(bytes)});
+  conversationArchive.attachments.push({...ref,mimeType:data.type&&data.type!=='application/octet-stream'?data.type:backupMimeTypeFromPath(ref.path,ref.mimeType),sizeBytes:bytes.byteLength,data:backupBase64(bytes)});
  }
  const payload={
   format:BACKUP_FORMAT,
@@ -234,10 +241,10 @@ function backupValidateShape(value,user){
  }
  if(value.schemaVersion>=2){
   if(!value.profile||value.profile.id!==user.id)throw new Error('بيانات الملف الشخصي غير مرتبطة بالحساب الحالي.');
-  for(const key of ['documents','attachments'])if(!Array.isArray(value.conversationArchive[key]))throw new Error('قسم الملفات غير مكتمل: '+key);
+  for(const key of ['documents','attachments','memberships','groupSettings','membershipEvents','privateReplyContexts','messageEditHistory'])if(!Array.isArray(value.conversationArchive[key]))throw new Error('قسم الأرشيف غير مكتمل: '+key);
   let total=0;
   for(const item of value.conversationArchive.attachments){
-   if(!item||!['chat-media','conversation-documents','avatars'].includes(item.bucket)||typeof item.path!=='string'||typeof item.data!=='string'||!Number.isSafeInteger(item.sizeBytes)||item.sizeBytes<0)throw new Error('سجل مرفق غير صالح.');
+   if(!item||!['chat-media','conversation-documents','avatars','channel-avatars'].includes(item.bucket)||typeof item.path!=='string'||typeof item.data!=='string'||!Number.isSafeInteger(item.sizeBytes)||item.sizeBytes<0)throw new Error('سجل مرفق غير صالح.');
    total+=item.sizeBytes;if(total>BACKUP_MAX_BINARY_BYTES)throw new Error('حجم المرفقات يتجاوز الحد الآمن.');
   }
  }
