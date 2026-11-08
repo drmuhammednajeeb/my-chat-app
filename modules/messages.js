@@ -420,7 +420,7 @@ function jumpToLatestMessages(){const area=$('messages');if(!area)return;const r
 function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
 
 async function openStarredMessages(){
- ensureGroupModal();const body=$('starredBody');body.replaceChildren();
+ window.dispatchEvent(new Event('bizmind:ensure-group-modal'));const body=$('starredBody');body.replaceChildren();
  const {data,error}=await supabaseClient.from('user_message_stars').select('message_id,conversation_id,created_at,chat_messages(id,content,created_at,sender_id,deleted_at)').eq('user_id',state.user.id).eq('conversation_id',state.active.id).order('created_at',{ascending:false}).limit(100);
  if(error){toast('تعذر تحميل الرسائل المميزة');return}
  if(!data?.length){const p=document.createElement('p');p.className='group-management-muted';p.textContent='لا توجد رسائل مميزة بنجمة في هذه المحادثة.';body.append(p)}
@@ -435,6 +435,8 @@ async function toggleMessageStar(messageId,star=true){
  if(result.error){toast('تعذر تحديث تمييز الرسالة');console.error(result.error);return false}
  if(star)state.starredMessageIds.add(messageId);else state.starredMessageIds.delete(messageId);return true;
 }
+
+window.addEventListener('bizmind:set-message-selection-mode',event=>setMessageSelectionMode(!!event.detail?.enabled));
 
 function setMessageSelectionMode(enabled){
  state.selectionMode=!!enabled;state.selectedMessageIds.clear();
