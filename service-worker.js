@@ -36,6 +36,7 @@ self.addEventListener("install", event => {
       new URL("./modules/channels.js", base).href,
       new URL("./modules/admin.js", base).href,
       new URL("./modules/media.js", base).href,
+      new URL("./modules/backup.js", base).href,
       new URL("./app.js", base).href,
       new URL("./workspace.js", base).href,
       new URL("./app.css", base).href
