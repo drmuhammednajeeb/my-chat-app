@@ -452,3 +452,4 @@ function renderChatAvatar(conversation){
 }
 window.addEventListener('bizmind:render-chat-avatar',event=>{if(event.detail?.conversation)renderChatAvatar(event.detail.conversation)});
 window.addEventListener('bizmind:render-conversations',()=>renderConversations());
+window.addEventListener('bizmind:close-chat-header-menu',()=>closeChatHeaderMenu());
