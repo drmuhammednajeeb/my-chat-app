@@ -8,62 +8,6 @@ function renderAvatar(container,profile,className='directory-avatar'){
  if(raw){try{const url=new URL(raw);if(url.protocol==='https:'){const img=document.createElement('img');img.src=url.href;img.alt='';img.loading=container.id==='myAvatar'?'eager':'lazy';img.decoding='async';img.fetchPriority=container.id==='myAvatar'?'high':'low';img.width=48;img.height=48;img.referrerPolicy='no-referrer';img.onerror=()=>container.replaceChildren(fallback);container.replaceChildren(img)}}catch(_e){}}
 }
 
-function renderChatAvatar(conversation){
- const target=$('chatAvatar');
- if(conversation?.type==='direct'){const profile=otherMember(conversation);renderAvatar(target,profile,'avatar');return}
- target.className='avatar';target.replaceChildren();
- const icon=document.createElement('i');icon.className='ph '+(isSelfConversation(conversation)?'ph-note-pencil':conversation?.type==='channel'?'ph-megaphone':'ph-users-three');target.append(icon);
-}
-
-async function prepareAvatarImage(file){
- if(typeof createImageBitmap!=='function')return {blob:file,type:file.type};
- const bitmap=await createImageBitmap(file);
- const scale=Math.min(1,512/Math.max(bitmap.width,bitmap.height));
- const width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale));
- const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
- const context=canvas.getContext('2d',{alpha:false});
- if(!context){bitmap.close?.();return {blob:file,type:file.type}}
- context.drawImage(bitmap,0,0,width,height);bitmap.close?.();
- const webp=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.82));
- if(webp)return {blob:webp,type:'image/webp'};
- const jpeg=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.84));
- return jpeg?{blob:jpeg,type:'image/jpeg'}:{blob:file,type:file.type};
-}
-
-async function withProfileTimeout(task,label,timeoutMs=20000){
- let timer;
- try{return await Promise.race([Promise.resolve(task),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' استغرق وقتاً أطول من المتوقع. تحقق من الاتصال ثم أعد المحاولة.')),timeoutMs)})])}
- finally{clearTimeout(timer)}
-}
-
-async function uploadProfileAvatar(file){
- if(!state.user||!file)throw new Error('اختر صورة أولاً');
- const allowed=['image/jpeg','image/png','image/webp'];
- if(!allowed.includes(file.type))throw new Error('اختر صورة بصيغة JPG أو PNG أو WebP');
- if(file.size>3*1024*1024)throw new Error('الحد الأقصى للصورة الشخصية 3 ميجابايت');
- const input=$('avatarInput');if(input)input.disabled=true;
- try{
-  const prepared=await withProfileTimeout(prepareAvatarImage(file),'تجهيز الصورة',15000);
-  const path=state.user.id+'/avatar';
-  const uploadResult=await withProfileTimeout(supabaseClient.storage.from('avatars').upload(path,prepared.blob,{upsert:true,contentType:prepared.type,cacheControl:'31536000'}),'رفع الصورة',25000);
-  if(uploadResult.error)throw uploadResult.error;
-  const {data:publicData}=supabaseClient.storage.from('avatars').getPublicUrl(path);
-  if(!publicData?.publicUrl)throw new Error('تعذر إنشاء رابط الصورة');
-  const avatarUrl=publicData.publicUrl+'?v='+Date.now();
-  const updateResult=await withProfileTimeout(supabaseClient.from('profiles').update({avatar_url:avatarUrl,updated_at:new Date().toISOString()}).eq('id',state.user.id).select('*').single(),'حفظ رابط الصورة',20000);
-  if(updateResult.error)throw updateResult.error;
-  const data=updateResult.data;if(!data)throw new Error('لم يتم استلام بيانات الملف الشخصي بعد الحفظ');
-  state.profile=data;$('myName').textContent=data.display_name||data.username||'المستخدم';$('myHandle').textContent='@'+(data.username||'user')+' · '+(data.membership_number||'');
-  renderAvatar($('myAvatar'),data,'avatar profile-avatar-edit');
-  if($('profileModal')?.classList.contains('open'))renderAvatar($('profileModalAvatar'),data,'profile-modal-avatar');
-  state.conversations.forEach(conv=>(conv.members||[]).forEach(member=>{if(member.user_id===data.id)member.profile={...(member.profile||{}),...data}}));
-  if(state.active?.type==='direct'&&otherMember(state.active)?.id===state.user.id)renderChatAvatar(state.active);
-  toast('تم اعتماد الصورة الشخصية وحفظها');
-  return data;
- }catch(error){console.error('Profile avatar upload failed:',error);throw error}
- finally{if(input){input.disabled=false;input.value=''}}
-}
-
 function formatVoiceDuration(seconds){
  const total=Math.max(0,Math.floor(seconds||0)),minutes=String(Math.floor(total/60)).padStart(2,'0'),secs=String(total%60).padStart(2,'0');
  return (minutes+':'+secs).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[Number(d)]);
@@ -248,7 +192,7 @@ async function sendMessage(){
     conversation.last_message=savedMessage;conversation.last_message_at=savedMessage.created_at;
    }
   }
-  renderConversations();
+  window.dispatchEvent(new Event('bizmind:render-conversations'));
  }
  state.uploading=false;resizeComposer();
 }
