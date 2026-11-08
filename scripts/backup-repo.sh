@@ -27,7 +27,7 @@ DEFAULT_BRANCH="$(git --git-dir="$MIRROR_DIR" symbolic-ref --short HEAD 2>/dev/n
 git --git-dir="$MIRROR_DIR" show-ref --verify --quiet "refs/heads/$DEFAULT_BRANCH" || fail "Default branch ref is missing: $DEFAULT_BRANCH"
 
 git --git-dir="$MIRROR_DIR" bundle create "$BUNDLE_FILE" --all
-git bundle verify "$BUNDLE_FILE"
+git --git-dir="$MIRROR_DIR" bundle verify "$BUNDLE_FILE"
 git --git-dir="$MIRROR_DIR" archive --format=tar.gz --prefix=my-chat-app-source/ --output="$SOURCE_ARCHIVE" "refs/heads/$DEFAULT_BRANCH"
 
 cat > "$MANIFEST" <<EOF
