@@ -234,14 +234,20 @@ async function sendMessage(){
   const existing=state.messages.findIndex(m=>m.id===savedMessage.id);
   if(existing>=0)state.messages[existing]=savedMessage;else state.messages.push(savedMessage);
   if(editing){
-   const restored=await loadMessages();
-   if(!restored)toast('تم حفظ التعديل، لكن تعذر تحديث العرض. اضغط تحديث المحادثة.');
+   // Update the existing row in place; do not reload history or jump to its tail.
+   handleMessageUpdateRealtime({new:savedMessage},conversationId);
   }else if(!state.messageIds.has(savedMessage.id)){
    const rendered=await renderMessage(savedMessage,conversationId);
    if(!rendered)toast('تم حفظ الرسالة، لكن تعذر عرضها فوراً. أعد فتح المحادثة لتحديث العرض.');
   }
   const conversation=state.conversations.find(item=>item.id===conversationId);
-  if(conversation){conversation.last_message=savedMessage;conversation.last_message_at=savedMessage.created_at;}
+  if(conversation){
+   const latestAt=Date.parse(conversation.last_message?.created_at||conversation.last_message_at||conversation.created_at);
+   const savedAt=Date.parse(savedMessage.created_at);
+   if(!Number.isFinite(latestAt)||!Number.isFinite(savedAt)||savedAt>=latestAt){
+    conversation.last_message=savedMessage;conversation.last_message_at=savedMessage.created_at;
+   }
+  }
   renderConversations();
  }
  state.uploading=false;resizeComposer();
