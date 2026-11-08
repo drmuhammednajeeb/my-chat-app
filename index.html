@@ -652,15 +652,22 @@ async function enterAppInternal(user,lifecycleVersion){
   (async()=>{subscribeNotifications();await loadNotifications()})(),
   loadTeamDashboard(true)
  ]);
+ // Startup must always settle on Home. Loading the conversation list is data hydration only;
+ // it must never select or open a conversation on behalf of the user.
+ stopMessagePolling();
+ if(state.channel)supabaseClient.removeChannel(state.channel);
+ if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
+ state.channel=null;state.typingChannel=null;state.active=null;state.activeChatPreference=null;
+ state.messages=[];state.messageIds.clear();state.renderingMessageIds.clear();
+ state.messageLoadVersion++;state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();
+ state.replyTarget=null;state.editTarget=null;state.groupSettings=null;
+ $('messageInput').value='';$('messageInput').disabled=true;$('sendBtn').disabled=true;
+ $('chatTitle').textContent=conversationsLoaded&&state.conversations.length?'مرحباً بك':'لا توجد محادثات بعد';
+ $('chatSub').textContent='اختر محادثة من القائمة لبدء التواصل';
+ $('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>مرحباً بك في BizmindMakers Chat Pro</h2><p>اختر محادثة من القائمة لعرض الرسائل. لن تُفتح أي محادثة تلقائياً عند تشغيل التطبيق.</p></div>';
+ applyDirectChatTheme();renderPinnedBanner();resizeComposer();
  setSidebarView('chats');
- // Restore the latest chat immediately; do not wait for notifications, team stats, or the user directory.
- if(conversationsLoaded&&state.conversations.length){
-  const latest=(invitedChannelId&&state.conversations.find(c=>c.id===invitedChannelId))||state.conversations[0];
-  await openConversation(latest);
-  if(lifecycleVersion!==authLifecycleVersion)return false;
- }else if(conversationsLoaded){
-  $('chatTitle').textContent='لا توجد محادثات بعد';$('chatSub').textContent='ابدأ محادثة من دليل المستخدمين';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>لا توجد محادثات بعد</h2><p>اختر مستخدماً من دليل المستخدمين لبدء محادثة جديدة.</p></div>';
- }
+ $('sidebar').classList.remove('closed');
  startPresence();return true;
 }
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
