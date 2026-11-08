@@ -543,26 +543,6 @@ document.addEventListener('DOMContentLoaded',()=>{
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeGroupManagement();$('starredModal')?.classList.remove('open');$('starredModal')?.setAttribute('aria-hidden','true');$('customListModal')?.classList.remove('open');$('customListModal')?.setAttribute('aria-hidden','true')}});
  $('createCustomListBtn').onclick=createCustomList;
  groupMenuActions();
- const originalRenderMessage=renderMessage;
- // The renderer decorates each new message with a selection checkbox only while selection mode is active.
- const observer=new MutationObserver(records=>{if(!state.selectionMode)return;records.forEach(record=>record.addedNodes.forEach(node=>{if(node.nodeType===1&&node.classList.contains('message'))decorateMessageSelection(node,state.messages.find(m=>m.id===node.dataset.messageId))}))});
- observer.observe($('messages'),{childList:true});
- const originalSetSidebarView=setSidebarView;
- setSidebarView=function(view){originalSetSidebarView(view);renderCustomLists()};
- const originalRenderConversations=renderConversations;
- renderConversations=function(section){originalRenderConversations(section);if(state.activeListId){const list=state.customLists.find(x=>x.id===state.activeListId);if(state.activeListId==='__favorites__'){$('sidebarSectionTitle').textContent='المفضلة'}else if(list){const title=$('sidebarSectionTitle');if(title)title.textContent=list.name+' · '+(state.sidebarView==='groups'?'المجموعات':'المحادثات')}}};
- const originalOpenConversation=openConversation;
- openConversation=async function(c){await originalOpenConversation(c);if(state.active?.id===c.id){applyGroupComposerOnOpen();updateConversationMenu()}};
- const originalLoadConversations=loadConversations;
- loadConversations=async function(){const result=await originalLoadConversations();await Promise.all([loadCustomLists(),loadAllUserConversationSettings()]);renderCustomLists();renderConversations();return result};
- const originalSavePreference=saveDirectChatPreference;
- saveDirectChatPreference=async function(patch){const ok=await originalSavePreference(patch);if(ok&&state.activeChatPreference){state.chatPrefs.set(state.active.id,{...state.chatPrefs.get(state.active.id),...state.activeChatPreference,...patch});updateConversationMenu()}return ok};
- const originalSubscribeNotifications=subscribeNotifications;
- subscribeNotifications=function(){originalSubscribeNotifications();};
- const originalRenderMessageFn=renderMessage;
- renderMessage=async function(m,...args){const result=await originalRenderMessageFn(m,...args);if(result&&state.selectionMode){const row=document.querySelector('.message[data-message-id="'+m.id+'"]');decorateMessageSelection(row,m)}return result};
- const oldUpdateConversationMenu=updateConversationMenu;
- updateConversationMenu=function(){oldUpdateConversationMenu();if(state.active){const setting=state.userConversationSettings.get(state.active.id)||{};$('muteNotificationsBtn').innerHTML=setting.is_muted?'<i class="ph ph-bell"></i><span>إلغاء كتم الإشعارات</span>':'<i class="ph ph-bell-slash"></i><span>كتم الإشعارات</span>'}};
  // Add star actions to message context menus without changing existing reply/edit/delete controls.
  const messageArea=$('messages');
  messageArea.addEventListener('contextmenu',event=>{if(!state.selectionMode)return;const row=event.target.closest('.message');if(!row)return;event.preventDefault();const check=row.querySelector('.message-select-check');if(check){check.checked=!check.checked;check.dispatchEvent(new Event('change'))}});
