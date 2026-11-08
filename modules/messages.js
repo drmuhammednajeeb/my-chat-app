@@ -168,7 +168,7 @@ async function jumpToMessage(id){
    supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).gt('created_at',target.created_at).order('created_at',{ascending:true}).limit(40)
   ]);
   if(beforeResult.error||afterResult.error)throw beforeResult.error||afterResult.error;
-  const rows=[...(beforeResult.data||[]).reverse(),target,...(afterResult.data||[])].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const rows=[...(beforeResult.data||[]).reverse(),target,...(afterResult.data||[])].sort(compareMessagesChronologically);
   const requestId=++state.messageLoadVersion;state.isLoadingMessages=true;state.messages=rows;state.replyMessages=new Map();
   const replyIds=[...new Set(rows.map(m=>m.reply_to).filter(x=>x&&!rows.some(m=>m.id===x)))];
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!parentError)(parents||[]).forEach(m=>state.replyMessages.set(m.id,m))}
@@ -291,7 +291,7 @@ async function loadMessages(){
   // Merge fetched rows with Realtime INSERTs received while this request was in flight.
   const merged=new Map((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>[m.id,m]));
   (data||[]).forEach(m=>merged.set(m.id,m));
-  const messages=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
+  const messages=Array.from(merged.values()).sort(compareMessagesChronologically).slice(-100);
   state.messages=messages;
   const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];state.replyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!replyError)(parents||[]).forEach(x=>state.replyMessages.set(x.id,x))}
   await loadMessageReactions(conversationId,messages);await loadMessagePins(conversationId);await loadPrivateReplyContexts(conversationId,messages);
@@ -336,7 +336,7 @@ async function loadOlderMessages(){
   state.hasMoreMessages=older.length===50;
   if(!older.length){state.hasMoreMessages=false;return false}
   const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
-  state.messages=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  state.messages=Array.from(merged.values()).sort(compareMessagesChronologically);
   const replyIds=[...new Set(state.messages.map(m=>m.reply_to).filter(id=>id&&!merged.has(id)))];
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(parentError)throw parentError;(parents||[]).forEach(parent=>state.replyMessages.set(parent.id,parent))}
   await loadMessageReactions(conversationId,older);await loadMessagePins(conversationId);
