@@ -213,3 +213,63 @@ A phase is complete only when:
 
 ---
 This document is an engineering plan and inventory. It does not itself authorize database changes, production deployment, merging, or broad refactoring.
+
+
+## 11. Modularization implementation — phase 1
+
+**Branch:** `refactor/modular-app-entrypoints`  
+**Base:** `2cbe07dcb78e4d7c6780a5a40692c37ea929be1f`
+
+This phase moves the two large inline application scripts into same-origin classic JavaScript assets without changing their source bodies or execution order:
+
+- `app.js`: the main application runtime (Supabase client, shared state, authentication, conversations, messages, groups, channels, realtime and UI handlers).
+- `workspace.js`: conversation workspace, labels/classification, private notes/documents and private-reply context.
+
+The HTML keeps both scripts at their original parser positions as blocking classic scripts. Preload hints start their downloads from the document head; they are deliberately **not** marked `async` or `defer`, so existing initialization order and global bindings remain intact. The Supabase UMD script remains before `app.js`, and `membership.js` remains after `workspace.js`.
+
+The service worker precaches both new same-origin assets and advances its shell cache to `v18`. It continues to exclude authenticated API responses and user content.
+
+**Scope boundary:** this is an entry-point extraction, not yet a complete feature-module split. The next phases should extract low-coupling services (diagnostics/notifications/settings) and then progressively isolate conversations, message lifecycle, realtime, groups/channels, media and administration behind explicit interfaces. Do not split shared state mechanically; document ownership and dependencies first.
+
+**Verification performed for this phase:** source-boundary checks confirm the extracted blocks are the original complete script bodies, the Supabase-before-app and app-before-workspace ordering is preserved, both preload hints and service-worker precache entries exist, and the cache version advances. No browser runtime, authenticated multi-account E2E or Vercel Preview test is claimed by this static verification.
+
+
+## 12. Feature-module extraction — phase 2
+
+Branch: `refactor/modular-app-entrypoints`.
+
+Function declarations have been separated into feature-oriented classic-script modules:
+
+- `modules/core.js`: 17 functions
+- `modules/auth.js`: 14 functions
+- `modules/notifications.js`: 11 functions
+- `modules/conversations.js`: 36 functions
+- `modules/messages.js`: 37 functions
+- `modules/realtime.js`: 12 functions
+- `modules/groups.js`: 15 functions
+- `modules/channels.js`: 6 functions
+- `modules/admin.js`: 12 functions
+- `modules/media.js`: 26 functions
+
+Modules load synchronously before `app.js`, after the Supabase UMD library. The current compatibility boundary is explicit: shared state, Supabase client, DOM helpers, event wiring, auth-state subscription and startup remain owned by `app.js`; feature functions resolve these shared bindings when invoked. This is a controlled migration stage, not yet full dependency injection or independent bundling.
+
+All extracted function bodies are preserved verbatim. Top-level state and initialization side effects remain in `app.js` to avoid changing startup timing. The service-worker shell cache advances to `v19` and precaches every feature module.
+
+No database schema, RLS policy, RPC, storage object, account, or production data was changed. Static checks are required before Preview validation; no browser or authenticated multi-user E2E is claimed.
+
+
+## 13. Bounded theme-service extraction — phase 3
+
+Branch: `refactor/modular-app-entrypoints`.
+
+Theme preference and browser theme synchronization have been extracted from the main runtime into `modules/theme.js`:
+
+- `themeService` privately owns the local theme preference and `matchMedia` reference.
+- It applies the selected theme, synchronizes system-theme changes, and handles cross-tab `storage` events.
+- Account-level preference persistence continues through the existing `saveUserSetting` function and existing Supabase settings RPC; no backend contract changed.
+- `core.js` retains `applyAppTheme` and `toggleAppTheme` compatibility wrappers, so existing call sites do not need a broad rewrite.
+- `app.js` now initializes the service and binds the existing theme button; the old theme preference globals were removed from that file.
+- The new script is loaded after `core.js` and before feature modules that may invoke theme/settings functions; it is preloaded and precached.
+- The service-worker shell cache advances to `v20`.
+
+This is the first bounded state-ownership extraction, not a full dependency-injection conversion. Static syntax, script-order, preload and precache checks pass. Browser behavior including theme switching, multi-tab synchronization, account preference restore and offline startup still requires Preview smoke testing.
