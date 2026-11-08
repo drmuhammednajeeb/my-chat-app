@@ -414,8 +414,9 @@ $('createGroupBtn').onclick=async()=>{
   row.querySelector('.swipe-reply-indicator')?.remove();gesture=null;
  };
  area.addEventListener('pointerdown',event=>{
-  if(!event.isPrimary||!['touch','pen'].includes(event.pointerType)||event.button!==0)return;
-  if(event.target.closest('button,a,img,audio,video,input,textarea,.reply-quote,.message-menu-wrap'))return;
+  // Support touch, stylus, and desktop mouse drag. Ignore interactive controls only.
+  if(!event.isPrimary||!['touch','pen','mouse'].includes(event.pointerType)||event.button!==0)return;
+  if(event.target.closest('button,a,audio,video,input,textarea,.reply-quote,.message-menu-wrap'))return;
   const row=event.target.closest('.message');
   if(!row)return;
   const id=row.dataset.messageId,message=(state.messages||[]).find(item=>item.id===id);
@@ -431,6 +432,7 @@ $('createGroupBtn').onclick=async()=>{
    if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)*1.15){reset();return}
    if(Math.abs(dx)<10||Math.abs(dx)<Math.abs(dy)*1.2)return;
    gesture.locked=true;
+   if(event.cancelable)event.preventDefault();
    try{gesture.row.setPointerCapture(event.pointerId)}catch(_){}
    const indicator=document.createElement('span');indicator.className='swipe-reply-indicator';
    indicator.innerHTML='<i class="ph ph-arrow-bend-up-left"></i>';gesture.row.append(indicator);
@@ -438,7 +440,7 @@ $('createGroupBtn').onclick=async()=>{
   gesture.row.style.transition='none';
   gesture.row.style.transform='translateX('+Math.max(-76,Math.min(76,dx))+'px)';
   gesture.row.classList.toggle('swipe-ready',Math.abs(dx)>=34);
- },{passive:true});
+ },{passive:false});
  const finish=event=>{
   if(!gesture||event.pointerId!==gesture.pointerId)return;
   const {id,dx,dy,locked}=gesture;
