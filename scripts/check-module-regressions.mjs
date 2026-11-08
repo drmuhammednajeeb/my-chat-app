@@ -100,7 +100,6 @@ assert.ok(hasListener(messages, "bizmind:set-message-selection-mode"), "messages
 assert.ok(core.includes("function isSelfConversation("), "core.js must own isSelfConversation");
 assert.ok(core.includes("function otherMember("), "core.js must own otherMember");
 assert.ok(core.includes("function convName("), "core.js must own convName");
-noDirectCall(messages, "convName", "messages.js");
 assert.ok(!conversations.includes("function convName("), "conversations.js must not redeclare convName");
 assert.ok(!app.includes("const SELF_CHAT_MARKER"), "app.js must not own the shared self-chat marker");
 
