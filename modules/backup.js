@@ -111,14 +111,6 @@ async function backupFetchAll(makeQuery,label,orderBy){
  }
  return rows;
 }
-async function backupFetchByConversation(table,conversationIds){
- const rows=[];
- for(let i=0;i<conversationIds.length;i+=100){
-  const ids=conversationIds.slice(i,i+100);
-  rows.push(...await backupFetchAll(()=>supabaseClient.from(table).select('*').in('conversation_id',ids),'أرشيف '+table));
- }
- return rows;
-}
 function backupMimeTypeFromPath(path,fallback){const ext=String(path).split('.').pop().toLowerCase();const map={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',pdf:'application/pdf',webm:'audio/webm',ogg:'audio/ogg',m4a:'audio/mp4',mp4:'audio/mp4',mp3:'audio/mpeg',wav:'audio/wav',aac:'audio/aac'};return map[ext]||fallback||'application/octet-stream'}
 function backupIsSafeStoragePath(path){
  if(typeof path!=='string'||!path||path.startsWith('/'))return false;
