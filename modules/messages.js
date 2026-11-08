@@ -275,6 +275,15 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  }finally{state.renderingMessageIds.delete(m.id);recordPerf('message_render_item',performance.now()-messageRenderStarted)}
 }
 
+async function renderMessageBatch(messages,conversationId,requestId,batchSize=6){
+ for(let index=0;index<messages.length;index+=batchSize){
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  const batch=messages.slice(index,index+batchSize);
+  await Promise.all(batch.map(message=>renderMessage(message,conversationId,requestId)));
+ }
+ return requestId===state.messageLoadVersion&&state.active?.id===conversationId;
+}
+
 async function loadMessages(){
  const conversationId=state.active?.id;if(!conversationId)return false;
  const messageLoadStarted=performance.now();const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
@@ -296,11 +305,8 @@ async function loadMessages(){
   area.replaceChildren();state.messageIds.clear();
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{
-   const messageRenderBatchStarted=performance.now();for(const message of messages){
-    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-    await renderMessage(message,conversationId,requestId);
-   }
-   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+   const messageRenderBatchStarted=performance.now();
+   if(!await renderMessageBatch(messages,conversationId,requestId,6))return false;
    area.scrollTop=area.scrollHeight;
    recordPerf('message_render_batch',performance.now()-messageRenderBatchStarted,{rows:messages.length});
   }
@@ -340,8 +346,7 @@ async function loadOlderMessages(){
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   state.isLoadingMessages=true;area.style.overflowAnchor='none';
   // Add only newly fetched history rows; preserve existing DOM, media and gesture bindings.
-  for(const message of older){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;await renderMessage(message,conversationId,requestId)}
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  if(!await renderMessageBatch(older,conversationId,requestId,6))return false;
   const restoredAnchor=anchorId?Array.from(area.querySelectorAll('.message')).find(node=>node.dataset.messageId===anchorId):null;
   if(restoredAnchor)area.scrollTop=oldScrollTop+(restoredAnchor.getBoundingClientRect().top-anchorViewportTop);
   state.isLoadingMessages=false;area.style.overflowAnchor='';return true;
