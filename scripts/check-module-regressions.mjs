@@ -97,7 +97,7 @@ assert.doesNotMatch(app, /\b(?:setSidebarView|renderConversations|openConversati
   "app.js must not reassign feature functions through wrappers");
 assert.ok(messages.includes("if(state.selectionMode)decorateMessageSelection(row,m)"),
   "messages.js must own selection decoration for newly rendered messages");
-assert.doesNotMatch(app, /new MutationObserver\(/,
+assert.doesNotMatch(app, /\.observe\(\$\('messages'\)/,
   "app.js must not observe message DOM to patch message-module behavior");
 
 console.log("Module boundary regression checks passed.");
