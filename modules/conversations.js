@@ -376,7 +376,7 @@ async function manageCustomList(list){
 }
 
 async function openCustomListPicker(){
- ensureGroupModal();const body=$('customListBody');body.replaceChildren();
+ window.dispatchEvent(new Event('bizmind:ensure-group-modal'));const body=$('customListBody');body.replaceChildren();
  if(!state.customLists.length){const p=document.createElement('p');p.className='group-management-muted';p.textContent='أنشئ قائمة مخصصة أولاً من قسم «قوائمي» في الشريط الجانبي.';body.append(p);const b=document.createElement('button');b.className='group-management-btn primary';b.textContent='إنشاء قائمة';b.onclick=async()=>{await createCustomList();openCustomListPicker()};body.append(b)}
  else{
   const current=state.chatListItems.get(state.active.id)||new Set();
