@@ -51,6 +51,8 @@ function groupRole(conversation=state.active){return (conversation?.members||[])
 
 function isGroupAdmin(conversation=state.active){return ['owner','admin'].includes(groupRole(conversation))||!!state.isTeamAdmin}
 
+window.addEventListener('bizmind:ensure-group-modal',()=>ensureGroupModal());
+
 function ensureGroupModal(){
  if($('groupManagementModal'))return;
  document.body.insertAdjacentHTML('beforeend',`
@@ -62,7 +64,7 @@ function ensureGroupModal(){
  <div id="messageSelectionToolbar" class="message-selection-toolbar"><strong id="messageSelectionCount">0 محددة</strong><div class="group-management-row"><button id="starSelectedMessages" type="button">تمييز بنجمة</button><button id="exportSelectedMessages" type="button">تصدير المحدد</button><button id="cancelMessageSelection" type="button">إلغاء</button></div></div>`);
  $('groupManagementClose').onclick=closeGroupManagement;$('groupManagementModal').addEventListener('click',e=>{if(e.target===$('groupManagementModal'))closeGroupManagement()});
  $('starredClose').onclick=()=>{$('starredModal').classList.remove('open');$('starredModal').setAttribute('aria-hidden','true')};$('customListClose').onclick=()=>{$('customListModal').classList.remove('open');$('customListModal').setAttribute('aria-hidden','true')};
- $('cancelMessageSelection').onclick=()=>setMessageSelectionMode(false);
+ $('cancelMessageSelection').onclick=()=>window.dispatchEvent(new CustomEvent('bizmind:set-message-selection-mode',{detail:{enabled:false}}));
  $('starSelectedMessages').onclick=starSelectedMessages;$('exportSelectedMessages').onclick=exportSelectedMessages;
 }
 
@@ -147,7 +149,7 @@ function applyGroupComposerOnOpen(){
 
 function groupMenuActions(){
  $('groupInfoBtn').onclick=openGroupManagement;
- $('selectMessagesBtn').onclick=()=>setMessageSelectionMode(!state.selectionMode);
+ $('selectMessagesBtn').onclick=()=>window.dispatchEvent(new CustomEvent('bizmind:set-message-selection-mode',{detail:{enabled:!state.selectionMode}}));
  $('muteNotificationsBtn').onclick=toggleMuteConversation;$('notificationSettingsBtn').onclick=setNotificationTone;
  $('disappearingBtn').onclick=()=>openGroupManagement();
  $('starredMessagesBtn').onclick=openStarredMessages;
