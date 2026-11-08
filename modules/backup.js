@@ -179,13 +179,22 @@ async function backupExistingConversationIds(userId){
  const rows=await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id').eq('user_id',userId),'التحقق من المحادثات المتاحة');
  return new Set(rows.map(row=>row.conversation_id));
 }
+async function backupExistingMembershipPairs(conversationIds){
+ const pairs=new Set();
+ for(let i=0;i<conversationIds.length;i+=100){
+  const ids=conversationIds.slice(i,i+100);
+  const rows=await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id,user_id').in('conversation_id',ids),'التحقق من مسؤولي الملاحظات');
+  rows.forEach(row=>pairs.add(row.conversation_id+':'+row.user_id));
+ }
+ return pairs;
+}
 async function backupRestore(backup){
  const user=backupCurrentUser();
  if(!user)throw new Error('انتهت جلسة الدخول. سجّل الدخول ثم أعد المحاولة.');
  backupValidateShape(backup,user);
  const expected=await backupDigest(backupCanonicalPayload(backup));
  if(backup.checksum!==expected)throw new Error('فشل التحقق من سلامة النسخة.');
- const personal=backup.personal,available=await backupExistingConversationIds(user.id),results=[];
+ const personal=backup.personal,available=await backupExistingConversationIds(user.id),membershipPairs=await backupExistingMembershipPairs([...available]),results=[];
  const apply=async(name,rows,conflict,filter)=>{
   backupAssertRestorableTable(name);
   const eligible=(rows||[]).filter(row=>!filter||filter(row));
@@ -229,16 +238,17 @@ async function backupRestore(backup){
  }
  results.push({name:'user_conversation_labels',restored:labelMap.size,skipped:personal.user_conversation_labels.length-labelMap.size});
  results.push({name:'user_conversation_label_items',restored:labelItems.length,skipped:personal.user_conversation_label_items.length-labelItems.length});
- await apply('private_conversation_notes',personal.private_conversation_notes,'id',row=>available.has(row.conversation_id));
+ const safeNotes=personal.private_conversation_notes.filter(row=>available.has(row.conversation_id)).map(row=>({...row,responsible_user_id:row.responsible_user_id&&membershipPairs.has(row.conversation_id+':'+row.responsible_user_id)?row.responsible_user_id:null}));
+ await apply('private_conversation_notes',safeNotes,'id');
  // Starred-message references are restored only if the referenced message is still accessible.
  const stars=[];
  for(let i=0;i<personal.user_message_stars.length;i+=100){
   const batch=personal.user_message_stars.slice(i,i+100);
   const ids=batch.map(row=>row.message_id);
   if(!ids.length)continue;
-  const {data,error}=await supabaseClient.from('chat_messages').select('id,conversation_id').in('id',ids);
+  const {data,error}=await supabaseClient.from('chat_messages').select('id,conversation_id,deleted_at').in('id',ids);
   if(error)throw new Error('تعذر التحقق من الرسائل المميزة: '+error.message);
-  const valid=new Set((data||[]).filter(row=>available.has(row.conversation_id)).map(row=>row.id));
+  const valid=new Set((data||[]).filter(row=>available.has(row.conversation_id)&&!row.deleted_at).map(row=>row.id));
   stars.push(...batch.filter(row=>valid.has(row.message_id)));
  }
  await apply('user_message_stars',stars,'user_id,message_id');
