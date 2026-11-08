@@ -17,6 +17,8 @@ A static function-reference scan initially found a strongly connected dependency
 - `groups.js`
 - `media.js`
 
+The second decoupling pass also removed several direct edges: `groups.js` requests avatar rendering through `bizmind:render-avatar`; `media.js` sends typing and edited-message notifications through `bizmind:publish-typing` and `bizmind:message-updated`; chat-avatar and conversation-list refresh requests are now owned by `conversations.js` through named events. The function-reference graph now reports 31 cross-module edges (down from 34 after the first pass and 35 at the original baseline) and 187 feature-module function declarations (three helper definitions were relocated/removed from their former owner file). The five-module strongly connected component remains.
+
 This is a logical dependency cycle, not an ES-module import cycle. The current ordered script loading allows the global functions to exist before normal user interaction, but the coupling makes independent testing, replacement, and maintenance difficult.
 
 ## Dependency observations
@@ -27,6 +29,7 @@ This is a logical dependency cycle, not an ES-module import cycle. The current o
 - `notifications.js` calls into core, conversations, and messages.
 - The five-module strongly connected component above is the remaining main decoupling target.
 - First safe edge removal: channel navigation now dispatches `bizmind:open-conversation`; `conversations.js` owns the listener.
+- Additional contracts: `bizmind:render-avatar`, `bizmind:publish-typing`, `bizmind:message-updated`, `bizmind:render-chat-avatar`, and `bizmind:render-conversations` keep the owning module responsible for rendering or transport behavior while removing direct calls.
 - Second safe edge removal: conversation-list lifecycle now dispatches `bizmind:render-my-channels`; `channels.js` owns the listener. This removed the direct `conversations.js` → `channels.js` function dependency and moved `channels.js` outside the cyclic component.
 - `app.js` still contains global wiring and runtime wrappers that replace functions such as `renderConversations`, `openConversation`, `loadConversations`, and `renderMessage`. These wrappers are an additional coupling surface and should be retired incrementally, not removed in one pass.
 
@@ -38,7 +41,7 @@ The HTML loads Supabase UMD first, then the ten feature scripts in a fixed order
 
 1. **Establish contracts without changing behavior.** Keep the classic-script runtime and current load order; define explicit feature boundaries and document the callable surface.
 2. **Extract shared application contracts.** Move cross-feature coordination behind narrow callbacks/events, beginning with conversation lifecycle and message rendering. Avoid broad rewrites.
-3. **Break the remaining five-module cycle incrementally.** Two channel/conversation edges have already been replaced with named window events. Continue with one narrow contract at a time; after each edge is removed, run the architecture check and syntax/build checks. Do not move a provider ahead of its dependencies until calls are routed through a contract.
+3. **Break the remaining five-module cycle incrementally.** Channel/conversation, group/avatar, media/realtime, and media/conversation call paths have been partly replaced with named window-event contracts. Continue with one narrow contract at a time; after each edge is removed, run the architecture check and syntax/build checks. Do not move a provider ahead of its dependencies until calls are routed through a contract.
 4. **Retire app.js monkey-patching.** Move each wrapper to the owning feature module or an explicit composition layer, one wrapper at a time.
 5. **Add behavioral regression coverage.** Verify startup/Home, authentication, direct/group/channel opening, chronological message rendering, realtime updates, notifications, media, workspace, and owner dashboard.
 6. **Only then consider ES modules.** Do not switch module systems until the dependency graph is acyclic and deployment/service-worker behavior is covered.
