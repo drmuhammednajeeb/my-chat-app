@@ -316,40 +316,83 @@ $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox
 $('conversationWorkspaceBtn').onclick=()=>{closeChatHeaderMenu();openConversationWorkspace()};
 $('workspaceInboxTabs').addEventListener('click',e=>{const label=e.target.closest('[data-workspace-label]');if(label){state.workspaceActiveLabelId=state.workspaceActiveLabelId===label.dataset.workspaceLabel?null:label.dataset.workspaceLabel;renderWorkspaceInboxTabs();renderConversations();return}const b=e.target.closest('[data-workspace-category]');if(!b)return;state.workspaceCategory=b.dataset.workspaceCategory;state.workspaceActiveLabelId=null;renderWorkspaceInboxTabs();renderConversations()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('conversationWorkspaceModal')?.classList.contains('open'))closeConversationWorkspace()});
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authLifecycleVersion++;diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='INITIAL_SESSION'&&document.documentElement.classList.contains('auth-booting'))diagLog('auth-initial-session',{hasSession:!!session?.user});if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authLifecycleVersion++;diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+
 (async()=>{
  const bootStatus=document.getElementById('bootStatus');
- const bootSupabaseMs=window.__BIZMIND_BOOT_TIMINGS__?.supabaseScriptMs;
+ const bootTimeoutMs=12000;
+ const bootStartedAt=performance.now();
+ let bootTimeoutId=null;
+ const bootLifecycleVersion=authLifecycleVersion;
+ const bootTimings=window.__BIZMIND_BOOT_TIMINGS__||(window.__BIZMIND_BOOT_TIMINGS__={});
+ bootTimings.bootStartedAt=bootStartedAt;
+ diagLog('boot_started');
+ const bootSupabaseMs=bootTimings.supabaseScriptMs;
  if(Number.isFinite(bootSupabaseMs))recordPerf('startup_supabase_script',bootSupabaseMs);
+ diagLog('supabase_client_ready',{available:!!supabaseClient,scriptTimingAvailable:Number.isFinite(bootSupabaseMs)});
  const bootDelayNotice=window.setTimeout(()=>{
   if(bootStatus)bootStatus.textContent='لا يزال التحقق جارياً. يرجى الانتظار مع التأكد من اتصال الإنترنت.';
  },8000);
  try{
   const sessionStarted=performance.now();
-  const {data,error}=await supabaseClient.auth.getSession();
-  recordPerf('startup_get_session',performance.now()-sessionStarted,{success:!error});
-  if(window.__BIZMIND_BOOT_TIMINGS__){window.__BIZMIND_BOOT_TIMINGS__.getSessionMs=Math.round(performance.now()-sessionStarted);window.__BIZMIND_BOOT_TIMINGS__.authResolved=performance.now()}
+  diagLog('get_session_started');
+  bootTimings.getSessionStartedAt=sessionStarted;
+  const sessionPromise=supabaseClient.auth.getSession().then(
+   result=>({kind:'resolved',result}),
+   error=>({kind:'rejected',error})
+  );
+  const timeoutPromise=new Promise(resolve=>{
+   bootTimeoutId=window.setTimeout(()=>resolve({kind:'timeout'}),bootTimeoutMs);
+  });
+  const outcome=await Promise.race([sessionPromise,timeoutPromise]);
+  if(bootLifecycleVersion!==authLifecycleVersion){
+   diagLog('boot_abandoned_after_auth_lifecycle_change');
+   return;
+  }
+  if(outcome.kind==='timeout'){
+   const elapsed=performance.now()-sessionStarted;
+   bootTimings.getSessionTimedOutAt=performance.now();
+   recordPerf('startup_get_session_timeout',elapsed,{timeout_ms:bootTimeoutMs});
+   diagLog('get_session_timed_out',{timeout_ms:bootTimeoutMs});
+   state.user=null;
+   $('app').classList.add('hidden');
+   $('auth').classList.remove('hidden');
+   authError('تأخر التحقق من جلسة الدخول أكثر من 12 ثانية. يمكنك تسجيل الدخول الآن، أو إعادة تحميل الصفحة والمحاولة مجدداً.');
+   diagLog('auth_shell_revealed',{reason:'session_timeout'});
+   return;
+  }
+  if(outcome.kind==='rejected')throw outcome.error;
+  const {data,error}=outcome.result;
+  const sessionElapsed=performance.now()-sessionStarted;
+  recordPerf('startup_get_session',sessionElapsed,{success:!error});
+  bootTimings.getSessionMs=Math.round(sessionElapsed);
+  bootTimings.authResolved=performance.now();
+  diagLog('get_session_resolved',{success:!error,hasSession:!!data?.session?.user});
   if(error)throw error;
   const session=data?.session;
   if(session?.user){
    await enterApp(session.user);
+   if(bootLifecycleVersion!==authLifecycleVersion)return;
+   diagLog('auth_shell_revealed',{reason:'authenticated_boot'});
   }else{
    state.user=null;
    $('app').classList.add('hidden');
    $('auth').classList.remove('hidden');
+   diagLog('auth_shell_revealed',{reason:'no_session'});
   }
  }catch(error){
   console.error('Initial auth session check failed:',error);
+  if(bootLifecycleVersion!==authLifecycleVersion)return;
   $('app').classList.add('hidden');
   $('auth').classList.remove('hidden');
-  authError('تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد تحميل التطبيق.');
+  authError('تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد المحاولة.');
+  diagLog('auth_shell_revealed',{reason:'session_error'});
  }finally{
+  if(bootTimeoutId!==null)window.clearTimeout(bootTimeoutId);
   window.clearTimeout(bootDelayNotice);
   document.documentElement.classList.remove('auth-booting');
  }
-})();
-
-// Profile Center: resilient editing, explicit photo approval and recoverable close controls
+})(); resilient editing, explicit photo approval and recoverable close controls
 let profileModalEditable=false,profilePendingPhoto=null,profilePhotoPreviewUrl=null,profilePhotoBusy=false,profileSaveBusy=false;
 
 document.addEventListener('DOMContentLoaded',()=>{
