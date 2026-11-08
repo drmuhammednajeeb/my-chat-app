@@ -110,3 +110,20 @@ The regression guard now rejects feature-function reassignment wrappers and app-
 ## Shared conversation-model primitives
 
 Moved `SELF_CHAT_MARKER`, `isSelfConversation()`, `otherMember()`, and `convName()` into `core.js`. These are pure/shared model helpers over the established global state and are consumed by several feature modules; keeping them in the foundational layer removes the `messages.js` → `conversations.js` dependency without duplicating conversation-name semantics (including the self-chat label).
+
+## Revalidation after shared group-helper ownership correction
+
+At commit `84b436d039a45b1970daaeb64f8802e097c7408a`, the duplicate definitions of `groupRole()` and `isGroupAdmin()` were removed from `groups.js`. Both helpers are now defined once in `core.js`, which is their shared owner.
+
+Revalidation results:
+
+- All ten feature-module sources pass JavaScript syntax parsing.
+- No duplicate top-level function declarations remain across the ten feature modules.
+- The static dependency scan reports 27 cross-module edges.
+- `core.js` has no outgoing feature-module dependencies in the scan.
+- The remaining strongly connected component is `conversations.js`, `realtime.js`, and `groups.js`.
+- The three-way cycle is backed by direct call sites: conversations invokes realtime lifecycle functions and group starred-message loading; realtime invokes conversation rendering/loading functions and group state/presentation functions; groups invokes conversation rendering/loading functions.
+- Script inclusion order in `index.html` remains correct, and all ten modules remain in the service-worker precache.
+- The regression assertions for the existing event boundaries and composition-root constraints pass in the source-level recheck.
+
+The dependency scan is a name-based static heuristic rather than an AST/type-aware analyzer. Its edge list is therefore used to locate candidate dependencies; the cycle above was separately checked against the direct call sites listed above. Browser-level functional testing has not been performed. CI status at this revision must be read independently of source validation; a Vercel build-rate-limit response is not evidence of a source compilation failure.
