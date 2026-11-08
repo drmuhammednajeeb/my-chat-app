@@ -144,3 +144,12 @@ function subscribePersonalChatData(){if(!state.user)return;if(state.personalChan
  .on('postgres_changes',{event:'*',schema:'public',table:'user_classification_rules',filter:'user_id=eq.'+uid},async()=>{await loadWorkspaceData();renderConversations()})
  .on('postgres_changes',{event:'*',schema:'public',table:'private_conversation_notes',filter:'user_id=eq.'+uid},p=>{const row=p.eventType==='DELETE'?p.old:p.new;if($('conversationWorkspaceModal')?.classList.contains('open')&&state.active?.id===row?.conversation_id)loadPrivateConversationNotes(state.active.id)})
  .subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Personal chat preferences realtime:',status)})}
+
+// Realtime event contracts keep transport handlers owned by this module.
+window.addEventListener('bizmind:publish-typing',event=>{
+ void publishTyping(!!event.detail?.isTyping);
+});
+window.addEventListener('bizmind:message-updated',event=>{
+ const {payload,conversationId}=event.detail||{};
+ if(payload&&conversationId)handleMessageUpdateRealtime(payload,conversationId);
+});
