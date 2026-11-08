@@ -129,17 +129,17 @@ async function backupCreate(){
  const personal={};
  const queryFor={
   user_settings:()=>supabaseClient.from('user_settings').select('user_id,settings,updated_at').eq('user_id',user.id),
-  user_chat_preferences:()=>supabaseClient.from('user_chat_preferences').select('*').eq('user_id',user.id),
-  user_conversation_settings:()=>supabaseClient.from('user_conversation_settings').select('*').eq('user_id',user.id),
-  user_message_stars:()=>supabaseClient.from('user_message_stars').select('*').eq('user_id',user.id),
-  user_conversation_labels:()=>supabaseClient.from('user_conversation_labels').select('*').eq('user_id',user.id),
-  user_conversation_label_items:()=>supabaseClient.from('user_conversation_label_items').select('*').eq('user_id',user.id),
-  user_classification_rules:()=>supabaseClient.from('user_classification_rules').select('*').eq('user_id',user.id),
-  user_conversation_classifications:()=>supabaseClient.from('user_conversation_classifications').select('*').eq('user_id',user.id),
-  private_conversation_notes:()=>supabaseClient.from('private_conversation_notes').select('*').eq('user_id',user.id),
+  user_chat_preferences:()=>supabaseClient.from('user_chat_preferences').select(RESTORE_COLUMNS.user_chat_preferences.join(',')).eq('user_id',user.id),
+  user_conversation_settings:()=>supabaseClient.from('user_conversation_settings').select(RESTORE_COLUMNS.user_conversation_settings.join(',')).eq('user_id',user.id),
+  user_message_stars:()=>supabaseClient.from('user_message_stars').select(RESTORE_COLUMNS.user_message_stars.join(',')).eq('user_id',user.id),
+  user_conversation_labels:()=>supabaseClient.from('user_conversation_labels').select(RESTORE_COLUMNS.user_conversation_labels.join(',')).eq('user_id',user.id),
+  user_conversation_label_items:()=>supabaseClient.from('user_conversation_label_items').select(RESTORE_COLUMNS.user_conversation_label_items.join(',')).eq('user_id',user.id),
+  user_classification_rules:()=>supabaseClient.from('user_classification_rules').select(RESTORE_COLUMNS.user_classification_rules.join(',')).eq('user_id',user.id),
+  user_conversation_classifications:()=>supabaseClient.from('user_conversation_classifications').select(RESTORE_COLUMNS.user_conversation_classifications.join(',')).eq('user_id',user.id),
+  private_conversation_notes:()=>supabaseClient.from('private_conversation_notes').select(RESTORE_COLUMNS.private_conversation_notes.join(',')).eq('user_id',user.id),
   user_notifications:()=>supabaseClient.from('user_notifications').select('*').eq('recipient_id',user.id),
-  chat_lists:()=>supabaseClient.from('chat_lists').select('*').eq('user_id',user.id),
-  chat_list_items:()=>supabaseClient.from('chat_list_items').select('*').eq('user_id',user.id)
+  chat_lists:()=>supabaseClient.from('chat_lists').select(RESTORE_COLUMNS.chat_lists.join(',')).eq('user_id',user.id),
+  chat_list_items:()=>supabaseClient.from('chat_list_items').select(RESTORE_COLUMNS.chat_list_items.join(',')).eq('user_id',user.id)
  };
  const orderFor={user_settings:['updated_at','user_id'],user_chat_preferences:['created_at','conversation_id'],user_conversation_settings:['updated_at','conversation_id'],user_message_stars:['created_at','message_id'],user_conversation_labels:['created_at','id'],user_conversation_label_items:['created_at','label_id','conversation_id'],user_classification_rules:['created_at','id'],user_conversation_classifications:['updated_at','conversation_id'],private_conversation_notes:['created_at','id'],user_notifications:['created_at','id'],chat_lists:['created_at','id'],chat_list_items:['created_at','list_id','conversation_id']};
  for(const table of PERSONAL_TABLES)personal[table]=await backupFetchAll(queryFor[table],table,orderFor[table]);
@@ -181,7 +181,7 @@ async function backupCreate(){
  for(const doc of conversationArchive.documents){
   fileRefs.set('conversation-documents:'+doc.storage_path,{bucket:'conversation-documents',path:doc.storage_path,mimeType:doc.mime_type||'application/octet-stream',kind:'document',conversationId:doc.conversation_id,ownerId:doc.owner_id,documentId:doc.id,fileName:doc.file_name,visibility:doc.visibility});
  }
- for(const conv of conversationArchive.conversations){if(conv.avatar_path){const path=conv.avatar_path;fileRefs.set('channel-avatars:'+path,{bucket:'channel-avatars',path,mimeType:'image/*',kind:'conversation-avatar',conversationId:conv.id,ownerId:path.split('/')[1]||null})}}
+ // Channel avatars are shared conversation assets, not personal-owned files. Keep their path metadata in the archive; do not duplicate shared binaries into an account backup.
  const avatarPath=backupStoragePathFromPublicUrl(profile?.avatar_url,'avatars');
  if(avatarPath&&avatarPath.split('/')[0]===user.id)fileRefs.set('avatars:'+avatarPath,{bucket:'avatars',path:avatarPath,mimeType:'image/*',kind:'profile-avatar',ownerId:user.id});
  let binaryBytes=0;
@@ -240,11 +240,17 @@ function backupValidateShape(value,user,expectedSchemaVersion=value?.schemaVersi
   if(value.conversationArchive[key].length>BACKUP_MAX_ROWS)throw new Error('أرشيف المحادثات يتجاوز الحد الآمن.');
  }
  if(value.schemaVersion>=2){
-  if(!value.profile||value.profile.id!==user.id)throw new Error('بيانات الملف الشخصي غير مرتبطة بالحساب الحالي.');
+  if(value.profile!==null&&(!value.profile||typeof value.profile!=='object'||Array.isArray(value.profile)||value.profile.id!==user.id))throw new Error('بيانات الملف الشخصي غير مرتبطة بالحساب الحالي.');
   for(const key of ['documents','attachments','memberships','groupSettings','membershipEvents','privateReplyContexts','messageEditHistory']){if(!Array.isArray(value.conversationArchive[key]))throw new Error('قسم الأرشيف غير مكتمل: '+key);if(value.conversationArchive[key].length>BACKUP_MAX_ROWS)throw new Error('عدد السجلات يتجاوز الحد الآمن: '+key)}
   let total=0;
   for(const item of value.conversationArchive.attachments){
    if(!item||!['chat-media','conversation-documents','avatars','channel-avatars'].includes(item.bucket)||typeof item.path!=='string'||typeof item.data!=='string'||!Number.isSafeInteger(item.sizeBytes)||item.sizeBytes<0)throw new Error('سجل مرفق غير صالح.');
+   const parts=item.path.split('/');
+   if(!parts.length||parts.some(part=>!part||part==='.'||part==='..'||part.includes('\\')||decodeURIComponent(part)==='.'||decodeURIComponent(part)==='..'))throw new Error('مسار مرفق غير آمن.');
+   if(['chat-media','conversation-documents'].includes(item.bucket)&&(typeof item.conversationId!=='string'||parts[0]!==item.conversationId||parts[1]!==user.id))throw new Error('مسار المرفق لا يطابق المحادثة والحساب الحاليين.');
+   if(item.bucket==='avatars'&&parts[0]!==user.id)throw new Error('مسار الصورة الشخصية لا يخص الحساب الحالي.');
+   if(item.bucket==='chat-media'&&(!Array.isArray(item.messageIds)||!item.messageIds.length||typeof item.senderId!=='string'))throw new Error('مرجع مرفق الرسالة غير مكتمل.');
+   if(item.bucket==='conversation-documents'&&(item.ownerId!==user.id||typeof item.documentId!=='string'))throw new Error('مرجع المستند لا يخص الحساب الحالي.');
    total+=item.sizeBytes;if(total>BACKUP_MAX_BINARY_BYTES)throw new Error('حجم المرفقات يتجاوز الحد الآمن.');
   }
  }
@@ -322,12 +328,13 @@ async function backupRestoreAttachments(backup,user,available){
    const {error}=await supabaseClient.storage.from(item.bucket).upload(item.path,new Blob([bytes],{type:item.mimeType}),{upsert:false,contentType:item.mimeType});
    if(error)throw new Error('تعذر استعادة مرفق الرسالة: '+error.message);restored++;
   }else if(item.bucket==='conversation-documents'){
-   if(item.ownerId!==user.id){skipped++;continue}
+   const pathParts=String(item.path).split('/');
+   if(item.ownerId!==user.id||pathParts[0]!==item.conversationId||pathParts[1]!==user.id){skipped++;continue}
    const exists=await backupStorageObjectExists(item.bucket,item.path);let changed=false;
    if(!exists){const {error}=await supabaseClient.storage.from(item.bucket).upload(item.path,new Blob([bytes],{type:item.mimeType}),{upsert:false,contentType:item.mimeType});if(error)throw new Error('تعذر استعادة المستند: '+error.message);changed=true}
    const {data:doc,error:docError}=await supabaseClient.from('conversation_documents').select('id').eq('id',item.documentId).maybeSingle();
    if(docError)throw new Error('تعذر التحقق من سجل المستند: '+docError.message);
-   if(!doc){const meta=(backup.conversationArchive.documents||[]).find(row=>row.id===item.documentId);if(!meta)throw new Error('بيانات المستند غير موجودة في الأرشيف.');const {error}=await supabaseClient.from('conversation_documents').insert({id:meta.id,owner_id:user.id,conversation_id:meta.conversation_id,storage_path:meta.storage_path,file_name:meta.file_name,mime_type:meta.mime_type,size_bytes:meta.size_bytes,visibility:meta.visibility,created_at:meta.created_at,shared_at:meta.shared_at});if(error)throw new Error('تعذر استعادة سجل المستند: '+error.message);changed=true}
+   if(!doc){const meta=(backup.conversationArchive.documents||[]).find(row=>row.id===item.documentId);if(!meta||meta.owner_id!==user.id||meta.conversation_id!==item.conversationId||meta.storage_path!==item.path)throw new Error('بيانات المستند لا تطابق المالك والمسار في الأرشيف.');const {error}=await supabaseClient.from('conversation_documents').insert({id:meta.id,owner_id:user.id,conversation_id:meta.conversation_id,storage_path:meta.storage_path,file_name:meta.file_name,mime_type:meta.mime_type,size_bytes:meta.size_bytes,visibility:meta.visibility,created_at:meta.created_at,shared_at:meta.shared_at});if(error)throw new Error('تعذر استعادة سجل المستند: '+error.message);changed=true}
    if(changed)restored++;else skipped++;
   }else skipped++;
  }
