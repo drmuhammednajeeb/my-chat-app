@@ -43,34 +43,6 @@ function openMessageReactions(row){
  positionMessageReactionBar(row);
 }
 
-function bindMessageGestures(row,message){
- const bubble=row.querySelector('.bubble');if(!bubble||message.deleted_at)return;
- let start=null,longPressTimer=null;
- const cancelLongPress=()=>{if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null}};
- bubble.addEventListener('pointerdown',event=>{
-  if(event.target.closest('button,a,.reply-quote,.message-menu-wrap'))return;
-  start={x:event.clientX,y:event.clientY,id:event.pointerId};
-  if(event.pointerType==='touch'){cancelLongPress();longPressTimer=setTimeout(()=>{if(start)openMessageReactions(row)},520)}
- });
- bubble.addEventListener('pointermove',event=>{
-  if(!start||start.id!==event.pointerId)return;
-  const dx=event.clientX-start.x,dy=event.clientY-start.y;
-  if(Math.hypot(dx,dy)>12)cancelLongPress();
-  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)<110)bubble.style.transform='translateX('+Math.max(-78,Math.min(78,dx*.42))+'px)';
- });
- bubble.addEventListener('pointerup',event=>{
-  if(!start)return;
-  const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;cancelLongPress();bubble.style.transform='';
-  const rtl=getComputedStyle(document.documentElement).direction==='rtl';
-  if(Math.abs(dx)>=58&&Math.abs(dx)>Math.abs(dy)*1.25&&(rtl?dx>0:dx<0))beginReply(message);
- });
- bubble.addEventListener('pointercancel',()=>{start=null;cancelLongPress();bubble.style.transform=''});
- bubble.addEventListener('click',event=>{
-  if(event.pointerType==='touch'||!event.detail||event.target.closest('button,a,.reply-quote,img,.message-menu-wrap'))return;
-  openMessageReactions(row);
- });
-}
-
 async function toggleMessageReaction(message,reactionType,button){
  const conversationId=message.conversation_id||state.active?.id,userId=state.user?.id;
  if(!conversationId||!userId||state.active?.id!==conversationId||message.deleted_at)return;
@@ -220,6 +192,38 @@ function renderMessageStatus(m,bubble){if(m.sender_id!==state.user?.id||m.delete
 
 async function markConversationReceipt(conversationId,markRead=true){const stamp=new Date().toISOString(),patch={last_delivered_at:stamp};if(markRead)patch.last_read_at=stamp;const {error}=await supabaseClient.from('conversation_members').update(patch).eq('conversation_id',conversationId).eq('user_id',state.user.id);if(error){console.warn('Receipt update failed',error.message);return false}if(state.active?.id===conversationId){const me=(state.active.members||[]).find(x=>x.user_id===state.user.id);if(me){me.last_delivered_at=stamp;if(markRead)me.last_read_at=stamp}if(markRead){state.memberReads[conversationId]=stamp;const conv=state.conversations.find(x=>x.id===conversationId);if(conv)conv.last_read_at=stamp;renderConversations()}document.querySelectorAll('.message.mine').forEach(row=>{const msg=state.messages.find(x=>x.id===row.dataset.messageId),bubble=row.querySelector('.bubble');if(msg&&bubble){bubble.querySelector('.message-status')?.remove();renderMessageStatus(msg,bubble)}})}return true}
 
+function compareMessagesChronologically(a,b){
+ const aTime=Date.parse(a?.created_at),bTime=Date.parse(b?.created_at);
+ if(Number.isFinite(aTime)&&Number.isFinite(bTime)&&aTime!==bTime)return aTime-bTime;
+ const aStamp=String(a?.created_at||''),bStamp=String(b?.created_at||'');
+ if(aStamp!==bStamp)return aStamp.localeCompare(bStamp);
+ return String(a?.id||'').localeCompare(String(b?.id||''));
+}
+
+function rebuildMessageDayDividers(area){
+ area.querySelectorAll('.day-divider').forEach(node=>node.remove());
+ let previousDay=null;
+ for(const row of area.querySelectorAll('.message')){
+  const day=row.dataset.day||'';
+  if(day!==previousDay){
+   const divider=document.createElement('div');
+   divider.className='day-divider';divider.textContent=day;divider.dataset.day=day;
+   area.insertBefore(divider,row);previousDay=day;
+  }
+ }
+}
+
+function insertMessageChronologically(area,row,message){
+ const next=Array.from(area.querySelectorAll('.message')).find(existing=>
+  compareMessagesChronologically(
+   {created_at:existing.dataset.createdAt,id:existing.dataset.messageId},
+   message
+  )>0
+ );
+ area.insertBefore(row,next||null);
+ rebuildMessageDayDividers(area);
+}
+
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||state.messageIds.has(m.id)||state.renderingMessageIds.has(m.id))return false;
  const messageRenderStarted=performance.now();state.renderingMessageIds.add(m.id);
@@ -228,7 +232,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
   const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
   const activeConversation=state.active;
   const member=(activeConversation?.members||[]).find(x=>x.user_id===m.sender_id),sender=member?.profile?.display_name||'عضو';
-  const row=document.createElement('article');row.className='message'+(m.sender_id===state.user?.id?' mine':'');row.dataset.day=day;row.dataset.messageId=m.id;
+  const row=document.createElement('article');row.className='message'+(m.sender_id===state.user?.id?' mine':'');row.dataset.day=day;row.dataset.createdAt=m.created_at;row.dataset.messageId=m.id;
   const bubble=document.createElement('div');bubble.className='bubble'+(m.deleted_at?' deleted':'');
   if(m.sender_id!==state.user?.id&&(activeConversation?.type==='group'||activeConversation?.type==='channel')){const label=document.createElement('div');label.className='sender';label.textContent=sender;row.append(label)}
   if(state.active?.type==='direct'&&state.privateReplyContexts.has(m.id)&&!m.deleted_at){const ctx=state.privateReplyContexts.get(m.id),q=document.createElement('div');q.className='reply-quote private-reply-quote';const who=document.createElement('strong'),preview=document.createElement('span');who.textContent='رد خاص من مجموعة';preview.textContent=ctx.quoted_content;q.append(who,preview);bubble.append(q)}
@@ -260,11 +264,10 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  top=Math.max(pad,Math.min(top,window.innerHeight-box.height-pad));
  menu.style.left=Math.round(left)+'px';menu.style.top=Math.round(top)+'px';trigger.setAttribute('aria-expanded','true');
 };menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
-  row.append(bubble);renderReactionBar(row,m);renderMessagePinMark(row,m);bindMessageGestures(row,m);
+  row.append(bubble);renderReactionBar(row,m);renderMessagePinMark(row,m);
   if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)){state.messageIds.delete(m.id);return false;}
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
-  const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
-  area.append(row);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
+  insertMessageChronologically(area,row,m);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
   if(!state.isLoadingMessages){if(m.sender_id===state.user?.id){clearNewMessages(false);scheduleMessagesBottom(area,'auto')}else if(near){scheduleMessagesBottom(area,'auto')}else{state.newMessageCount=(state.newMessageCount||0)+1;updateNewMessagesIndicator()}}
   updateDiagnostics();
   return true;
@@ -323,8 +326,8 @@ async function loadOlderMessages(){
  state.loadingOlderMessages=true;
  const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
  const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
- const oldHeight=area.scrollHeight,oldTop=area.scrollTop,requestId=state.messageLoadVersion;
- const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
+ const requestId=state.messageLoadVersion;
+ const oldScrollTop=area.scrollTop,anchorViewportTop=anchorTop;
  try{
   let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',oldest.created_at);if(state.activeChatPreference?.cleared_before)olderQuery=olderQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await olderQuery.order('created_at',{ascending:false}).limit(50);
   if(error)throw error;
@@ -338,18 +341,18 @@ async function loadOlderMessages(){
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(parentError)throw parentError;(parents||[]).forEach(parent=>state.replyMessages.set(parent.id,parent))}
   await loadMessageReactions(conversationId,older);await loadMessagePins(conversationId);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  state.isLoadingMessages=true;area.style.overflowAnchor='none';area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
-  for(const message of state.messages){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;await renderMessage(message,conversationId,requestId)}
+  state.isLoadingMessages=true;area.style.overflowAnchor='none';
+  // Add only newly fetched history rows; preserve existing DOM, media and gesture bindings.
+  for(const message of older){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;await renderMessage(message,conversationId,requestId)}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   const restoredAnchor=anchorId?Array.from(area.querySelectorAll('.message')).find(node=>node.dataset.messageId===anchorId):null;
-  if(restoredAnchor)area.scrollTop=oldTop+(restoredAnchor.getBoundingClientRect().top-anchorTop);
-  else area.scrollTop=oldTop+(area.scrollHeight-oldHeight);
+  if(restoredAnchor)area.scrollTop=oldScrollTop+(restoredAnchor.getBoundingClientRect().top-anchorViewportTop);
   state.isLoadingMessages=false;area.style.overflowAnchor='';return true;
  }catch(error){
   console.error('Older message loading failed:',error);toast('تعذر تحميل الرسائل الأقدم');
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){state.isLoadingMessages=false;area.style.overflowAnchor=''}
   return false;
- }finally{state.loadingOlderMessages=false;area.querySelector('.messages-history-loader')?.remove()}
+ }finally{state.loadingOlderMessages=false}
 }
 
 async function editMessage(m){beginEditMessage(m)}
