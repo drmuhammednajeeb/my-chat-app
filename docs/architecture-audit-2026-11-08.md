@@ -80,3 +80,16 @@ Message swipe/reaction interaction remains deferred. Do not change its pointer-e
 ## Merge policy
 
 PR #72 remains Draft and must not be merged until the user explicitly approves after functional preview testing. Production and Supabase remain untouched.
+
+## Progress update — first dependency seam
+
+After recording the baseline, the first low-risk ownership correction was applied:
+
+- Moved `clearNewMessages()` and `jumpToLatestMessages()` from `modules/core.js` to `modules/messages.js`.
+- Preserved both function names and bodies; call sites and user-facing behavior were not intentionally changed.
+- `modules/core.js` no longer calls message-layer functions.
+- The same conservative scan now reports 41 distinct module dependency directions (down from 42), and the strongly connected component is reduced from 9 files to 7. `modules/core.js` is no longer part of that component and has no outgoing cross-module function calls in this scan.
+- Structural checks confirmed the two functions exist only in `modules/messages.js`, no duplicate function declarations were detected in the checked files, and braces are balanced in both changed files.
+- Vercel reported the latest preview deployment as Ready. This is a deployment/build signal, not authenticated end-to-end browser validation.
+
+Next: inspect the remaining 7-file cycle and select one similarly narrow seam. Keep this PR Draft and do not merge until functional preview validation and explicit approval.
