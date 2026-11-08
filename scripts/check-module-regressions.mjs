@@ -68,6 +68,16 @@ assert.ok(hasListener(realtime, "bizmind:message-updated"), "realtime.js must ow
 assert.ok(!hasListener(conversations, "bizmind:render-chat-avatar"), "unused render-chat-avatar listener must not remain without a producer");
 assert.ok(hasListener(conversations, "bizmind:render-conversations"), "conversations.js must own render-conversations");
 
+// conversations/realtime -> media: avatar painting and voice cancellation are media-owned commands.
+noDirectCall(conversations, "renderAvatar", "conversations.js");
+noDirectCall(realtime, "renderAvatar", "realtime.js");
+noDirectCall(conversations, "cancelVoiceRecording", "conversations.js");
+assert.ok(hasDispatch(conversations, "bizmind:render-avatar"), "conversations.js must request avatar rendering through an event");
+assert.ok(hasDispatch(realtime, "bizmind:render-avatar"), "realtime.js must request avatar rendering through an event");
+assert.ok(hasListener(media, "bizmind:render-avatar"), "media.js must own avatar rendering");
+assert.ok(hasDispatch(conversations, "bizmind:cancel-voice-recording"), "conversations.js must publish voice cancellation");
+assert.ok(hasListener(media, "bizmind:cancel-voice-recording"), "media.js must own voice cancellation");
+
 // messages -> conversations: read-receipt refresh and menu close use synchronous DOM events.
 noDirectCall(messages, "renderConversations", "messages.js");
 noDirectCall(messages, "closeChatHeaderMenu", "messages.js");
