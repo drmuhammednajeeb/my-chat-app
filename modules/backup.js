@@ -128,6 +128,8 @@ async function backupCreate(){
   personal,
   conversationArchive
  };
+ const serializedSize=new TextEncoder().encode(JSON.stringify(payload)).length;
+ if(serializedSize>BACKUP_MAX_FILE_BYTES)throw new Error('حجم النسخة يتجاوز 100 ميجابايت. قسّم النسخ الاحتياطي إلى نطاقات أصغر في إصدار لاحق.');
  const checksum=await backupDigest(backupCanonicalPayload(payload));
  return {...payload,checksum};
 }
