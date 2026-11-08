@@ -96,6 +96,18 @@ assert.ok(hasListener(groups, "bizmind:ensure-group-modal"), "groups.js must own
 assert.ok(hasDispatch(groups, "bizmind:set-message-selection-mode"), "groups.js must publish selection commands");
 assert.ok(hasListener(messages, "bizmind:set-message-selection-mode"), "messages.js must own selection mode");
 
+// Conversation/realtime lifecycle: conversations.js publishes commands; realtime.js owns their implementation.
+for (const event of ["bizmind:stop-message-polling", "bizmind:subscribe-conversation", "bizmind:subscribe-profile-updates", "bizmind:start-message-polling"]) {
+  assert.ok(hasDispatch(conversations, event), "conversations.js must publish " + event);
+  assert.ok(hasListener(realtime, event), "realtime.js must own " + event);
+}
+for (const name of ["stopMessagePolling", "subscribeConversation", "subscribeProfileUpdates", "startMessagePolling"]) {
+  noDirectCall(conversations, name, "conversations.js");
+}
+assert.ok(hasDispatch(conversations, "bizmind:load-starred-message-ids"), "conversations.js must request starred-message state through an event");
+assert.ok(hasListener(groups, "bizmind:load-starred-message-ids"), "groups.js must own starred-message loading");
+noDirectCall(conversations, "loadStarredMessageIds", "conversations.js");
+
 // Shared conversation-model primitives belong to core, not the conversations feature module.
 assert.ok(core.includes("function isSelfConversation("), "core.js must own isSelfConversation");
 assert.ok(core.includes("function otherMember("), "core.js must own otherMember");
