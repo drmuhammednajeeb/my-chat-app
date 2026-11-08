@@ -35,6 +35,7 @@ let busy=false;
 
 function backupEscape(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function backupCurrentUser(){return typeof state!=='undefined'&&state.user?.id?state.user:null}
+function backupAssertRestorableTable(name){if(!RESTORE_TABLES.includes(name))throw new Error('جدول غير مسموح بالاستعادة: '+name)}
 function backupToast(message){if(typeof toast==='function')toast(message);else console.info(message)}
 function backupHex(buffer){return Array.from(new Uint8Array(buffer),b=>b.toString(16).padStart(2,'0')).join('')}
 async function backupDigest(value){
@@ -167,6 +168,7 @@ async function backupRestore(backup){
  if(backup.checksum!==expected)throw new Error('فشل التحقق من سلامة النسخة.');
  const personal=backup.personal,available=await backupExistingConversationIds(user.id),results=[];
  const apply=async(name,rows,conflict,filter)=>{
+  backupAssertRestorableTable(name);
   const eligible=(rows||[]).filter(row=>!filter||filter(row));
   if(!eligible.length){results.push({name,restored:0,skipped:(rows||[]).length});return}
   const safeRows=eligible.map(row=>({...row,user_id:user.id}));
@@ -175,6 +177,7 @@ async function backupRestore(backup){
   results.push({name,restored:safeRows.length,skipped:(rows||[]).length-safeRows.length});
  };
  // Merge-only: no DELETE/TRUNCATE, and rows are constrained to the authenticated owner.
+ backupAssertRestorableTable('user_settings');
  const settings=personal.user_settings[0]?.settings;
  if(settings&&typeof settings==='object'&&!Array.isArray(settings)){
   const {error}=await supabaseClient.rpc('patch_my_user_settings',{p_patch:settings});
@@ -186,6 +189,8 @@ async function backupRestore(backup){
  await apply('user_classification_rules',personal.user_classification_rules,'id');
  await apply('user_conversation_classifications',personal.user_conversation_classifications,'user_id,conversation_id',row=>available.has(row.conversation_id));
  // Resolve labels by name first so a pre-existing label is never duplicated under a new UUID.
+ backupAssertRestorableTable('user_conversation_labels');
+ backupAssertRestorableTable('user_conversation_label_items');
  const labelMap=new Map();
  for(const old of personal.user_conversation_labels){
   const {data:existing,error:lookupError}=await supabaseClient.from('user_conversation_labels').select('id,name,color,icon').eq('user_id',user.id).eq('name',old.name).maybeSingle();
