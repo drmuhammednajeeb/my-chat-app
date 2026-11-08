@@ -371,9 +371,9 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='INITIAL_SESS
   if(error)throw error;
   const session=data?.session;
   if(session?.user){
-   await enterApp(session.user);
+   const entered=await enterApp(session.user);
    if(bootLifecycleVersion!==authLifecycleVersion)return;
-   diagLog('auth_shell_revealed',{reason:'authenticated_boot'});
+   diagLog('auth_shell_revealed',{reason:entered?'authenticated_boot':'authenticated_boot_blocked'});
   }else{
    state.user=null;
    $('app').classList.add('hidden');
