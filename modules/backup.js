@@ -4,7 +4,9 @@
 
 const BACKUP_FORMAT='bizmindmakers-chat-backup';
 const BACKUP_SCHEMA_VERSION=1;
-const BACKUP_MAX_FILE_BYTES=100*1024*1024;
+const BACKUP_MAX_FILE_BYTES=140*1024*1024;
+const BACKUP_MAX_PLAINTEXT_BYTES=100*1024*1024;
+const BACKUP_KDF_ITERATIONS=310000;
 const BACKUP_PAGE_SIZE=500;
 const BACKUP_MAX_ROWS=100000;
 const PERSONAL_TABLES=[
@@ -57,6 +59,28 @@ function backupPickRestoreRow(name,row,userId){
 }
 function backupToast(message){if(typeof toast==='function')toast(message);else console.info(message)}
 function backupHex(buffer){return Array.from(new Uint8Array(buffer),b=>b.toString(16).padStart(2,'0')).join('')}
+function backupBase64(bytes){
+ let binary='';
+ for(let offset=0;offset<bytes.length;offset+=0x8000)binary+=String.fromCharCode(...bytes.subarray(offset,offset+0x8000));
+ return btoa(binary);
+}
+function backupFromBase64(value){
+ const binary=atob(value),bytes=new Uint8Array(binary.length);
+ for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+ return bytes;
+}
+async function backupDeriveKey(passphrase,salt){
+ const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(passphrase),'PBKDF2',false,['deriveKey']);
+ return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:BACKUP_KDF_ITERATIONS,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function backupEncryptEnvelope(backup,passphrase){
+ if(!globalThis.crypto?.subtle)throw new Error('التشفير الآمن غير مدعوم في هذا المتصفح.');
+ const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+ const key=await backupDeriveKey(passphrase,salt);
+ const plaintext=new TextEncoder().encode(JSON.stringify(backup));
+ const ciphertext=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,plaintext);
+ return {format:BACKUP_FORMAT,schemaVersion:BACKUP_SCHEMA_VERSION,createdAt:backup.createdAt,userId:backup.userId,encryption:{algorithm:'AES-256-GCM',kdf:'PBKDF2-SHA-256',iterations:BACKUP_KDF_ITERATIONS,salt:backupBase64(salt),iv:backupBase64(iv)},ciphertext:backupBase64(new Uint8Array(ciphertext))};
+}
 async function backupDigest(value){
  if(!globalThis.crypto?.subtle)throw new Error('المتصفح لا يدعم التحقق المشفر من سلامة النسخة.');
  const bytes=new TextEncoder().encode(JSON.stringify(value));
@@ -129,16 +153,18 @@ async function backupCreate(){
   conversationArchive
  };
  const serializedSize=new TextEncoder().encode(JSON.stringify(payload)).length;
- if(serializedSize>BACKUP_MAX_FILE_BYTES)throw new Error('حجم النسخة يتجاوز 100 ميجابايت. قسّم النسخ الاحتياطي إلى نطاقات أصغر في إصدار لاحق.');
+ if(serializedSize>BACKUP_MAX_PLAINTEXT_BYTES)throw new Error('حجم النسخة يتجاوز 100 ميجابايت قبل التشفير. قسّم النسخ الاحتياطي إلى نطاقات أصغر في إصدار لاحق.');
  const checksum=await backupDigest(backupCanonicalPayload(payload));
  return {...payload,checksum};
 }
-function backupDownload(backup){
- const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
+async function backupDownload(backup,passphrase){
+ const envelope=await backupEncryptEnvelope(backup,passphrase);
+ const blob=new Blob([JSON.stringify(envelope)],{type:'application/json;charset=utf-8'});
+ if(blob.size>BACKUP_MAX_FILE_BYTES)throw new Error('حجم ملف النسخة المشفر تجاوز الحد المسموح.');
  const url=URL.createObjectURL(blob);
  const a=document.createElement('a');
  const stamp=new Date(backup.createdAt).toISOString().replace(/[:.]/g,'-');
- a.href=url;a.download='bizmindmakers-backup-'+stamp+'.json';
+ a.href=url;a.download='bizmindmakers-backup-encrypted-'+stamp+'.json';
  document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
@@ -164,17 +190,30 @@ function backupValidateShape(value,user){
   if(value.conversationArchive[key].length>BACKUP_MAX_ROWS)throw new Error('أرشيف المحادثات يتجاوز الحد الآمن.');
  }
 }
-async function backupParseFile(file){
+async function backupParseFile(file,passphrase){
  if(!file)throw new Error('اختر ملف النسخة الاحتياطية.');
- if(file.size>BACKUP_MAX_FILE_BYTES)throw new Error('حجم الملف أكبر من 100 ميجابايت.');
+ if(file.size>BACKUP_MAX_FILE_BYTES)throw new Error('حجم الملف المشفر أكبر من الحد المسموح.');
+ if(typeof passphrase!=='string'||passphrase.length<12)throw new Error('أدخل كلمة مرور النسخة (12 حرفاً على الأقل).');
  const raw=await file.text();
- let value;
- try{value=JSON.parse(raw)}catch(_){throw new Error('تعذر قراءة الملف؛ تأكد أنه ملف JSON سليم.')}
+ let envelope;
+ try{envelope=JSON.parse(raw)}catch(_){throw new Error('تعذر قراءة الملف؛ تأكد أنه ملف JSON سليم.')}
  const user=backupCurrentUser();
  if(!user)throw new Error('يجب تسجيل الدخول أولاً.');
+ if(envelope?.format!==BACKUP_FORMAT||envelope?.schemaVersion!==BACKUP_SCHEMA_VERSION)throw new Error('صيغة النسخة أو إصدارها غير مدعوم.');
+ if(envelope.userId!==user.id)throw new Error('هذه النسخة مرتبطة بحساب آخر. لن يتم استيراد بياناتها إلى حسابك.');
+ const meta=envelope.encryption;
+ if(meta?.algorithm!=='AES-256-GCM'||meta?.kdf!=='PBKDF2-SHA-256'||meta?.iterations!==BACKUP_KDF_ITERATIONS||typeof envelope.ciphertext!=='string')throw new Error('بيانات التشفير في الملف غير صالحة.');
+ let value;
+ try{
+  const salt=backupFromBase64(meta.salt),iv=backupFromBase64(meta.iv),ciphertext=backupFromBase64(envelope.ciphertext);
+  if(salt.length!==16||iv.length!==12||ciphertext.length>BACKUP_MAX_FILE_BYTES)throw new Error('Invalid encrypted payload dimensions.');
+  const key=await backupDeriveKey(passphrase,salt);
+  const plaintext=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ciphertext);
+  value=JSON.parse(new TextDecoder().decode(plaintext));
+ }catch(_){throw new Error('تعذر فك تشفير النسخة. تحقق من كلمة المرور ومن سلامة الملف.')}
  backupValidateShape(value,user);
  const expected=await backupDigest(backupCanonicalPayload(value));
- if(typeof value.checksum!=='string'||value.checksum!==expected)throw new Error('فشل التحقق من بصمة SHA-256. قد يكون الملف تالفاً أو تم تعديله.');
+ if(typeof value.checksum!=='string'||value.checksum!==expected)throw new Error('فشل التحقق من بصمة SHA-256 داخل النسخة.');
  return value;
 }
 function backupCountSummary(backup){
