@@ -53,3 +53,6 @@ function openGroupModal(){
 }
 
 function closeGroupModal(){$('groupModal').classList.remove('open');}
+
+// Internal feature contract: conversation lifecycle requests channel-list refreshes via an event.
+window.addEventListener('bizmind:render-my-channels',()=>renderMyChannels());
