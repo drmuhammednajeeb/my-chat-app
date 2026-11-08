@@ -437,3 +437,9 @@ async function toggleFavoriteConversation(){
  const current=!!state.userConversationSettings.get(state.active?.id)?.is_favorite;
  if(await saveUserConversationSettings({is_favorite:!current})){updateConversationMenu();renderConversations();toast(current?'أزيلت من المفضلة':'أضيفت إلى المفضلة')}
 }
+
+// Internal feature contract: channel UI requests navigation without importing or calling this module.
+window.addEventListener('bizmind:open-conversation',event=>{
+ const conversation=event.detail?.conversation;
+ if(conversation)void openConversation(conversation);
+});
