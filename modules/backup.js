@@ -119,6 +119,9 @@ async function backupFetchByConversation(table,conversationIds){
  }
  return rows;
 }
+function backupStoragePathFromPublicUrl(value,bucket){
+ try{const url=new URL(value),marker='/storage/v1/object/public/'+bucket+'/',index=url.pathname.indexOf(marker);if(index<0)return null;const path=decodeURIComponent(url.pathname.slice(index+marker.length));if(!path||path.startsWith('/')||path.split('/').some(part=>part==='.'||part==='..'))return null;return path}catch(_){return null}
+}
 async function backupCreate(){
  const user=backupCurrentUser();
  if(!user)throw new Error('يجب تسجيل الدخول أولاً.');
@@ -172,6 +175,8 @@ async function backupCreate(){
  for(const doc of conversationArchive.documents){
   fileRefs.set('conversation-documents:'+doc.storage_path,{bucket:'conversation-documents',path:doc.storage_path,mimeType:doc.mime_type||'application/octet-stream',kind:'document',conversationId:doc.conversation_id,ownerId:doc.owner_id,documentId:doc.id,fileName:doc.file_name,visibility:doc.visibility});
  }
+ const avatarPath=backupStoragePathFromPublicUrl(profile?.avatar_url,'avatars');
+ if(avatarPath&&avatarPath.split('/')[0]===user.id)fileRefs.set('avatars:'+avatarPath,{bucket:'avatars',path:avatarPath,mimeType:'image/*',kind:'profile-avatar',ownerId:user.id});
  let binaryBytes=0;
  for(const ref of fileRefs.values()){
   const {data,error}=await supabaseClient.storage.from(ref.bucket).download(ref.path);
@@ -232,7 +237,7 @@ function backupValidateShape(value,user){
   for(const key of ['documents','attachments'])if(!Array.isArray(value.conversationArchive[key]))throw new Error('قسم الملفات غير مكتمل: '+key);
   let total=0;
   for(const item of value.conversationArchive.attachments){
-   if(!item||!['chat-media','conversation-documents'].includes(item.bucket)||typeof item.path!=='string'||typeof item.data!=='string'||!Number.isSafeInteger(item.sizeBytes)||item.sizeBytes<0)throw new Error('سجل مرفق غير صالح.');
+   if(!item||!['chat-media','conversation-documents','avatars'].includes(item.bucket)||typeof item.path!=='string'||typeof item.data!=='string'||!Number.isSafeInteger(item.sizeBytes)||item.sizeBytes<0)throw new Error('سجل مرفق غير صالح.');
    total+=item.sizeBytes;if(total>BACKUP_MAX_BINARY_BYTES)throw new Error('حجم المرفقات يتجاوز الحد الآمن.');
   }
  }
@@ -292,7 +297,14 @@ async function backupRestoreAttachments(backup,user,available){
  for(const item of (backup.conversationArchive.attachments||[])){
   if(!available.has(item.conversationId)){skipped++;continue}
   const bytes=backupFromBase64(item.data);if(bytes.byteLength!==item.sizeBytes)throw new Error('حجم المرفق لا يطابق بيانات النسخة: '+item.path);
-  if(item.bucket==='chat-media'){
+  if(item.bucket==='avatars'){
+   if(String(item.path).split('/')[0]!==user.id){skipped++;continue}
+   const exists=await backupStorageObjectExists(item.bucket,item.path);
+   if(!exists){const {error}=await supabaseClient.storage.from(item.bucket).upload(item.path,new Blob([bytes],{type:item.mimeType}),{upsert:false,contentType:item.mimeType});if(error)throw new Error('تعذر استعادة الصورة الشخصية: '+error.message)}
+   const publicUrl=supabaseClient.storage.from('avatars').getPublicUrl(item.path).data?.publicUrl;
+   if(publicUrl){const {error}=await supabaseClient.from('profiles').update({avatar_url:publicUrl}).eq('id',user.id);if(error)throw new Error('تمت استعادة الصورة لكن تعذر تحديث رابطها: '+error.message)}
+   if(!exists)restored++;else skipped++;
+  }else if(item.bucket==='chat-media'){
    if(String(item.path).split('/')[1]!==user.id||item.senderId!==user.id||(item.messageIds||[]).length===0){skipped++;continue}
    const {data:messages,error:messageError}=await supabaseClient.from('chat_messages').select('id,sender_id,attachment_path').in('id',item.messageIds).eq('conversation_id',item.conversationId);
    if(messageError)throw new Error('تعذر التحقق من ملكية مرفق الرسالة: '+messageError.message);
