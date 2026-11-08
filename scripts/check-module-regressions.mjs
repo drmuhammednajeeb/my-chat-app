@@ -91,13 +91,13 @@ for (const [owner, names] of declarations) {
 }
 
 // app.js is the composition root, not a runtime monkey-patching layer.
-assert.doesNotMatch(app, /(?:async\\s+)?function\\s+[A-Za-z_$][\\w$]*\\s*\\(/,
+assert.doesNotMatch(app, /(?:async\s+)?function\s+[A-Za-z_$][\w$]*\s*\(/,
   "app.js must not regain feature function declarations");
-assert.doesNotMatch(app, /\\b(?:setSidebarView|renderConversations|openConversation|loadConversations|saveDirectChatPreference|subscribeNotifications|renderMessage|updateConversationMenu)\\s*=\\s*(?:async\\s*)?function\\b/,
+assert.doesNotMatch(app, /\b(?:setSidebarView|renderConversations|openConversation|loadConversations|saveDirectChatPreference|subscribeNotifications|renderMessage|updateConversationMenu)\s*=\s*(?:async\s*)?function\b/,
   "app.js must not reassign feature functions through wrappers");
 assert.ok(messages.includes("if(state.selectionMode)decorateMessageSelection(row,m)"),
   "messages.js must own selection decoration for newly rendered messages");
-assert.doesNotMatch(app, /new MutationObserver\\(/,
+assert.doesNotMatch(app, /new MutationObserver\(/,
   "app.js must not observe message DOM to patch message-module behavior");
 
 console.log("Module boundary regression checks passed.");
