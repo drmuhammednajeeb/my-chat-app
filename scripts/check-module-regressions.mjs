@@ -76,6 +76,16 @@ assert.ok(hasDispatch(messages, "bizmind:close-chat-header-menu"), "messages.js 
 assert.ok(hasListener(conversations, "bizmind:render-conversations"), "conversations.js must own render-conversations");
 assert.ok(hasListener(conversations, "bizmind:close-chat-header-menu"), "conversations.js must own close-chat-header-menu");
 
+// groups <-> messages: modal setup and selection commands are owned by their respective modules.
+noDirectCall(messages, "ensureGroupModal", "messages.js");
+noDirectCall(conversations, "ensureGroupModal", "conversations.js");
+noDirectCall(groups, "setMessageSelectionMode", "groups.js");
+assert.ok(hasDispatch(messages, "bizmind:ensure-group-modal"), "messages.js must request modal setup through an event");
+assert.ok(hasDispatch(conversations, "bizmind:ensure-group-modal"), "conversations.js must request modal setup through an event");
+assert.ok(hasListener(groups, "bizmind:ensure-group-modal"), "groups.js must own modal setup");
+assert.ok(hasDispatch(groups, "bizmind:set-message-selection-mode"), "groups.js must publish selection commands");
+assert.ok(hasListener(messages, "bizmind:set-message-selection-mode"), "messages.js must own selection mode");
+
 // Core must remain a dependency-free shared foundation.
 const moduleSources = { auth, notifications, conversations, messages, realtime, groups, channels, admin, media };
 const declarations = new Map();
