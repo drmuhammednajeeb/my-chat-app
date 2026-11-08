@@ -32,9 +32,10 @@ assert.match(restoreBody,/backupAssertRestorableTable\('user_settings'\)/);
 assert.match(restoreBody,/backupAssertRestorableTable\('user_conversation_labels'\)/);
 assert.match(restoreBody,/backupAssertRestorableTable\('user_conversation_label_items'\)/);
 
-const backupScript=index.indexOf('<script src="./modules/backup.js"></script>');
-const membershipScript=index.indexOf('<script src="./membership.js"></script>');
-const appScript=index.indexOf('<script src="./app.js"></script>');
+const scriptSources=[...index.matchAll(/<script\\b[^>]*src=["']([^"']+)["'][^>]*>/gi)].map(match=>match[1]);
+const backupScript=scriptSources.indexOf("./modules/backup.js");
+const membershipScript=scriptSources.indexOf("./membership.js");
+const appScript=scriptSources.indexOf("./app.js");
 assert.ok(backupScript>membershipScript&&backupScript>appScript,
   "backup module must load after app state and membership initialization");
 assert.ok(worker.includes('./modules/backup.js'),"backup module must be included in shell precache");
