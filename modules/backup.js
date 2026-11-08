@@ -163,21 +163,22 @@ async function backupCreate(){
  const conversationArchive={conversationCount:conversationIds.length,conversations:[],memberships:[],messages:[],reactions:[],pins:[],documents:[],groupSettings:[],membershipEvents:[],privateReplyContexts:[],messageEditHistory:[],attachments:[]};
  for(let i=0;i<conversationIds.length;i+=100){
   const ids=conversationIds.slice(i,i+100);
-  conversationArchive.conversations.push(...await backupFetchAll(()=>supabaseClient.from('conversations').select('*').in('id',ids),'المحادثات',['created_at','id']));
+  conversationArchive.conversations.push(...await backupFetchAll(()=>supabaseClient.from('conversations').select('id,type,title,created_by,created_at,updated_at,last_message_at,description,is_public,avatar_path').in('id',ids),'المحادثات',['created_at','id']));
   for(const table of ['chat_messages','message_reactions','message_pins']){
    const key=table==='chat_messages'?'messages':table==='message_reactions'?'reactions':'pins';
    conversationArchive[key].push(...await backupFetchAll(()=>{
-    const query=supabaseClient.from(table).select('*').in('conversation_id',ids);
+    const columns=table==='chat_messages'?'id,conversation_id,sender_id,content,attachment_path,attachment_type,reply_to,edited_at,deleted_at,created_at,edit_revision,expires_at':table==='message_reactions'?'conversation_id,message_id,user_id,reaction_type,created_at':'id,conversation_id,message_id,pinned_by,pinned_at';
+    const query=supabaseClient.from(table).select(columns).in('conversation_id',ids);
     return table==='chat_messages'?query.is('deleted_at',null):query;
    },'أرشيف '+table,table==='message_pins'?['pinned_at','id']:table==='message_reactions'?['created_at','message_id','user_id']:['created_at','id']));
   }
   conversationArchive.memberships.push(...await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id,user_id,role,joined_at,last_read_at,last_delivered_at').in('conversation_id',ids),'عضويات المحادثات',['conversation_id','user_id']));
-  conversationArchive.groupSettings.push(...await backupFetchAll(()=>supabaseClient.from('conversation_group_settings').select('*').in('conversation_id',ids),'إعدادات المجموعات',['updated_at','conversation_id']));
-  conversationArchive.membershipEvents.push(...await backupFetchAll(()=>supabaseClient.from('conversation_member_events').select('*').in('conversation_id',ids),'سجل العضويات',['created_at','id']));
-  conversationArchive.privateReplyContexts.push(...await backupFetchAll(()=>supabaseClient.from('private_reply_contexts').select('*').in('direct_conversation_id',ids),'سياقات الرد الخاص',['created_at','direct_message_id']));
+  conversationArchive.groupSettings.push(...await backupFetchAll(()=>supabaseClient.from('conversation_group_settings').select('conversation_id,only_admins_can_send,disappearing_seconds,theme_color,updated_by,updated_at,background_theme').in('conversation_id',ids),'إعدادات المجموعات',['updated_at','conversation_id']));
+  conversationArchive.membershipEvents.push(...await backupFetchAll(()=>supabaseClient.from('conversation_member_events').select('id,conversation_id,actor_id,target_user_id,event_type,details,created_at').in('conversation_id',ids),'سجل العضويات',['created_at','id']));
+  conversationArchive.privateReplyContexts.push(...await backupFetchAll(()=>supabaseClient.from('private_reply_contexts').select('direct_message_id,direct_conversation_id,sender_id,source_conversation_id,source_message_id,quoted_content,quoted_sender_id,created_at').in('direct_conversation_id',ids),'سياقات الرد الخاص',['created_at','direct_message_id']));
   conversationArchive.documents.push(...await backupFetchAll(()=>supabaseClient.from('conversation_documents').select('id,owner_id,conversation_id,storage_path,file_name,mime_type,size_bytes,visibility,created_at,shared_at').in('conversation_id',ids),'مستندات المحادثات',['created_at','id']));
  }
- for(let i=0;i<conversationArchive.messages.length;i+=100){const ids=conversationArchive.messages.slice(i,i+100).map(row=>row.id);if(ids.length)conversationArchive.messageEditHistory.push(...await backupFetchAll(()=>supabaseClient.from('message_edit_history').select('*').in('message_id',ids),'سجل تعديلات الرسائل',['edited_at','id']))}
+ for(let i=0;i<conversationArchive.messages.length;i+=100){const ids=conversationArchive.messages.slice(i,i+100).map(row=>row.id);if(ids.length)conversationArchive.messageEditHistory.push(...await backupFetchAll(()=>supabaseClient.from('message_edit_history').select('id,message_id,editor_id,old_content,new_content,revision_number,edited_at').in('message_id',ids),'سجل تعديلات الرسائل',['edited_at','id']))}
  const fileRefs=new Map();
  for(const message of conversationArchive.messages){
   if(!message.attachment_path)continue;
