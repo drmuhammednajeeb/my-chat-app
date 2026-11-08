@@ -392,7 +392,9 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='INITIAL_SESS
   window.clearTimeout(bootDelayNotice);
   document.documentElement.classList.remove('auth-booting');
  }
-})(); resilient editing, explicit photo approval and recoverable close controls
+})();
+
+// Profile Center: resilient editing, explicit photo approval and recoverable close controls
 let profileModalEditable=false,profilePendingPhoto=null,profilePhotoPreviewUrl=null,profilePhotoBusy=false,profileSaveBusy=false;
 
 document.addEventListener('DOMContentLoaded',()=>{
