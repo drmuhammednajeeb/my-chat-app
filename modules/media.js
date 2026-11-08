@@ -224,6 +224,6 @@ function closeProfileModal(){
 
 // Avatar rendering contract used by feature modules without importing media helpers.
 window.addEventListener('bizmind:render-avatar',event=>{
- const {container,profile}=event.detail||{};
- if(container)renderAvatar(container,profile);
+ const {container,profile,className}=event.detail||{};
+ if(container)renderAvatar(container,profile,className||'directory-avatar');
 });
