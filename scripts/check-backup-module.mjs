@@ -32,7 +32,7 @@ assert.match(restoreBody,/backupAssertRestorableTable\('user_settings'\)/);
 assert.match(restoreBody,/backupAssertRestorableTable\('user_conversation_labels'\)/);
 assert.match(restoreBody,/backupAssertRestorableTable\('user_conversation_label_items'\)/);
 
-const scriptSources=[...index.matchAll(/<script\\b[^>]*src=["']([^"']+)["'][^>]*>/gi)].map(match=>match[1]);
+const scriptSources=[...index.matchAll(/<script[^>]*src=["']([^"']+)["'][^>]*>/gi)].map(match=>match[1]);
 const backupScript=scriptSources.indexOf("./modules/backup.js");
 const membershipScript=scriptSources.indexOf("./membership.js");
 const appScript=scriptSources.indexOf("./app.js");
