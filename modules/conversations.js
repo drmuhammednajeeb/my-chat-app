@@ -443,3 +443,12 @@ window.addEventListener('bizmind:open-conversation',event=>{
  const conversation=event.detail?.conversation;
  if(conversation)void openConversation(conversation);
 });
+
+function renderChatAvatar(conversation){
+ const target=$('chatAvatar');
+ if(conversation?.type==='direct'){const profile=otherMember(conversation);window.dispatchEvent(new CustomEvent('bizmind:render-avatar',{detail:{container:target,profile,className:'avatar'}}));return}
+ target.className='avatar';target.replaceChildren();
+ const icon=document.createElement('i');icon.className='ph '+(isSelfConversation(conversation)?'ph-note-pencil':conversation?.type==='channel'?'ph-megaphone':'ph-users-three');target.append(icon);
+}
+window.addEventListener('bizmind:render-chat-avatar',event=>{if(event.detail?.conversation)renderChatAvatar(event.detail.conversation)});
+window.addEventListener('bizmind:render-conversations',()=>renderConversations());
