@@ -11,6 +11,15 @@ const [backup,index,worker] = await Promise.all([
 assert.match(backup,/const BACKUP_FORMAT='bizmindmakers-chat-backup'/);
 assert.match(backup,/const BACKUP_SCHEMA_VERSION=1/);
 assert.match(backup,/crypto\.subtle\.digest\('SHA-256'/);
+assert.match(backup,/AES-256-GCM/);
+assert.match(backup,/PBKDF2-SHA-256/);
+assert.match(backup,/BACKUP_KDF_ITERATIONS=310000/);
+assert.match(backup,/backupEncryptEnvelope/);
+assert.match(backup,/backupParseFile\(file,passphrase\)/);
+assert.match(backup,/backupExportPassword/);
+assert.match(backup,/backupImportPassword/);
+assert.match(backup,/backupDownload\(backup,pass\)/);
+assert.doesNotMatch(backup,/JSON\.stringify\(backup,null,2\)/);
 assert.match(backup,/value\.userId!==user\.id/);
 assert.match(backup,/value\.checksum!==expected/);
 assert.match(backup,/row\.recipient_id!==user\.id/);
@@ -42,6 +51,7 @@ const appScript=scriptSources.indexOf("./app.js");
 assert.ok(backupScript>membershipScript&&backupScript>appScript,
   "backup module must load after app state and membership initialization");
 assert.ok(worker.includes('./modules/backup.js'),"backup module must be included in shell precache");
-assert.match(backup,/const BACKUP_MAX_FILE_BYTES=100\*1024\*1024/);
+assert.match(backup,/const BACKUP_MAX_FILE_BYTES=140\*1024\*1024/);
+assert.match(backup,/const BACKUP_MAX_PLAINTEXT_BYTES=100\*1024\*1024/);
 
 console.log("Backup module static regression checks: PASS");
