@@ -80,12 +80,13 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
 .conv-last,.profile-info,.chat-title,.sectionhead>span{overflow-wrap:anywhere}
 .day-divider{direction:rtl;text-align:center;unicode-bidi:plaintext}
 .message .meta{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
-.message.reactions-open{position:relative;z-index:1100;isolation:isolate}
+.message.reactions-open{position:relative;z-index:1100;margin-bottom:46px}
 .message.reactions-open .reaction-bar{
- position:fixed!important;z-index:1101;top:auto;bottom:auto;left:auto;right:auto;
- width:max-content;max-width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 16px);
- overflow:visible;flex-wrap:nowrap;white-space:nowrap;
+ position:absolute!important;z-index:1101;top:calc(100% + 6px)!important;bottom:auto!important;
+ left:4px;right:auto;width:max-content;max-width:min(360px,calc(100vw - 16px));
+ max-height:calc(100dvh - 16px);overflow:visible;flex-wrap:nowrap;white-space:nowrap;
 }
+.message.mine.reactions-open .reaction-bar{left:auto;right:4px}
 .message-options-menu{z-index:1200;max-width:calc(100vw - 16px);max-height:min(70dvh,520px);overflow-y:auto;overscroll-behavior:contain}
 .message-options-menu[role="menu"]{direction:rtl;text-align:right}
 .message-menu-option{direction:rtl;text-align:start;justify-content:flex-start;min-height:40px}
