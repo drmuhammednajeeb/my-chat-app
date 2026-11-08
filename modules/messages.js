@@ -229,7 +229,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
   const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
   const activeConversation=state.active;
   const member=(activeConversation?.members||[]).find(x=>x.user_id===m.sender_id),sender=member?.profile?.display_name||'عضو';
-  const row=document.createElement('article');row.className='message'+(m.sender_id===state.user?.id?' mine':'');row.dataset.day=day;row.dataset.createdAt=m.created_at;row.dataset.messageId=m.id;
+  const row=document.createElement('article');row.className='message'+(m.sender_id===state.user?.id?' mine':'');if(state.loadingOlderMessages)row.style.animation='none';row.dataset.day=day;row.dataset.createdAt=m.created_at;row.dataset.messageId=m.id;
   const bubble=document.createElement('div');bubble.className='bubble'+(m.deleted_at?' deleted':'');
   if(m.sender_id!==state.user?.id&&(activeConversation?.type==='group'||activeConversation?.type==='channel')){const label=document.createElement('div');label.className='sender';label.textContent=sender;row.append(label)}
   if(state.active?.type==='direct'&&state.privateReplyContexts.has(m.id)&&!m.deleted_at){const ctx=state.privateReplyContexts.get(m.id),q=document.createElement('div');q.className='reply-quote private-reply-quote';const who=document.createElement('strong'),preview=document.createElement('span');who.textContent='رد خاص من مجموعة';preview.textContent=ctx.quoted_content;q.append(who,preview);bubble.append(q)}
