@@ -277,3 +277,9 @@ function closeProfileModal(){
  $('profileModal').classList.remove('open');$('profileModal').setAttribute('aria-hidden','true');document.body.classList.remove('profile-modal-open');
  if(!profilePhotoBusy)resetProfilePhotoSelection();
 }
+
+// Avatar rendering contract used by feature modules without importing media helpers.
+window.addEventListener('bizmind:render-avatar',event=>{
+ const {container,profile}=event.detail||{};
+ if(container)renderAvatar(container,profile);
+});
