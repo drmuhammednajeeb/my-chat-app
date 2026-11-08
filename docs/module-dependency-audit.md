@@ -9,13 +9,12 @@
 
 The ten feature files are extracted, but they are **not yet independently isolated modules**. They are classic scripts sharing the browser global scope: they contain no ES module imports/exports and call functions declared by other files directly.
 
-A static function-reference scan found a strongly connected dependency component across six modules:
+A static function-reference scan initially found a strongly connected dependency component across six modules. The first decoupling pass has now removed `channels.js` from that component. The remaining strongly connected component is:
 
 - `conversations.js`
 - `messages.js`
 - `realtime.js`
 - `groups.js`
-- `channels.js`
 - `media.js`
 
 This is a logical dependency cycle, not an ES-module import cycle. The current ordered script loading allows the global functions to exist before normal user interaction, but the coupling makes independent testing, replacement, and maintenance difficult.
@@ -26,7 +25,9 @@ This is a logical dependency cycle, not an ES-module import cycle. The current o
 - `admin.js` depends on `core.js` only.
 - `auth.js` is an application-entry orchestrator and calls into most feature modules after authentication.
 - `notifications.js` calls into core, conversations, and messages.
-- The six-module strongly connected component above is the main decoupling target.
+- The five-module strongly connected component above is the remaining main decoupling target.
+- First safe edge removal: channel navigation now dispatches `bizmind:open-conversation`; `conversations.js` owns the listener.
+- Second safe edge removal: conversation-list lifecycle now dispatches `bizmind:render-my-channels`; `channels.js` owns the listener. This removed the direct `conversations.js` → `channels.js` function dependency and moved `channels.js` outside the cyclic component.
 - `app.js` still contains global wiring and runtime wrappers that replace functions such as `renderConversations`, `openConversation`, `loadConversations`, and `renderMessage`. These wrappers are an additional coupling surface and should be retired incrementally, not removed in one pass.
 
 ## Loading and cache checks
@@ -37,7 +38,7 @@ The HTML loads Supabase UMD first, then the ten feature scripts in a fixed order
 
 1. **Establish contracts without changing behavior.** Keep the classic-script runtime and current load order; define explicit feature boundaries and document the callable surface.
 2. **Extract shared application contracts.** Move cross-feature coordination behind narrow callbacks/events, beginning with conversation lifecycle and message rendering. Avoid broad rewrites.
-3. **Break the six-module cycle incrementally.** After each edge is removed, run the architecture check and syntax/build checks. Do not move a provider ahead of its dependencies until calls are routed through a contract.
+3. **Break the remaining five-module cycle incrementally.** Two channel/conversation edges have already been replaced with named window events. Continue with one narrow contract at a time; after each edge is removed, run the architecture check and syntax/build checks. Do not move a provider ahead of its dependencies until calls are routed through a contract.
 4. **Retire app.js monkey-patching.** Move each wrapper to the owning feature module or an explicit composition layer, one wrapper at a time.
 5. **Add behavioral regression coverage.** Verify startup/Home, authentication, direct/group/channel opening, chronological message rendering, realtime updates, notifications, media, workspace, and owner dashboard.
 6. **Only then consider ES modules.** Do not switch module systems until the dependency graph is acyclic and deployment/service-worker behavior is covered.
