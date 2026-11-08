@@ -12,6 +12,11 @@ const [backup,index,worker,architecture] = await Promise.all([
 assert.match(backup,/const BACKUP_FORMAT='bizmindmakers-chat-backup'/);
 assert.match(backup,/const BACKUP_SCHEMA_VERSION=2/);
 assert.match(backup,/\[1,2\]\.includes\(value\.schemaVersion\)/);
+assert.match(backup,/function backupValidateShape\(value,user,expectedSchemaVersion=value\?\.schemaVersion\)/);
+assert.match(backup,/value\.schemaVersion!==expectedSchemaVersion/);
+assert.doesNotMatch(backup,/value\.schemaVersion!==envelope\.schemaVersion/);
+assert.match(backup,/item\.bucket!=='avatars'&&!available\.has\(item\.conversationId\)/);
+assert.match(backup,/تُضمّن المرفقات المسموح بها داخل الملف المشفّر/);
 assert.match(backup,/\[1,2\]\.includes\(envelope\?\.schemaVersion\)/);
 assert.match(backup,/crypto\.subtle\.digest\('SHA-256'/);
 assert.match(backup,/AES-256-GCM/);
