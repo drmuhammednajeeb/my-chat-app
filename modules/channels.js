@@ -20,7 +20,7 @@ function renderMyChannels(){
   if(channel.description){const desc=document.createElement('p');desc.textContent=channel.description;card.append(desc)}
   const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center';
   const action=document.createElement('button');action.type='button';action.textContent='فتح القناة';
-  action.onclick=()=>openConversation(channel);actions.append(action);
+  action.onclick=()=>window.dispatchEvent(new CustomEvent('bizmind:open-conversation',{detail:{conversation:channel}}));actions.append(action);
   const myMembership=(channel.members||[]).find(m=>m.user_id===state.user.id),canInvite=mine||['owner','admin'].includes(myMembership?.role);
   if(canInvite){const invite=document.createElement('button');invite.type='button';invite.className='secondary';invite.textContent='نسخ رابط دعوة';invite.onclick=()=>shareChannelInvite(channel,invite);actions.append(invite)}
   const memberCount=document.createElement('small');memberCount.style.cssText='color:#667781;align-self:center';memberCount.textContent=(channel.members||[]).length+' أعضاء';actions.append(memberCount);
