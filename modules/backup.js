@@ -141,7 +141,10 @@ async function backupCreate(){
   conversationArchive.conversations.push(...await backupFetchAll(()=>supabaseClient.from('conversations').select('*').in('id',ids),'المحادثات'));
   for(const table of ['chat_messages','message_reactions','message_pins']){
    const key=table==='chat_messages'?'messages':table==='message_reactions'?'reactions':'pins';
-   conversationArchive[key].push(...await backupFetchAll(()=>supabaseClient.from(table).select('*').in('conversation_id',ids),'أرشيف '+table));
+   conversationArchive[key].push(...await backupFetchAll(()=>{
+    const query=supabaseClient.from(table).select('*').in('conversation_id',ids);
+    return table==='chat_messages'?query.is('deleted_at',null):query;
+   },'أرشيف '+table));
   }
  }
  const payload={
