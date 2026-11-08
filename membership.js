@@ -134,13 +134,13 @@
         verify.type = "button";
         verify.addEventListener("click", async () => {
           const officialNumber = prompt(
-            "أدخل رقم العضوية الرسمي لهذا العضو (971001 متبوعاً بستة أرقام):",
+            "أدخل رقم العضوية الرسمي لهذا العضو (971 متبوعاً بتسعة أرقام):",
             ""
           );
           if (officialNumber === null) return;
           const normalized = officialNumber.trim();
-          if (!/^971001[0-9]{6}$/.test(normalized)) {
-            if (typeof toast === "function") toast("رقم غير صحيح. المطلوب 12 رقماً بالصيغة 971001XXXXXX");
+          if (!/^971[0-9]{9}$/.test(normalized)) {
+            if (typeof toast === "function") toast("رقم غير صحيح. المطلوب 12 رقماً: 971 + 9 أرقام");
             return;
           }
           verify.disabled = true;
@@ -220,8 +220,8 @@
         if (typeof toast === "function") toast("بريد إلكتروني غير صحيح: " + email);
         return;
       }
-      if (!/^971001[0-9]{6}$/.test(membership_number)) {
-        if (typeof toast === "function") toast("رقم فوريفر غير صحيح: " + membership_number + " — المطلوب 971001XXXXXX");
+      if (!/^971[0-9]{9}$/.test(membership_number)) {
+        if (typeof toast === "function") toast("رقم فوريفر غير صحيح: " + membership_number + " — المطلوب 971 + 9 أرقام");
         return;
       }
       members.push({ email, membership_number });
