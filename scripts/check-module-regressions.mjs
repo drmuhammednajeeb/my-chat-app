@@ -79,7 +79,7 @@ assert.ok(hasListener(conversations, "bizmind:close-chat-header-menu"), "convers
 const moduleSources = { auth, notifications, conversations, messages, realtime, groups, channels, admin, media };
 const declarations = new Map();
 for (const [file, source] of Object.entries(moduleSources)) {
-  declarations.set(file, [...source.matchAll(/(?:^|\\n)\\s*(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\s*\\(/g)].map(m => m[1]));
+  declarations.set(file, [...source.matchAll(new RegExp("(?:^|\\n)\\s*(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\s*\\(", "g"))].map(m => m[1]));
 }
 for (const [owner, names] of declarations) {
   for (const name of names) {
