@@ -89,3 +89,11 @@ Removed the feature-function monkey-patching block from `app.js`. The behavior n
 - Message selection decoration now runs inside `renderMessage()`; the app-level MutationObserver and render wrapper were removed.
 
 The regression guard now rejects feature-function reassignment wrappers and app-level message DOM observers. `app.js` remains the composition/startup and DOM event-wiring layer; this pass does not yet convert the classic-script runtime to native ES modules.
+
+
+## Group/message boundary pass
+
+- Replaced the direct `groups.js` → `messages.js` calls to `setMessageSelectionMode()` with the synchronous `bizmind:set-message-selection-mode` command event; `messages.js` remains the owner of selection state and rendering.
+- Replaced `messages.js` and `conversations.js` direct calls to `ensureGroupModal()` with `bizmind:ensure-group-modal`; `groups.js` owns modal construction.
+- The calls were confirmed to be command-style operations with no consumed return value, so synchronous DOM events preserve their ordering without introducing fire-and-forget async behavior.
+- Added regression assertions for both event producers and their owning listeners.
