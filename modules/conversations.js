@@ -66,8 +66,6 @@ function renderDirectory(){
  });
 }
 
-function isSelfConversation(conversation){return !!conversation&&conversation.type==='group'&&conversation.created_by===state.user?.id&&conversation.description===SELF_CHAT_MARKER}
-
 async function ensureSelfConversation(){
  if(!state.user)return null;
  let conversation=state.conversations.find(isSelfConversation);
@@ -80,10 +78,6 @@ async function ensureSelfConversation(){
  if(!conversation)throw new Error('لم تظهر مساحة مراسلة نفسك في قائمة المحادثات');
  return conversation;
 }
-
-function otherMember(conv){return (conv.members||[]).find(m=>m.user_id!==state.user.id)?.profile}
-
-function convName(c){if(isSelfConversation(c))return (state.profile?.display_name||state.profile?.username||'أنا')+' (أنا)';if(c.type==='group')return c.title||'مجموعة جديدة';if(c.type==='channel')return c.title||'قناة بدون اسم';const p=otherMember(c);return p?.display_name||p?.username||'محادثة خاصة'}
 
 function convPreview(c){const cleared=state.chatPrefs.get(c.id)?.cleared_before;if(c.type==='direct'&&cleared&&c.last_message?.created_at&&new Date(c.last_message.created_at)<=new Date(cleared))return 'تم مسح السجل من طرفك';return c.last_message?.content||'ابدأ المحادثة الآن'}
 
