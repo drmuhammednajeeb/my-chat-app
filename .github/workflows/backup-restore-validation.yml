@@ -1,0 +1,42 @@
+name: Backup Restore Validation
+
+on:
+  push:
+    branches:
+      - feature/backup-restore-module
+  pull_request:
+    paths:
+      - "modules/backup.js"
+      - "scripts/check-backup-module.mjs"
+      - "scripts/check-module-architecture.mjs"
+      - "index.html"
+      - "service-worker.js"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Parse backup runtime module
+        run: node --check modules/backup.js
+
+      - name: Parse regression scripts
+        run: |
+          node --check scripts/check-backup-module.mjs
+          node --check scripts/check-module-architecture.mjs
+
+      - name: Run backup regression checks
+        run: node scripts/check-backup-module.mjs
+
+      - name: Run module architecture checks
+        run: node scripts/check-module-architecture.mjs
