@@ -323,12 +323,12 @@ async function backupRestoreAttachments(backup,user,available){
    if(error)throw new Error('تعذر استعادة مرفق الرسالة: '+error.message);restored++;
   }else if(item.bucket==='conversation-documents'){
    if(item.ownerId!==user.id){skipped++;continue}
-   const exists=await backupStorageObjectExists(item.bucket,item.path);
-   if(!exists){const {error}=await supabaseClient.storage.from(item.bucket).upload(item.path,new Blob([bytes],{type:item.mimeType}),{upsert:false,contentType:item.mimeType});if(error)throw new Error('تعذر استعادة المستند: '+error.message)}
+   const exists=await backupStorageObjectExists(item.bucket,item.path);let changed=false;
+   if(!exists){const {error}=await supabaseClient.storage.from(item.bucket).upload(item.path,new Blob([bytes],{type:item.mimeType}),{upsert:false,contentType:item.mimeType});if(error)throw new Error('تعذر استعادة المستند: '+error.message);changed=true}
    const {data:doc,error:docError}=await supabaseClient.from('conversation_documents').select('id').eq('id',item.documentId).maybeSingle();
    if(docError)throw new Error('تعذر التحقق من سجل المستند: '+docError.message);
-   if(!doc){const meta=(backup.conversationArchive.documents||[]).find(row=>row.id===item.documentId);if(!meta)throw new Error('بيانات المستند غير موجودة في الأرشيف.');const {error}=await supabaseClient.from('conversation_documents').insert({id:meta.id,owner_id:user.id,conversation_id:meta.conversation_id,storage_path:meta.storage_path,file_name:meta.file_name,mime_type:meta.mime_type,size_bytes:meta.size_bytes,visibility:meta.visibility,created_at:meta.created_at,shared_at:meta.shared_at});if(error)throw new Error('تعذر استعادة سجل المستند: '+error.message)}
-   if(!exists)restored++;else skipped++;
+   if(!doc){const meta=(backup.conversationArchive.documents||[]).find(row=>row.id===item.documentId);if(!meta)throw new Error('بيانات المستند غير موجودة في الأرشيف.');const {error}=await supabaseClient.from('conversation_documents').insert({id:meta.id,owner_id:user.id,conversation_id:meta.conversation_id,storage_path:meta.storage_path,file_name:meta.file_name,mime_type:meta.mime_type,size_bytes:meta.size_bytes,visibility:meta.visibility,created_at:meta.created_at,shared_at:meta.shared_at});if(error)throw new Error('تعذر استعادة سجل المستند: '+error.message);changed=true}
+   if(changed)restored++;else skipped++;
   }else skipped++;
  }
  return {name:'storage_attachments',restored,skipped};
