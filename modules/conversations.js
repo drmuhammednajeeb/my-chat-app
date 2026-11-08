@@ -19,6 +19,7 @@ function setSidebarView(view){
  if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');if(state.teamData)renderTeamDashboard();else showTeamDashboardSkeleton();if(!state.teamLoading&&!state.teamData)loadTeamDashboard(true)}
  else if(users){renderDirectory();if(!state.directoryUsers.length&&!state.directoryLoading)loadDirectory()}
  else if(channels){window.dispatchEvent(new Event('bizmind:render-my-channels'))}else renderConversations();
+ renderCustomLists();
 }
 
 async function loadDirectory(reset=true){
@@ -86,7 +87,15 @@ function convName(c){if(isSelfConversation(c))return (state.profile?.display_nam
 
 function convPreview(c){const cleared=state.chatPrefs.get(c.id)?.cleared_before;if(c.type==='direct'&&cleared&&c.last_message?.created_at&&new Date(c.last_message.created_at)<=new Date(cleared))return 'تم مسح السجل من طرفك';return c.last_message?.content||'ابدأ المحادثة الآن'}
 
+function syncConversationListTitle(){
+ if(!state.activeListId)return;
+ const list=state.customLists.find(x=>x.id===state.activeListId);
+ if(state.activeListId==='__favorites__')$('sidebarSectionTitle').textContent='المفضلة';
+ else if(list){const title=$('sidebarSectionTitle');if(title)title.textContent=list.name+' · '+(state.sidebarView==='groups'?'المجموعات':'المحادثات')}
+}
+
 function renderConversations(section=state.sidebarView==='groups'?'groups':'direct'){
+ syncConversationListTitle();
  const q=$('search').value.trim().toLowerCase(),list=$('conversationList');
  if(state.conversationsLoading&&!state.conversations.length){showListSkeleton(list,6);return}
  list.replaceChildren();
@@ -168,23 +177,30 @@ function bindConversationSwipe(shell,row,action,conversation,archived,list){
  });
 }
 
+async function refreshConversationAuxiliaryUi(){
+ await Promise.all([loadCustomLists(),loadAllUserConversationSettings()]);
+ renderCustomLists();
+ renderConversations();
+}
+
 async function loadConversations(){
  state.conversationsLoading=true;
  if(!state.conversations.length){showListSkeleton($('conversationList'),6);showListSkeleton($('directoryList'),4)}
  const {data:members,error}=await supabaseClient.from('conversation_members').select('conversation_id,role,last_read_at').eq('user_id',state.user.id);
- if(error){state.conversationsLoading=false;toast('تعذر تحميل المحادثات');console.error(error);renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));return false}
- state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));return true}
+ if(error){state.conversationsLoading=false;toast('تعذر تحميل المحادثات');console.error(error);renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));await refreshConversationAuxiliaryUi();return false}
+ state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));await refreshConversationAuxiliaryUi();return true}
  const {data:convs,error:ce}=await supabaseClient.from('conversations').select('*').in('id',ids).order('last_message_at',{ascending:false});
- if(ce){state.conversationsLoading=false;toast('تعذر قراءة المحادثات');console.error(ce);renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));return false}
+ if(ce){state.conversationsLoading=false;toast('تعذر قراءة المحادثات');console.error(ce);renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));await refreshConversationAuxiliaryUi();return false}
  const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url,bio)').in('conversation_id',ids);
- if(me){state.conversationsLoading=false;toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));return false}
+ if(me){state.conversationsLoading=false;toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));await refreshConversationAuxiliaryUi();return false}
  const {data:latest,error:le}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
- if(le){state.conversationsLoading=false;toast('تعذر تحميل معاينة الرسائل');console.error(le);renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));return false}
+ if(le){state.conversationsLoading=false;toast('تعذر تحميل معاينة الرسائل');console.error(le);renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));await refreshConversationAuxiliaryUi();return false}
  state.conversations=(convs||[]).map(c=>({...c,last_read_at:state.memberReads[c.id]||null,members:(allMembers||[]).filter(m=>m.conversation_id===c.id).map(m=>({...m,profile:m.profiles})),last_message:(latest||[]).find(m=>m.conversation_id===c.id)}));
  await loadDirectChatPreferences();
  await loadWorkspaceData();
  state.conversations.sort((a,b)=>new Date(b.last_message?.created_at||b.created_at)-new Date(a.last_message?.created_at||a.created_at));
  state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')window.dispatchEvent(new Event('bizmind:render-my-channels'));
+ await refreshConversationAuxiliaryUi();
  if(state.active){const refreshed=state.conversations.find(c=>c.id===state.active.id);if(refreshed)state.active=refreshed}
  return true;
 }
@@ -249,7 +265,7 @@ async function saveDirectChatPreference(patch){
  const next={...current,...patch,user_id:state.user.id,conversation_id:c.id,updated_at:new Date().toISOString()};
  const {data,error}=await supabaseClient.from('user_chat_preferences').upsert(next,{onConflict:'user_id,conversation_id'}).select('conversation_id,theme,cleared_before,is_shortcut,is_archived,is_favorite').single();
  if(error){console.error('Saving chat preference failed:',error);toast('تعذر حفظ إعداد المحادثة');return false}
- state.chatPrefs.set(c.id,data);state.activeChatPreference=data;return true;
+ state.chatPrefs.set(c.id,data);state.activeChatPreference=data;state.chatPrefs.set(c.id,{...state.chatPrefs.get(c.id),...state.activeChatPreference,...patch});updateConversationMenu();return true;
 }
 
 function applyDirectChatTheme(){
@@ -310,6 +326,7 @@ async function openConversation(c){
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
  stopMessagePolling();subscribeConversation();subscribeProfileUpdates(c);await loadStarredMessageIds(c.id);await loadMessages();recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:state.active?.id===c.id});if(state.active?.id===c.id)startMessagePolling(c.id);
+ if(state.active?.id===c.id){applyGroupComposerOnOpen();updateConversationMenu()}
 }
 
 function closeChatHeaderMenu(){const menu=$('chatHeaderMenu'),button=$('chatHeaderMenuBtn');menu?.classList.add('hidden');button?.setAttribute('aria-expanded','false')}
