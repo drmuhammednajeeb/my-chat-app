@@ -153,3 +153,9 @@ window.addEventListener('bizmind:message-updated',event=>{
  const {payload,conversationId}=event.detail||{};
  if(payload&&conversationId)handleMessageUpdateRealtime(payload,conversationId);
 });
+
+// Conversation lifecycle commands are handled here so conversations.js does not depend on realtime internals.
+window.addEventListener('bizmind:stop-message-polling',()=>stopMessagePolling());
+window.addEventListener('bizmind:subscribe-conversation',()=>subscribeConversation());
+window.addEventListener('bizmind:subscribe-profile-updates',event=>{const conversation=event.detail?.conversation;if(conversation)subscribeProfileUpdates(conversation)});
+window.addEventListener('bizmind:start-message-polling',event=>{const conversationId=event.detail?.conversationId;if(conversationId)startMessagePolling(conversationId)});
