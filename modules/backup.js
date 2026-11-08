@@ -104,6 +104,11 @@ async function backupCreate(){
  for(const table of PERSONAL_TABLES){
   personal[table]=await backupFetchAll(queryFor[table],table);
  }
+ personal.user_settings=personal.user_settings.map(row=>({
+  user_id:row.user_id,
+  settings:row.settings&&['dark','light','system'].includes(row.settings.theme)?{theme:row.settings.theme}:{},
+  updated_at:row.updated_at
+ }));
  const membership=await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id').eq('user_id',user.id),'عضويات المحادثات');
  const conversationIds=[...new Set(membership.map(row=>row.conversation_id).filter(Boolean))];
  const conversationArchive={conversationCount:conversationIds.length,conversations:[],messages:[],reactions:[],pins:[]};
@@ -291,7 +296,6 @@ function backupOpenModal(){
  const modal=document.createElement('section');
  modal.id='backupRestoreModal';modal.className='backup-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','backupRestoreTitle');
  modal.innerHTML='<div class="backup-dialog"><header><div><h2 id="backupRestoreTitle">النسخ الاحتياطي والاستعادة</h2><p>إدارة نسخة بياناتك الشخصية وأرشيف المحادثات</p></div><button type="button" id="backupRestoreClose" aria-label="إغلاق">×</button></header><div class="backup-content"><section><h3>إنشاء نسخة احتياطية</h3><p>تصدير بياناتك الشخصية مع أرشيف قراءة فقط للمحادثات والرسائل التي تستطيع الوصول إليها.</p><button type="button" id="backupCreateBtn" class="backup-primary">إنشاء وتنزيل نسخة احتياطية</button></section><section><h3>استعادة نسخة</h3><p>اختر ملف JSON أصلياً من هذا التطبيق. الاستعادة تدمج إعداداتك وبياناتك الشخصية دون حذف الموجود.</p><label class="backup-file-label">اختيار ملف النسخة<input id="backupRestoreFile" type="file" accept="application/json,.json"></label><pre id="backupRestorePreview" class="backup-preview">لم يتم اختيار ملف بعد.</pre><button type="button" id="backupRestoreApply" class="backup-primary" disabled>استعادة البيانات الشخصية</button></section><aside class="backup-warning"><strong>ضوابط الحماية</strong><ul><li>لا يتم تصدير كلمات المرور أو رموز الجلسات أو مفاتيح الوصول.</li><li>الرسائل والمحادثات المشتركة محفوظة في الأرشيف فقط ولا تُعاد إلى قاعدة البيانات.</li><li>لا تُحذف أي بيانات حالية؛ الاستعادة دمج وليست استبدالاً.</li><li>ملفات المرفقات الثنائية غير مضمنة في هذه النسخة.</li><li>قد تُتخطى سجلات مرتبطة بمحادثات لم تعد متاحة لحسابك.</li></ul></aside><p id="backupRestoreStatus" role="status" aria-live="polite"></p></div></div>';
- document.body.append(modal);
  const close=()=>modal.classList.remove('open');
  modal.querySelector('#backupRestoreClose').addEventListener('click',close);
  modal.addEventListener('click',event=>{if(event.target===modal)close()});
@@ -315,7 +319,7 @@ function backupOpenModal(){
    const results=await backupRestore(selectedBackup);
    backupSetStatus('اكتملت الاستعادة. '+results.map(row=>row.name+': '+row.restored+' مستعاد، '+row.skipped+' متجاوز').join(' | '));
    backupToast('اكتملت استعادة البيانات الشخصية. حدّث الصفحة لتحديث الواجهات.');
-  }catch(error){console.error('Backup restore failed:',error);backupSetStatus(error.message||'توقفت الاستعادة. قد تكون بعض الأقسام السابقة قد استُعيدت بالفعل؛ أعد المحاولة بعد المراجعة.',true)}
+  }catch(error){console.error('Backup restore failed:',error);backupSetStatus('قد تكون بعض الأقسام السابقة قد استُعيدت بالفعل. '+(error.message||'توقفت الاستعادة؛ راجع البيانات ثم أعد المحاولة.'),true)}
   finally{backupSetBusy(false)}
  });
  document.body.append(modal);modal.classList.add('open');
