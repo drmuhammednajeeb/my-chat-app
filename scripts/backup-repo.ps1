@@ -40,7 +40,7 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($DefaultBranch)) {
 }
 Invoke-Git @('--git-dir', $MirrorDir, 'show-ref', '--verify', '--quiet', "refs/heads/$DefaultBranch")
 Invoke-Git @('--git-dir', $MirrorDir, 'bundle', 'create', $BundleFile, '--all')
-Invoke-Git @('bundle', 'verify', $BundleFile)
+Invoke-Git @('--git-dir', $MirrorDir, 'bundle', 'verify', $BundleFile)
 Invoke-Git @('--git-dir', $MirrorDir, 'archive', '--format=zip', "--prefix=my-chat-app-source/", "--output=$SourceArchive", "refs/heads/$DefaultBranch")
 
 @(
