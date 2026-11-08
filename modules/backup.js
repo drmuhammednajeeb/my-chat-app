@@ -321,13 +321,15 @@ function backupOpenModal(){
  document.body.append(modal);modal.classList.add('open');
 }
 function backupInstallEntry(){
- const menu=document.getElementById('chatHeaderMenu');
- if(!menu||document.getElementById('backupRestoreOpenBtn'))return;
+ const profileActions=document.querySelector('#sidebar .profile');
+ if(!profileActions||document.getElementById('backupRestoreOpenBtn'))return;
  const button=document.createElement('button');
- button.id='backupRestoreOpenBtn';button.type='button';button.className='theme-toggle-btn';button.setAttribute('role','menuitem');
- button.innerHTML='<i class="ph ph-shield-check"></i><span>النسخ الاحتياطي والاستعادة</span>';
- button.addEventListener('click',()=>{menu.classList.add('hidden');backupOpenModal()});
- menu.append(button);
+ button.id='backupRestoreOpenBtn';button.type='button';button.className='iconbtn';
+ button.title='النسخ الاحتياطي والاستعادة';button.setAttribute('aria-label','النسخ الاحتياطي والاستعادة');
+ button.innerHTML='<i class="ph ph-shield-check"></i>';
+ button.addEventListener('click',backupOpenModal);
+ const logout=document.getElementById('logoutBtn');
+ if(logout)profileActions.insertBefore(button,logout);else profileActions.append(button);
  const style=document.createElement('style');
  style.textContent='.backup-modal{position:fixed;inset:0;z-index:180;display:none;place-items:center;padding:14px;background:#07111dcc;direction:rtl}.backup-modal.open{display:grid}.backup-dialog{width:min(100%,680px);max-height:94dvh;overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--text);box-shadow:0 20px 70px #0005}.backup-dialog>header{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;padding:15px 18px;background:var(--panel);border-bottom:1px solid var(--line)}.backup-dialog h2{margin:0;font-size:17px}.backup-dialog header p,.backup-content p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.7}.backup-dialog header button{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);font-size:22px}.backup-content{display:grid;gap:12px;padding:14px}.backup-content section,.backup-warning{padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}.backup-content h3{margin:0;font-size:13px}.backup-primary,.backup-file-label{display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;padding:10px 13px;border:0;border-radius:9px;background:var(--accent);color:#fff;font:inherit;font-size:12px;font-weight:800;cursor:pointer}.backup-primary:disabled{opacity:.45;cursor:not-allowed}.backup-file-label{background:var(--panel);border:1px solid var(--line);color:var(--text)}.backup-file-label input{max-width:190px;font-size:10px}.backup-preview{max-height:180px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:10px;border-radius:9px;background:var(--panel);color:var(--muted);font:10px/1.8 ui-monospace,monospace}.backup-warning{border-color:#d49b3d66;background:#d49b3d0d;font-size:11px;line-height:1.8}.backup-warning ul{margin:7px 0 0;padding-inline-start:20px}.backup-warning strong{font-size:12px}.backup-content #backupRestoreStatus{min-height:20px;margin:0;color:var(--accent);font-size:11px;line-height:1.7;overflow-wrap:anywhere}.backup-content #backupRestoreStatus[data-state=error]{color:#d45b5b}@media(max-width:520px){.backup-modal{padding:7px}.backup-content{padding:9px}.backup-dialog{max-height:96dvh}}';
  document.head.append(style);
