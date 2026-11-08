@@ -98,7 +98,7 @@ Do not change the Supabase project URL, schema, RLS, Storage policies, or produc
 | Environment variables/secrets | Password manager or encrypted secret vault; never place in Git or plain backup archives |
 | DNS/domain ownership | Registrar account access and DNS record inventory |
 
-The existing in-app Backup & Restore module is for permitted account-level application data. It is not a substitute for a repository mirror or a full Supabase disaster-recovery plan.
+The existing in-app Backup & Restore module is for permitted account-level application data. It is not a substitute for a repository mirror or a full Supabase disaster-recovery plan. Its current security review, explicit export scope, restore limitations, and required isolated test matrix are recorded in [SECURITY_QUALITY_AUDIT.md](./SECURITY_QUALITY_AUDIT.md).
 
 ## Security requirements
 
