@@ -63,7 +63,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
    }
   }
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId)return;
-  state.messages=Array.from(current.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
+  state.messages=Array.from(current.values()).sort(compareMessagesChronologically).slice(-100);
   if(added)await markConversationReceipt(conversationId,document.visibilityState==='visible'&&isMessagesNearBottom());
   const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole);if($('messageInput').disabled&&!channelReadOnly){$('messageInput').disabled=false;diagLog('composer-reenabled-by-poll')}
   resizeComposer();diagLog('poll-success',{fetched:fetched.length,added,rendered:$('messages').querySelectorAll('.message').length});
@@ -94,10 +94,7 @@ function handleMessageUpdateRealtime(payload,conversationId){
   // A rendered message missing from the in-memory list may be restored, but
   // never append an unknown historical UPDATE event to the conversation tail.
   state.messages.push(incoming);
-  state.messages.sort((a,b)=>{
-   const byTime=Date.parse(a.created_at)-Date.parse(b.created_at);
-   return byTime||String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.id).localeCompare(String(b.id));
-  });
+  state.messages.sort(compareMessagesChronologically);
  }
  if(incoming.deleted_at){loadMessages().catch(error=>console.error('Deleted message refresh failed:',error));return}
  if(row){
@@ -121,7 +118,7 @@ function subscribeConversation(){
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  const id=state.active.id;diagLog('realtime-subscribe',{conversationId:id});
  state.channel=supabaseClient.channel('chat:'+id)
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom())})
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);state.messages.sort(compareMessagesChronologically);if(!state.messageIds.has(incoming.id)&&!state.renderingMessageIds.has(incoming.id))renderMessage(incoming,id).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom())})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>handleMessageUpdateRealtime(p,id))
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
