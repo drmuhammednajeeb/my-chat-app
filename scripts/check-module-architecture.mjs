@@ -16,7 +16,8 @@ const modules = [
   "modules/groups.js",
   "modules/channels.js",
   "modules/admin.js",
-  "modules/media.js"
+  "modules/media.js",
+  "modules/backup.js"
 ];
 const strict = process.argv.includes("--strict");
 const indexHtml = await readFile("index.html", "utf8");
