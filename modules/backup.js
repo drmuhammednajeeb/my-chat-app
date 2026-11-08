@@ -198,11 +198,13 @@ async function backupRestore(backup){
  // Merge-only: no DELETE/TRUNCATE, and rows are constrained to the authenticated owner.
  backupAssertRestorableTable('user_settings');
  const settings=personal.user_settings[0]?.settings;
- if(settings&&typeof settings==='object'&&!Array.isArray(settings)){
-  const {error}=await supabaseClient.rpc('patch_my_user_settings',{p_patch:settings});
+ const settingsPatch={};
+ if(settings&&typeof settings==='object'&&!Array.isArray(settings)&&['dark','light','system'].includes(settings.theme))settingsPatch.theme=settings.theme;
+ if(Object.keys(settingsPatch).length){
+  const {error}=await supabaseClient.rpc('patch_my_user_settings',{p_patch:settingsPatch});
   if(error)throw new Error('تعذر استعادة إعدادات الحساب: '+error.message);
   results.push({name:'user_settings',restored:1,skipped:0});
- }else results.push({name:'user_settings',restored:0,skipped:0});
+ }else results.push({name:'user_settings',restored:0,skipped:personal.user_settings.length});
  await apply('user_chat_preferences',personal.user_chat_preferences,'user_id,conversation_id',row=>available.has(row.conversation_id));
  await apply('user_conversation_settings',personal.user_conversation_settings,'user_id,conversation_id',row=>available.has(row.conversation_id));
  await apply('user_classification_rules',personal.user_classification_rules,'id');
