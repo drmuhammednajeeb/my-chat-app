@@ -25,7 +25,7 @@ const serviceWorker = await readFile("service-worker.js", "utf8");
 const sourceFiles = new Map();
 for (const path of modules) sourceFiles.set(path, await readFile(path, "utf8"));
 
-const scriptSources = [...indexHtml.matchAll(/<script\\b[^>]*src=["']([^"']+)["'][^>]*>/gi)].map(match => match[1]);
+const scriptSources = [...indexHtml.matchAll(/<script\b[^>]*src=["']([^"']+)["'][^>]*>/gi)].map(match => match[1]);
 const expectedOrder = modules.map(path => "./" + path);
 const positions = expectedOrder.map(path => scriptSources.indexOf(path));
 const missingScripts = expectedOrder.filter((_, index) => positions[index] < 0);
@@ -36,7 +36,7 @@ const missingPrecache = modules.filter(path => !serviceWorker.includes("./" + pa
 
 const declarations = new Map();
 for (const [path, source] of sourceFiles) {
-  const names = [...source.matchAll(/(?:^|\\n)\\s*(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\s*\\(/g)].map(match => match[1]);
+  const names = [...source.matchAll(/(?:^|\n)\s*(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/g)].map(match => match[1]);
   declarations.set(path, names);
 }
 const owners = new Map();
@@ -49,8 +49,8 @@ const duplicateDeclarations = [...owners.entries()]
 
 function stripComments(source) {
   return source
-    .replace(/\\/\\*[\\s\\S]*?\\*\\//g, " ")
-    .replace(/(^|[^:])\\/\\/.*$/gm, "$1 ");
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1 ");
 }
 
 const graph = new Map(modules.map(path => [path, new Set()]));
@@ -58,7 +58,7 @@ for (const [caller, source] of sourceFiles) {
   const searchable = stripComments(source);
   for (const [callee, names] of declarations) {
     if (caller === callee) continue;
-    if (names.some(name => new RegExp("\\\\b" + name + "\\\\s*\\\\(").test(searchable))) {
+    if (names.some(name => new RegExp("\\b" + name + "\\s*\\(").test(searchable))) {
       graph.get(caller).add(callee);
     }
   }
