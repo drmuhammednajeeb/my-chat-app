@@ -200,28 +200,25 @@ function compareMessagesChronologically(a,b){
  return String(a?.id||'').localeCompare(String(b?.id||''));
 }
 
-function rebuildMessageDayDividers(area){
- area.querySelectorAll('.day-divider').forEach(node=>node.remove());
- let previousDay=null;
- for(const row of area.querySelectorAll('.message')){
-  const day=row.dataset.day||'';
-  if(day!==previousDay){
-   const divider=document.createElement('div');
-   divider.className='day-divider';divider.textContent=day;divider.dataset.day=day;
-   area.insertBefore(divider,row);previousDay=day;
-  }
- }
-}
-
 function insertMessageChronologically(area,row,message){
- const next=Array.from(area.querySelectorAll('.message')).find(existing=>
+ const rows=Array.from(area.querySelectorAll('.message'));
+ const nextIndex=rows.findIndex(existing=>
   compareMessagesChronologically(
    {created_at:existing.dataset.createdAt,id:existing.dataset.messageId},
    message
   )>0
  );
+ const next=nextIndex>=0?rows[nextIndex]:null;
+ const previous=nextIndex>=0?rows[nextIndex-1]:rows[rows.length-1]||null;
+ const day=row.dataset.day||'';
  area.insertBefore(row,next||null);
- rebuildMessageDayDividers(area);
+ // Existing divider before a same-day next row already covers this insertion.
+ // Create a divider only when the new row starts a genuinely new day group.
+ if((previous?.dataset.day||null)!==day&&(next?.dataset.day||null)!==day){
+  const divider=document.createElement('div');
+  divider.className='day-divider';divider.textContent=day;divider.dataset.day=day;
+  area.insertBefore(divider,row);
+ }
 }
 
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
