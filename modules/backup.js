@@ -183,7 +183,7 @@ async function backupCreate(){
   if(error||!data)throw new Error('تعذر تضمين ملف مرفق في النسخة ('+ref.path+'): '+(error?.message||'الملف غير متاح').slice(0,220));
   const bytes=new Uint8Array(await data.arrayBuffer());binaryBytes+=bytes.byteLength;
   if(binaryBytes>BACKUP_MAX_BINARY_BYTES)throw new Error('تجاوز حجم المرفقات 65 ميجابايت. أوقفنا التصدير بدلاً من إصدار نسخة ناقصة.');
-  conversationArchive.attachments.push({...ref,sizeBytes:bytes.byteLength,data:backupBase64(bytes)});
+  conversationArchive.attachments.push({...ref,mimeType:data.type||ref.mimeType,sizeBytes:bytes.byteLength,data:backupBase64(bytes)});
  }
  const payload={
   format:BACKUP_FORMAT,
