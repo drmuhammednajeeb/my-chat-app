@@ -223,6 +223,7 @@ function closeProfileModal(){
 }
 
 // Avatar rendering contract used by feature modules without importing media helpers.
+window.addEventListener('bizmind:cancel-voice-recording',()=>cancelVoiceRecording());
 window.addEventListener('bizmind:render-avatar',event=>{
  const {container,profile,className}=event.detail||{};
  if(container)renderAvatar(container,profile,className||'directory-avatar');
