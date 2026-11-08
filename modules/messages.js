@@ -120,6 +120,57 @@ function messagePreview(m){if(!m)return 'رسالة غير متاحة';if(m.dele
 
 function renderComposerContext(){const privateReply=state.privateReplyPending,target=state.editTarget||state.replyTarget||privateReply,box=$('composerContext');if(!box)return;if(!target){box.classList.add('hidden');$('composerContextText').textContent='';$('attachBtn').disabled=false;$('sendBtn').title='إرسال';$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';return}box.classList.remove('hidden');$('composerContextLabel').textContent=state.editTarget?'تعديل الرسالة':privateReply?'رد خاص من المجموعة':'الرد على الرسالة';$('composerContextText').textContent=privateReply?privateReply.quotedContent:messagePreview(target);$('sendBtn').title=state.editTarget?'حفظ التعديل':'إرسال الرد';$('sendBtn').innerHTML=state.editTarget?'<i class="ph ph-check"></i>':'<i class="ph ph-paper-plane-tilt"></i>'}
 
+function bindMessageGestures(bubble,row,message){
+ if(!bubble||!row||!message||message.deleted_at)return;
+ let gesture=null;
+ const clear=()=>{
+  if(!gesture)return;
+  bubble.style.transform='';
+  bubble.style.transition='';
+  bubble.style.userSelect='';
+  bubble.style.webkitUserSelect='';
+  row.classList.remove('swipe-ready');
+  row.querySelector('.swipe-reply-indicator')?.remove();
+  gesture=null;
+ };
+ bubble.addEventListener('pointerdown',event=>{
+  if(!event.isPrimary||!['touch','pen','mouse'].includes(event.pointerType)||event.button!==0)return;
+  if(event.target.closest('button,a,audio,video,input,textarea,.reply-quote,.message-menu-wrap'))return;
+  clear();
+  gesture={pointerId:event.pointerId,x:event.clientX,y:event.clientY,dx:0,dy:0,locked:false};
+ },{passive:true});
+ bubble.addEventListener('pointermove',event=>{
+  if(!gesture||event.pointerId!==gesture.pointerId)return;
+  const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;
+  gesture.dx=dx;gesture.dy=dy;
+  if(!gesture.locked){
+   if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)*1.1){clear();return}
+   if(Math.abs(dx)<8||Math.abs(dx)<Math.abs(dy)*1.15)return;
+   gesture.locked=true;
+   if(event.cancelable)event.preventDefault();
+   bubble.style.userSelect='none';bubble.style.webkitUserSelect='none';
+   try{bubble.setPointerCapture(event.pointerId)}catch(_){}
+   const indicator=document.createElement('span');
+   indicator.className='swipe-reply-indicator';
+   indicator.innerHTML='<i class="ph ph-arrow-bend-up-left"></i>';
+   row.append(indicator);
+  }
+  if(event.cancelable)event.preventDefault();
+  bubble.style.transition='none';
+  bubble.style.transform='translateX('+Math.max(-72,Math.min(72,dx))+'px)';
+  row.classList.toggle('swipe-ready',Math.abs(dx)>=28);
+ },{passive:false});
+ const finish=event=>{
+  if(!gesture||event.pointerId!==gesture.pointerId)return;
+  const shouldReply=gesture.locked&&Math.abs(gesture.dx)>=46&&Math.abs(gesture.dx)>Math.abs(gesture.dy)*1.2;
+  clear();
+  if(shouldReply)beginReply(message);
+ };
+ bubble.addEventListener('pointerup',finish);
+ bubble.addEventListener('pointercancel',clear);
+ bubble.addEventListener('lostpointercapture',()=>{if(gesture)clear()});
+}
+ 
 function beginReply(m){if(!m||m.deleted_at)return;if(state.editTarget)$('messageInput').value='';state.editTarget=null;$('attachBtn').disabled=false;state.replyTarget=m;renderComposerContext();resizeComposer();$('messageInput').focus()}
 
 function canEditMessage(m){
@@ -261,7 +312,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  top=Math.max(pad,Math.min(top,window.innerHeight-box.height-pad));
  menu.style.left=Math.round(left)+'px';menu.style.top=Math.round(top)+'px';trigger.setAttribute('aria-expanded','true');
 };menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
-  row.append(bubble);renderReactionBar(row,m);renderMessagePinMark(row,m);
+  row.append(bubble);bindMessageGestures(bubble,row,m);renderReactionBar(row,m);renderMessagePinMark(row,m);
   if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)){state.messageIds.delete(m.id);return false;}
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
   insertMessageChronologically(area,row,m);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
