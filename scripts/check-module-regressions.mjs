@@ -59,12 +59,12 @@ assert.ok(hasListener(media, "bizmind:render-avatar"), "media.js must own render
 for (const name of ["publishTyping", "handleMessageUpdateRealtime", "renderChatAvatar"]) {
   noDirectCall(media, name, "media.js");
 }
-for (const event of ["bizmind:publish-typing", "bizmind:message-updated", "bizmind:render-chat-avatar", "bizmind:render-conversations"]) {
+for (const event of ["bizmind:publish-typing", "bizmind:message-updated", "bizmind:render-conversations"]) {
   requireEvent(media, event, "media.js");
 }
 assert.ok(hasListener(realtime, "bizmind:publish-typing"), "realtime.js must own publish-typing");
 assert.ok(hasListener(realtime, "bizmind:message-updated"), "realtime.js must own message-updated");
-assert.ok(hasListener(conversations, "bizmind:render-chat-avatar"), "conversations.js must own render-chat-avatar");
+assert.ok(!hasListener(conversations, "bizmind:render-chat-avatar"), "unused render-chat-avatar listener must not remain without a producer");
 assert.ok(hasListener(conversations, "bizmind:render-conversations"), "conversations.js must own render-conversations");
 
 // messages -> conversations: read-receipt refresh and menu close use synchronous DOM events.
