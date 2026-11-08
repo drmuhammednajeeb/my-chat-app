@@ -87,10 +87,19 @@ function subscribeProfileUpdates(conversation){
 
 function handleMessageUpdateRealtime(payload,conversationId){
  const incoming=payload?.new;if(!incoming?.id||state.active?.id!==conversationId)return;
- const index=state.messages.findIndex(message=>message.id===incoming.id);
- if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);
- if(incoming.deleted_at){loadMessages().catch(error=>console.error('Deleted message refresh failed:',error));return}
  const row=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===incoming.id);
+ const index=state.messages.findIndex(message=>message.id===incoming.id);
+ if(index>=0)state.messages[index]=incoming;
+ else if(row){
+  // A rendered message missing from the in-memory list may be restored, but
+  // never append an unknown historical UPDATE event to the conversation tail.
+  state.messages.push(incoming);
+  state.messages.sort((a,b)=>{
+   const byTime=Date.parse(a.created_at)-Date.parse(b.created_at);
+   return byTime||String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.id).localeCompare(String(b.id));
+  });
+ }
+ if(incoming.deleted_at){loadMessages().catch(error=>console.error('Deleted message refresh failed:',error));return}
  if(row){
   const bubble=row.querySelector('.bubble');let content=bubble?.querySelector('.message-content');
   if(bubble&&incoming.content){
