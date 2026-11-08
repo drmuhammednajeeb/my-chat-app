@@ -8,6 +8,7 @@ on:
     paths:
       - "modules/backup.js"
       - "scripts/check-backup-module.mjs"
+      - "scripts/test-backup-crypto.mjs"
       - "scripts/check-module-architecture.mjs"
       - "index.html"
       - "service-worker.js"
@@ -33,10 +34,14 @@ jobs:
       - name: Parse regression scripts
         run: |
           node --check scripts/check-backup-module.mjs
+          node --check scripts/test-backup-crypto.mjs
           node --check scripts/check-module-architecture.mjs
 
       - name: Run backup regression checks
         run: node scripts/check-backup-module.mjs
+
+      - name: Run WebCrypto and attachment acceptance tests
+        run: node --test scripts/test-backup-crypto.mjs
 
       - name: Run module architecture checks
         run: node scripts/check-module-architecture.mjs
