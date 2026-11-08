@@ -58,9 +58,7 @@ function isMessagesNearBottom(area=$('messages'),threshold=120){return !!area&&(
 
 function updateNewMessagesIndicator(){const button=$('newMessagesJump'),label=$('newMessagesJumpText');if(!button||!label)return;const count=state.newMessageCount||0;button.classList.toggle('hidden',count===0);label.textContent=count===1?'رسالة جديدة · الانتقال للأسفل':'رسائل جديدة · '+count.toLocaleString('ar-SA');button.setAttribute('aria-label',count+' رسائل جديدة. الانتقال إلى أحدث الرسائل')}
 
-function clearNewMessages(markRead=false){const hadUnread=(state.newMessageCount||0)>0;state.newMessageCount=0;updateNewMessagesIndicator();if(hadUnread&&markRead&&state.active?.id&&document.visibilityState==='visible')markConversationReceipt(state.active.id,true).catch(error=>console.warn('Read receipt after jump failed:',error?.message||error))}
 
-function jumpToLatestMessages(){const area=$('messages');if(!area)return;const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;area.scrollTo({top:area.scrollHeight,behavior:reduced?'auto':'smooth'});clearNewMessages(true)}
 
 function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(!area)return;
