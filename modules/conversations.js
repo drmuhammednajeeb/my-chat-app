@@ -285,7 +285,7 @@ async function archiveConversation(conversation,archive=true){
  const {data,error}=await supabaseClient.from('user_chat_preferences').upsert(payload,{onConflict:'user_id,conversation_id'}).select('conversation_id,theme,cleared_before,is_shortcut,is_archived').single();
  if(error){console.error('Archive update failed:',error);toast('تعذرت أرشفة المحادثة');return}
  state.chatPrefs.set(conversation.id,data);
- if(state.active?.id===conversation.id){state.activeChatPreference=data;if(archive){state.active=null;applyDirectChatTheme();stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);$('chatTitle').textContent='تمت أرشفة المحادثة';$('chatSub').textContent='يمكنك استعادتها من قسم المؤرشفة';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-archive-box"></i></div><h2>تمت الأرشفة</h2><p>المحادثة ورسائلها محفوظة ويمكن استعادتها في أي وقت.</p></div>'}}
+ if(state.active?.id===conversation.id){state.activeChatPreference=data;if(archive){state.active=null;applyDirectChatTheme();window.dispatchEvent(new Event('bizmind:stop-message-polling'));if(state.channel)supabaseClient.removeChannel(state.channel);$('chatTitle').textContent='تمت أرشفة المحادثة';$('chatSub').textContent='يمكنك استعادتها من قسم المؤرشفة';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-archive-box"></i></div><h2>تمت الأرشفة</h2><p>المحادثة ورسائلها محفوظة ويمكن استعادتها في أي وقت.</p></div>'}}
  renderConversations();toast(archive?'تمت أرشفة المحادثة في حسابك فقط':'تمت استعادة المحادثة إلى القائمة');
 }
 
@@ -323,7 +323,7 @@ async function openConversation(c){
  $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
- stopMessagePolling();subscribeConversation();subscribeProfileUpdates(c);await loadStarredMessageIds(c.id);await loadMessages();recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:state.active?.id===c.id});if(state.active?.id===c.id)startMessagePolling(c.id);
+ window.dispatchEvent(new Event('bizmind:stop-message-polling'));window.dispatchEvent(new Event('bizmind:subscribe-conversation'));window.dispatchEvent(new CustomEvent('bizmind:subscribe-profile-updates',{detail:{conversation:c}}));await new Promise(resolve=>window.dispatchEvent(new CustomEvent('bizmind:load-starred-message-ids',{detail:{conversationId:c.id,resolve}})));await loadMessages();recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:state.active?.id===c.id});if(state.active?.id===c.id)window.dispatchEvent(new CustomEvent('bizmind:start-message-polling',{detail:{conversationId:c.id}}));
  if(state.active?.id===c.id){window.dispatchEvent(new Event('bizmind:apply-group-composer-on-open'));updateConversationMenu()}
 }
 
@@ -433,7 +433,7 @@ async function clearActiveConversation(){
 
 async function closeActiveConversation(){
  if(state.voiceRecorder){toast('أوقف التسجيل قبل إغلاق الدردشة');return}
- closeChatHeaderMenu();stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
+ closeChatHeaderMenu();window.dispatchEvent(new Event('bizmind:stop-message-polling'));if(state.channel)supabaseClient.removeChannel(state.channel);if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  state.channel=null;state.typingChannel=null;state.active=null;state.messages=[];state.messageIds.clear();state.messageLoadVersion++;
  $('chatTitle').textContent='اختر محادثة';$('chatSub').textContent='محادثاتك الخاصة والمجموعات';$('messages').innerHTML='<div class="welcome"><h2>تم إغلاق الدردشة</h2><p>اختر محادثة أخرى من القائمة.</p></div>';$('messageInput').disabled=true;$('sendBtn').disabled=true;
  if(innerWidth<=760)$('sidebar').classList.remove('closed');renderConversations();
