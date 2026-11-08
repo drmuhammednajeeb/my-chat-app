@@ -105,3 +105,8 @@ The regression guard now rejects feature-function reassignment wrappers and app-
 - `conversations.js` no longer calls `cancelVoiceRecording()` directly when switching conversations. It publishes `bizmind:cancel-voice-recording`, handled synchronously by `media.js`.
 - These are synchronous presentation/lifecycle commands with no consumed return values. The voice cancellation listener immediately invokes the existing cancellation routine, preserving ordering before the new conversation loads.
 - Regression tests now protect the producer/listener pairs and forbid direct calls from the requesting modules.
+
+
+## Shared conversation-model primitives
+
+Moved `SELF_CHAT_MARKER`, `isSelfConversation()`, `otherMember()`, and `convName()` into `core.js`. These are pure/shared model helpers over the established global state and are consumed by several feature modules; keeping them in the foundational layer removes the `messages.js` → `conversations.js` dependency without duplicating conversation-name semantics (including the self-chat label).
