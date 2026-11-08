@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const read = path => readFile(path, "utf8");
-const [core, auth, notifications, conversations, messages, realtime, groups, channels, admin, media] = await Promise.all([
+const [core, auth, notifications, conversations, messages, realtime, groups, channels, admin, media, app] = await Promise.all([
   read("modules/core.js"),
   read("modules/auth.js"),
   read("modules/notifications.js"),
@@ -19,7 +19,8 @@ const [core, auth, notifications, conversations, messages, realtime, groups, cha
   read("modules/groups.js"),
   read("modules/channels.js"),
   read("modules/admin.js"),
-  read("modules/media.js")
+  read("modules/media.js"),
+  read("app.js")
 ]);
 
 const hasDispatch = (source, event) =>
@@ -88,5 +89,15 @@ for (const [owner, names] of declarations) {
     }
   }
 }
+
+// app.js is the composition root, not a runtime monkey-patching layer.
+assert.doesNotMatch(app, /(?:async\\s+)?function\\s+[A-Za-z_$][\\w$]*\\s*\\(/,
+  "app.js must not regain feature function declarations");
+assert.doesNotMatch(app, /\\b(?:setSidebarView|renderConversations|openConversation|loadConversations|saveDirectChatPreference|subscribeNotifications|renderMessage|updateConversationMenu)\\s*=\\s*(?:async\\s*)?function\\b/,
+  "app.js must not reassign feature functions through wrappers");
+assert.ok(messages.includes("if(state.selectionMode)decorateMessageSelection(row,m)"),
+  "messages.js must own selection decoration for newly rendered messages");
+assert.doesNotMatch(app, /new MutationObserver\\(/,
+  "app.js must not observe message DOM to patch message-module behavior");
 
 console.log("Module boundary regression checks passed.");
