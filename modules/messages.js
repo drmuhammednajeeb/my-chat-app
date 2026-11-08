@@ -315,7 +315,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
   row.append(bubble);bindMessageGestures(bubble,row,m);renderReactionBar(row,m);renderMessagePinMark(row,m);
   if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)){state.messageIds.delete(m.id);return false;}
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
-  insertMessageChronologically(area,row,m);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
+  insertMessageChronologically(area,row,m);if(state.selectionMode)decorateMessageSelection(row,m);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
   if(!state.isLoadingMessages){if(m.sender_id===state.user?.id){clearNewMessages(false);scheduleMessagesBottom(area,'auto')}else if(near){scheduleMessagesBottom(area,'auto')}else{state.newMessageCount=(state.newMessageCount||0)+1;updateNewMessagesIndicator()}}
   updateDiagnostics();
   return true;
