@@ -76,7 +76,7 @@ function subscribeProfileUpdates(conversation){
  let channel=supabaseClient.channel('profile-updates:'+state.user.id);
  channel=channel.on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles'},payload=>{
   const updated=payload.new;if(!updated?.id)return;
-  if(updated.id===state.user?.id){state.profile={...(state.profile||{}),...updated};$('myName').textContent=updated.display_name||updated.username;$('myHandle').textContent='@'+updated.username+' · '+(updated.membership_number||state.profile?.membership_number||'');renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit')}
+  if(updated.id===state.user?.id){state.profile={...(state.profile||{}),...updated};$('myName').textContent=updated.display_name||updated.username;$('myHandle').textContent='@'+updated.username+' · '+(updated.membership_number||state.profile?.membership_number||'');window.dispatchEvent(new CustomEvent('bizmind:render-avatar',{detail:{container:$('myAvatar'),profile:state.profile,className:'avatar profile-avatar-edit'}}))}
   state.conversations.forEach(conv=>(conv.members||[]).forEach(member=>{if(member.user_id===updated.id)member.profile={...(member.profile||{}),...updated}}));
   state.directoryUsers=state.directoryUsers.map(profile=>profile.id===updated.id?{...profile,...updated}:profile);
   if(state.active?.type==='direct'&&otherMember(state.active)?.id===updated.id){$('chatTitle').textContent=convName(state.active);renderChatAvatar(state.active)}
