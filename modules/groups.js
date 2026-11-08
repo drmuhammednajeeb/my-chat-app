@@ -28,7 +28,7 @@ function renderGroupCandidates(people){
  if(!people.length){const empty=document.createElement('div');empty.className='group-hint';empty.style.padding='12px';empty.textContent='لا توجد نتائج مطابقة.';results.append(empty);return}
  people.forEach(profile=>{
   const selected=groupSelectedProfiles.has(profile.id);const button=document.createElement('button');button.type='button';button.className='group-person'+(selected?' selected':'');
-  const avatar=document.createElement('div');avatar.className='avatar';renderAvatar(avatar,profile);
+  const avatar=document.createElement('div');avatar.className='avatar';window.dispatchEvent(new CustomEvent('bizmind:render-avatar',{detail:{container:avatar,profile}}));
   const copy=document.createElement('div');copy.className='group-person-copy';
   const name=document.createElement('strong');name.textContent=profile.display_name||profile.username||'مستخدم';
   const handle=document.createElement('small');handle.textContent='@'+(profile.username||'user');copy.append(name,handle);
