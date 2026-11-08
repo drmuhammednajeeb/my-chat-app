@@ -403,7 +403,7 @@ $('createGroupBtn').onclick=async()=>{
  finally{button.textContent='إنشاء المجموعة';renderGroupSelection()}
 };
 
-/* Swipe horizontally on a message to reply; vertical movement remains native scrolling. */
+/* Single pointer-based swipe handler. Vertical scrolling stays native; either horizontal direction replies. */
 (()=>{
  const area=$('messages');if(!area)return;
  let gesture=null;
@@ -414,40 +414,41 @@ $('createGroupBtn').onclick=async()=>{
   row.querySelector('.swipe-reply-indicator')?.remove();gesture=null;
  };
  area.addEventListener('pointerdown',event=>{
-  if(!['touch','pen'].includes(event.pointerType)||event.button!==0)return;
+  if(!event.isPrimary||!['touch','pen'].includes(event.pointerType)||event.button!==0)return;
+  if(event.target.closest('button,a,img,audio,video,input,textarea,.reply-quote,.message-menu-wrap'))return;
   const row=event.target.closest('.message');
-  if(!row||event.target.closest('button,a,img,input,textarea'))return;
+  if(!row)return;
   const id=row.dataset.messageId,message=(state.messages||[]).find(item=>item.id===id);
   if(!message||message.deleted_at)return;
-  reset();gesture={row,id,startX:event.clientX,startY:event.clientY,dx:0,dy:0,locked:false,pointerId:event.pointerId};
+  reset();
+  gesture={row,id,startX:event.clientX,startY:event.clientY,dx:0,dy:0,locked:false,pointerId:event.pointerId};
  },{passive:true});
  document.addEventListener('pointermove',event=>{
   if(!gesture||event.pointerId!==gesture.pointerId)return;
   const dx=event.clientX-gesture.startX,dy=event.clientY-gesture.startY;
   gesture.dx=dx;gesture.dy=dy;
   if(!gesture.locked){
-   if(Math.abs(dy)>Math.abs(dx)*1.15&&Math.abs(dy)>8){reset();return}
-   if(Math.abs(dx)<9||Math.abs(dx)<Math.abs(dy)*1.2)return;
+   if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)*1.15){reset();return}
+   if(Math.abs(dx)<10||Math.abs(dx)<Math.abs(dy)*1.2)return;
    gesture.locked=true;
-   const indicator=document.createElement('span');indicator.className='swipe-reply-indicator';indicator.innerHTML='<i class="ph ph-arrow-bend-up-left"></i>';gesture.row.append(indicator);
+   try{gesture.row.setPointerCapture(event.pointerId)}catch(_){}
+   const indicator=document.createElement('span');indicator.className='swipe-reply-indicator';
+   indicator.innerHTML='<i class="ph ph-arrow-bend-up-left"></i>';gesture.row.append(indicator);
   }
-  const amount=Math.max(-76,Math.min(76,dx));
-  gesture.row.style.transition='none';gesture.row.style.transform='translateX('+amount+'px)';
-  const indicator=gesture.row.querySelector('.swipe-reply-indicator');
-  if(indicator)indicator.classList.toggle('from-left',dx<0);
+  gesture.row.style.transition='none';
+  gesture.row.style.transform='translateX('+Math.max(-76,Math.min(76,dx))+'px)';
   gesture.row.classList.toggle('swipe-ready',Math.abs(dx)>=34);
  },{passive:true});
- const finish=()=>{
-  if(!gesture)return;
-  const {row,id,dx,dy,locked}=gesture;
+ const finish=event=>{
+  if(!gesture||event.pointerId!==gesture.pointerId)return;
+  const {id,dx,dy,locked}=gesture;
   const shouldReply=locked&&Math.abs(dx)>=62&&Math.abs(dx)>Math.abs(dy)*1.25;
   reset();
   if(shouldReply){const message=(state.messages||[]).find(item=>item.id===id);if(message)beginReply(message)}
  };
  document.addEventListener('pointerup',finish,{passive:true});
- document.addEventListener('pointercancel',reset,{passive:true});
+ document.addEventListener('pointercancel',event=>{if(gesture&&event.pointerId===gesture.pointerId)reset()},{passive:true});
 })();
-
 $('voiceRecordBtn').onclick=()=>state.voiceRecorder?stopVoiceRecording():startVoiceRecording();
 $('voiceCancelBtn').onclick=cancelVoiceRecording;
 $('attachBtn').onclick=()=>$('fileInput').click();
