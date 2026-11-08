@@ -28,12 +28,10 @@ function renderReactionBar(row,message){
 
 function positionMessageReactionBar(row){
  const bar=row?.querySelector('.reaction-bar');if(!row||!bar||!row.classList.contains('reactions-open'))return;
- const anchor=row.getBoundingClientRect(),pop=bar.getBoundingClientRect(),gap=8,pad=8;
- let top=anchor.bottom+gap;if(top+pop.height>window.innerHeight-pad)top=anchor.top-pop.height-gap;
- top=Math.max(pad,Math.min(top,window.innerHeight-pop.height-pad));
- let left=row.classList.contains('mine')?anchor.right-pop.width:anchor.left;
- left=Math.max(pad,Math.min(left,window.innerWidth-pop.width-pad));
- bar.style.top=Math.round(top)+'px';bar.style.left=Math.round(left)+'px';bar.style.right='auto';
+ // Keep the reaction palette in the message's own positioning context.
+ // CSS anchors it directly below the message; avoid viewport coordinates
+ // that drift when the message list scrolls or reflows.
+ bar.style.top='';bar.style.left='';bar.style.right='';
 }
 
 function openMessageReactions(row){
