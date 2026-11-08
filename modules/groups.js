@@ -47,9 +47,6 @@ function renderGroupSelection(){
  $('createGroupBtn').disabled=count===0||!$('groupNameInput').value.trim();
 }
 
-function groupRole(conversation=state.active){return (conversation?.members||[]).find(m=>m.user_id===state.user?.id)?.role||'member'}
-
-function isGroupAdmin(conversation=state.active){return ['owner','admin'].includes(groupRole(conversation))||!!state.isTeamAdmin}
 
 window.addEventListener('bizmind:ensure-group-modal',()=>ensureGroupModal());
 
