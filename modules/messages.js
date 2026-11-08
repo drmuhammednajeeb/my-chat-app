@@ -327,10 +327,7 @@ async function loadOlderMessages(){
  if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
  const oldest=state.messages[0];if(!oldest?.created_at)return false;
  state.loadingOlderMessages=true;
- const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
- const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
  const requestId=state.messageLoadVersion;
- const oldScrollTop=area.scrollTop,anchorViewportTop=anchorTop;
  try{
   let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',oldest.created_at);if(state.activeChatPreference?.cleared_before)olderQuery=olderQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await olderQuery.order('created_at',{ascending:false}).limit(50);
   if(error)throw error;
@@ -344,6 +341,11 @@ async function loadOlderMessages(){
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(parentError)throw parentError;(parents||[]).forEach(parent=>state.replyMessages.set(parent.id,parent))}
   await loadMessageReactions(conversationId,older);await loadMessagePins(conversationId);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  // Capture the live viewport immediately before insertion, not before the network
+  // request, so continued user scrolling during fetch is preserved.
+  const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
+  const anchorId=anchor?.dataset.messageId,anchorViewportTop=anchor?.getBoundingClientRect().top??0;
+  const oldScrollTop=area.scrollTop;
   state.isLoadingMessages=true;area.style.overflowAnchor='none';
   // Add only newly fetched history rows; preserve existing DOM, media and gesture bindings.
   if(!await renderMessageBatch(older,conversationId,requestId,6))return false;
