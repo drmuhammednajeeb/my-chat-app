@@ -69,3 +69,28 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').source.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').source.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
 });
+
+test('all pre-membership policy sources are ordered before the dynamic membership rewrite', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const inventory = await buildObjectInventory();
+  const duplicatePaths = new Set(dag.duplicateProvenance.map(item => item.duplicate));
+  const nodesBySource = new Map();
+  for (const node of dag.nodes) for (const source of node.source ?? []) nodesBySource.set(source, node.id);
+  const edges = new Map(dag.nodes.map(node => [node.id, []]));
+  for (const [from, to] of dag.explicitEdges) if (edges.has(from)) edges.get(from).push(to);
+  function reaches(start, target, seen = new Set()) {
+    if (start === target) return true;
+    if (seen.has(start)) return false;
+    seen.add(start);
+    return (edges.get(start) ?? []).some(next => reaches(next, target, seen));
+  }
+  const preMembershipPolicyFiles = inventory.files.filter(file =>
+    file.policyDetails.length > 0 && file.sourceTimestamp && Number(file.sourceTimestamp) <= 20261107144109
+  );
+  for (const file of preMembershipPolicyFiles) {
+    if (duplicatePaths.has(file.path)) continue;
+    const nodeId = nodesBySource.get(file.path);
+    assert.ok(nodeId, 'policy source missing from DAG: ' + file.path);
+    assert.ok(reaches(nodeId, 'membership.base'), 'policy source is not ordered before membership rewrite: ' + file.path);
+  }
+});
