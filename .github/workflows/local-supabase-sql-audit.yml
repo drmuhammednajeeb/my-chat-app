@@ -40,7 +40,7 @@ jobs:
             console.log('MIGRATION_FILES=' + report.sourceDirectories[0].fileCount);
             console.log('HISTORICAL_SQL_FILES=' + report.sourceDirectories[1].fileCount);
             console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
-            console.log('LEGACY_BLOCKERS=' + report.legacyBlockers.length);
+            console.log('LEGACY_BLOCKERS=' + report.legacyBlockers.length);\n            console.log('SYNTAX_HAZARDS=' + report.syntaxHazards.length);
             console.log('BOOTSTRAP_STATUS=' + report.bootstrap.status);
             for (const item of blockers) console.log('BLOCKER=' + item.code + ': ' + item.message);
             if (report.auditMode !== 'READ_ONLY' || report.bootstrap.executable !== false) process.exit(1);
