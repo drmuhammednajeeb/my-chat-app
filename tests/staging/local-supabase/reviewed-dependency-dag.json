@@ -322,7 +322,7 @@
       "source": [
         "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql"
       ],
-      "status": "BLOCKED_FORMAT_CONFLICT",
+      "status": "SEQUENCED_REQUIRED",
       "requires": [
         "membership.official"
       ]
@@ -479,14 +479,14 @@
     },
     {
       "id": "DAG-003",
-      "severity": "BLOCKER",
+      "severity": "REVIEW_REQUIRED",
       "evidence": [
         "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
         "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
         "membership.js",
         "index.html"
       ],
-      "issue": "Client and final migration expect 971 + nine digits, while two official membership admin implementations retain 971001 + six digits; final migration allowlist omits them."
+      "issue": "The format transition is intentionally sequential: the historical manual-verification SQL uses 971001 + six digits, and the final CLI migration rewrites six functions—including admin_create_official_member_invites_impl and admin_set_member_official_number_impl—to 971 + nine digits. The test manifest must run the final migration after the historical membership SQL and verify all six replacements before app-level acceptance tests."
     },
     {
       "id": "DAG-004",
