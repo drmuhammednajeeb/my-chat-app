@@ -574,6 +574,16 @@
         "membership.official",
         "chat.groups"
       ]
+    },
+    {
+      "id": "test-fixture.admin-assertion",
+      "source": [
+        "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql"
+      ],
+      "status": "READ_ONLY_TEST_ASSERTION",
+      "requires": [
+        "membership.final-format"
+      ]
     }
   ],
   "explicitEdges": [
@@ -1000,6 +1010,10 @@
     [
       "membership.chat-rls-fix",
       "membership.final-format"
+    ],
+    [
+      "membership.final-format",
+      "test-fixture.admin-assertion"
     ]
   ],
   "blockers": [
