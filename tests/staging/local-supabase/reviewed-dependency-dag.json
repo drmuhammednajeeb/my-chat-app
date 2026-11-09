@@ -307,6 +307,92 @@
       ]
     },
     {
+      "id": "chat.avatar-storage",
+      "source": [
+        "database/changes/20261107035500_user_avatars_storage.sql"
+      ],
+      "requires": [
+        "core.base",
+        "platform.storage",
+        "platform.realtime"
+      ]
+    },
+    {
+      "id": "chat.preference-archive-rls",
+      "source": [
+        "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
+      ],
+      "requires": [
+        "chat.preferences"
+      ]
+    },
+    {
+      "id": "chat.account-settings-message-edit",
+      "source": [
+        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
+      ],
+      "provides": [
+        "user_settings",
+        "message_edit_history",
+        "edit_message_secure",
+        "patch_my_user_settings"
+      ],
+      "requires": [
+        "core.base",
+        "chat.reactions",
+        "team.admin"
+      ]
+    },
+    {
+      "id": "chat.message-edit-hardening",
+      "source": [
+        "database/changes/20261107124500_harden_message_edit_permissions.sql"
+      ],
+      "requires": [
+        "chat.account-settings-message-edit"
+      ]
+    },
+    {
+      "id": "chat.group-settings-hardening",
+      "source": [
+        "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
+      ],
+      "requires": [
+        "chat.groups",
+        "team.admin"
+      ]
+    },
+    {
+      "id": "chat.team-admin-group-overrides",
+      "source": [
+        "database/changes/20261107130534_include_team_admins_in_group_management.sql"
+      ],
+      "requires": [
+        "chat.group-settings-hardening",
+        "team.admin"
+      ]
+    },
+    {
+      "id": "chat.scope-team-admin-overrides",
+      "source": [
+        "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+      ],
+      "requires": [
+        "chat.team-admin-group-overrides",
+        "team.admin"
+      ]
+    },
+    {
+      "id": "chat.message-edit-indexes",
+      "source": [
+        "database/changes/20261107131500_index_message_edit_history.sql"
+      ],
+      "requires": [
+        "chat.account-settings-message-edit",
+        "chat.message-edit-hardening"
+      ]
+    },
+    {
       "id": "membership.base",
       "source": [
         "database/changes/20261107144109_private_membership_system_20261107.sql"
@@ -329,7 +415,15 @@
         "chat.notifications",
         "chat.workspaces",
         "chat.expiry",
-        "chat.workspace-realtime"
+        "chat.workspace-realtime",
+        "chat.avatar-storage",
+        "chat.preference-archive-rls",
+        "chat.account-settings-message-edit",
+        "chat.message-edit-hardening",
+        "chat.group-settings-hardening",
+        "chat.team-admin-group-overrides",
+        "chat.scope-team-admin-overrides",
+        "chat.message-edit-indexes"
       ]
     },
     {
@@ -596,6 +690,102 @@
     [
       "platform.storage",
       "chat.workspace-realtime"
+    ],
+    [
+      "core.base",
+      "chat.avatar-storage"
+    ],
+    [
+      "platform.storage",
+      "chat.avatar-storage"
+    ],
+    [
+      "platform.realtime",
+      "chat.avatar-storage"
+    ],
+    [
+      "chat.avatar-storage",
+      "membership.base"
+    ],
+    [
+      "chat.preferences",
+      "chat.preference-archive-rls"
+    ],
+    [
+      "chat.preference-archive-rls",
+      "membership.base"
+    ],
+    [
+      "core.base",
+      "chat.account-settings-message-edit"
+    ],
+    [
+      "chat.reactions",
+      "chat.account-settings-message-edit"
+    ],
+    [
+      "team.admin",
+      "chat.account-settings-message-edit"
+    ],
+    [
+      "chat.account-settings-message-edit",
+      "membership.base"
+    ],
+    [
+      "chat.account-settings-message-edit",
+      "chat.message-edit-hardening"
+    ],
+    [
+      "chat.message-edit-hardening",
+      "membership.base"
+    ],
+    [
+      "chat.groups",
+      "chat.group-settings-hardening"
+    ],
+    [
+      "team.admin",
+      "chat.group-settings-hardening"
+    ],
+    [
+      "chat.group-settings-hardening",
+      "membership.base"
+    ],
+    [
+      "chat.group-settings-hardening",
+      "chat.team-admin-group-overrides"
+    ],
+    [
+      "team.admin",
+      "chat.team-admin-group-overrides"
+    ],
+    [
+      "chat.team-admin-group-overrides",
+      "membership.base"
+    ],
+    [
+      "chat.team-admin-group-overrides",
+      "chat.scope-team-admin-overrides"
+    ],
+    [
+      "team.admin",
+      "chat.scope-team-admin-overrides"
+    ],
+    [
+      "chat.scope-team-admin-overrides",
+      "membership.base"
+    ],
+    [
+      "chat.account-settings-message-edit",
+      "chat.message-edit-indexes"
+    ],
+    [
+      "chat.message-edit-hardening",
+      "chat.message-edit-indexes"
+    ],
+    [
+      "chat.message-edit-indexes",
+      "membership.base"
     ]
   ],
   "blockers": [
