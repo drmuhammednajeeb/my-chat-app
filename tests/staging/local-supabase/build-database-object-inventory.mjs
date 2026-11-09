@@ -224,6 +224,8 @@ export async function buildObjectInventory(root = ROOT) {
     storageObjectPolicyBuckets,
     clientBucketsWithoutStoragePolicies: clientStorageBuckets.filter(bucket => !storageObjectPolicyBuckets.includes(bucket))
   };
+  let supabaseConfigPresent = true;
+  try { await stat(path.join(ROOT, 'supabase/config.toml')); } catch (error) { if (error.code === 'ENOENT') supabaseConfigPresent = false; else throw error; }
   const hardcodedIdentityReview = {
     emailLiteralFiles: files.filter(file => file.hardcodedEmails.length > 0).map(file => file.path),
     uuidLiteralFiles: files.filter(file => file.hardcodedUuids.length > 0).map(file => file.path),
@@ -239,7 +241,7 @@ export async function buildObjectInventory(root = ROOT) {
   return {
     schemaVersion: 1, auditMode: 'READ_ONLY_SOURCE_INVENTORY',
     scope: 'Repository SQL definitions and references only; not a live deployed database catalog.',
-    sourceCounts: { migrations: migrations.length, historicalSql: historical.length, totalSqlFiles: files.length },
+    sourceCounts: { migrations: migrations.length, historicalSql: historical.length, totalSqlFiles: files.length, supabaseConfigPresent },
     inventoryTotals: {
       createdTables: files.reduce((n, f) => n + f.createdTables.length, 0),
       columns: files.reduce((n, f) => n + f.tableDetails.reduce((count, table) => count + table.columns.length, 0), 0),
