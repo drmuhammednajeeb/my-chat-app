@@ -68,6 +68,7 @@ jobs:
             console.log('CHAT_MEDIA_UPLOAD_PATH_OWNER_GUARD=' + report.storageCoverage.chatMediaUploadPathOwnershipGuard);
             console.log('PLATFORM_DEPENDENCIES=' + JSON.stringify(report.platformDependencies));
             console.log('EXTENSION_CREATES=' + JSON.stringify(report.files.flatMap(file => file.extensionCreates)));
+            console.log('SUPABASE_CONFIG_PRESENT=' + report.sourceCounts.supabaseConfigPresent);
             console.log('SQL_EXECUTION_AUTHORIZED=false');
             if (report.auditMode !== 'READ_ONLY_SOURCE_INVENTORY') process.exit(1);
           "
