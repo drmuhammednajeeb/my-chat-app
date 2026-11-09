@@ -42,6 +42,9 @@ jobs:
             console.log('INVENTORY_MODE=' + report.auditMode);
             console.log('SQL_FILES=' + report.sourceCounts.totalSqlFiles);
             console.log('CREATED_TABLES=' + report.inventoryTotals.createdTables);
+            console.log('COLUMNS=' + report.inventoryTotals.columns);
+            console.log('FOREIGN_KEYS=' + report.inventoryTotals.foreignKeys);
+            console.log('GRANT_STATEMENTS=' + report.inventoryTotals.grantStatements);
             console.log('FUNCTION_DEFINITIONS=' + report.inventoryTotals.functionDefinitions);
             console.log('INDEXES=' + report.inventoryTotals.indexes);
             console.log('TRIGGERS=' + report.inventoryTotals.triggers);
