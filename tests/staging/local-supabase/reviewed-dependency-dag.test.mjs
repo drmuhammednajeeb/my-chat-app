@@ -109,3 +109,24 @@ test('every repository SQL source is mapped once or explicitly excluded as an id
     assert.equal(mapped.has(item.duplicate), false, 'duplicate source must not be replayed: ' + item.duplicate);
   }
 });
+
+
+test('replay manifest is design-only, topologically aligned, and fail-closed', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const manifestPath = path.join(root, 'tests/staging/local-supabase/replay-manifest.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  assert.equal(manifest.mode, 'DESIGN_ONLY');
+  assert.equal(manifest.status, 'BLOCKED');
+  assert.equal(manifest.execution.enabled, false);
+  assert.deepEqual(manifest.execution.files, []);
+  assert.equal(manifest.execution.sqlExecuted, false);
+  assert.equal(manifest.execution.cloudAllowed, false);
+  assert.equal(manifest.execution.productionAllowed, false);
+  const ids = [...dag.nodes.map(node => node.id)];
+  assert.deepEqual(manifest.candidateNodeOrder.map(node => node.nodeId), ids);
+  const duplicateCopies = new Set(dag.duplicateProvenance.map(item => item.duplicate));
+  const selected = manifest.candidateNodeOrder.flatMap(node => node.testSources);
+  for (const source of selected) await access(path.join(root, source));
+  for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
+  assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-002')));
+});
