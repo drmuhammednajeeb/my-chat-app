@@ -1359,7 +1359,7 @@ async function loadMessages(){
   let messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   state.messages=messages;
   const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];state.replyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!replyError)(parents||[]).forEach(x=>state.replyMessages.set(x.id,x))}
-  await loadMessageReactions(conversationId,messages);await loadMessagePins(conversationId);await loadPrivateReplyContexts(conversationId,messages);
+  await loadMessageReactions(conversationId,messages,requestId);await loadMessagePins(conversationId,requestId);await loadPrivateReplyContexts(conversationId,messages,requestId);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   // Reconcile again after auxiliary queries: Realtime INSERTs may arrive while those queries are in flight.
   const latest=new Map(messages.map(m=>[m.id,m]));
@@ -1409,7 +1409,7 @@ async function loadOlderMessages(){
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   const replyIds=[...new Set(state.messages.map(m=>m.reply_to).filter(id=>id&&!merged.has(id)))];
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(parentError)throw parentError;(parents||[]).forEach(parent=>state.replyMessages.set(parent.id,parent))}
-  await loadMessageReactions(conversationId,older);await loadMessagePins(conversationId);
+  await loadMessageReactions(conversationId,older,requestId);await loadMessagePins(conversationId,requestId);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   state.isLoadingMessages=true;area.style.overflowAnchor='none';area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
   for(const message of state.messages){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;await renderMessage(message,conversationId,requestId)}
