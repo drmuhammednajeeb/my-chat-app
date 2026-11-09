@@ -168,7 +168,7 @@ function inspect(file) {
   const storageBucketIds = matches(sql, /\binsert\s+into\s+storage\.buckets[\s\S]{0,300}?\bvalues\s*\(\s*'([^']+)'/gi, m => m[1]);
   const publicationTables = matches(sql, /\balter\s+publication\s+supabase_realtime\s+add\s+table\s+((?:public|app_private)\.[a-z_]\w*)/gi, m => m[1].toLowerCase());
   const legacyMessagesReferences = matches(sql, /\bpublic\s*\.\s*messages\b/gi, m => m[0].replace(/\s+/g, ''));
-  const hardcodedEmails = matches(sql, /'([^']+@[^']+)'/gi, m => m[1]);
+  const hardcodedEmails = matches(sql, /'([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})'/gi, m => m[1].toLowerCase());
   const hardcodedUuids = matches(sql, /'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'/gi, m => m[1].toLowerCase());
   const hardcodedMembershipNumbers = matches(sql, /'(971[0-9]{9})'/gi, m => m[1]);
   const cronUsage = /\b(?:cron\.schedule|cron\.unschedule|create\s+extension\s+(?:if\s+not\s+exists\s+)?pg_cron)\b/i.test(sql);
