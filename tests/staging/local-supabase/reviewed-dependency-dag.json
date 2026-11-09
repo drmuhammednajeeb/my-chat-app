@@ -301,7 +301,8 @@
       "requires": [
         "chat.workspaces",
         "platform.realtime",
-        "platform.storage"
+        "platform.storage",
+        "chat.workspace-indexes"
       ]
     },
     {
@@ -377,7 +378,8 @@
       ],
       "requires": [
         "chat.groups",
-        "team.admin"
+        "team.admin",
+        "chat.group-ownership-transfer"
       ]
     },
     {
@@ -407,7 +409,8 @@
       ],
       "requires": [
         "chat.account-settings-message-edit",
-        "chat.message-edit-hardening"
+        "chat.message-edit-hardening",
+        "chat.restore-message-edit-guard"
       ]
     },
     {
@@ -442,7 +445,13 @@
         "chat.team-admin-group-overrides",
         "chat.scope-team-admin-overrides",
         "chat.message-edit-indexes",
-        "chat.media-policies"
+        "chat.media-policies",
+        "core.profile-fks",
+        "chat.personal-lists-realtime",
+        "chat.restore-message-edit-guard",
+        "chat.favorite-column",
+        "chat.remove-duplicate-favorite",
+        "chat.workspace-indexes"
       ]
     },
     {
@@ -621,6 +630,73 @@
       ],
       "requires": [
         "storage.compat-buckets"
+      ]
+    },
+    {
+      "id": "core.profile-fks",
+      "source": [
+        "supabase/migrations/202611060004_reference_profiles.sql"
+      ],
+      "requires": [
+        "core.base"
+      ]
+    },
+    {
+      "id": "chat.group-ownership-transfer",
+      "source": [
+        "database/changes/20261107125616_secure_group_ownership_transfer.sql"
+      ],
+      "requires": [
+        "chat.groups",
+        "team.admin"
+      ]
+    },
+    {
+      "id": "chat.personal-lists-realtime",
+      "source": [
+        "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
+      ],
+      "requires": [
+        "chat.groups",
+        "chat.preferences",
+        "platform.realtime"
+      ]
+    },
+    {
+      "id": "chat.restore-message-edit-guard",
+      "source": [
+        "database/changes/20261107130000_restore_message_edit_guard.sql"
+      ],
+      "requires": [
+        "chat.message-edit-hardening"
+      ]
+    },
+    {
+      "id": "chat.favorite-column",
+      "source": [
+        "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
+      ],
+      "requires": [
+        "chat.groups"
+      ]
+    },
+    {
+      "id": "chat.remove-duplicate-favorite",
+      "source": [
+        "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
+      ],
+      "requires": [
+        "chat.favorite-column",
+        "chat.preferences"
+      ]
+    },
+    {
+      "id": "chat.workspace-indexes",
+      "source": [
+        "database/changes/20261107134600_index_workspace_foreign_keys.sql"
+      ],
+      "requires": [
+        "chat.workspaces"
       ]
     }
   ],
@@ -1071,6 +1147,78 @@
     ],
     [
       "chat.media-policies",
+      "membership.base"
+    ],
+    [
+      "core.base",
+      "core.profile-fks"
+    ],
+    [
+      "chat.groups",
+      "chat.group-ownership-transfer"
+    ],
+    [
+      "team.admin",
+      "chat.group-ownership-transfer"
+    ],
+    [
+      "chat.groups",
+      "chat.personal-lists-realtime"
+    ],
+    [
+      "chat.preferences",
+      "chat.personal-lists-realtime"
+    ],
+    [
+      "platform.realtime",
+      "chat.personal-lists-realtime"
+    ],
+    [
+      "chat.message-edit-hardening",
+      "chat.restore-message-edit-guard"
+    ],
+    [
+      "chat.groups",
+      "chat.favorite-column"
+    ],
+    [
+      "chat.favorite-column",
+      "chat.remove-duplicate-favorite"
+    ],
+    [
+      "chat.preferences",
+      "chat.remove-duplicate-favorite"
+    ],
+    [
+      "chat.workspaces",
+      "chat.workspace-indexes"
+    ],
+    [
+      "core.profile-fks",
+      "membership.base"
+    ],
+    [
+      "chat.group-ownership-transfer",
+      "chat.group-settings-hardening"
+    ],
+    [
+      "chat.personal-lists-realtime",
+      "membership.base"
+    ],
+    [
+      "chat.restore-message-edit-guard",
+      "membership.base"
+    ],
+    [
+      "chat.favorite-column",
+      "membership.base"
+    ],
+    [
+      "chat.remove-duplicate-favorite",
+      "membership.base"
+    ],
+    [
+      "chat.workspace-indexes",
       "membership.base"
     ]
   ],
