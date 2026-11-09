@@ -288,7 +288,8 @@
         "core.base",
         "chat.groups",
         "platform.storage",
-        "platform.pgcrypto"
+        "platform.pgcrypto",
+        "storage.compat-buckets"
       ]
     },
     {
@@ -440,7 +441,8 @@
         "chat.group-settings-hardening",
         "chat.team-admin-group-overrides",
         "chat.scope-team-admin-overrides",
-        "chat.message-edit-indexes"
+        "chat.message-edit-indexes",
+        "chat.media-policies"
       ]
     },
     {
@@ -583,6 +585,43 @@
       "status": "READ_ONLY_TEST_ASSERTION",
       "requires": [
         "membership.final-format"
+      ]
+    },
+    {
+      "id": "storage.compat-buckets",
+      "source": [
+        "tests/staging/local-supabase/fixtures/storage-buckets-compat.sql"
+      ],
+      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
+      "provides": [
+        "storage.buckets.chat-media",
+        "storage.buckets.conversation-documents"
+      ],
+      "requires": [
+        "platform.storage"
+      ]
+    },
+    {
+      "id": "chat.media-policies",
+      "source": [
+        "tests/staging/local-supabase/fixtures/chat-media-storage-policies-candidate.sql"
+      ],
+      "status": "TEST_ONLY_CANDIDATE_NOT_PRODUCTION_SOURCE",
+      "provides": [
+        "chat-media storage.objects INSERT and SELECT policies"
+      ],
+      "requires": [
+        "core.base",
+        "storage.compat-buckets"
+      ]
+    },
+    {
+      "id": "chat.voice",
+      "source": [
+        "database/changes/20261107080000_chat_voice_messages.sql"
+      ],
+      "requires": [
+        "storage.compat-buckets"
       ]
     }
   ],
@@ -1014,6 +1053,30 @@
     [
       "membership.final-format",
       "test-fixture.admin-assertion"
+    ],
+    [
+      "platform.storage",
+      "storage.compat-buckets"
+    ],
+    [
+      "core.base",
+      "chat.media-policies"
+    ],
+    [
+      "storage.compat-buckets",
+      "chat.media-policies"
+    ],
+    [
+      "storage.compat-buckets",
+      "chat.voice"
+    ],
+    [
+      "storage.compat-buckets",
+      "chat.workspaces"
+    ],
+    [
+      "chat.media-policies",
+      "membership.base"
     ]
   ],
   "blockers": [
@@ -1114,6 +1177,25 @@
         "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ],
       "issue": "Resolved for disposable local replay by reserved .test synthetic Auth/profile fixtures and test-only copies substituting a synthetic membership number. The canonical production seed SQL remains unchanged; actual Supabase Auth schema compatibility still needs local rehearsal."
+    },
+    {
+      "id": "DAG-012",
+      "severity": "RESOLVED_FOR_LOCAL_FIXTURE",
+      "evidence": [
+        "index.html",
+        "database/changes/20261107080000_chat_voice_messages.sql",
+        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+      ],
+      "issue": "The browser uses chat-media and conversation-documents, but repository SQL does not create either bucket. A test-only private-bucket fixture now creates both before their consumers; this does not assert deployed bucket configuration."
+    },
+    {
+      "id": "DAG-013",
+      "severity": "REVIEW_REQUIRED_PRODUCTION_PARITY",
+      "evidence": [
+        "index.html",
+        "database/changes/20261107080000_chat_voice_messages.sql"
+      ],
+      "issue": "The browser uploads and creates signed URLs from chat-media, but no repository SQL defines chat-media storage.objects policies. A candidate test-only INSERT/SELECT policy fixture is derived from the observed conversationId/userId/object path and active-membership helper. It must not be treated as authoritative production policy without source/schema verification."
     }
   ],
   "duplicateProvenance": [
