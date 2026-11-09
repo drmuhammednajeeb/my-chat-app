@@ -990,14 +990,32 @@ $('directShortcutBtn').onclick=toggleDirectChatShortcut;
 $('directClearBtn').onclick=clearDirectChatForMe;
 async function openConversation(c){
  if(!c?.id)return;
+ const openToken=state.conversationOpenVersion=(state.conversationOpenVersion||0)+1;
+ state.messageLoadVersion++;
+ stopMessagePolling();
  const conversationOpenStarted=performance.now();
  if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};applyDirectChatTheme();state.messages=[];state.newMessageCount=0;updateNewMessagesIndicator();$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();state.messageLoadVersion++;diagLog('conversation-open',{id:c.id});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);if(c.type==='group'){await loadGroupSettings(c.id);await loadUserConversationSettings(c.id)}else{state.groupSettings=null;await loadUserConversationSettings(c.id)}const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=(c.type!=='channel'||myRole==='owner'||myRole==='admin')&&!(c.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(myRole));$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=isSelfConversation(c)?'مساحة شخصية · مراسلة نفسك':c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';// renderChatAvatar already renders the other participant's saved photo or initials.$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
+ state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};applyDirectChatTheme();state.messages=[];state.newMessageCount=0;updateNewMessagesIndicator();$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();diagLog('conversation-open',{id:c.id,openToken});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);
+ if(c.type==='group'){
+  await loadGroupSettings(c.id);
+  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
+  await loadUserConversationSettings(c.id);
+ }else{
+  state.groupSettings=null;
+  await loadUserConversationSettings(c.id);
+ }
+ if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
+ const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=(c.type!=='channel'||myRole==='owner'||myRole==='admin')&&!(c.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(myRole));$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=isSelfConversation(c)?'مساحة شخصية · مراسلة نفسك':c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';// renderChatAvatar already renders the other participant's saved photo or initials.$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
  $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Keep the composer available while messages and attachments load.
- stopMessagePolling();subscribeConversation();subscribeProfileUpdates(c);await loadStarredMessageIds(c.id);await loadMessages();recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:state.active?.id===c.id});if(state.active?.id===c.id)startMessagePolling(c.id);
+ subscribeConversation();subscribeProfileUpdates(c);await loadStarredMessageIds(c.id);
+ if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
+ await loadMessages();
+ if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
+ recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:true});
+ startMessagePolling(c.id);
 }
 
 async function loadMessageReactions(conversationId,messages){
@@ -2122,10 +2140,11 @@ async function toggleConversationInList(listId,add){
  if(result.error){toast('تعذر تحديث القائمة');console.error(result.error);return}
  const set=state.chatListItems.get(c.id)||new Set();if(add)set.add(listId);else set.delete(listId);state.chatListItems.set(c.id,set);renderConversations();toast(add?'أضيفت المحادثة إلى القائمة':'أزيلت المحادثة من القائمة');
 }
-async function loadStarredMessageIds(conversationId){if(!state.user||!conversationId)return;const {data,error}=await supabaseClient.from('user_message_stars').select('message_id').eq('user_id',state.user.id).eq('conversation_id',conversationId);if(error){console.warn('Starred message state unavailable:',error.message);return}state.starredMessageIds=new Set((data||[]).map(x=>x.message_id))}
+async function loadStarredMessageIds(conversationId){if(!state.user||!conversationId)return;const {data,error}=await supabaseClient.from('user_message_stars').select('message_id').eq('user_id',state.user.id).eq('conversation_id',conversationId);if(state.active?.id!==conversationId)return;if(error){console.warn('Starred message state unavailable:',error.message);return}state.starredMessageIds=new Set((data||[]).map(x=>x.message_id))}
 async function loadGroupSettings(conversationId){
  if(!conversationId||state.active?.id!==conversationId)return;
  const {data,error}=await supabaseClient.from('conversation_group_settings').select('*').eq('conversation_id',conversationId).maybeSingle();
+ if(state.active?.id!==conversationId)return;
  if(error){console.warn('Group settings unavailable:',error.message);state.groupSettings=null;return}
  state.groupSettings=data||{conversation_id:conversationId,only_admins_can_send:false,disappearing_seconds:0,theme_color:'default'};
  applyGroupTheme();
@@ -2156,7 +2175,7 @@ async function loadUserConversationSettings(conversationId){
  const {data,error}=await supabaseClient.from('user_conversation_settings').select('is_muted,notification_tone,is_favorite').eq('user_id',state.user.id).eq('conversation_id',conversationId).maybeSingle();
  if(error){console.warn('Conversation notification settings unavailable:',error.message);return}
  state.userConversationSettings.set(conversationId,data||{is_muted:false,notification_tone:'default',is_favorite:false});
- updateConversationMenu();
+ if(state.active?.id===conversationId)updateConversationMenu();
 }
 async function saveUserConversationSettings(patch){
  const c=state.active;if(!c||!state.user)return false;
