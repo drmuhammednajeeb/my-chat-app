@@ -67,10 +67,79 @@ function stripComments(sql) {
 }
 function matches(sql, regex, map) { return [...sql.matchAll(regex)].map(map); }
 
+
+function findClosingParen(source, openIndex) {
+  let depth = 0, quote = null;
+  for (let i = openIndex; i < source.length; i++) {
+    const ch = source[i];
+    if (quote) {
+      if (ch === quote) {
+        if (quote === "'" && source[i + 1] === "'") i++;
+        else quote = null;
+      } else if (ch === '\\' && quote === "'") i++;
+      continue;
+    }
+    if (ch === "'" || ch === '"') { quote = ch; continue; }
+    if (ch === '(') depth++;
+    else if (ch === ')' && --depth === 0) return i;
+  }
+  return -1;
+}
+function splitTopLevel(source) {
+  const parts = []; let start = 0, depth = 0, quote = null;
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i];
+    if (quote) {
+      if (ch === quote) {
+        if (quote === "'" && source[i + 1] === "'") i++;
+        else quote = null;
+      } else if (ch === '\\' && quote === "'") i++;
+      continue;
+    }
+    if (ch === "'" || ch === '"') { quote = ch; continue; }
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    else if (ch === ',' && depth === 0) { parts.push(source.slice(start, i).trim()); start = i + 1; }
+  }
+  if (source.slice(start).trim()) parts.push(source.slice(start).trim());
+  return parts;
+}
+function extractTableDetails(sql) {
+  const tables = [], foreignKeys = [];
+  const re = /\bcreate\s+table\s+(?:if\s+not\s+exists\s+)?((?:[a-z_]\w*\.)?[a-z_]\w*)\s*\(/gi;
+  for (const match of sql.matchAll(re)) {
+    const open = match.index + match[0].lastIndexOf('(');
+    const close = findClosingParen(sql, open);
+    if (close < 0) continue;
+    const name = match[1].toLowerCase();
+    const columns = [];
+    for (const definition of splitTopLevel(sql.slice(open + 1, close))) {
+      const fk = definition.match(/\bforeign\s+key\s*\(([^)]+)\)\s+references\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\s*\(([^)]+)\)/i)
+        || definition.match(/^\s*([a-z_]\w*)[\s\S]*?\breferences\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\s*\(([^)]+)\)/i);
+      if (fk) foreignKeys.push({
+        source: name, constraint: definition.match(/\bconstraint\s+([a-z_]\w*)/i)?.[1] ?? null,
+        columns: (fk[1] || fk[1]).split(',').map(x => x.trim()),
+        target: fk[2].toLowerCase(), targetColumns: fk[3].split(',').map(x => x.trim())
+      });
+      if (!/^\s*(?:constraint|primary\s+key|foreign\s+key|unique|check|exclude)\b/i.test(definition)) {
+        const column = definition.match(/^\s*("?[\w$]+"?)/);
+        if (column) columns.push({ name: column[1].replace(/"/g, ''), declaration: definition.replace(/\s+/g, ' ').trim() });
+      }
+    }
+    tables.push({ name, columns });
+  }
+  const alterForeignKeys = matches(sql,
+    /\balter\s+table\s+((?:[a-z_]\w*\.)?[a-z_]\w*)[\s\S]{0,300}?\badd\s+constraint\s+([a-z_]\w*)\s+foreign\s+key\s*\(([^)]+)\)\s+references\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\s*\(([^)]+)\)/gi,
+    m => ({ source: m[1].toLowerCase(), constraint: m[2], columns: m[3].split(',').map(x => x.trim()), target: m[4].toLowerCase(), targetColumns: m[5].split(',').map(x => x.trim()) }));
+  foreignKeys.push(...alterForeignKeys);
+  return { tables, foreignKeys };
+}
+
 function inspect(file) {
   const sql = stripComments(file.sql);
   const sha256 = createHash('sha256').update(file.sql, 'utf8').digest('hex');
-  const createdTables = matches(sql, /\bcreate\s+table\s+(?:if\s+not\s+exists\s+)?((?:[a-z_]\w*\.)?[a-z_]\w*)/gi, m => m[1].toLowerCase());
+  const tableDetails = extractTableDetails(sql);
+  const createdTables = tableDetails.tables.map(table => table.name);
   const alteredTables = matches(sql, /\balter\s+table\s+(?:if\s+exists\s+)?((?:[a-z_]\w*\.)?[a-z_]\w*)/gi, m => m[1].toLowerCase());
   const functions = matches(sql, /\bcreate\s+(?:or\s+replace\s+)?function\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\s*\(([\s\S]*?)\)\s*returns\b/gi,
     m => ({ name: m[1].toLowerCase(), signature: m[2].replace(/\s+/g, ' ').trim() }));
@@ -80,18 +149,19 @@ function inspect(file) {
   const policies = matches(sql, /\bcreate\s+policy\s+"?([^"\r\n]+?)"?\s+on\s+((?:[a-z_]\w*\.)?[a-z_]\w*)/gi, m => ({ name: m[1].trim(), table: m[2].toLowerCase() }));
   const constraints = matches(sql, /\badd\s+constraint\s+([a-z_]\w*)/gi, m => m[1].toLowerCase());
   const relationsReferenced = [...new Set(matches(sql, /\b(?:from|join|update|into|references)\s+((?:public|app_private|auth|storage|cron|extensions)\s*\.\s*[a-z_]\w*)/gi, m => m[1].replace(/\s+/g, '').toLowerCase()))].sort();
-  const internalFunctionsReferenced = [...new Set(matches(sql, /\bapp_private\s*\.\s*([a-z_]\w*)\s*\(/gi, m => m[1].toLowerCase()))].sort();
+  const internalFunctionsReferenced = [...new Set([...sql.matchAll(/\bapp_private\s*\.\s*([a-z_]\w*)\s*\(/gi)]\n    .filter(m => !/\b(?:into|from|join|update|references|table)\s*$/i.test(sql.slice(Math.max(0, m.index - 32), m.index)))\n    .map(m => m[1].toLowerCase()))].sort();
   const extensionCreates = matches(sql, /\bcreate\s+extension\s+(?:if\s+not\s+exists\s+)?(?:with\s+schema\s+([a-z_]\w*)\s+)?([a-z_]\w*)/gi, m => ({ name: m[2].toLowerCase(), schema: m[1]?.toLowerCase() ?? null }));
   const storageBucketIds = matches(sql, /\binsert\s+into\s+storage\.buckets[\s\S]{0,300}?\bvalues\s*\(\s*'([^']+)'/gi, m => m[1]);
   const publicationTables = matches(sql, /\balter\s+publication\s+supabase_realtime\s+add\s+table\s+((?:public|app_private)\.[a-z_]\w*)/gi, m => m[1].toLowerCase());
   const legacyMessagesReferences = matches(sql, /\bpublic\s*\.\s*messages\b/gi, m => m[0].replace(/\s+/g, ''));
   const cronUsage = /\b(?:cron\.schedule|cron\.unschedule|create\s+extension\s+(?:if\s+not\s+exists\s+)?pg_cron)\b/i.test(sql);
+  const grants = matches(sql, /\b(grant|revoke)\s+([^;]+?)\s+on\s+(?:table\s+)?((?:public|app_private|auth|storage|cron|extensions)\.[a-z_]\w*)\s+(to|from)\s+([^;]+);/gi, m => ({ action: m[1].toUpperCase(), privileges: m[2].replace(/\s+/g, ' ').trim(), object: m[3].toLowerCase(), direction: m[4].toUpperCase(), roles: m[5].replace(/\s+/g, ' ').trim() }));
   const syntaxHazards = matches(sql, /\$(?:function|body)?\$\s*\r?\n\s*(?:revoke|grant|create|alter|drop)\b/gi, m => ({ line: sql.slice(0, m.index).split('\n').length }));
   const migrationTimestamp = file.kind === 'migration' ? file.path.split('/').at(-1).match(/^(\d{8,14})/)?.[1] ?? null : null;
   return { path: file.path, kind: file.kind, bytes: file.bytes, sha256, migrationTimestamp,
-    createdTables: [...new Set(createdTables)].sort(), alteredTables: [...new Set(alteredTables)].sort(),
+    createdTables: [...new Set(createdTables)].sort(), tableDetails: tableDetails.tables, foreignKeys: tableDetails.foreignKeys, alteredTables: [...new Set(alteredTables)].sort(),
     functions, sequences: [...new Set(sequences)].sort(), indexes, triggers, policies,
-    constraints: [...new Set(constraints)].sort(), relationsReferenced, internalFunctionsReferenced,
+    constraints: [...new Set(constraints)].sort(), grants, relationsReferenced, internalFunctionsReferenced,
     extensionCreates, storageBucketIds, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, cronUsage, syntaxHazards };
 }
 
@@ -133,6 +203,9 @@ export async function buildObjectInventory(root = ROOT) {
     sourceCounts: { migrations: migrations.length, historicalSql: historical.length, totalSqlFiles: files.length },
     inventoryTotals: {
       createdTables: files.reduce((n, f) => n + f.createdTables.length, 0),
+      columns: files.reduce((n, f) => n + f.tableDetails.reduce((count, table) => count + table.columns.length, 0), 0),
+      foreignKeys: files.reduce((n, f) => n + f.foreignKeys.length, 0),
+      grantStatements: files.reduce((n, f) => n + f.grants.length, 0),
       alteredTableStatements: files.reduce((n, f) => n + f.alteredTables.length, 0),
       functionDefinitions: files.reduce((n, f) => n + f.functions.length, 0),
       sequences: files.reduce((n, f) => n + f.sequences.length, 0),
