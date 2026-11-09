@@ -282,7 +282,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
@@ -1741,13 +1741,44 @@ async function sendMessage(){
  const activeConversation=state.active,draftValue=$('messageInput').value,content=draftValue.trim(),file=state.attachment,conversationId=activeConversation?.id,userId=state.user?.id,editTarget=state.editTarget,editing=!!editTarget,replyTo=state.replyTarget?.id||null,privateContext=state.privateReplyPending?{...state.privateReplyPending}:null;
  const activeRole=(activeConversation?.members||[]).find(m=>m.user_id===userId)?.role;if(activeConversation?.type==='channel'&&!['owner','admin'].includes(activeRole)){toast('النشر في هذه القناة مخصص للمشرفين');return}if(activeConversation?.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole)){toast('الإرسال متاح لمشرفي المجموعة فقط');return}
  if(!conversationId||!userId||(!content&&!file)||state.uploading)return;
+ const pendingKey=conversationId+':'+userId;
+ let pendingSend=null;
+ if(!editing){
+  state.pendingMessageSends ||= new Map();
+  const previous=state.pendingMessageSends.get(pendingKey);
+  pendingSend=previous&&previous.content===content&&previous.replyTo===replyTo&&previous.file===file
+   ?previous:{id:crypto.randomUUID(),conversationId,userId,content,replyTo,file,attachmentPath:null,attachmentType:null};
+  state.pendingMessageSends.set(pendingKey,pendingSend);
+ }
  state.uploading=true;$('sendBtn').disabled=true;$('messageInput').disabled=false;
  let savedMessage=null;
  try{
   const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
   if(sessionError)throw sessionError;
   if(!session?.user?.id||session.user.id!==userId)throw new Error('انتهت جلسة الدخول. أعد تسجيل الدخول ثم حاول إرسال الرسالة مجدداً.');
-  if(editTarget){if(file)throw new Error('أزل المرفق قبل حفظ تعديل الرسالة');const target=editTarget;if(target.conversation_id!==conversationId||target.sender_id!==userId||!canEditMessage(target))throw new Error('انتهت مهلة التعديل أو لا تملك صلاحية تعديل الرسالة');const {data,error}=await supabaseClient.rpc('edit_message_secure',{p_message_id:target.id,p_new_content:content,p_expected_revision:Number(target.edit_revision||0)});if(error)throw error;savedMessage=Array.isArray(data)?data[0]:data;if(!savedMessage?.id)throw new Error('لم يتم تأكيد حفظ التعديل')}else{let attachment={};if(file)attachment=await uploadAttachment(file,conversationId,userId);const {data,error}=await supabaseClient.from('chat_messages').insert({conversation_id:conversationId,sender_id:userId,content,...(replyTo?{reply_to:replyTo}:{}),...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();if(error)throw error;savedMessage=data;if(privateContext){const {error:ctxError}=await supabaseClient.from('private_reply_contexts').insert({direct_message_id:savedMessage.id,direct_conversation_id:conversationId,sender_id:userId,source_conversation_id:privateContext.sourceConversationId,source_message_id:privateContext.sourceMessageId,quoted_content:privateContext.quotedContent,quoted_sender_id:privateContext.quotedSenderId});if(ctxError){console.warn(ctxError);toast('أُرسلت الرسالة الخاصة دون اقتباس المجموعة')}else state.privateReplyContexts.set(savedMessage.id,{quoted_content:privateContext.quotedContent});if(state.privateReplyPending?.sourceMessageId===privateContext.sourceMessageId)state.privateReplyPending=null}}
+  if(editTarget){
+   if(file)throw new Error('أزل المرفق قبل حفظ تعديل الرسالة');
+   const target=editTarget,expectedRevision=Number(target.edit_revision||0);
+   if(target.conversation_id!==conversationId||target.sender_id!==userId||!canEditMessage(target))throw new Error('انتهت مهلة التعديل أو لا تملك صلاحية تعديل الرسالة');
+   const {data,error}=await supabaseClient.rpc('edit_message_secure',{p_message_id:target.id,p_new_content:content,p_expected_revision:expectedRevision});
+   if(error){
+    const {data:verified,error:verifyError}=await supabaseClient.from('chat_messages').select('*').eq('id',target.id).eq('conversation_id',conversationId).eq('sender_id',userId).maybeSingle();
+    if(verifyError||!verified||verified.content!==content||Number(verified.edit_revision||0)<=expectedRevision)throw error;
+    savedMessage=verified;
+   }else savedMessage=Array.isArray(data)?data[0]:data;
+   if(!savedMessage?.id)throw new Error('لم يتم تأكيد حفظ التعديل');
+  }else{
+   let attachment={path:pendingSend?.attachmentPath||null,type:pendingSend?.attachmentType||null};
+   if(file&&!attachment.path){attachment=await uploadAttachment(file,conversationId,userId);pendingSend.attachmentPath=attachment.path;pendingSend.attachmentType=attachment.type}
+   const {data,error}=await supabaseClient.from('chat_messages').insert({id:pendingSend.id,conversation_id:conversationId,sender_id:userId,content,...(replyTo?{reply_to:replyTo}:{}),...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();
+   if(error){
+    const {data:verified,error:verifyError}=await supabaseClient.from('chat_messages').select('*').eq('id',pendingSend.id).eq('conversation_id',conversationId).eq('sender_id',userId).maybeSingle();
+    if(verifyError||!verified)throw error;
+    savedMessage=verified;
+   }else savedMessage=data;
+   if(!savedMessage?.id)throw new Error('لم يتم تأكيد حفظ الرسالة');
+   if(state.pendingMessageSends.get(pendingKey)?.id===pendingSend.id)state.pendingMessageSends.delete(pendingKey);
+   if(privateContext){const {error:ctxError}=await supabaseClient.from('private_reply_contexts').insert({direct_message_id:savedMessage.id,direct_conversation_id:conversationId,sender_id:userId,source_conversation_id:privateContext.sourceConversationId,source_message_id:privateContext.sourceMessageId,quoted_content:privateContext.quotedContent,quoted_sender_id:privateContext.quotedSenderId});if(ctxError){console.warn(ctxError);toast('أُرسلت الرسالة الخاصة دون اقتباس المجموعة')}else state.privateReplyContexts.set(savedMessage.id,{quoted_content:privateContext.quotedContent});if(state.privateReplyPending?.sourceMessageId===privateContext.sourceMessageId)state.privateReplyPending=null}}
  }catch(error){
   console.error('Message persistence failed:',error);
   toast(error.message||'لم يتم تأكيد حفظ الرسالة. احتفظنا بالنص لإعادة المحاولة.');
