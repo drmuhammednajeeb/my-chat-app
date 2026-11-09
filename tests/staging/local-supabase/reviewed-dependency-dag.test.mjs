@@ -64,12 +64,27 @@ test('reviewed dependency graph is acyclic and preserves the direct-RPC blocker'
 
 test('test-only fixtures are present and canonical SQL remains outside the fixture tree', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
-  await access(path.join(root, 'tests/staging/local-supabase/fixtures/legacy-messages-compat.sql'));
-  await access(path.join(root, 'tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
-  assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').source.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
-  assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').source.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
+  const patchManifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
+  const requiredFixtures = [
+    'legacy-messages-compat.sql',
+    '20261107152733_fix_official_membership_invite_duplicate_validation.sql',
+    'synthetic-auth-admin-before-membership.sql',
+    'synthetic-admin-profile-after-membership.sql',
+    'assert-synthetic-admin-active.sql',
+    'chat-media-upload-path-hardening.sql'
+  ];
+  for (const name of requiredFixtures) await access(path.join(root, 'tests/staging/local-supabase/fixtures', name));
+  for (const fixture of patchManifest.fixtures) await access(path.join(root, fixture.path));
+  assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
+  assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
+  assert.ok(dag.nodes.find(node => node.id === 'team.admin').testSource.some(source => source.includes('team_management_dashboard.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'membership.official').testSource.some(source => source.includes('20261107152550_official_forever_membership_numbers_manual_verification.sql')));
+  const mediaPolicy = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql'), 'utf8');
+  assert.match(mediaPolicy, /storage\.foldername\(name\)\)\[2\]\s*=\s*\(select auth\.uid\(\)\)/i);
+  assert.equal(patchManifest.execution.enabled, false);
+  assert.equal(patchManifest.execution.productionAllowed, false);
+  assert.equal(patchManifest.execution.cloudAllowed, false);
 });
-
 test('all pre-membership policy sources are ordered before the dynamic membership rewrite', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const inventory = await buildObjectInventory();
@@ -138,6 +153,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   const selected = manifest.candidateNodeOrder.flatMap(node => node.testSources);
   const inventory = await buildObjectInventory();
   assert.equal(manifest.sourceCoverage.sqlFiles, inventory.files.length);
+  assert.equal(manifest.sourceCoverage.mappedSources, inventory.files.length - duplicateCopies.size);
   for (const source of selected) await access(path.join(root, source));
   for (const file of inventory.files) {
     if (duplicateCopies.has(file.path) || patchedCanonicalSources.has(file.path)) continue;
