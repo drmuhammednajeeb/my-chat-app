@@ -212,6 +212,16 @@ export async function buildObjectInventory(root = ROOT) {
   const membershipBaseTimestamp = 20261107144109;
   const policiesAfterMembershipBase = files.filter(file => file.sourceTimestamp && Number(file.sourceTimestamp) > membershipBaseTimestamp).flatMap(file => file.policyDetails.map(policy => ({ path: file.path, ...policy })));
   const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
+  const clientStorageBuckets = [...new Set(matches(appHtml, /storage\\.from\\(\\s*['\"]([^'\"]+)['\"]/gi, m => m[1]))].sort();
+  const declaredStorageBuckets = [...new Set(files.flatMap(file => file.storageBucketIds))].sort();
+  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => file.policyDetails.filter(policy => policy.table === 'storage.objects').flatMap(policy => matches(policy.statement, /bucket_id\\s*=\\s*['\"]([^'\"]+)['\"]/gi, m => m[1]))) )].sort();
+  const storageCoverage = {
+    clientBuckets: clientStorageBuckets,
+    declaredBucketIds: declaredStorageBuckets,
+    missingBucketDeclarations: clientStorageBuckets.filter(bucket => !declaredStorageBuckets.includes(bucket)),
+    storageObjectPolicyBuckets,
+    clientBucketsWithoutStoragePolicies: clientStorageBuckets.filter(bucket => !storageObjectPolicyBuckets.includes(bucket))
+  };
   const hardcodedIdentityReview = {
     emailLiteralFiles: files.filter(file => file.hardcodedEmails.length > 0).map(file => file.path),
     uuidLiteralFiles: files.filter(file => file.hardcodedUuids.length > 0).map(file => file.path),
@@ -258,6 +268,7 @@ export async function buildObjectInventory(root = ROOT) {
     },
     duplicateGroups,
     policyCoverage: { membershipRewriteSource: 'database/changes/20261107144109_private_membership_system_20261107.sql', policiesAfterMembershipBase, laterPoliciesMissingActiveMemberGuard },
+    storageCoverage,
     hardcodedIdentityReview,
     syntaxHazards: files.flatMap(f => f.syntaxHazards.map(item => ({ path: f.path, ...item }))),
     files
