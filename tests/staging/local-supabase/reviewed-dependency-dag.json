@@ -60,7 +60,8 @@
       "source": [
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
         "supabase/migrations/202611060006_explicit_legacy_deny.sql",
-        "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql"
+        "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
+        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
       ],
       "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
       "note": "Current client uses chat_messages and the two migrations only perform table-level policy/privilege operations. A minimal empty stub is permitted only in the disposable local replay fixture; it is not a model of the deployed legacy table."
@@ -432,7 +433,9 @@
         "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql"
       ],
       "requires": [
-        "membership.base"
+        "membership.base",
+        "membership.wrappers",
+        "membership.auth-fix"
       ]
     },
     {
@@ -443,7 +446,8 @@
       "status": "SEQUENCED_REQUIRED",
       "requires": [
         "membership.official",
-        "membership.syntax-fix"
+        "membership.syntax-fix",
+        "membership.auth-fix"
       ]
     },
     {
@@ -455,6 +459,80 @@
       "status": "TEST_COPY_ONLY",
       "requires": [
         "membership.official"
+      ]
+    },
+    {
+      "id": "membership.wrappers",
+      "source": [
+        "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
+      ],
+      "requires": [
+        "membership.base"
+      ]
+    },
+    {
+      "id": "membership.invitation-policies",
+      "source": [
+        "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
+      ],
+      "requires": [
+        "membership.base"
+      ]
+    },
+    {
+      "id": "membership.invitation-indexes",
+      "source": [
+        "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
+      ],
+      "requires": [
+        "membership.base"
+      ]
+    },
+    {
+      "id": "membership.auth-fix",
+      "source": [
+        "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
+      ],
+      "requires": [
+        "membership.base"
+      ]
+    },
+    {
+      "id": "membership.retire-sequence",
+      "source": [
+        "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
+      ],
+      "requires": [
+        "membership.official"
+      ]
+    },
+    {
+      "id": "membership.anchor",
+      "source": [
+        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
+      ],
+      "status": "SYNTHETIC_FIXTURE_ONLY",
+      "requires": [
+        "membership.official"
+      ]
+    },
+    {
+      "id": "membership.restore-rpc",
+      "source": [
+        "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
+      ],
+      "requires": [
+        "membership.official"
+      ]
+    },
+    {
+      "id": "membership.chat-rls-fix",
+      "source": [
+        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+      ],
+      "requires": [
+        "membership.official",
+        "chat.groups"
       ]
     }
   ],
@@ -786,6 +864,54 @@
     [
       "chat.message-edit-indexes",
       "membership.base"
+    ],
+    [
+      "membership.base",
+      "membership.wrappers"
+    ],
+    [
+      "membership.base",
+      "membership.invitation-policies"
+    ],
+    [
+      "membership.base",
+      "membership.invitation-indexes"
+    ],
+    [
+      "membership.base",
+      "membership.auth-fix"
+    ],
+    [
+      "membership.official",
+      "membership.retire-sequence"
+    ],
+    [
+      "membership.official",
+      "membership.anchor"
+    ],
+    [
+      "membership.official",
+      "membership.restore-rpc"
+    ],
+    [
+      "membership.official",
+      "membership.chat-rls-fix"
+    ],
+    [
+      "chat.groups",
+      "membership.chat-rls-fix"
+    ],
+    [
+      "membership.wrappers",
+      "membership.official"
+    ],
+    [
+      "membership.auth-fix",
+      "membership.official"
+    ],
+    [
+      "membership.auth-fix",
+      "membership.final-format"
     ]
   ],
   "blockers": [
@@ -867,7 +993,7 @@
         "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
         "database/changes/team_management_dashboard.sql"
       ],
-      "issue": "Historical SQL contains fixed identity/email assumptions; use synthetic fixtures only."
+      "issue": "Historical data statements contain fixed production identity and membership-number assumptions. The local replay must use synthetic test-only variants for the team-admin seed and official-number verification; the canonical files must remain unchanged."
     },
     {
       "id": "DAG-010",
@@ -876,6 +1002,16 @@
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
       ],
       "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
+    },
+    {
+      "id": "DAG-011",
+      "severity": "BLOCKER",
+      "evidence": [
+        "database/changes/team_management_dashboard.sql",
+        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
+      ],
+      "issue": "The team-admin seed and official membership verification are tied to a fixed production identity/number. The isolated fixture needs a synthetic Auth user and test-only copies that substitute reserved .test identity and synthetic membership number before testing team-admin/RLS flows."
     }
   ],
   "duplicateProvenance": [
