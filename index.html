@@ -1784,25 +1784,26 @@ async function sendMessage(){
   toast(error.message||'لم يتم تأكيد حفظ الرسالة. احتفظنا بالنص لإعادة المحاولة.');
   state.uploading=false;resizeComposer();return;
  }
- // Clear only the exact draft that was sent, and only while its conversation remains active.
- if(state.active?.id===conversationId&&$('messageInput').value===draftValue&&state.attachment===file&&state.replyTarget?.id===replyTo&&((!state.editTarget&&!editTarget)||state.editTarget?.id===editTarget?.id)&&(!state.privateReplyPending||state.privateReplyPending.sourceMessageId===privateContext?.sourceMessageId)){
-  $('messageInput').value='';state.attachment=null;state.voiceDuration=0;$('fileInput').value='';$('attachmentPreview').replaceChildren();$('attachmentPreview').classList.add('hidden');state.replyTarget=null;state.editTarget=null;state.privateReplyPending=null;renderComposerContext();resizeComposer();publishTyping(false);
- }
- if(state.active?.id===conversationId){
-  const existing=state.messages.findIndex(m=>m.id===savedMessage.id);
-  if(existing>=0)state.messages[existing]=savedMessage;else state.messages.push(savedMessage);
-  if(editing){
-   const restored=await loadMessages();
-   if(!restored)toast('تم حفظ التعديل، لكن تعذر تحديث العرض. اضغط تحديث المحادثة.');
-  }else if(!state.messageIds.has(savedMessage.id)){
-   const rendered=await renderMessage(savedMessage,conversationId,state.messageLoadVersion);
-   if(!rendered)toast('تم حفظ الرسالة، لكن تعذر عرضها فوراً. أعد فتح المحادثة لتحديث العرض.');
+ try{
+  // Clear only the exact draft that was sent, and only while its conversation remains active.
+  if(state.active?.id===conversationId&&$('messageInput').value===draftValue&&state.attachment===file&&state.replyTarget?.id===replyTo&&((!state.editTarget&&!editTarget)||state.editTarget?.id===editTarget?.id)&&(!state.privateReplyPending||state.privateReplyPending.sourceMessageId===privateContext?.sourceMessageId)){
+   $('messageInput').value='';state.attachment=null;state.voiceDuration=0;$('fileInput').value='';$('attachmentPreview').replaceChildren();$('attachmentPreview').classList.add('hidden');state.replyTarget=null;state.editTarget=null;state.privateReplyPending=null;renderComposerContext();resizeComposer();publishTyping(false);
   }
-  const conversation=state.conversations.find(item=>item.id===conversationId);
-  if(conversation){conversation.last_message=savedMessage;conversation.last_message_at=savedMessage.created_at;}
-  renderConversations();
- }
- state.uploading=false;resizeComposer();
+  if(state.active?.id===conversationId){
+   const existing=state.messages.findIndex(m=>m.id===savedMessage.id);
+   if(existing>=0)state.messages[existing]=savedMessage;else state.messages.push(savedMessage);
+   if(editing){
+    const restored=await loadMessages();
+    if(!restored)toast('تم حفظ التعديل، لكن تعذر تحديث العرض. اضغط تحديث المحادثة.');
+   }else if(!state.messageIds.has(savedMessage.id)){
+    const rendered=await renderMessage(savedMessage,conversationId,state.messageLoadVersion);
+    if(!rendered)toast('تم حفظ الرسالة، لكن تعذر عرضها فوراً. أعد فتح المحادثة لتحديث العرض.');
+   }
+   const conversation=state.conversations.find(item=>item.id===conversationId);
+   if(conversation){conversation.last_message=savedMessage;conversation.last_message_at=savedMessage.created_at;}
+   renderConversations();
+  }
+ }finally{state.uploading=false;resizeComposer()}
 }
 function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role),groupBlocked=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||groupBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
 $('messageInput').addEventListener('input',()=>{resizeComposer();if($('messageInput').value.trim())publishTyping(true);else publishTyping(false)});
