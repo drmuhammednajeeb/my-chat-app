@@ -118,7 +118,7 @@ function extractTableDetails(sql) {
         || definition.match(/^\s*([a-z_]\w*)[\s\S]*?\breferences\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\s*\(([^)]+)\)/i);
       if (fk) foreignKeys.push({
         source: name, constraint: definition.match(/\bconstraint\s+([a-z_]\w*)/i)?.[1] ?? null,
-        columns: (fk[1] || fk[1]).split(',').map(x => x.trim()),
+        columns: (definition.match(/\\bforeign\\s+key\\s*\\(([^)]+)\\)/i)?.[1] ?? definition.match(/^\\s*(\"?[\\w$]+\"?)/)?.[1] ?? '').split(',').filter(Boolean).map(x => x.trim()),
         target: fk[2].toLowerCase(), targetColumns: fk[3].split(',').map(x => x.trim())
       });
       if (!/^\s*(?:constraint|primary\s+key|foreign\s+key|unique|check|exclude)\b/i.test(definition)) {
