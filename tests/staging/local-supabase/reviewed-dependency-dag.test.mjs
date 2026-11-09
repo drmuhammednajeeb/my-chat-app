@@ -13,6 +13,12 @@ test('reviewed dependency graph references existing source files and known nodes
   assert.equal(dag.executionAuthorized, false);
   assert.equal(dag.safety.sqlExecutionEnabled, false);
   const ids = new Set([...dag.platformNodes, ...dag.nodes].map(node => node.id));
+  for (const node of dag.nodes) {
+    for (const dependency of node.requires ?? []) {
+      if (dependency.startsWith('UNRESOLVED:')) continue;
+      assert.ok(dag.explicitEdges.some(edge => edge[0] === dependency && edge[1] === node.id), 'missing direct dependency edge: ' + dependency + ' -> ' + node.id);
+    }
+  }
   for (const edge of dag.explicitEdges) {
     assert.equal(ids.has(edge[0]), true, 'unknown dependency source: ' + edge[0]);
     assert.equal(ids.has(edge[1]), true, 'unknown dependency target: ' + edge[1]);
