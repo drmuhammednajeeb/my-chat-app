@@ -136,6 +136,7 @@ test('render and initial-load paths retain stale-result guards', () => {
   assert.match(render, /createSignedUrl\(m\.attachment_path,3600\)/);
   assert.match(load, /if\(requestId!==state\.messageLoadVersion\|\|state\.active\?\.id!==conversationId\)return false/);
   assert.ok(load.includes('state.messagePollCursor=(data||[])[0]?'));
+  assert.match(load, /allMessagesRendered/);
 });
 
 test('fallback synchronization is cursor-based and reconciles edits and deletions', () => {
