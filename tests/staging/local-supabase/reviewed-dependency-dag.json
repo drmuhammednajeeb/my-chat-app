@@ -109,9 +109,24 @@
       ]
     },
     {
+      "id": "test-fixture.admin-auth-seed",
+      "source": [
+        "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql"
+      ],
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "provides": [
+        "auth.users synthetic admin row"
+      ],
+      "requires": [
+        "core.base",
+        "platform.auth"
+      ]
+    },
+    {
       "id": "team.admin",
       "source": [
-        "database/changes/team_management_dashboard.sql"
+        "database/changes/team_management_dashboard.sql",
+        "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
       ],
       "provides": [
         "app_private.team_admins",
@@ -121,8 +136,10 @@
       "requires": [
         "core.base",
         "platform.auth",
-        "core.creator"
-      ]
+        "core.creator",
+        "test-fixture.admin-auth-seed"
+      ],
+      "status": "TEST_COPY_ONLY_SYNTHETIC_ADMIN_EMAIL"
     },
     {
       "id": "chat.preferences",
@@ -428,15 +445,34 @@
       ]
     },
     {
+      "id": "test-fixture.admin-profile",
+      "source": [
+        "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql"
+      ],
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "provides": [
+        "public.profiles synthetic admin row"
+      ],
+      "requires": [
+        "membership.base",
+        "test-fixture.admin-auth-seed"
+      ]
+    },
+    {
       "id": "membership.official",
       "source": [
-        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql"
+        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+        "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql"
       ],
       "requires": [
         "membership.base",
         "membership.wrappers",
-        "membership.auth-fix"
-      ]
+        "membership.auth-fix",
+        "test-fixture.admin-profile",
+        "membership.invitation-policies",
+        "membership.invitation-indexes"
+      ],
+      "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER"
     },
     {
       "id": "membership.final-format",
@@ -447,13 +483,18 @@
       "requires": [
         "membership.official",
         "membership.syntax-fix",
-        "membership.auth-fix"
+        "membership.auth-fix",
+        "membership.anchor",
+        "membership.retire-sequence",
+        "membership.restore-rpc",
+        "membership.chat-rls-fix"
       ]
     },
     {
       "id": "membership.syntax-fix",
       "source": [
         "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+        "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
         "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ],
       "status": "TEST_COPY_ONLY",
@@ -509,9 +550,10 @@
     {
       "id": "membership.anchor",
       "source": [
-        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
+        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+        "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ],
-      "status": "SYNTHETIC_FIXTURE_ONLY",
+      "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
       "requires": [
         "membership.official"
       ]
@@ -912,6 +954,54 @@
     [
       "membership.auth-fix",
       "membership.final-format"
+    ],
+    [
+      "core.base",
+      "test-fixture.admin-auth-seed"
+    ],
+    [
+      "platform.auth",
+      "test-fixture.admin-auth-seed"
+    ],
+    [
+      "membership.base",
+      "test-fixture.admin-profile"
+    ],
+    [
+      "test-fixture.admin-auth-seed",
+      "test-fixture.admin-profile"
+    ],
+    [
+      "test-fixture.admin-auth-seed",
+      "team.admin"
+    ],
+    [
+      "test-fixture.admin-profile",
+      "membership.official"
+    ],
+    [
+      "membership.invitation-policies",
+      "membership.official"
+    ],
+    [
+      "membership.invitation-indexes",
+      "membership.official"
+    ],
+    [
+      "membership.anchor",
+      "membership.final-format"
+    ],
+    [
+      "membership.retire-sequence",
+      "membership.final-format"
+    ],
+    [
+      "membership.restore-rpc",
+      "membership.final-format"
+    ],
+    [
+      "membership.chat-rls-fix",
+      "membership.final-format"
     ]
   ],
   "blockers": [
@@ -1005,13 +1095,13 @@
     },
     {
       "id": "DAG-011",
-      "severity": "BLOCKER",
+      "severity": "RESOLVED_FOR_LOCAL_FIXTURES",
       "evidence": [
         "database/changes/team_management_dashboard.sql",
         "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
         "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ],
-      "issue": "The team-admin seed and official membership verification are tied to a fixed production identity/number. The isolated fixture needs a synthetic Auth user and test-only copies that substitute reserved .test identity and synthetic membership number before testing team-admin/RLS flows."
+      "issue": "Resolved for disposable local replay by reserved .test synthetic Auth/profile fixtures and test-only copies substituting a synthetic membership number. The canonical production seed SQL remains unchanged; actual Supabase Auth schema compatibility still needs local rehearsal."
     }
   ],
   "duplicateProvenance": [
