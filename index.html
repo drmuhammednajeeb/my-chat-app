@@ -1223,7 +1223,7 @@ async function jumpToMessage(id){
    supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).gt('created_at',target.created_at).order('created_at',{ascending:true}).limit(40)
   ]);
   if(beforeResult.error||afterResult.error)throw beforeResult.error||afterResult.error;
-  const rows=[...(beforeResult.data||[]).reverse(),target,...(afterResult.data||[])].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const rows=[...(beforeResult.data||[]).reverse(),target,...(afterResult.data||[])].sort((a,b)=>compareMessagesChronologically(a,b));
   const requestId=++state.messageLoadVersion;state.isLoadingMessages=true;state.messages=rows;state.replyMessages=new Map();
   const replyIds=[...new Set(rows.map(m=>m.reply_to).filter(x=>x&&!rows.some(m=>m.id===x)))];
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!parentError)(parents||[]).forEach(m=>state.replyMessages.set(m.id,m))}
@@ -1303,7 +1303,7 @@ async function loadMessages(){
  const messageLoadStarted=performance.now();const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
  area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
  try{
-  const messageFetchStarted=performance.now();let messageQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)messageQuery=messageQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await messageQuery.order('created_at',{ascending:false}).limit(50);
+  const messageFetchStarted=performance.now();let messageQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)messageQuery=messageQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await messageQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(50);
   recordPerf('message_fetch',performance.now()-messageFetchStarted,{success:!error,rows:data?.length||0});if(error)throw error;
   state.hasMoreMessages=(data||[]).length===50;
   state.diagnostics.lastFetchAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastFetchCount=(data||[]).length;state.diagnostics.lastFetchError=null;diagLog('fetch-success',{count:(data||[]).length,requestId});
@@ -1311,7 +1311,7 @@ async function loadMessages(){
   // Merge fetched rows with Realtime INSERTs received while this request was in flight.
   const merged=new Map((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>[m.id,m]));
   (data||[]).forEach(m=>merged.set(m.id,m));
-  let messages=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
+  let messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   state.messages=messages;
   const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];state.replyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!replyError)(parents||[]).forEach(x=>state.replyMessages.set(x.id,x))}
   await loadMessageReactions(conversationId,messages);await loadMessagePins(conversationId);await loadPrivateReplyContexts(conversationId,messages);
@@ -1319,7 +1319,7 @@ async function loadMessages(){
   // Reconcile again after auxiliary queries: Realtime INSERTs may arrive while those queries are in flight.
   const latest=new Map(messages.map(m=>[m.id,m]));
   (state.messages||[]).filter(m=>m.conversation_id===conversationId).forEach(m=>latest.set(m.id,m));
-  messages=Array.from(latest.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
+  messages=Array.from(latest.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   state.messages=messages;
   area.replaceChildren();state.messageIds.clear();
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
@@ -1343,24 +1343,25 @@ async function loadMessages(){
   return false;
  }
 }
+function compareMessagesChronologically(a,b){const timeDiff=compareMessagesChronologically(a,b);if(timeDiff)return timeDiff;const aid=String(a.id||''),bid=String(b.id||'');return aid<bid?-1:aid>bid?1:0}
 async function loadOlderMessages(){
  const conversationId=state.active?.id,area=$('messages');
  if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
- const oldest=state.messages[0];if(!oldest?.created_at)return false;
+ const oldest=state.messages[0];if(!oldest?.created_at||!oldest?.id)return false;
  state.loadingOlderMessages=true;
  const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
  const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
  const oldHeight=area.scrollHeight,oldTop=area.scrollTop,requestId=state.messageLoadVersion;
  const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
  try{
-  let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',oldest.created_at);if(state.activeChatPreference?.cleared_before)olderQuery=olderQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await olderQuery.order('created_at',{ascending:false}).limit(50);
+  const cursorFilter='created_at.lt.'+oldest.created_at+',and(created_at.eq.'+oldest.created_at+',id.lt.'+oldest.id+')';let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(cursorFilter);if(state.activeChatPreference?.cleared_before)olderQuery=olderQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await olderQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(50);
   if(error)throw error;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   const older=(data||[]).slice().reverse();
   state.hasMoreMessages=older.length===50;
   if(!older.length){state.hasMoreMessages=false;return false}
   const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
-  state.messages=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   const replyIds=[...new Set(state.messages.map(m=>m.reply_to).filter(id=>id&&!merged.has(id)))];
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(parentError)throw parentError;(parents||[]).forEach(parent=>state.replyMessages.set(parent.id,parent))}
   await loadMessageReactions(conversationId,older);await loadMessagePins(conversationId);
@@ -1413,7 +1414,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
    }
   }
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId)return;
-  state.messages=Array.from(current.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
+  state.messages=Array.from(current.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   if(added)await markConversationReceipt(conversationId,document.visibilityState==='visible'&&isMessagesNearBottom());
   const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole);if($('messageInput').disabled&&!channelReadOnly){$('messageInput').disabled=false;diagLog('composer-reenabled-by-poll')}
   resizeComposer();diagLog('poll-success',{fetched:fetched.length,added,rendered:$('messages').querySelectorAll('.message').length});
