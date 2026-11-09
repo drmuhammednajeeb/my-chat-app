@@ -282,14 +282,14 @@
         "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
       ],
       "provides": [
-        "workspace tables"
+        "workspace tables",
+        "storage.buckets.conversation-documents"
       ],
       "requires": [
         "core.base",
         "chat.groups",
         "platform.storage",
-        "platform.pgcrypto",
-        "storage.compat-buckets"
+        "platform.pgcrypto"
       ]
     },
     {
@@ -594,8 +594,7 @@
       ],
       "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
       "provides": [
-        "storage.buckets.chat-media",
-        "storage.buckets.conversation-documents"
+        "storage.buckets.chat-media"
       ],
       "requires": [
         "platform.storage"
@@ -1071,10 +1070,6 @@
       "chat.voice"
     ],
     [
-      "storage.compat-buckets",
-      "chat.workspaces"
-    ],
-    [
       "chat.media-policies",
       "membership.base"
     ]
@@ -1186,7 +1181,7 @@
         "database/changes/20261107080000_chat_voice_messages.sql",
         "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
       ],
-      "issue": "The browser uses chat-media and conversation-documents, but repository SQL does not create either bucket. A test-only private-bucket fixture now creates both before their consumers; this does not assert deployed bucket configuration."
+      "issue": "The browser uses chat-media and conversation-documents. Repository SQL creates conversation-documents in the workspace migration, but does not create chat-media. A test-only private chat-media bucket fixture is provided before voice and media-policy consumers; deployed chat-media configuration remains unverified."
     },
     {
       "id": "DAG-013",
