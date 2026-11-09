@@ -536,13 +536,13 @@
         "chat.team-admin-group-overrides",
         "chat.scope-team-admin-overrides",
         "chat.message-edit-indexes",
-        "chat.media-policies",
         "core.profile-fks",
         "chat.personal-lists-realtime",
         "chat.restore-message-edit-guard",
         "chat.favorite-column",
         "chat.remove-duplicate-favorite",
-        "chat.workspace-indexes"
+        "chat.workspace-indexes",
+        "chat.media-upload-path-hardening"
       ],
       "testSource": [
         "database/changes/20261107144109_private_membership_system_20261107.sql"
@@ -730,46 +730,12 @@
       ]
     },
     {
-      "id": "storage.compat-buckets",
-      "source": [
-        "tests/staging/local-supabase/fixtures/storage-buckets-compat.sql"
-      ],
-      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
-      "provides": [
-        "storage.buckets.chat-media"
-      ],
-      "requires": [
-        "platform.storage"
-      ],
-      "testSource": [
-        "tests/staging/local-supabase/fixtures/storage-buckets-compat.sql"
-      ]
-    },
-    {
-      "id": "chat.media-policies",
-      "source": [
-        "tests/staging/local-supabase/fixtures/chat-media-storage-policies-candidate.sql"
-      ],
-      "status": "TEST_ONLY_CANDIDATE_NOT_PRODUCTION_SOURCE",
-      "provides": [
-        "chat-media storage.objects INSERT and SELECT policies"
-      ],
-      "requires": [
-        "core.base",
-        "storage.compat-buckets"
-      ],
-      "testSource": [
-        "tests/staging/local-supabase/fixtures/chat-media-storage-policies-candidate.sql"
-      ],
-      "parityNote": "Candidate local policy only; deployed chat-media policies are not present in the repository source."
-    },
-    {
       "id": "chat.voice",
       "source": [
         "database/changes/20261107080000_chat_voice_messages.sql"
       ],
       "requires": [
-        "storage.compat-buckets"
+        "core.base"
       ],
       "testSource": [
         "database/changes/20261107080000_chat_voice_messages.sql"
@@ -862,6 +828,21 @@
       "testSource": [
         "database/changes/20261107134600_index_workspace_foreign_keys.sql"
       ]
+    },
+    {
+      "id": "chat.media-upload-path-hardening",
+      "source": [
+        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
+        "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql"
+      ],
+      "status": "TEST_ONLY_SECURITY_HARDENING_CANDIDATE",
+      "requires": [
+        "core.base"
+      ],
+      "parityNote": "Replaces the canonical chat-media INSERT policy in the disposable replay to bind folder segment 2 to auth.uid(). Do not deploy without separate review."
     }
   ],
   "explicitEdges": [
@@ -1294,26 +1275,6 @@
       "test-fixture.admin-assertion"
     ],
     [
-      "platform.storage",
-      "storage.compat-buckets"
-    ],
-    [
-      "core.base",
-      "chat.media-policies"
-    ],
-    [
-      "storage.compat-buckets",
-      "chat.media-policies"
-    ],
-    [
-      "storage.compat-buckets",
-      "chat.voice"
-    ],
-    [
-      "chat.media-policies",
-      "membership.base"
-    ],
-    [
       "core.base",
       "core.profile-fks"
     ],
@@ -1383,6 +1344,14 @@
     ],
     [
       "chat.workspace-indexes",
+      "membership.base"
+    ],
+    [
+      "core.base",
+      "chat.media-upload-path-hardening"
+    ],
+    [
+      "chat.media-upload-path-hardening",
       "membership.base"
     ]
   ],
@@ -1486,23 +1455,13 @@
       "issue": "Resolved for disposable local replay by reserved .test synthetic Auth/profile fixtures and test-only copies substituting a synthetic membership number. The canonical production seed SQL remains unchanged; actual Supabase Auth schema compatibility still needs local rehearsal."
     },
     {
-      "id": "DAG-012",
-      "severity": "RESOLVED_FOR_LOCAL_FIXTURE",
-      "evidence": [
-        "index.html",
-        "database/changes/20261107080000_chat_voice_messages.sql",
-        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
-      ],
-      "issue": "The browser uses chat-media and conversation-documents. Repository SQL creates conversation-documents in the workspace migration, but does not create chat-media. A test-only private chat-media bucket fixture is provided before voice and media-policy consumers; deployed chat-media configuration remains unverified."
-    },
-    {
       "id": "DAG-013",
-      "severity": "REVIEW_REQUIRED_PRODUCTION_PARITY",
+      "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
       "evidence": [
         "index.html",
         "database/changes/20261107080000_chat_voice_messages.sql"
       ],
-      "issue": "The browser uploads and creates signed URLs from chat-media, but no repository SQL defines chat-media storage.objects policies. A candidate test-only INSERT/SELECT policy fixture is derived from the observed conversationId/userId/object path and active-membership helper. It must not be treated as authoritative production policy without source/schema verification."
+      "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
     }
   ],
   "duplicateProvenance": [
