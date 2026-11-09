@@ -22,7 +22,7 @@ The generated **build-database-object-inventory.mjs** report records source SHA-
 
 ### 1. Legacy public.messages
 
-Two CLI migrations reference **public.messages**, but no repository SQL creates that table. The current browser client reads and writes **public.chat_messages**; no client-side access to the legacy messages table was found. The old table may exist in a previously provisioned database, but the repository does not provide its schema. Do not invent a production schema. Decide whether a minimal test-only compatibility stub is sufficient for replay testing or whether the two legacy statements should be excluded from a test-only replay bundle.
+Two CLI migrations reference **public.messages**, but no repository SQL creates that table. The current browser client reads and writes **public.chat_messages**; no client-side access to the legacy messages table was found. Both legacy migrations only need the table to exist for table-level policy and privilege operations; they do not reference its columns. A minimal empty compatibility stub is therefore appropriate for disposable local replay only. It is not a reconstruction of the deployed legacy table and must never be deployed or used to replace production schema.
 
 ### 2. Missing direct-conversation RPC implementation
 
@@ -68,7 +68,7 @@ Historical SQL includes fixed identity/email assumptions and data updates. Do no
 
 Key dependency chains:
 
-1. Supabase Auth + Storage + Realtime + legacy compatibility decision → core chat schema.
+1. Supabase Auth + Storage + Realtime + a minimal test-only legacy messages stub → core chat schema.
 2. Core schema → team-admin infrastructure, chat preferences, reactions, pins/receipts, channel support, and notifications.
 3. Team-admin + preferences + core schema → group management and workspaces.
 4. Public-channel schema + team-admin + pgcrypto → private-channel invitation functions.

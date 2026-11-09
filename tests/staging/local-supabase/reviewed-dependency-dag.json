@@ -61,8 +61,8 @@
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
         "supabase/migrations/202611060006_explicit_legacy_deny.sql"
       ],
-      "status": "UNRESOLVED",
-      "note": "Referenced but not created by repository SQL; current browser code uses chat_messages."
+      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
+      "note": "Current client uses chat_messages and the two migrations only perform table-level policy/privilege operations. A minimal empty stub is permitted only in the disposable local replay fixture; it is not a model of the deployed legacy table."
     },
     {
       "id": "core.base",
@@ -118,7 +118,8 @@
       ],
       "requires": [
         "core.base",
-        "platform.auth"
+        "platform.auth",
+        "core.creator"
       ]
     },
     {
@@ -231,7 +232,7 @@
       ],
       "requires": [
         "core.base",
-        "conversations.description"
+        "chat.channels-public"
       ]
     },
     {
@@ -456,17 +457,25 @@
     [
       "membership.official",
       "membership.final-format"
+    ],
+    [
+      "core.creator",
+      "team.admin"
+    ],
+    [
+      "chat.channels-public",
+      "chat.self"
     ]
   ],
   "blockers": [
     {
       "id": "DAG-001",
-      "severity": "BLOCKER",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
       "evidence": [
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
         "supabase/migrations/202611060006_explicit_legacy_deny.sql"
       ],
-      "issue": "public.messages is referenced but not created by repository SQL; current client uses public.chat_messages. Decide test-only compatibility treatment."
+      "issue": "Resolved for disposable local replay only: include a minimal empty public.messages compatibility stub before the two legacy-referencing migrations. The stub is not production schema and must never be deployed."
     },
     {
       "id": "DAG-002",
