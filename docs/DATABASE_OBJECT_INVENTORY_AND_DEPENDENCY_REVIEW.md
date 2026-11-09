@@ -26,6 +26,13 @@ The read-only CI inventory covers **53 SQL files** and extracted **27 table defi
 The test-only terminator patch is recorded in **fixtures/patch-manifest.json**. CI verified source SHA-256 `371e3b426ce5e2b47ba2cde669c2e32934baffae781ed684303a8e5cd5695088` and test-copy SHA-256 `fadf57b686cb4cfe1e6bb57c94a96a6859545cba4d1f650fe8dfc7a9c92d6b82`; the only byte-level change is the missing semicolon after the function body. The additional synthetic email and membership-number substitutions are recorded in **fixtures/synthetic-fixture-patches.json** with their own source and test-copy SHA-256 hashes. All canonical historical files remain unchanged.
 
 
+
+## Application Storage contract review
+
+The browser uses three buckets: **avatars**, **chat-media**, and **conversation-documents**. Repository SQL creates the **avatars** bucket and defines object policies for **avatars** and **conversation-documents**, but it does not create the latter bucket. It also does not create the **chat-media** bucket or define object policies for it; the voice-message SQL only updates the MIME allowlist for a bucket that must already exist. The application uploads message media under conversation-id / uploader-id / generated-object-name and later creates signed URLs from chat-media.
+
+For isolated local tests, a test-only fixture creates private chat-media and conversation-documents buckets. A separate candidate fixture defines chat-media upload/read policies using the observed path and active conversation-membership helper. This candidate exists only to exercise the expected contract locally; it is not evidence of the deployed policy and must not be deployed without a separate production-source review. The local bucket fixture is included before workspace and voice SQL consumers, and the chat-media policy fixture is included before the membership dynamic policy rewrite.
+
 ## RLS membership-gate source review
 
 The static inventory extracted **107 policy definitions**. The membership base change contains a dynamic rewrite that appends the active-membership predicate to authenticated policies present when it runs. The dependency graph therefore places the feature SQL that creates policies before the membership rewrite. The inventory found **3 policy definitions with source timestamps after that rewrite**; all 3 contain a direct or indirect active-membership guard, and the static report found **0 later policies without a recognized guard**. This is a source-level result only: PostgreSQL RLS behavior, role semantics, and the dynamic policy rewrite still require local integration tests before security can be declared verified.
