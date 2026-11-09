@@ -17,7 +17,8 @@ The auditor emits a JSON report containing:
 - SHA-256 hashes and byte-identical duplicate groups.
 - Numeric migration ordering where a timestamp prefix exists.
 - Heuristic public-table references and table definitions.
-- References to legacy `public.messages`, separately classified from `public.chat_messages`.
+- Qualified references to legacy `public.messages`, separately classified from `public.chat_messages`.
+- A conservative syntax-hazard heuristic for a dollar-quoted function body followed by another statement without a visible semicolon.
 - Missing local Supabase CLI configuration and unresolved legacy-table dependencies.
 - An explicit `bootstrap.executable: false` decision.
 
@@ -32,8 +33,8 @@ The auditor emits a JSON report containing:
 
 ## Current gate
 
-The repository's audited SQL history still references `public.messages` without defining that legacy table in the migration set, and `supabase/config.toml` has not yet been established. Therefore the bootstrap remains **BLOCKED**. The next step is a human-reviewed test-only schema/fixture plan; it must not change canonical migration files.
+The repository's audited SQL history still references `public.messages` without defining that legacy table in the migration set, contains one suspected missing function terminator in `database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql`, and has no `supabase/config.toml`. Therefore the bootstrap remains **BLOCKED**. The next step is a human-reviewed test-only schema/fixture plan; it must not change canonical migration files.
 
 ## What this does not test
 
-This stage does not start Supabase, validate PostgreSQL execution, exercise Auth/RLS/Realtime/Storage, run browser E2E, or measure backend concurrency. Those stages remain **NOT RUN** until a separately reviewed local-only bootstrap exists.
+This stage does not parse or execute the SQL against PostgreSQL, start Supabase, exercise Auth/RLS/Realtime/Storage, run full-app E2E, or measure backend concurrency. The syntax check is heuristic and is not a substitute for a PostgreSQL parser. Those stages remain **NOT RUN** until a separately reviewed local-only bootstrap exists.
