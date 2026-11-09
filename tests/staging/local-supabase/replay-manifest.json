@@ -1,0 +1,566 @@
+{
+  "schemaVersion": 1,
+  "mode": "DESIGN_ONLY",
+  "status": "BLOCKED",
+  "sourceCoverage": {
+    "sqlFiles": 53,
+    "mappedSources": 50,
+    "identicalDuplicateCopiesExcluded": 3,
+    "allSourcesMappedOrExplicitlyExcluded": true
+  },
+  "execution": {
+    "enabled": false,
+    "files": [],
+    "sqlExecuted": false,
+    "localStackStarted": false,
+    "cloudAllowed": false,
+    "productionAllowed": false,
+    "networkEgressAllowed": false
+  },
+  "candidateNodeOrder": [
+    {
+      "nodeId": "legacy.messages",
+      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
+        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "storage.compat-buckets",
+      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/storage-buckets-compat.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "core.base",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.voice",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107080000_chat_voice_messages.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "core.grants",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/202611060002_tighten_api_grants.sql",
+        "supabase/migrations/202611060003_minimum_table_privileges.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "core.creator",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.preferences",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/user_specific_direct_chat_preferences.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.reactions",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/message_reactions_and_whatsapp_typography.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.notifications",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/20261107014128_unified_user_notifications.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.avatar-storage",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107035500_user_avatars_storage.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.admin-auth-seed",
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.media-policies",
+      "status": "TEST_ONLY_CANDIDATE_NOT_PRODUCTION_SOURCE",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/chat-media-storage-policies-candidate.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Candidate local policy only; deployed chat-media policies are not present in the repository source."
+    },
+    {
+      "nodeId": "core.profile-fks",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/202611060004_reference_profiles.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.channels-public",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/public_announcement_channels.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.preference-archive-rls",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.notification-indexes",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "team.admin",
+      "status": "TEST_COPY_ONLY_SYNTHETIC_ADMIN_EMAIL",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.self",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107061012_self_message_conversation.sql",
+        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.pins",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/professional_message_controls_and_receipts.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.groups",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.channels-private",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/private_channels_with_secure_invites.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.account-settings-message-edit",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.hardening",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
+      ],
+      "blockedBy": [
+        "DAG-002"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.workspaces",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.expiry",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.group-ownership-transfer",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107125616_secure_group_ownership_transfer.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.personal-lists-realtime",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.favorite-column",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.message-edit-hardening",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107124500_harden_message_edit_permissions.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.workspace-realtime",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
+        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.workspace-indexes",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107134600_index_workspace_foreign_keys.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.expiry-purge",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.group-settings-hardening",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.remove-duplicate-favorite",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.message-edit-indexes",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107131500_index_message_edit_history.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.restore-message-edit-guard",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107130000_restore_message_edit_guard.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.team-admin-group-overrides",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107130534_include_team_admins_in_group_management.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.scope-team-admin-overrides",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.base",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107144109_private_membership_system_20261107.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.wrappers",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.invitation-policies",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.invitation-indexes",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.auth-fix",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.admin-profile",
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.official",
+      "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.syntax-fix",
+      "status": "TEST_COPY_ONLY",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.retire-sequence",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.anchor",
+      "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.restore-rpc",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.chat-rls-fix",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "membership.final-format",
+      "status": "SEQUENCED_REQUIRED",
+      "testSources": [
+        "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.admin-assertion",
+      "status": "READ_ONLY_TEST_ASSERTION",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    }
+  ],
+  "duplicateSelection": [
+    {
+      "logicalChange": "chat privilege hardening",
+      "selected": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
+      "excludedIdenticalCopy": "database/changes/chat_table_privilege_hardening.sql",
+      "sha256": "400e727c552cea4b32602f43be6eed6d722406847e3f0f4bd3a19ae37814cdf4"
+    },
+    {
+      "logicalChange": "unified notifications",
+      "selected": "supabase/migrations/20261107014128_unified_user_notifications.sql",
+      "excludedIdenticalCopy": "database/changes/unified_notifications.sql",
+      "sha256": "9bec9867db333ddd5c7950fc8cdd0c04c76ca554e1117cf71d53e7b6b818fda8"
+    },
+    {
+      "logicalChange": "notification indexes",
+      "selected": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
+      "excludedIdenticalCopy": "database/changes/index_user_notification_foreign_keys.sql",
+      "sha256": "c59daeb5b307f67ed8148611530d94f4330ac9fedbbe52df0e9c908a2b687ea2"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "DAG-002",
+      "severity": "BLOCKER",
+      "issue": "app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation RPC are not defined in reviewed SQL sources."
+    },
+    {
+      "id": "DAG-003",
+      "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
+      "issue": "The historical-to-final membership format transition is represented and the final migration allowlist is tested for all six function targets, including both admin RPC implementations. A PostgreSQL local apply test must still prove the replacement and resulting constraints."
+    },
+    {
+      "id": "DAG-006",
+      "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
+      "issue": "Static source review found three policy definitions timestamped after the membership rewrite; all three use a direct or indirect active-membership guard, with zero later unguarded policies detected. The DAG sequences all earlier feature policy sources before the rewrite. Runtime PostgreSQL RLS tests are still required."
+    },
+    {
+      "id": "DAG-007",
+      "severity": "REVIEW_REQUIRED",
+      "issue": "Verify pgcrypto extension schema and extensions.digest / extensions.gen_random_bytes resolution locally."
+    },
+    {
+      "id": "DAG-008",
+      "severity": "REVIEW_REQUIRED",
+      "issue": "Verify local pg_cron availability and job behavior before inclusion."
+    },
+    {
+      "id": "DAG-009",
+      "severity": "REVIEW_REQUIRED_IDENTITY_AUDIT",
+      "issue": "The known fixed email and membership-number statements have synthetic test-only copies. A final repository-wide scan of hard-coded identity literals is still required before replay."
+    },
+    {
+      "id": "DAG-010",
+      "severity": "REVIEW_REQUIRED",
+      "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
+    },
+    {
+      "id": "DAG-013",
+      "severity": "REVIEW_REQUIRED_PRODUCTION_PARITY",
+      "issue": "The browser uploads and creates signed URLs from chat-media, but no repository SQL defines chat-media storage.objects policies. A candidate test-only INSERT/SELECT policy fixture is derived from the observed conversationId/userId/object path and active-membership helper. It must not be treated as authoritative production policy without source/schema verification."
+    }
+  ],
+  "requiredSourceRecovery": [
+    "Authoritative definition and dependencies for app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation(uuid). The current repository invokes/references them but does not define them."
+  ],
+  "safetyNotes": [
+    "Candidate order is derived from the reviewed acyclic dependency graph.",
+    "Test-only copies and candidate policies are local fixtures, not production migrations.",
+    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved."
+  ]
+}
