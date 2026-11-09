@@ -29,9 +29,9 @@ The test-only terminator patch is recorded in **fixtures/patch-manifest.json**. 
 
 ## Application Storage contract review
 
-The browser uses three buckets: **avatars**, **chat-media**, and **conversation-documents**. Repository SQL creates **avatars** and **conversation-documents** and defines object policies for both. It does not create the **chat-media** bucket or define object policies for it; the voice-message SQL only updates the MIME allowlist for a bucket that must already exist. The application uploads message media under conversation-id / uploader-id / generated-object-name and later creates signed URLs from chat-media.
+The browser uses three buckets: **avatars**, **chat-media**, and **conversation-documents**. Repository SQL creates all three: avatars in the avatar-storage change, chat-media in the core chat migration, and conversation-documents in the workspace change. The source inventory confirms object policies for all three buckets; there is no missing bucket or missing chat-media policy.
 
-For isolated local tests, a test-only fixture creates the private chat-media bucket. A separate candidate fixture defines chat-media upload/read policies using the observed path and active conversation-membership helper. This candidate exists only to exercise the expected contract locally; it is not evidence of the deployed policy and must not be deployed without a separate production-source review. The local bucket fixture is included before workspace and voice SQL consumers, and the chat-media policy fixture is included before the membership dynamic policy rewrite.
+A security-hardening opportunity remains: the canonical chat-media INSERT policy checks conversation membership but does not bind the second path segment (the uploader folder in the browser's conversation-id / user-id / generated-object path) to `auth.uid()`. The app currently constructs that path correctly, but the database does not independently enforce that path ownership. A test-only replacement policy adds this check in the disposable replay before the membership rewrite. This is a candidate for local RLS testing, not an approved production change.
 
 ## RLS membership-gate source review
 
