@@ -1018,10 +1018,11 @@ async function openConversation(c){
  startMessagePolling(c.id);
 }
 
-async function loadMessageReactions(conversationId,messages){
+async function loadMessageReactions(conversationId,messages,requestId=null){
  const ids=(messages||[]).filter(m=>!m.deleted_at).map(m=>m.id);if(!ids.length)return true;
  try{
   const {data,error}=await supabaseClient.from('message_reactions').select('message_id,user_id,reaction_type').eq('conversation_id',conversationId).in('message_id',ids);
+  if(requestId!==null&&(requestId!==state.messageLoadVersion||state.active?.id!==conversationId))return false;
   if(error)throw error;
   const next=new Map(state.reactions||[]);ids.forEach(id=>next.delete(id));
   (data||[]).forEach(r=>{const list=next.get(r.message_id)||[];list.push(r);next.set(r.message_id,list)});
@@ -1215,28 +1216,72 @@ async function jumpToMessage(id){
  let row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);
  if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500);return}
  const conversationId=state.active?.id;if(!conversationId)return;
+ const requestId=++state.messageLoadVersion,initialMessageIds=new Set((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>m.id));
+ const isCurrent=()=>requestId===state.messageLoadVersion&&state.active?.id===conversationId;
+ state.isLoadingMessages=true;
  try{
-  let targetQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).eq('id',id);if(state.activeChatPreference?.cleared_before)targetQuery=targetQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data:target,error}=await targetQuery.maybeSingle();
-  if(error||!target){toast('تعذر العثور على الرسالة المثبتة');return}
-  const [beforeResult,afterResult]=await Promise.all([
-   supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).lt('created_at',target.created_at).gt('created_at',state.activeChatPreference?.cleared_before||'1970-01-01T00:00:00.000Z').order('created_at',{ascending:false}).limit(40),
-   supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).gt('created_at',target.created_at).order('created_at',{ascending:true}).limit(40)
-  ]);
+  let targetQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).eq('id',id);
+  if(state.activeChatPreference?.cleared_before)targetQuery=targetQuery.gt('created_at',state.activeChatPreference.cleared_before);
+  const {data:target,error}=await targetQuery.maybeSingle();
+  if(!isCurrent())return;
+  if(error||!target){state.isLoadingMessages=false;toast('تعذر العثور على الرسالة المطلوبة');return}
+  if(!target.created_at||!target.id)throw new Error('Target message is missing its chronological cursor');
+  const beforeFilter='created_at.lt.'+target.created_at+',and(created_at.eq.'+target.created_at+',id.lt.'+target.id+')';
+  const afterFilter='created_at.gt.'+target.created_at+',and(created_at.eq.'+target.created_at+',id.gt.'+target.id+')';
+  let beforeQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(beforeFilter).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(40);
+  let afterQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(afterFilter).order('created_at',{ascending:true}).order('id',{ascending:true}).limit(40);
+  if(state.activeChatPreference?.cleared_before)beforeQuery=beforeQuery.gt('created_at',state.activeChatPreference.cleared_before);
+  const [beforeResult,afterResult]=await Promise.all([beforeQuery,afterQuery]);
+  if(!isCurrent())return;
   if(beforeResult.error||afterResult.error)throw beforeResult.error||afterResult.error;
-  const rows=[...(beforeResult.data||[]).reverse(),target,...(afterResult.data||[])].sort((a,b)=>compareMessagesChronologically(a,b));
-  const requestId=++state.messageLoadVersion;state.isLoadingMessages=true;state.messages=rows;state.replyMessages=new Map();
+  const merged=new Map([...(beforeResult.data||[]),target,...(afterResult.data||[])].map(message=>[message.id,message]));
+  // Preserve Realtime INSERTs received while the target window was being fetched.
+  (state.messages||[]).filter(m=>m.conversation_id===conversationId&&!initialMessageIds.has(m.id)).forEach(m=>merged.set(m.id,m));
+  const rows=Array.from(merged.values()).sort(compareMessagesChronologically);
+  state.messages=rows;state.replyMessages=new Map();
   const replyIds=[...new Set(rows.map(m=>m.reply_to).filter(x=>x&&!rows.some(m=>m.id===x)))];
-  if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!parentError)(parents||[]).forEach(m=>state.replyMessages.set(m.id,m))}
-  await loadMessageReactions(conversationId,rows);await loadMessagePins(conversationId);
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return;
+  if(replyIds.length){
+   const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);
+   if(!isCurrent())return;
+   if(parentError)throw parentError;
+   (parents||[]).forEach(m=>state.replyMessages.set(m.id,m));
+  }
+  await Promise.all([
+   loadMessageReactions(conversationId,rows,requestId),
+   loadMessagePins(conversationId,requestId),
+   loadPrivateReplyContexts(conversationId,rows,requestId)
+  ]);
+  if(!isCurrent())return;
   const area=$('messages');area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
-  for(const message of rows){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){state.isLoadingMessages=false;return}await renderMessage(message,conversationId,requestId)}
+  for(const message of rows){
+   if(!isCurrent()){state.isLoadingMessages=false;return}
+   await renderMessage(message,conversationId,requestId);
+  }
+  if(!isCurrent())return;
   state.isLoadingMessages=false;
   row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);
   if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500)}
- }catch(error){state.isLoadingMessages=false;console.error('Jump to message failed:',error);toast('تعذر تحميل الرسائل المحيطة بالرسالة المطلوبة')}
+ }catch(error){
+  if(isCurrent())state.isLoadingMessages=false;
+  console.error('Jump to message failed:',error);
+  if(isCurrent())toast('تعذر تحميل الرسائل المحيطة بالرسالة المطلوبة');
+ }
 }
-async function loadMessagePins(id){const {data,error}=await supabaseClient.from('message_pins').select('id,conversation_id,message_id,pinned_by,pinned_at').eq('conversation_id',id).order('pinned_at',{ascending:false});if(error){console.warn('Pinned messages load failed',error.message);state.pinnedMessages=new Map();renderPinnedBanner();return false}state.pinnedMessages=new Map((data||[]).map(x=>[x.message_id,x]));const missing=[...state.pinnedMessages.keys()].filter(mid=>!state.messages.some(m=>m.id===mid)&&!state.replyMessages.has(mid));if(missing.length){const {data:rows,error:messageError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at,attachment_path').eq('conversation_id',id).in('id',missing);if(!messageError)(rows||[]).forEach(m=>state.replyMessages.set(m.id,m))}renderPinnedBanner();return true}
+async function loadMessagePins(id,requestId=null){
+ const isCurrent=()=>requestId===null||(requestId===state.messageLoadVersion&&state.active?.id===id);
+ const {data,error}=await supabaseClient.from('message_pins').select('id,conversation_id,message_id,pinned_by,pinned_at').eq('conversation_id',id).order('pinned_at',{ascending:false});
+ if(!isCurrent())return false;
+ if(error){console.warn('Pinned messages load failed',error.message);state.pinnedMessages=new Map();renderPinnedBanner();return false}
+ const nextPins=new Map((data||[]).map(x=>[x.message_id,x]));
+ const missing=[...nextPins.keys()].filter(mid=>!state.messages.some(m=>m.id===mid)&&!state.replyMessages.has(mid));
+ if(missing.length){
+  const {data:rows,error:messageError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at,attachment_path').eq('conversation_id',id).in('id',missing);
+  if(!isCurrent())return false;
+  if(!messageError)(rows||[]).forEach(m=>state.replyMessages.set(m.id,m));
+ }
+ if(!isCurrent())return false;
+ state.pinnedMessages=nextPins;renderPinnedBanner();return true
+}
 async function toggleMessagePin(m){if(!m?.id||!state.active?.id)return;const id=state.active.id,existing=state.pinnedMessages.get(m.id);try{if(existing){const {error}=await supabaseClient.from('message_pins').delete().eq('conversation_id',id).eq('message_id',m.id);if(error)throw error;state.pinnedMessages.delete(m.id);toast('تم إلغاء تثبيت الرسالة')}else{const {data,error}=await supabaseClient.from('message_pins').insert({conversation_id:id,message_id:m.id,pinned_by:state.user.id}).select().single();if(error)throw error;state.pinnedMessages.set(m.id,data);toast('تم تثبيت الرسالة')}renderPinnedBanner();const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===m.id);if(row)renderMessagePinMark(row,m)}catch(error){console.error('Pin action failed',error);toast('تعذر تغيير تثبيت الرسالة. تحقق من صلاحياتك')}}
 function renderMessagePinMark(row,m){row.querySelector('.message-pinned-mark')?.remove();if(!state.pinnedMessages.has(m.id)||m.deleted_at)return;const mark=document.createElement('div');mark.className='message-pinned-mark';mark.textContent='📌 رسالة مثبتة';row.querySelector('.bubble')?.prepend(mark)}
 function renderMessageStatus(m,bubble){if(m.sender_id!==state.user?.id||m.deleted_at)return;const others=(state.active?.members||[]).filter(x=>x.user_id!==state.user.id),delivered=others.filter(x=>x.last_delivered_at&&new Date(x.last_delivered_at)>=new Date(m.created_at)).length,read=others.filter(x=>x.last_read_at&&new Date(x.last_read_at)>=new Date(m.created_at)).length,status=document.createElement('span');status.className='message-status';if(others.length===1){if(read){status.classList.add('read');status.innerHTML='<span class="ticks">✓✓</span><span>مقروءة</span>'}else if(delivered){status.classList.add('delivered');status.innerHTML='<span class="ticks">✓✓</span><span>تم التسليم</span>'}else status.innerHTML='<span class="ticks">✓</span><span>تم الإرسال</span>'}else if(others.length>1){if(read){status.classList.add('read','group-status');status.textContent='قُرئت '+read+'/'+others.length}else if(delivered){status.classList.add('delivered','group-status');status.textContent='وصلت '+delivered+'/'+others.length}else status.textContent='تم الإرسال'}else status.innerHTML='<span class="ticks">✓</span><span>تم الإرسال</span>';bubble.append(status)}
@@ -2403,7 +2448,15 @@ async function savePrivateConversationNote(){const c=state.active,note=$('worksp
 async function loadConversationDocuments(id){const {data,error}=await supabaseClient.from('conversation_documents').select('id,owner_id,storage_path,file_name,size_bytes,visibility').eq('conversation_id',id).order('created_at',{ascending:false}).limit(100);if(error)return toast('تعذر تحميل المستندات');const box=$('workspaceDocumentsList');box.replaceChildren();for(const d of data||[]){const row=document.createElement('div'),name=document.createElement('span'),open=document.createElement('button');name.textContent=d.file_name+' · '+(d.visibility==='private'?'خاص':'مشترك');open.textContent='فتح';open.onclick=async()=>{const {data:s,error}=await supabaseClient.storage.from('conversation-documents').createSignedUrl(d.storage_path,300);if(error)return toast('تعذر فتح المستند');window.open(s.signedUrl,'_blank','noopener')};row.append(name,open);if(d.owner_id===state.user.id){const toggle=document.createElement('button');toggle.textContent=d.visibility==='private'?'مشاركة':'إلغاء المشاركة';toggle.onclick=async()=>{const v=d.visibility==='private'?'shared':'private';const {error}=await supabaseClient.from('conversation_documents').update({visibility:v,shared_at:v==='shared'?new Date().toISOString():null}).eq('id',d.id).eq('owner_id',state.user.id);if(error)return toast('تعذر تغيير المشاركة');loadConversationDocuments(id)};const del=document.createElement('button');del.textContent='حذف';del.onclick=async()=>{if(!confirm('حذف المستند؟'))return;const {error:fileError}=await supabaseClient.storage.from('conversation-documents').remove([d.storage_path]);if(fileError)return toast('تعذر حذف الملف من التخزين؛ لم نحذف سجله');const {error}=await supabaseClient.from('conversation_documents').delete().eq('id',d.id).eq('owner_id',state.user.id);if(error)return toast('حُذف الملف لكن تعذر حذف سجله؛ أعد المحاولة');loadConversationDocuments(id)};row.append(toggle,del)}box.append(row)}}
 async function uploadConversationDocument(){const c=state.active,file=$('workspaceDocumentFile').files?.[0];if(!file)return toast('اختر ملفاً');if(!['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)||file.size>25*1024*1024)return toast('ملف غير مدعوم أو أكبر من 25 ميجابايت');const path=c.id+'/'+state.user.id+'/'+crypto.randomUUID()+'-'+file.name.replace(/[^\\p{L}\\p{N}._-]/gu,'_').slice(0,120),visibility=$('workspaceDocumentVisibility').value,button=$('workspaceUploadDocument');button.disabled=true;try{const {error:up}=await supabaseClient.storage.from('conversation-documents').upload(path,file,{contentType:file.type});if(up)throw up;const {error}=await supabaseClient.from('conversation_documents').insert({owner_id:state.user.id,conversation_id:c.id,storage_path:path,file_name:file.name.slice(0,240),mime_type:file.type,size_bytes:file.size,visibility,shared_at:visibility==='shared'?new Date().toISOString():null});if(error){await supabaseClient.storage.from('conversation-documents').remove([path]);throw error}$('workspaceDocumentFile').value='';await loadConversationDocuments(c.id);toast(visibility==='shared'?'تمت المشاركة':'تم الحفظ في المستودع الخاص')}catch(e){console.error(e);toast('تعذر رفع المستند')}finally{button.disabled=false}}
 async function replyPrivatelyToGroupMessage(m){const c=state.active,profile=(c?.members||[]).find(x=>x.user_id===m.sender_id)?.profile;if(c?.type!=='group'||!profile?.id||m.sender_id===state.user.id)return toast('تعذر فتح الرد الخاص');state.privateReplyPending={sourceConversationId:c.id,sourceMessageId:m.id,quotedContent:messagePreview(m).slice(0,1200),quotedSenderId:m.sender_id};await openDirectConversation(profile);if(state.active?.type==='direct'){renderComposerContext();$('messageInput').focus();toast('هذا الرد خاص ولن يظهر في المجموعة')}else{state.privateReplyPending=null;renderComposerContext()}}
-async function loadPrivateReplyContexts(id,messages){state.privateReplyContexts=new Map();if(state.active?.type!=='direct'||!messages.length)return;const {data,error}=await supabaseClient.from('private_reply_contexts').select('direct_message_id,quoted_content').in('direct_message_id',messages.map(m=>m.id));if(error){console.warn(error);return}(data||[]).forEach(x=>state.privateReplyContexts.set(x.direct_message_id,x))}
+async function loadPrivateReplyContexts(id,messages,requestId=null){
+ const isCurrent=()=>state.active?.id===id&&(requestId===null||requestId===state.messageLoadVersion);
+ if(!isCurrent())return false;
+ if(state.active?.type!=='direct'||!messages.length){state.privateReplyContexts=new Map();return true}
+ const {data,error}=await supabaseClient.from('private_reply_contexts').select('direct_message_id,quoted_content').in('direct_message_id',messages.map(m=>m.id));
+ if(!isCurrent())return false;
+ if(error){console.warn(error);return false}
+ state.privateReplyContexts=new Map((data||[]).map(x=>[x.direct_message_id,x]));return true
+}
 function renderPrivateReplyQuote(messageId,context){const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId),bubble=row?.querySelector('.bubble');if(!bubble||bubble.querySelector('.private-reply-quote'))return;const quote=document.createElement('div'),who=document.createElement('strong'),preview=document.createElement('span');quote.className='reply-quote private-reply-quote';who.textContent='رد خاص من مجموعة';preview.textContent=context?.quoted_content||'رسالة مقتبسة';quote.append(who,preview);const meta=bubble.querySelector('.meta');if(meta)bubble.insertBefore(quote,meta);else bubble.append(quote)}
 
 </script>
