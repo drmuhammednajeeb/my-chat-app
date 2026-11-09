@@ -57,6 +57,46 @@ jobs:
             console.log('SQL_EXECUTION_AUTHORIZED=false');
             if (report.auditMode !== 'READ_ONLY_SOURCE_INVENTORY') process.exit(1);
           "
+      - name: Publish full source inventory in job summary
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/database-object-inventory.json', 'utf8'));
+          const lines = [
+            '# Database object inventory',
+            '',
+            'Read-only source inventory only. This is not a live PostgreSQL catalog and no SQL was executed.',
+            '',
+            'Files: ' + report.sourceCounts.totalSqlFiles +
+              ' | Tables: ' + report.inventoryTotals.createdTables +
+              ' | Columns: ' + report.inventoryTotals.columns +
+              ' | Foreign keys: ' + report.inventoryTotals.foreignKeys +
+              ' | Functions: ' + report.inventoryTotals.functionDefinitions +
+              ' | Indexes: ' + report.inventoryTotals.indexes +
+              ' | Triggers: ' + report.inventoryTotals.triggers +
+              ' | Policies: ' + report.inventoryTotals.policies +
+              ' | Grants/revokes: ' + report.inventoryTotals.grantStatements,
+            ''
+          ];
+          for (const file of report.files) {
+            lines.push('## ' + file.path);
+            lines.push('- SHA256: ' + file.sha256);
+            lines.push('- Tables created: ' + (file.createdTables.join(', ') || 'none'));
+            lines.push('- Table columns: ' + (file.tableDetails.map(t => t.name + ': ' + t.columns.map(c => c.name).join(', ')).join('; ') || 'none'));
+            lines.push('- Foreign keys: ' + (file.foreignKeys.map(fk => fk.source + '(' + fk.columns.join(',') + ') -> ' + fk.target + '(' + fk.targetColumns.join(',') + ')').join('; ') || 'none'));
+            lines.push('- Altered tables: ' + (file.alteredTables.join(', ') || 'none'));
+            lines.push('- Functions: ' + (file.functions.map(fn => fn.name + '(' + fn.signature + ')').join('; ') || 'none'));
+            lines.push('- Sequences: ' + (file.sequences.join(', ') || 'none'));
+            lines.push('- Indexes: ' + (file.indexes.map(index => index.name + ' ON ' + index.table).join('; ') || 'none'));
+            lines.push('- Triggers: ' + (file.triggers.map(trigger => trigger.name + ' ON ' + trigger.table).join('; ') || 'none'));
+            lines.push('- Policies: ' + (file.policies.map(policy => policy.name + ' ON ' + policy.table).join('; ') || 'none'));
+            lines.push('- Constraints: ' + (file.constraints.join(', ') || 'none'));
+            lines.push('- GRANT/REVOKE: ' + (file.grants.map(grant => grant.action + ' ' + grant.privileges + ' ON ' + grant.object + ' ' + grant.direction + ' ' + grant.roles).join('; ') || 'none'));
+            lines.push('- Referenced relations: ' + (file.relationsReferenced.join(', ') || 'none'));
+            lines.push('');
+          }
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          NODE
       - name: Run original SQL manifest audit
         run: |
           node tests/staging/local-supabase/audit-sql-manifest.mjs > "$RUNNER_TEMP/sql-audit-report.json"
