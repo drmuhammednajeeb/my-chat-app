@@ -142,7 +142,7 @@ export async function buildObjectInventory(root = ROOT) {
     },
     platformDependencies,
     legacyMessages: {
-      referencedByMigrations: files.filter(f => f.kind === 'migration' && f.relationsReferenced.includes('public.messages')).map(f => f.path),
+      referencedByMigrations: files.filter(f => f.kind === 'migration' && /\\bpublic\\s*\\.\\s*messages\\b/i.test(stripComments(f.sql))).map(f => f.path),
       tableDefinitionFoundInRepositorySql: files.some(f => f.createdTables.includes('public.messages')),
       currentClientUsesLegacyMessagesTable: /\.from\(\s*['"]messages['"]\s*\)/i.test(appHtml)
     },
@@ -152,7 +152,7 @@ export async function buildObjectInventory(root = ROOT) {
       officialInviteSourceStillContains971001PlusSixDigits: officialInviteStillLegacy,
       finalMigrationFunctionTargets: finalTargets,
       finalMigrationAlsoUpdatesOfficialInviteAndAdminSetImplementations: finalCoversInviteImplementations,
-      status: frontendRequires971Nine && officialInviteStillLegacy && !finalCoversInviteImplementations ? 'BLOCKED_FORMAT_CONFLICT' : 'REVIEW_REQUIRED'
+      status: frontendRequires971Nine && officialInviteStillLegacy && finalCoversInviteImplementations && finalTargets.length === 6 ? 'SEQUENCED_FORMAT_TRANSITION' : 'REVIEW_REQUIRED'
     },
     duplicateGroups,
     syntaxHazards: files.flatMap(f => f.syntaxHazards.map(item => ({ path: f.path, ...item }))),
