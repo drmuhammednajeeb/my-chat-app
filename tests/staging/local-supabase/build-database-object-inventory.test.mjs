@@ -55,3 +55,12 @@ test('all policy definitions after the membership rewrite enforce active members
   assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 3);
   assert.deepEqual(report.policyCoverage.laterPoliciesMissingActiveMemberGuard, []);
 });
+
+
+test('fixed identity literals are inventoried for synthetic test substitution', async () => {
+  const report = await buildObjectInventory();
+  assert.ok(report.hardcodedIdentityReview.emailLiteralFiles.includes('database/changes/team_management_dashboard.sql'));
+  assert.ok(report.hardcodedIdentityReview.uuidLiteralFiles.includes('database/changes/20261107144109_private_membership_system_20261107.sql'));
+  assert.ok(report.hardcodedIdentityReview.membershipNumberLiteralFiles.includes('database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql'));
+  assert.ok(report.hardcodedIdentityReview.membershipNumberLiteralFiles.includes('database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql'));
+});
