@@ -89,6 +89,13 @@ Key dependency chains:
 
 The three duplicate pairs are recorded with one proposed canonical test source each. This is provenance only; no source is deleted or changed.
 
+
+## Synthetic team-admin and membership fixtures
+
+The historical team-admin seed and official-membership verification SQL contain fixed production identity assumptions. The disposable test plan now uses a reserved **admin@bizmindmakers.test** Auth identity and synthetic member number **971001000001**. The Auth row is seeded after the core schema but before the team-admin seed; the profile row is inserted after the membership base installs its profile guard. Test-only SQL copies substitute only the declared email/member-number literals, and the syntax-only copy adds only the missing semicolon. Each copy is checked byte-for-byte against its canonical source plus the declared replacement, with SHA-256 recorded by CI. Canonical SQL remains unchanged.
+
+The DAG sequences the membership policy rewrite after every pre-membership policy source. The graph test checks that each such source has a dependency path into the membership rewrite node, preventing a future file from silently bypassing the dynamic RLS hardening step.
+
 ## Next safe steps
 
 1. Recover the authoritative direct-conversation RPC source and verify whether it exists in the intended schema without changing it.
