@@ -60,8 +60,7 @@
       "source": [
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
         "supabase/migrations/202611060006_explicit_legacy_deny.sql",
-        "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
-        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+        "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql"
       ],
       "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
       "note": "Current client uses chat_messages and the two migrations only perform table-level policy/privilege operations. A minimal empty stub is permitted only in the disposable local replay fixture; it is not a model of the deployed legacy table."
@@ -494,7 +493,6 @@
       "id": "membership.syntax-fix",
       "source": [
         "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
-        "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
         "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ],
       "status": "TEST_COPY_ONLY",
