@@ -40,6 +40,11 @@ No Supabase schema, migration, RLS policy, RPC, Storage policy, or production se
 - The watermark is captured before the query and advanced only after a successful pass; changes made during the query remain eligible for the next pass.
 - Stable ID ordering handles multiple messages with identical created_at values.
 
+### Browser regression finding: normal send draft retention
+
+- Chromium integration tests exposed a real composer-state bug: when no reply target existed, `state.replyTarget?.id` evaluated to `undefined` while the captured `replyTo` was `null`. The strict comparison prevented the successfully sent draft from clearing.
+- The comparison now normalizes the absent reply target to `null` before comparing. This preserves the intended guard against clearing a different reply draft while allowing ordinary non-reply sends to clear correctly.
+
 ### Send and edit retry safety
 
 - New messages receive a client-generated UUID before persistence. The existing schema defines chat_messages.id as a UUID primary key with a generated default, so supplying a UUID uses the existing key and requires no migration.
