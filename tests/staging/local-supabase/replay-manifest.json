@@ -531,11 +531,6 @@
       "issue": "Verify local pg_cron availability and job behavior before inclusion."
     },
     {
-      "id": "DAG-009",
-      "severity": "REVIEW_REQUIRED_IDENTITY_AUDIT",
-      "issue": "The known fixed email and membership-number statements have synthetic test-only copies. A final repository-wide scan of hard-coded identity literals is still required before replay."
-    },
-    {
       "id": "DAG-010",
       "severity": "REVIEW_REQUIRED",
       "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
