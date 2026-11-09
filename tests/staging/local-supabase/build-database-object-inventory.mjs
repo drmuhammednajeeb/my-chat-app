@@ -142,7 +142,7 @@ export async function buildObjectInventory(root = ROOT) {
     },
     platformDependencies,
     legacyMessages: {
-      referencedByMigrations: files.filter(f => f.kind === 'migration' && /\\bpublic\\s*\\.\\s*messages\\b/i.test(stripComments(f.sql))).map(f => f.path),
+      referencedByMigrations: files.filter(f => f.kind === 'migration' && /\bpublic\s*\.\s*messages\b/i.test(stripComments(f.sql))).map(f => f.path),
       tableDefinitionFoundInRepositorySql: files.some(f => f.createdTables.includes('public.messages')),
       currentClientUsesLegacyMessagesTable: /\.from\(\s*['"]messages['"]\s*\)/i.test(appHtml)
     },
