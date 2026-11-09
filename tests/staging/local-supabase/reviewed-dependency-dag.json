@@ -1384,7 +1384,8 @@
         "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
         "index.html"
       ],
-      "issue": "app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation RPC are not defined in reviewed SQL sources."
+      "issue": "app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation RPC are not defined in reviewed SQL sources.",
+      "recoveryInstructions": "docs/RECOVER_DIRECT_CONVERSATION_RPC.md"
     },
     {
       "id": "DAG-003",
