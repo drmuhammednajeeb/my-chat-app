@@ -1,0 +1,579 @@
+{
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "executionAuthorized": false,
+  "scope": "Repository-source dependency graph; not a live catalog and not an executable SQL order.",
+  "sourceSets": {
+    "cliMigrations": {
+      "path": "supabase/migrations",
+      "count": 10
+    },
+    "historicalChanges": {
+      "path": "database/changes",
+      "count": 43,
+      "note": "Not a canonical Supabase CLI sequence."
+    }
+  },
+  "platformNodes": [
+    {
+      "id": "platform.auth",
+      "provides": [
+        "auth.users",
+        "auth.uid()",
+        "authenticated",
+        "anon"
+      ]
+    },
+    {
+      "id": "platform.storage",
+      "provides": [
+        "storage.buckets",
+        "storage.objects",
+        "storage.foldername(text)"
+      ]
+    },
+    {
+      "id": "platform.realtime",
+      "provides": [
+        "publication supabase_realtime"
+      ]
+    },
+    {
+      "id": "platform.pgcrypto",
+      "provides": [
+        "extensions.digest",
+        "extensions.gen_random_bytes"
+      ]
+    },
+    {
+      "id": "platform.pg_cron",
+      "provides": [
+        "cron.job",
+        "cron.schedule",
+        "cron.unschedule"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "legacy.messages",
+      "source": [
+        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
+        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+      ],
+      "status": "UNRESOLVED",
+      "note": "Referenced but not created by repository SQL; current browser code uses chat_messages."
+    },
+    {
+      "id": "core.base",
+      "source": [
+        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+      ],
+      "provides": [
+        "profiles",
+        "conversations",
+        "conversation_members",
+        "chat_messages",
+        "app_private.is_conversation_member",
+        "app_private.can_manage_conversation"
+      ],
+      "requires": [
+        "platform.auth",
+        "platform.storage",
+        "platform.realtime",
+        "legacy.messages"
+      ]
+    },
+    {
+      "id": "core.grants",
+      "source": [
+        "supabase/migrations/202611060002_tighten_api_grants.sql",
+        "supabase/migrations/202611060003_minimum_table_privileges.sql"
+      ],
+      "requires": [
+        "core.base"
+      ]
+    },
+    {
+      "id": "core.creator",
+      "source": [
+        "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
+      ],
+      "provides": [
+        "app_private.is_conversation_creator(uuid)"
+      ],
+      "requires": [
+        "core.base"
+      ]
+    },
+    {
+      "id": "team.admin",
+      "source": [
+        "database/changes/team_management_dashboard.sql"
+      ],
+      "provides": [
+        "app_private.team_admins",
+        "app_private.is_team_admin()",
+        "app_private.enforce_group_member_limit()"
+      ],
+      "requires": [
+        "core.base",
+        "platform.auth"
+      ]
+    },
+    {
+      "id": "chat.preferences",
+      "source": [
+        "database/changes/user_specific_direct_chat_preferences.sql"
+      ],
+      "provides": [
+        "user_chat_preferences"
+      ],
+      "requires": [
+        "core.base"
+      ]
+    },
+    {
+      "id": "chat.pins",
+      "source": [
+        "database/changes/professional_message_controls_and_receipts.sql"
+      ],
+      "provides": [
+        "message_pins",
+        "conversation_members.last_delivered_at"
+      ],
+      "requires": [
+        "core.base",
+        "team.admin"
+      ]
+    },
+    {
+      "id": "chat.reactions",
+      "source": [
+        "database/changes/message_reactions_and_whatsapp_typography.sql"
+      ],
+      "provides": [
+        "message_reactions"
+      ],
+      "requires": [
+        "core.base",
+        "platform.realtime"
+      ]
+    },
+    {
+      "id": "chat.groups",
+      "source": [
+        "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
+      ],
+      "provides": [
+        "conversation_group_settings",
+        "conversation_member_events",
+        "user_message_stars",
+        "user_conversation_settings",
+        "chat_lists",
+        "chat_list_items"
+      ],
+      "requires": [
+        "core.base",
+        "chat.preferences",
+        "team.admin"
+      ]
+    },
+    {
+      "id": "chat.channels-public",
+      "source": [
+        "database/changes/public_announcement_channels.sql"
+      ],
+      "provides": [
+        "channel conversation type",
+        "description",
+        "is_public"
+      ],
+      "requires": [
+        "core.base",
+        "core.creator"
+      ]
+    },
+    {
+      "id": "chat.channels-private",
+      "source": [
+        "database/changes/private_channels_with_secure_invites.sql"
+      ],
+      "provides": [
+        "channel_invites",
+        "create_private_channel",
+        "create_channel_invite",
+        "join_channel_by_invite"
+      ],
+      "requires": [
+        "chat.channels-public",
+        "team.admin",
+        "platform.pgcrypto"
+      ]
+    },
+    {
+      "id": "chat.hardening",
+      "source": [
+        "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
+      ],
+      "requires": [
+        "chat.pins",
+        "chat.reactions",
+        "team.admin",
+        "UNRESOLVED:get_or_create_direct_conversation_impl(uuid)"
+      ]
+    },
+    {
+      "id": "chat.self",
+      "source": [
+        "database/changes/20261107061012_self_message_conversation.sql",
+        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
+      ],
+      "requires": [
+        "core.base",
+        "conversations.description"
+      ]
+    },
+    {
+      "id": "chat.notifications",
+      "source": [
+        "supabase/migrations/20261107014128_unified_user_notifications.sql"
+      ],
+      "provides": [
+        "user_notifications",
+        "notification triggers"
+      ],
+      "requires": [
+        "core.base",
+        "platform.realtime"
+      ]
+    },
+    {
+      "id": "chat.notification-indexes",
+      "source": [
+        "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql"
+      ],
+      "requires": [
+        "chat.notifications"
+      ]
+    },
+    {
+      "id": "chat.workspaces",
+      "source": [
+        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+      ],
+      "provides": [
+        "workspace tables"
+      ],
+      "requires": [
+        "core.base",
+        "chat.groups",
+        "platform.storage",
+        "platform.pgcrypto"
+      ]
+    },
+    {
+      "id": "chat.expiry",
+      "source": [
+        "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
+      ],
+      "requires": [
+        "chat.groups",
+        "platform.realtime"
+      ]
+    },
+    {
+      "id": "chat.expiry-purge",
+      "source": [
+        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+      ],
+      "requires": [
+        "chat.expiry",
+        "platform.pg_cron"
+      ]
+    },
+    {
+      "id": "membership.base",
+      "source": [
+        "database/changes/20261107144109_private_membership_system_20261107.sql"
+      ],
+      "provides": [
+        "member_invitations",
+        "membership_number_seq",
+        "auth signup triggers"
+      ],
+      "requires": [
+        "core.base",
+        "team.admin",
+        "platform.auth"
+      ]
+    },
+    {
+      "id": "membership.official",
+      "source": [
+        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql"
+      ],
+      "requires": [
+        "membership.base"
+      ]
+    },
+    {
+      "id": "membership.final-format",
+      "source": [
+        "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql"
+      ],
+      "status": "BLOCKED_FORMAT_CONFLICT",
+      "requires": [
+        "membership.official"
+      ]
+    }
+  ],
+  "explicitEdges": [
+    [
+      "platform.auth",
+      "core.base"
+    ],
+    [
+      "platform.storage",
+      "core.base"
+    ],
+    [
+      "platform.realtime",
+      "core.base"
+    ],
+    [
+      "legacy.messages",
+      "core.base"
+    ],
+    [
+      "core.base",
+      "core.grants"
+    ],
+    [
+      "core.base",
+      "core.creator"
+    ],
+    [
+      "core.base",
+      "team.admin"
+    ],
+    [
+      "core.base",
+      "chat.preferences"
+    ],
+    [
+      "team.admin",
+      "chat.pins"
+    ],
+    [
+      "core.base",
+      "chat.pins"
+    ],
+    [
+      "core.base",
+      "chat.reactions"
+    ],
+    [
+      "chat.preferences",
+      "chat.groups"
+    ],
+    [
+      "team.admin",
+      "chat.groups"
+    ],
+    [
+      "core.base",
+      "chat.groups"
+    ],
+    [
+      "core.creator",
+      "chat.channels-public"
+    ],
+    [
+      "chat.channels-public",
+      "chat.channels-private"
+    ],
+    [
+      "team.admin",
+      "chat.channels-private"
+    ],
+    [
+      "platform.pgcrypto",
+      "chat.channels-private"
+    ],
+    [
+      "chat.pins",
+      "chat.hardening"
+    ],
+    [
+      "chat.reactions",
+      "chat.hardening"
+    ],
+    [
+      "team.admin",
+      "chat.hardening"
+    ],
+    [
+      "chat.notifications",
+      "chat.notification-indexes"
+    ],
+    [
+      "chat.groups",
+      "chat.workspaces"
+    ],
+    [
+      "platform.storage",
+      "chat.workspaces"
+    ],
+    [
+      "platform.pgcrypto",
+      "chat.workspaces"
+    ],
+    [
+      "chat.groups",
+      "chat.expiry"
+    ],
+    [
+      "chat.expiry",
+      "chat.expiry-purge"
+    ],
+    [
+      "platform.pg_cron",
+      "chat.expiry-purge"
+    ],
+    [
+      "core.base",
+      "membership.base"
+    ],
+    [
+      "team.admin",
+      "membership.base"
+    ],
+    [
+      "membership.base",
+      "membership.official"
+    ],
+    [
+      "membership.official",
+      "membership.final-format"
+    ]
+  ],
+  "blockers": [
+    {
+      "id": "DAG-001",
+      "severity": "BLOCKER",
+      "evidence": [
+        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
+        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+      ],
+      "issue": "public.messages is referenced but not created by repository SQL; current client uses public.chat_messages. Decide test-only compatibility treatment."
+    },
+    {
+      "id": "DAG-002",
+      "severity": "BLOCKER",
+      "evidence": [
+        "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
+        "index.html"
+      ],
+      "issue": "app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation RPC are not defined in reviewed SQL sources."
+    },
+    {
+      "id": "DAG-003",
+      "severity": "BLOCKER",
+      "evidence": [
+        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+        "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
+        "membership.js",
+        "index.html"
+      ],
+      "issue": "Client and final migration expect 971 + nine digits, while two official membership admin implementations retain 971001 + six digits; final migration allowlist omits them."
+    },
+    {
+      "id": "DAG-004",
+      "severity": "BLOCKER",
+      "evidence": [
+        "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+      ],
+      "issue": "Function terminator lacks semicolon before REVOKE/GRANT; correction only in test-only copy."
+    },
+    {
+      "id": "DAG-005",
+      "severity": "BLOCKER",
+      "evidence": [
+        "database/changes/20261107144109_private_membership_system_20261107.sql",
+        "database/changes/team_management_dashboard.sql"
+      ],
+      "issue": "Membership system depends on app_private.team_admins and is_team_admin; establish team-admin schema first."
+    },
+    {
+      "id": "DAG-006",
+      "severity": "REVIEW_REQUIRED",
+      "evidence": [
+        "database/changes/20261107144109_private_membership_system_20261107.sql"
+      ],
+      "issue": "Dynamic rewrite only affects authenticated policies present at execution time; later policies need active-member enforcement review."
+    },
+    {
+      "id": "DAG-007",
+      "severity": "REVIEW_REQUIRED",
+      "evidence": [
+        "database/changes/private_channels_with_secure_invites.sql",
+        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+      ],
+      "issue": "Verify pgcrypto extension schema and extensions.digest / extensions.gen_random_bytes resolution locally."
+    },
+    {
+      "id": "DAG-008",
+      "severity": "REVIEW_REQUIRED",
+      "evidence": [
+        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+      ],
+      "issue": "Verify local pg_cron availability and job behavior before inclusion."
+    },
+    {
+      "id": "DAG-009",
+      "severity": "REVIEW_REQUIRED",
+      "evidence": [
+        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+        "database/changes/team_management_dashboard.sql"
+      ],
+      "issue": "Historical SQL contains fixed identity/email assumptions; use synthetic fixtures only."
+    },
+    {
+      "id": "DAG-010",
+      "severity": "REVIEW_REQUIRED",
+      "evidence": [
+        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+      ],
+      "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
+    }
+  ],
+  "duplicateProvenance": [
+    {
+      "logicalChange": "chat privilege hardening",
+      "canonicalTestSource": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
+      "duplicate": "database/changes/chat_table_privilege_hardening.sql",
+      "sha256": "e164e04680c5c0a768bfbd39f4387e0d038a9749"
+    },
+    {
+      "logicalChange": "unified notifications",
+      "canonicalTestSource": "supabase/migrations/20261107014128_unified_user_notifications.sql",
+      "duplicate": "database/changes/unified_notifications.sql",
+      "sha256": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e"
+    },
+    {
+      "logicalChange": "notification indexes",
+      "canonicalTestSource": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
+      "duplicate": "database/changes/index_user_notification_foreign_keys.sql",
+      "sha256": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7"
+    }
+  ],
+  "safety": {
+    "sqlExecutionEnabled": false,
+    "supabaseStartupAuthorized": false,
+    "cloudConnectionsAllowed": false,
+    "productionDataAllowed": false,
+    "canonicalSqlMutationAllowed": false,
+    "costBearingResourcesAllowed": false
+  }
+}
