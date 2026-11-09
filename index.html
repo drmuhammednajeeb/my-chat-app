@@ -282,7 +282,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
@@ -996,7 +996,7 @@ async function openConversation(c){
  const conversationOpenStarted=performance.now();
  if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};applyDirectChatTheme();state.messages=[];state.newMessageCount=0;updateNewMessagesIndicator();$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();diagLog('conversation-open',{id:c.id,openToken});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);
+ state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};applyDirectChatTheme();state.messages=[];state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.newMessageCount=0;updateNewMessagesIndicator();$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();diagLog('conversation-open',{id:c.id,openToken});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);
  if(c.type==='group'){
   await loadGroupSettings(c.id);
   if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
@@ -1384,13 +1384,14 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
 }
 async function loadMessages(){
  const conversationId=state.active?.id;if(!conversationId)return false;
- const messageLoadStarted=performance.now();const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
+ const messageLoadStarted=performance.now(),syncStartedAt=new Date(Date.now()-60000).toISOString();const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
  area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
  try{
   const messageFetchStarted=performance.now();let messageQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)messageQuery=messageQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await messageQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(50);
   recordPerf('message_fetch',performance.now()-messageFetchStarted,{success:!error,rows:data?.length||0});if(error)throw error;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   state.hasMoreMessages=(data||[]).length===50;
+  state.messagePollLastCheckedAt=syncStartedAt;state.messagePollCursor=(data||[])[0]?{conversationId,created_at:data[0].created_at,id:data[0].id}:null;
   state.diagnostics.lastFetchAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastFetchCount=(data||[]).length;state.diagnostics.lastFetchError=null;diagLog('fetch-success',{count:(data||[]).length,requestId});
   // Merge fetched rows with Realtime INSERTs received while this request was in flight.
   const merged=new Map((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>[m.id,m]));
@@ -1489,27 +1490,53 @@ function startMessagePolling(conversationId){
 }
 async function pollMessagesFallback(conversationId,generation=state.messagePollGeneration){
  if(state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
- const messageRequestId=state.messageLoadVersion;
+ const messageRequestId=state.messageLoadVersion,pollStartedAt=state.messagePollLastCheckedAt||new Date(Date.now()-60000).toISOString();
+ const cursor=state.messagePollCursor?.conversationId===conversationId?state.messagePollCursor:null;
  state.messagePollBusy=true;state.diagnostics.lastPollAt=new Date().toLocaleTimeString('en-GB');
  try{
-  let pollQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)pollQuery=pollQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await pollQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(100);
+  const syncFilter=cursor
+   ?'created_at.gt.'+cursor.created_at+',and(created_at.eq.'+cursor.created_at+',id.gt.'+cursor.id+'),edited_at.gt.'+pollStartedAt+',deleted_at.gt.'+pollStartedAt
+   :'created_at.gt.'+pollStartedAt+',edited_at.gt.'+pollStartedAt+',deleted_at.gt.'+pollStartedAt;
+  let pollQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(syncFilter);
+  if(state.activeChatPreference?.cleared_before)pollQuery=pollQuery.gt('created_at',state.activeChatPreference.cleared_before);
+  const {data,error}=await pollQuery.order('created_at',{ascending:true}).order('id',{ascending:true}).limit(200);
   if(error)throw error;
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
   const current=new Map((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>[m.id,m]));
-  const fetched=(data||[]).slice().reverse();let added=0;
+  let nextCursor=cursor?{...cursor}:null,added=0,needsRetry=false;
+  const fetched=(data||[]).slice().sort((a,b)=>compareMessagesChronologically(a,b));
   for(const message of fetched){
-   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId)break;
-   if(!state.messageIds.has(message.id)&&!state.renderingMessageIds.has(message.id)){
+   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
+   const existing=current.get(message.id);
+   if(existing){
+    const changed=existing.content!==message.content||existing.edited_at!==message.edited_at||existing.deleted_at!==message.deleted_at||existing.attachment_path!==message.attachment_path||existing.attachment_type!==message.attachment_type;
+    current.set(message.id,message);
+    if(changed){handleMessageUpdateRealtime({new:message},conversationId);if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return}
+    if(!state.messageIds.has(message.id)){
+     const rendered=await renderMessage(message,conversationId,messageRequestId);
+     if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
+     if(!rendered){needsRetry=true;break}
+     added++;
+    }
+   }else{
     const rendered=await renderMessage(message,conversationId,messageRequestId);
     if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
-    if(rendered){current.set(message.id,message);added++}
+    if(!rendered){needsRetry=true;break}
+    current.set(message.id,message);added++;
    }
+   if(!nextCursor||compareMessagesChronologically(message,nextCursor)>0)nextCursor={conversationId,created_at:message.created_at,id:message.id};
   }
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
   state.messages=Array.from(current.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
+  if(nextCursor)state.messagePollCursor=nextCursor;
   if(added)await markConversationReceipt(conversationId,document.visibilityState==='visible'&&isMessagesNearBottom(),messageRequestId);
-  const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole),groupReadOnly=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole);if($('messageInput').disabled&&!channelReadOnly&&!groupReadOnly){$('messageInput').disabled=false;diagLog('composer-reenabled-by-poll')}
-  resizeComposer();diagLog('poll-success',{fetched:fetched.length,added,rendered:$('messages').querySelectorAll('.message').length});
+  if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
+  if(!needsRetry)state.messagePollLastCheckedAt=pollStartedAt;
+  const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;
+  const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole);
+  const groupReadOnly=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole);
+  if($('messageInput').disabled&&!channelReadOnly&&!groupReadOnly){$('messageInput').disabled=false;diagLog('composer-reenabled-by-poll')}
+  resizeComposer();diagLog('poll-success',{fetched:fetched.length,added,rendered:$('messages').querySelectorAll('.message').length,needsRetry});
  }catch(error){diagLog('poll-error',{error:String(error?.message||error)});console.warn('Fallback message sync failed:',error)}
  finally{
   if(generation===state.messagePollGeneration){
