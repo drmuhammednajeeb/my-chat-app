@@ -168,6 +168,9 @@ function inspect(file) {
   const storageBucketIds = matches(sql, /\binsert\s+into\s+storage\.buckets[\s\S]{0,300}?\bvalues\s*\(\s*'([^']+)'/gi, m => m[1]);
   const publicationTables = matches(sql, /\balter\s+publication\s+supabase_realtime\s+add\s+table\s+((?:public|app_private)\.[a-z_]\w*)/gi, m => m[1].toLowerCase());
   const legacyMessagesReferences = matches(sql, /\bpublic\s*\.\s*messages\b/gi, m => m[0].replace(/\s+/g, ''));
+  const hardcodedEmails = matches(sql, /'([^']+@[^']+)'/gi, m => m[1]);
+  const hardcodedUuids = matches(sql, /'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'/gi, m => m[1].toLowerCase());
+  const hardcodedMembershipNumbers = matches(sql, /'(971[0-9]{9})'/gi, m => m[1]);
   const cronUsage = /\b(?:cron\.schedule|cron\.unschedule|create\s+extension\s+(?:if\s+not\s+exists\s+)?pg_cron)\b/i.test(sql);
   const grants = matches(sql, /\b(grant|revoke)\s+([^;]+?)\s+on\s+(?:table\s+)?((?:public|app_private|auth|storage|cron|extensions)\.[a-z_]\w*)\s+(to|from)\s+([^;]+);/gi, m => ({ action: m[1].toUpperCase(), privileges: m[2].replace(/\s+/g, ' ').trim(), object: m[3].toLowerCase(), direction: m[4].toUpperCase(), roles: m[5].replace(/\s+/g, ' ').trim() }));
   const syntaxHazards = matches(sql, /\$(?:function|body)?\$\s*\r?\n\s*(?:revoke|grant|create|alter|drop)\b/gi, m => ({ line: sql.slice(0, m.index).split('\n').length }));
@@ -177,7 +180,7 @@ function inspect(file) {
     createdTables: [...new Set(createdTables)].sort(), tableDetails: tableDetails.tables, foreignKeys: tableDetails.foreignKeys, alteredTables: [...new Set(alteredTables)].sort(), sourceTimestamp,
     functions, sequences: [...new Set(sequences)].sort(), indexes, triggers, policies, policyDetails,
     constraints: [...new Set(constraints)].sort(), grants, relationsReferenced, internalFunctionsReferenced,
-    extensionCreates, storageBucketIds, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, cronUsage, syntaxHazards };
+    extensionCreates, storageBucketIds, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, hardcodedEmails, hardcodedUuids, hardcodedMembershipNumbers, cronUsage, syntaxHazards };
 }
 
 export async function buildObjectInventory(root = ROOT) {
@@ -250,6 +253,7 @@ export async function buildObjectInventory(root = ROOT) {
     },
     duplicateGroups,
     policyCoverage: { membershipRewriteSource: 'database/changes/20261107144109_private_membership_system_20261107.sql', policiesAfterMembershipBase, laterPoliciesMissingActiveMemberGuard },
+    hardcodedIdentityReview,
     syntaxHazards: files.flatMap(f => f.syntaxHazards.map(item => ({ path: f.path, ...item }))),
     files
   };
