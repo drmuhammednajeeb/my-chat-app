@@ -1490,7 +1490,7 @@ function startMessagePolling(conversationId){
 }
 async function pollMessagesFallback(conversationId,generation=state.messagePollGeneration){
  if(state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
- const messageRequestId=state.messageLoadVersion,pollStartedAt=state.messagePollLastCheckedAt||new Date(Date.now()-60000).toISOString();
+ const messageRequestId=state.messageLoadVersion,pollStartedAt=state.messagePollLastCheckedAt||new Date(Date.now()-60000).toISOString(),pollCutoffAt=new Date().toISOString();
  const cursor=state.messagePollCursor?.conversationId===conversationId?state.messagePollCursor:null;
  state.messagePollBusy=true;state.diagnostics.lastPollAt=new Date().toLocaleTimeString('en-GB');
  try{
@@ -1531,7 +1531,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
   if(nextCursor)state.messagePollCursor=nextCursor;
   if(added)await markConversationReceipt(conversationId,document.visibilityState==='visible'&&isMessagesNearBottom(),messageRequestId);
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
-  if(!needsRetry)state.messagePollLastCheckedAt=pollStartedAt;
+  if(!needsRetry)state.messagePollLastCheckedAt=pollCutoffAt;
   const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;
   const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole);
   const groupReadOnly=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole);
