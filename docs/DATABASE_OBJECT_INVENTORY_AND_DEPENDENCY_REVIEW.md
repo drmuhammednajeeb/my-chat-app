@@ -25,6 +25,11 @@ The read-only CI inventory covers **53 SQL files** and extracted **27 table defi
 
 The test-only terminator patch is recorded in **fixtures/patch-manifest.json**. CI verified source SHA-256 `371e3b426ce5e2b47ba2cde669c2e32934baffae781ed684303a8e5cd5695088` and test-copy SHA-256 `fadf57b686cb4cfe1e6bb57c94a96a6859545cba4d1f650fe8dfc7a9c92d6b82`; the only byte-level change is the missing semicolon after the function body. The canonical historical file remains unchanged.
 
+
+## RLS membership-gate source review
+
+The static inventory extracted **107 policy definitions**. The membership base change contains a dynamic rewrite that appends the active-membership predicate to authenticated policies present when it runs. The dependency graph therefore places the feature SQL that creates policies before the membership rewrite. The inventory found **3 policy definitions with source timestamps after that rewrite**; all 3 contain a direct or indirect active-membership guard, and the static report found **0 later policies without a recognized guard**. This is a source-level result only: PostgreSQL RLS behavior, role semantics, and the dynamic policy rewrite still require local integration tests before security can be declared verified.
+
 ## Confirmed blockers
 
 ### 1. Legacy public.messages
