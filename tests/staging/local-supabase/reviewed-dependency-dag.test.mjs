@@ -146,3 +146,12 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-002')));
 });
+
+
+test('direct conversation RPC recovery instructions are read-only', async () => {
+  const doc = await readFile(path.join(root, 'docs/RECOVER_DIRECT_CONVERSATION_RPC.md'), 'utf8');
+  assert.match(doc, /pg_get_functiondef/);
+  assert.match(doc, /get_or_create_direct_conversation_impl/);
+  assert.match(doc, /read-only/i);
+  assert.doesNotMatch(doc, /^\s*(insert|update|delete|create|alter|drop)\s+/im);
+});
