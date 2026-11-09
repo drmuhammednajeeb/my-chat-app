@@ -7,5 +7,5 @@ on storage.objects for insert to authenticated
 with check (
   bucket_id = 'chat-media'
   and (storage.foldername(name))[2] = (select auth.uid())::text
-  and app_private.is_conversation_member(((storage.foldername(name))[1])::uuid)
+  and (select app_private.is_conversation_member(((storage.foldername(name))[1])::uuid))
 );
