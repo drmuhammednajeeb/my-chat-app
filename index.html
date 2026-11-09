@@ -1372,6 +1372,7 @@ function scheduleMessagePolling(conversationId,generation,delay=messagePollingDe
   pollMessagesFallback(conversationId,generation);
  },delay);
 }
+document.addEventListener('visibilitychange',()=>{if(state.active?.id&&state.messagePollTimer)scheduleMessagePolling(state.active.id,state.messagePollGeneration)});
 function stopMessagePolling(){state.isLoadingMessages=false;state.loadingOlderMessages=false;state.hasMoreMessages=false;state.messagePollGeneration++;if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}state.messagePollBusy=false;diagLog('poll-stopped',{generation:state.messagePollGeneration})}
 function startMessagePolling(conversationId){
  stopMessagePolling();const generation=state.messagePollGeneration;
@@ -1461,7 +1462,7 @@ function subscribeConversation(){
   .on('postgres_changes',{event:'*',schema:'public',table:'conversation_documents',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id&&$('conversationWorkspaceModal')?.classList.contains('open'))loadConversationDocuments(id)})
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'private_reply_contexts',filter:'direct_conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.privateReplyContexts.set(p.new.direct_message_id,p.new);renderPrivateReplyQuote(p.new.direct_message_id,p.new)})
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_member_events',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id&&$('groupManagementModal')?.classList.contains('open'))openGroupManagement()})
-  .subscribe(s=>{state.realtimeStatus=s;diagLog('realtime-status',{status:s});$('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';});
+  .subscribe(s=>{state.realtimeStatus=s;diagLog('realtime-status',{status:s});if(state.messagePollTimer)scheduleMessagePolling(id,state.messagePollGeneration);$('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';});
  state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=payload?.is_typing?(payload?.name||'عضو')+' يكتب الآن…':'';clearTimeout(state.typingTimer);if(payload?.is_typing)state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
 }
 async function editMessage(m){beginEditMessage(m)}
