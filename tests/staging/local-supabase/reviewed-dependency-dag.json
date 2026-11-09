@@ -326,7 +326,8 @@
       ],
       "status": "SEQUENCED_REQUIRED",
       "requires": [
-        "membership.official"
+        "membership.official",
+        "membership.syntax-fix"
       ]
     },
     {
@@ -485,6 +486,42 @@
     [
       "membership.syntax-fix",
       "membership.final-format"
+    ],
+    [
+      "platform.auth",
+      "team.admin"
+    ],
+    [
+      "platform.realtime",
+      "chat.reactions"
+    ],
+    [
+      "core.base",
+      "chat.channels-public"
+    ],
+    [
+      "core.base",
+      "chat.self"
+    ],
+    [
+      "core.base",
+      "chat.notifications"
+    ],
+    [
+      "platform.realtime",
+      "chat.notifications"
+    ],
+    [
+      "core.base",
+      "chat.workspaces"
+    ],
+    [
+      "platform.realtime",
+      "chat.expiry"
+    ],
+    [
+      "platform.auth",
+      "membership.base"
     ]
   ],
   "blockers": [
