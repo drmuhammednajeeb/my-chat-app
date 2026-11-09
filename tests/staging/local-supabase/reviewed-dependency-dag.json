@@ -1353,6 +1353,18 @@
     [
       "chat.media-upload-path-hardening",
       "membership.base"
+    ],
+    [
+      "chat.workspace-indexes",
+      "chat.workspace-realtime"
+    ],
+    [
+      "chat.restore-message-edit-guard",
+      "chat.message-edit-indexes"
+    ],
+    [
+      "core.base",
+      "chat.voice"
     ]
   ],
   "blockers": [
