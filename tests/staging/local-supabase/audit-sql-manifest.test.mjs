@@ -71,11 +71,11 @@ test('qualified legacy references are detected and missing function terminators 
     await mkdir(path.join(root, 'database/changes'), { recursive: true });
     await writeFile(
       path.join(root, 'supabase/migrations/20261101000000_base.sql'),
-      'create table public.chat_messages(id uuid);\\ncreate policy deny_old on public.messages for all using(false);\\n'
+      'create table public.chat_messages(id uuid);\ncreate policy deny_old on public.messages for all using(false);\n'
     );
     await writeFile(
       path.join(root, 'database/changes/20261102000000_bad_function.sql'),
-      'create or replace function app_private.sample() returns void language sql as $function$ select 1; $function$\\nrevoke all on function app_private.sample() from public;\\n'
+      'create or replace function app_private.sample() returns void language sql as $function$ select 1; $function$\nrevoke all on function app_private.sample() from public;\n'
     );
     const report = await buildSqlAudit(root);
     assert.equal(report.legacyBlockers.length, 1);
