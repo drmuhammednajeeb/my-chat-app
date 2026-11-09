@@ -22,6 +22,8 @@ test('partial secrets fail closed', () => {
 test('production Supabase host is always rejected', () => {
   const result = inspectStagingConfig({ ...complete, STAGING_SUPABASE_URL: `https://${PRODUCTION_SUPABASE_HOST}` });
   assert.equal(result.mode, 'BLOCKED_PRODUCTION_HOST');
+  const trailingDot = inspectStagingConfig({ ...complete, STAGING_SUPABASE_URL: `https://${PRODUCTION_SUPABASE_HOST}.` });
+  assert.equal(trailingDot.mode, 'BLOCKED_PRODUCTION_HOST');
 });
 
 test('non-HTTPS endpoint is rejected', () => {
