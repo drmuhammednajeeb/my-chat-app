@@ -63,6 +63,14 @@
     {
       "path": "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql",
       "runWhen": "After the final membership format migration; read-only assertion."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/storage-buckets-compat.sql",
+      "runWhen": "After Supabase Storage schema is available and before workspace/voice bucket consumers; local disposable replay only."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/chat-media-storage-policies-candidate.sql",
+      "runWhen": "After core chat membership helpers exist and before the membership dynamic policy rewrite; candidate test policy only, not a production-source assertion."
     }
   ],
   "execution": {
