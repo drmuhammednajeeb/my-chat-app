@@ -30,9 +30,9 @@ The browser calls **public.get_or_create_direct_conversation(p_other_user_id)**.
 
 ### 3. Forever membership format conflict
 
-The browser-side **membership.js** and **index.html** validate **^971[0-9]{9}$**. The historical manual-verification SQL defines **admin_create_official_member_invites_impl(jsonb)** and **admin_set_member_official_number_impl(uuid,text)** using **^971001[0-9]{6}$**. The final CLI migration **20261108075913** rewrites six named functions to the nine-digit format, but its allowlist does not include those two implementations.
+The browser-side **membership.js** and **index.html** validate **^971[0-9]{9}$**. The historical manual-verification SQL temporarily defines **admin_create_official_member_invites_impl(jsonb)** and **admin_set_member_official_number_impl(uuid,text)** using **^971001[0-9]{6}$**. The final CLI migration **20261108075913** explicitly includes both functions in its six-function allowlist and rewrites them to the nine-digit format, alongside the profile and invitation constraints.
 
-Result: the UI and database disagree on invitation creation and official-number assignment. Do not resolve this by changing the official membership rule without a separately reviewed business decision. Encode the intended canonical format in tests first, then test all related RPCs against it.
+This is an intentional staged transition, not a missing-function defect. The test manifest must apply the final CLI migration after the historical membership SQL, assert that exactly six function definitions were updated, and verify that both admin RPCs accept only the final **971 + nine digits** format. Do not run app acceptance tests in the intermediate state.
 
 ### 4. Confirmed SQL terminator defect
 
@@ -80,7 +80,7 @@ The three duplicate pairs are recorded with one proposed canonical test source e
 ## Next safe steps
 
 1. Recover the authoritative direct-conversation RPC source and verify whether it exists in the intended schema without changing it.
-2. Obtain a business-rule decision for the official Forever membership-number format and reconcile the client, invitation implementation, assignment implementation, and final migration as a test-only patch first.
+2. Prove the staged Forever membership-number format transition: historical 971001 + six digits, followed by the final migration updating all six functions and constraints to 971 + nine digits.
 3. Decide the legacy **public.messages** replay treatment based on actual historical compatibility needs.
 4. Review the dynamic membership-policy rewrite and all later policies.
 5. Build the explicit test-only allowlist and fixtures only after the blockers are resolved.
