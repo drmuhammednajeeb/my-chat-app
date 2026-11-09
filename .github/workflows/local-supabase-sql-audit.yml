@@ -33,7 +33,8 @@ jobs:
             tests/staging/local-supabase/audit-sql-manifest.test.mjs \
             tests/staging/local-supabase/bootstrap-guard.test.mjs \
             tests/staging/local-supabase/build-database-object-inventory.test.mjs \
-            tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs
+            tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs \
+            tests/staging/local-supabase/reviewed-dependency-dag.test.mjs
       - name: Generate repository SQL object inventory
         run: |
           node tests/staging/local-supabase/build-database-object-inventory.mjs > "$RUNNER_TEMP/database-object-inventory.json"
