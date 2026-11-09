@@ -13,13 +13,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: local-sql-audit-${{ github.ref }}
+  group: local-sql-audit-\${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   read-only-sql-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -27,9 +27,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run isolated audit unit tests
-        run: node --test tests/staging/local-supabase/audit-sql-manifest.test.mjs tests/staging/local-supabase/bootstrap-guard.test.mjs
-      - name: Audit repository SQL without executing it
+      - name: Run isolated read-only audit tests
+        run: |
+          node --test \
+            tests/staging/local-supabase/audit-sql-manifest.test.mjs \
+            tests/staging/local-supabase/bootstrap-guard.test.mjs \
+            tests/staging/local-supabase/build-database-object-inventory.test.mjs
+      - name: Generate repository SQL object inventory
+        run: |
+          node tests/staging/local-supabase/build-database-object-inventory.mjs > "$RUNNER_TEMP/database-object-inventory.json"
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const report = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/database-object-inventory.json', 'utf8'));
+            console.log('INVENTORY_MODE=' + report.auditMode);
+            console.log('SQL_FILES=' + report.sourceCounts.totalSqlFiles);
+            console.log('CREATED_TABLES=' + report.inventoryTotals.createdTables);
+            console.log('FUNCTION_DEFINITIONS=' + report.inventoryTotals.functionDefinitions);
+            console.log('INDEXES=' + report.inventoryTotals.indexes);
+            console.log('TRIGGERS=' + report.inventoryTotals.triggers);
+            console.log('POLICIES=' + report.inventoryTotals.policies);
+            console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
+            console.log('UNRESOLVED_INTERNAL_FUNCTIONS=' + report.unresolvedInternalFunctions.join(','));
+            console.log('MISSING_CLIENT_RPCS=' + report.missingClientRpcs.join(','));
+            console.log('MEMBERSHIP_FORMAT_STATUS=' + report.membershipFormatReview.status);
+            console.log('SQL_EXECUTION_AUTHORIZED=false');
+            if (report.auditMode !== 'READ_ONLY_SOURCE_INVENTORY') process.exit(1);
+          "
+      - name: Run original SQL manifest audit
         run: |
           node tests/staging/local-supabase/audit-sql-manifest.mjs > "$RUNNER_TEMP/sql-audit-report.json"
           node --input-type=module -e "
