@@ -44,6 +44,8 @@ The static inventory extracted **107 policy definitions**. The membership base c
 
 ## Confirmed blockers
 
+The unresolved direct-conversation RPC source can be retrieved without changing the deployed database using the read-only procedure in [RECOVER_DIRECT_CONVERSATION_RPC.md](RECOVER_DIRECT_CONVERSATION_RPC.md). The local replay remains disabled until its authoritative definitions are recovered and reviewed.
+
 ### 1. Legacy public.messages
 
 Two CLI migrations reference **public.messages**, but no repository SQL creates that table. The current browser client reads and writes **public.chat_messages**; no client-side access to the legacy messages table was found. Both legacy migrations only need the table to exist for table-level policy and privilege operations; they do not reference its columns. A minimal empty compatibility stub is therefore appropriate for disposable local replay only. It is not a reconstruction of the deployed legacy table and must never be deployed or used to replace production schema.
