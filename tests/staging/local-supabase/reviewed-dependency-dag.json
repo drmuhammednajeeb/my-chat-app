@@ -317,7 +317,6 @@
         "chat.notifications",
         "chat.workspaces",
         "chat.expiry",
-        "chat.expiry-purge",
         "chat.workspace-realtime"
       ]
     },
@@ -568,10 +567,6 @@
     ],
     [
       "chat.expiry",
-      "membership.base"
-    ],
-    [
-      "chat.expiry-purge",
       "membership.base"
     ],
     [
