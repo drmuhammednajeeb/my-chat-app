@@ -1293,11 +1293,16 @@ async function loadMessages(){
   // Merge fetched rows with Realtime INSERTs received while this request was in flight.
   const merged=new Map((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>[m.id,m]));
   (data||[]).forEach(m=>merged.set(m.id,m));
-  const messages=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
+  let messages=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
   state.messages=messages;
   const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];state.replyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(!replyError)(parents||[]).forEach(x=>state.replyMessages.set(x.id,x))}
   await loadMessageReactions(conversationId,messages);await loadMessagePins(conversationId);await loadPrivateReplyContexts(conversationId,messages);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  // Reconcile again after auxiliary queries: Realtime INSERTs may arrive while those queries are in flight.
+  const latest=new Map(messages.map(m=>[m.id,m]));
+  (state.messages||[]).filter(m=>m.conversation_id===conversationId).forEach(m=>latest.set(m.id,m));
+  messages=Array.from(latest.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-100);
+  state.messages=messages;
   area.replaceChildren();state.messageIds.clear();
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{
