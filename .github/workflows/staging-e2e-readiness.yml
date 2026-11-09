@@ -1,6 +1,9 @@
 name: Staging E2E readiness gate
 
 on:
+  push:
+    branches:
+      - "engineering/stability-css-extraction-20261109"
   workflow_dispatch:
 
 permissions:
