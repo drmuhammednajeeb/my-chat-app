@@ -133,8 +133,16 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   assert.equal(expectedOrder.length, ids.length);
   assert.deepEqual(manifest.candidateNodeOrder.map(node => node.nodeId), expectedOrder.filter(id => !id.startsWith('platform.')));
   const duplicateCopies = new Set(dag.duplicateProvenance.map(item => item.duplicate));
+  const patchManifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
+  const patchedCanonicalSources = new Set(patchManifest.patches.map(item => item.sourcePath));
   const selected = manifest.candidateNodeOrder.flatMap(node => node.testSources);
+  const inventory = await buildObjectInventory();
+  assert.equal(manifest.sourceCoverage.sqlFiles, inventory.files.length);
   for (const source of selected) await access(path.join(root, source));
+  for (const file of inventory.files) {
+    if (duplicateCopies.has(file.path) || patchedCanonicalSources.has(file.path)) continue;
+    assert.ok(selected.includes(file.path), 'candidate replay source missing: ' + file.path);
+  }
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-002')));
 });
