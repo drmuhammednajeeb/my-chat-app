@@ -215,7 +215,9 @@ export async function buildObjectInventory(root = ROOT) {
   const clientStorageBuckets = [...new Set(matches(appHtml, /storage\.from\(\s*['"]([^'"]+)['"]/gi, m => m[1]))].sort();
   const declaredStorageBuckets = [...new Set(files.flatMap(file => file.storageBucketIds))].sort();
   const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => file.policyDetails.filter(policy => policy.table === 'storage.objects').flatMap(policy => matches(policy.statement, /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, m => m[1]))) )].sort();
+  const chatMediaUploadPolicy = files.flatMap(file => file.policyDetails).find(policy => policy.table === 'storage.objects' && policy.name === 'Conversation members upload chat media');
   const storageCoverage = {
+    chatMediaUploadPathOwnershipGuard: Boolean(chatMediaUploadPolicy && /storage\\.foldername\\(name\\)\\)\\s*\\[\\s*2\\s*\\].*auth\\.uid\\s*\\(/i.test(chatMediaUploadPolicy.statement)),
     clientBuckets: clientStorageBuckets,
     declaredBucketIds: declaredStorageBuckets,
     missingBucketDeclarations: clientStorageBuckets.filter(bucket => !declaredStorageBuckets.includes(bucket)),
