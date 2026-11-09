@@ -33,6 +33,11 @@ The browser uses three buckets: **avatars**, **chat-media**, and **conversation-
 
 A security-hardening opportunity remains: the canonical chat-media INSERT policy checks conversation membership but does not bind the second path segment (the uploader folder in the browser's conversation-id / user-id / generated-object path) to `auth.uid()`. The app currently constructs that path correctly, but the database does not independently enforce that path ownership. A test-only replacement policy adds this check in the disposable replay before the membership rewrite. This is a candidate for local RLS testing, not an approved production change.
 
+
+## Supabase platform prerequisites
+
+The source inventory confirms dependencies on Supabase Auth (`auth.users`), Storage (`storage.buckets` and `storage.objects`), the `supabase_realtime` publication, `pgcrypto` (including the `extensions` schema references), and `pg_cron` for scheduled cleanup. The repository still has no `supabase/config.toml`. These platform components must be explicitly enabled/configured in the local-only Supabase project before replay; the inventory does not prove that the local extension versions or schemas are available.
+
 ## RLS membership-gate source review
 
 The static inventory extracted **107 policy definitions**. The membership base change contains a dynamic rewrite that appends the active-membership predicate to authenticated policies present when it runs. The dependency graph therefore places the feature SQL that creates policies before the membership rewrite. The inventory found **3 policy definitions with source timestamps after that rewrite**; all 3 contain a direct or indirect active-membership guard, and the static report found **0 later policies without a recognized guard**. This is a source-level result only: PostgreSQL RLS behavior, role semantics, and the dynamic policy rewrite still require local integration tests before security can be declared verified.
