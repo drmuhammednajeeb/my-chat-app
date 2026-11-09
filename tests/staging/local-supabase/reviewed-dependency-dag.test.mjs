@@ -122,8 +122,16 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   assert.equal(manifest.execution.sqlExecuted, false);
   assert.equal(manifest.execution.cloudAllowed, false);
   assert.equal(manifest.execution.productionAllowed, false);
-  const ids = [...dag.nodes.map(node => node.id)];
-  assert.deepEqual(manifest.candidateNodeOrder.map(node => node.nodeId), ids);
+  const allNodes = [...dag.platformNodes, ...dag.nodes];
+  const ids = allNodes.map(node => node.id);
+  const indegree = new Map(ids.map(id => [id, 0]));
+  const outgoing = new Map(ids.map(id => [id, []]));
+  for (const [from, to] of dag.explicitEdges) { outgoing.get(from).push(to); indegree.set(to, indegree.get(to) + 1); }
+  const queue = ids.filter(id => indegree.get(id) === 0);
+  const expectedOrder = [];
+  while (queue.length) { const id = queue.shift(); expectedOrder.push(id); for (const next of outgoing.get(id)) { indegree.set(next, indegree.get(next) - 1); if (indegree.get(next) === 0) queue.push(next); } }
+  assert.equal(expectedOrder.length, ids.length);
+  assert.deepEqual(manifest.candidateNodeOrder.map(node => node.nodeId), expectedOrder.filter(id => !id.startsWith('platform.')));
   const duplicateCopies = new Set(dag.duplicateProvenance.map(item => item.duplicate));
   const selected = manifest.candidateNodeOrder.flatMap(node => node.testSources);
   for (const source of selected) await access(path.join(root, source));
