@@ -212,6 +212,11 @@ export async function buildObjectInventory(root = ROOT) {
   const membershipBaseTimestamp = 20261107144109;
   const policiesAfterMembershipBase = files.filter(file => file.sourceTimestamp && Number(file.sourceTimestamp) > membershipBaseTimestamp).flatMap(file => file.policyDetails.map(policy => ({ path: file.path, ...policy })));
   const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
+  const hardcodedIdentityReview = {
+    emailLiteralFiles: files.filter(file => file.hardcodedEmails.length > 0).map(file => file.path),
+    uuidLiteralFiles: files.filter(file => file.hardcodedUuids.length > 0).map(file => file.path),
+    membershipNumberLiteralFiles: files.filter(file => file.hardcodedMembershipNumbers.length > 0).map(file => file.path)
+  };
   const platformDependencies = {
     authSchema: files.some(file => file.relationsReferenced.some(name => name.startsWith('auth.'))),
     storageSchema: files.some(file => file.relationsReferenced.some(name => name.startsWith('storage.')) || file.storageBucketIds.length),
