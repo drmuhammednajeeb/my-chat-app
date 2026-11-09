@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Read-only SQL inventory and bootstrap-readiness audit.
-// This tool never executes, rewrites, renames, or deletes SQL files.
+// Never executes, rewrites, renames, or deletes SQL files.
 import { createHash } from 'node:crypto';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -32,23 +32,21 @@ async function walkSql(root, relativeDir, kind) {
 }
 
 function stripSqlComments(sql) {
-  return sql
-    .replace(/--[^\\r\\n]*/g, ' ')
-    .replace(/\\/\\*[\\s\\S]*?\\*\\//g, ' ');
+  return sql.replace(/--[^\r\n]*/g, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ');
 }
 
 function inspectFile(file) {
   const sql = stripSqlComments(file.content);
   const digest = createHash('sha256').update(file.content, 'utf8').digest('hex');
-  const legacyRefs = [...sql.matchAll(/\\b(?:public\\s*\\.\\s*)?messages\\b/gi)].map(match => ({
-    token: match[0].replace(/\\s+/g, ''),
-    line: sql.slice(0, match.index).split('\\n').length
+  const legacyRefs = [...sql.matchAll(/\b(?:public\s*\.\s*)?messages\b/gi)].map(match => ({
+    token: match[0].replace(/\s+/g, ''),
+    line: sql.slice(0, match.index).split('\n').length
   }));
-  const creates = [...sql.matchAll(/\\bcreate\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?(?:public\\s*\\.\\s*)?([a-z_][\\w$]*)/gi)].map(m => m[1].toLowerCase());
-  const referencedPublicTables = [...new Set([...sql.matchAll(/\\b(?:from|join|update|into|on|references)\\s+public\\s*\\.\\s*([a-z_][\\w$]*)/gi)].map(m => m[1].toLowerCase()))].sort();
-  const timestamp = file.kind === 'migration' ? file.path.split('/').at(-1).match(/^(\\d{14}|\\d{12}|\\d{8})/)?.[1] ?? null : null;
-  const hasLegacyMessages = /\\bpublic\\s*\\.\\s*messages\\b/i.test(sql);
-  const hasCurrentChatMessages = /\\bpublic\\s*\\.\\s*chat_messages\\b/i.test(sql);
+  const creates = [...sql.matchAll(/\bcreate\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\s*\.\s*)?([a-z_][\w$]*)/gi)].map(m => m[1].toLowerCase());
+  const referencedPublicTables = [...new Set([...sql.matchAll(/\b(?:from|join|update|into|on|references)\s+public\s*\.\s*([a-z_][\w$]*)/gi)].map(m => m[1].toLowerCase()))].sort();
+  const timestamp = file.kind === 'migration' ? file.path.split('/').at(-1).match(/^(\d{14}|\d{12}|\d{8})/)?.[1] ?? null : null;
+  const hasLegacyMessages = /\bpublic\s*\.\s*messages\b/i.test(sql);
+  const hasCurrentChatMessages = /\bpublic\s*\.\s*chat_messages\b/i.test(sql);
   return {
     path: file.path,
     kind: file.kind,
@@ -69,8 +67,7 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
     walkSql(root, 'supabase/migrations', 'migration'),
     walkSql(root, 'database/changes', 'historical_change')
   ]);
-  const sourceFiles = [...migrations, ...historical];
-  const inspected = sourceFiles.map(inspectFile);
+  const inspected = [...migrations, ...historical].map(inspectFile);
   const byHash = new Map();
   for (const file of inspected) {
     const list = byHash.get(file.sha256) ?? [];
@@ -98,7 +95,7 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
   if (!configExists) findings.push({ severity: 'blocking', code: 'SUPABASE_CONFIG_MISSING', message: 'supabase/config.toml is absent; the local CLI stack is not configured.' });
   if (migrationFiles.length === 0) findings.push({ severity: 'blocking', code: 'NO_MIGRATIONS', message: 'No SQL files were found in supabase/migrations/.' });
   if (legacyBlockers.length) findings.push({ severity: 'blocking', code: 'UNRESOLVED_LEGACY_TABLE_DEPENDENCY', message: 'One or more migrations reference public.messages without defining it in the migration set.', files: legacyBlockers.map(item => item.path) });
-  if (duplicateGroups.length) findings.push({ severity: 'warning', code: 'DUPLICATE_SQL_CONTENT', message: 'Byte-identical SQL files exist across or within SQL directories; they are reported, never automatically deduplicated.', groups: duplicateGroups });
+  if (duplicateGroups.length) findings.push({ severity: 'warning', code: 'DUPLICATE_SQL_CONTENT', message: 'Byte-identical SQL files exist; they are reported, never automatically deduplicated.', groups: duplicateGroups });
 
   return {
     schemaVersion: 1,
@@ -126,9 +123,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   try {
     const report = await buildSqlAudit(root);
     console.log(JSON.stringify(report, null, 2));
-    if (process.argv.includes('--fail-on-blockers') && report.findings.some(item => item.severity === 'blocking')) {
-      process.exitCode = 2;
-    }
+    if (process.argv.includes('--fail-on-blockers') && report.findings.some(item => item.severity === 'blocking')) process.exitCode = 2;
   } catch (error) {
     console.error('SQL_AUDIT_FAILED:', error.message);
     process.exitCode = 1;
