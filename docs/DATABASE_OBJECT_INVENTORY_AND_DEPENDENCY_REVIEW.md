@@ -18,6 +18,13 @@ The generated **build-database-object-inventory.mjs** report records source SHA-
 
 **Limitation:** this is a static source inventory, not a catalog dump of a deployed database. It cannot prove which objects currently exist in production or whether a Supabase-managed service is initialized locally.
 
+
+## Static inventory result (CI verified)
+
+The read-only CI inventory covers **53 SQL files** and extracted **27 table definitions, 186 column declarations, 69 foreign-key declarations, 82 function definitions, 61 indexes, 19 triggers, 107 policies, and 65 GRANT/REVOKE statements**. It also records three byte-identical duplicate groups. These are source-parser counts, not a live database catalog count; multi-statement/conditional DDL and dynamic SQL still require PostgreSQL catalog validation during the later local rehearsal.
+
+The test-only terminator patch is recorded in **fixtures/patch-manifest.json**. CI verified source SHA-256 `371e3b426ce5e2b47ba2cde669c2e32934baffae781ed684303a8e5cd5695088` and test-copy SHA-256 `fadf57b686cb4cfe1e6bb57c94a96a6859545cba4d1f650fe8dfc7a9c92d6b82`; the only byte-level change is the missing semicolon after the function body. The canonical historical file remains unchanged.
+
 ## Confirmed blockers
 
 ### 1. Legacy public.messages
