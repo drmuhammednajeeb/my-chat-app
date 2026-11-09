@@ -1287,7 +1287,28 @@ function renderMessagePinMark(row,m){row.querySelector('.message-pinned-mark')?.
 function renderMessageStatus(m,bubble){if(m.sender_id!==state.user?.id||m.deleted_at)return;const others=(state.active?.members||[]).filter(x=>x.user_id!==state.user.id),delivered=others.filter(x=>x.last_delivered_at&&new Date(x.last_delivered_at)>=new Date(m.created_at)).length,read=others.filter(x=>x.last_read_at&&new Date(x.last_read_at)>=new Date(m.created_at)).length,status=document.createElement('span');status.className='message-status';if(others.length===1){if(read){status.classList.add('read');status.innerHTML='<span class="ticks">✓✓</span><span>مقروءة</span>'}else if(delivered){status.classList.add('delivered');status.innerHTML='<span class="ticks">✓✓</span><span>تم التسليم</span>'}else status.innerHTML='<span class="ticks">✓</span><span>تم الإرسال</span>'}else if(others.length>1){if(read){status.classList.add('read','group-status');status.textContent='قُرئت '+read+'/'+others.length}else if(delivered){status.classList.add('delivered','group-status');status.textContent='وصلت '+delivered+'/'+others.length}else status.textContent='تم الإرسال'}else status.innerHTML='<span class="ticks">✓</span><span>تم الإرسال</span>';bubble.append(status)}
 function handlePinRealtime(p,id){const r=p.eventType==='DELETE'?p.old:p.new;if(r?.conversation_id!==id)return;if(p.eventType==='DELETE')state.pinnedMessages.delete(r.message_id);else state.pinnedMessages.set(r.message_id,r);renderPinnedBanner();const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===r.message_id),m=state.messages.find(x=>x.id===r.message_id);if(row&&m)renderMessagePinMark(row,m)}
 function handleMembershipRealtime(p,id){const m=p.new;if(m?.conversation_id!==id||state.active?.id!==id)return;const current=(state.active.members||[]).find(x=>x.user_id===m.user_id);if(current)Object.assign(current,m);document.querySelectorAll('.message.mine').forEach(row=>{const msg=state.messages.find(x=>x.id===row.dataset.messageId),bubble=row.querySelector('.bubble');if(msg&&bubble){bubble.querySelector('.message-status')?.remove();renderMessageStatus(msg,bubble)}})}
-async function markConversationReceipt(conversationId,markRead=true,requestId=null){const userId=state.user?.id;if(!userId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;const stamp=new Date().toISOString(),patch={last_delivered_at:stamp};if(markRead)patch.last_read_at=stamp;const {error}=await supabaseClient.from('conversation_members').update(patch).eq('conversation_id',conversationId).eq('user_id',userId);if(error){console.warn('Receipt update failed',error.message);return false}if(state.user?.id!==userId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;if(state.active?.id===conversationId){const me=(state.active.members||[]).find(x=>x.user_id===userId);if(me){me.last_delivered_at=stamp;if(markRead)me.last_read_at=stamp}if(markRead){state.memberReads[conversationId]=stamp;const conv=state.conversations.find(x=>x.id===conversationId);if(conv)conv.last_read_at=stamp;renderConversations()}document.querySelectorAll('.message.mine').forEach(row=>{const msg=state.messages.find(x=>x.id===row.dataset.messageId),bubble=row.querySelector('.bubble');if(msg&&bubble){bubble.querySelector('.message-status')?.remove();renderMessageStatus(msg,bubble)}})}return true}
+async function markConversationReceipt(conversationId,markRead=true,requestId=null){
+ const userId=state.user?.id;
+ if(!userId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
+ state.receiptQueues ||= new Map();
+ const previous=state.receiptQueues.get(conversationId)||Promise.resolve(false);
+ const task=previous.catch(()=>false).then(async()=>{
+  if(state.user?.id!==userId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
+  const stamp=new Date().toISOString(),patch={last_delivered_at:stamp};
+  if(markRead)patch.last_read_at=stamp;
+  const {error}=await supabaseClient.from('conversation_members').update(patch).eq('conversation_id',conversationId).eq('user_id',userId);
+  if(error){console.warn('Receipt update failed',error.message);return false}
+  if(state.user?.id!==userId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
+  const me=(state.active.members||[]).find(x=>x.user_id===userId);
+  if(me){me.last_delivered_at=stamp;if(markRead)me.last_read_at=stamp}
+  if(markRead){state.memberReads[conversationId]=stamp;const conv=state.conversations.find(x=>x.id===conversationId);if(conv)conv.last_read_at=stamp;renderConversations()}
+  document.querySelectorAll('.message.mine').forEach(row=>{const msg=state.messages.find(x=>x.id===row.dataset.messageId),bubble=row.querySelector('.bubble');if(msg&&bubble){bubble.querySelector('.message-status')?.remove();renderMessageStatus(msg,bubble)}});
+  return true;
+ });
+ state.receiptQueues.set(conversationId,task);
+ try{return await task}
+ finally{if(state.receiptQueues.get(conversationId)===task)state.receiptQueues.delete(conversationId)}
+}
 async function publishTyping(isTyping){if(!state.typingChannel||!state.user)return;const now=Date.now();if(isTyping&&now-state.typingSent<1000)return;state.typingSent=now;try{await state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile?.display_name||'عضو',is_typing:isTyping}})}catch(e){console.debug('Typing broadcast failed',e?.message||e)}}
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId)return false;
@@ -1487,7 +1508,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
   state.messages=Array.from(current.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   if(added)await markConversationReceipt(conversationId,document.visibilityState==='visible'&&isMessagesNearBottom(),messageRequestId);
-  const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole);if($('messageInput').disabled&&!channelReadOnly){$('messageInput').disabled=false;diagLog('composer-reenabled-by-poll')}
+  const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole),groupReadOnly=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole);if($('messageInput').disabled&&!channelReadOnly&&!groupReadOnly){$('messageInput').disabled=false;diagLog('composer-reenabled-by-poll')}
   resizeComposer();diagLog('poll-success',{fetched:fetched.length,added,rendered:$('messages').querySelectorAll('.message').length});
  }catch(error){diagLog('poll-error',{error:String(error?.message||error)});console.warn('Fallback message sync failed:',error)}
  finally{
@@ -1634,6 +1655,7 @@ async function startVoiceRecording(){
  const recordingConversationId=state.active.id,recordingUserId=state.user?.id;
  const role=(state.active.members||[]).find(m=>m.user_id===state.user?.id)?.role;
  if(state.active.type==='channel'&&!['owner','admin'].includes(role)){toast('التسجيل في هذه القناة مخصص للمشرفين');return}
+ if(state.active.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(role)){toast('التسجيل في هذه المجموعة مخصص للمشرفين');return}
  if(!window.isSecureContext){toast('يلزم فتح التطبيق عبر اتصال HTTPS لتفعيل الميكروفون');return}
  if(!navigator.mediaDevices?.getUserMedia){toast('الميكروفون غير متاح. افتح التطبيق في Chrome أو Safari واسمح باستخدامه');return}
  let stream=null;
@@ -1724,7 +1746,7 @@ async function sendMessage(){
  }
  state.uploading=false;resizeComposer();
 }
-function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
+function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role),groupBlocked=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||groupBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
 $('messageInput').addEventListener('input',()=>{resizeComposer();if($('messageInput').value.trim())publishTyping(true);else publishTyping(false)});
 $('messageInput').addEventListener('blur',()=>publishTyping(false));
 $('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.stopPropagation();requestAnimationFrame(resizeComposer)}});
