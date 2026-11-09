@@ -123,32 +123,32 @@ test('receipt writes are serialized per conversation in one client session', asy
 
 test('render and initial-load paths retain stale-result guards', () => {
   const render = extractFunction('renderMessageInternal'), load = extractFunction('loadMessages');
-  assert.match(render, /if\\(!isCurrent\\(\\)\\)return false/);
+  assert.match(render, /if\(!isCurrent\(\)\)return false/);
   assert.match(render, /createSignedUrl\\(m\\.attachment_path,3600\\)/);
-  assert.match(load, /if\\(requestId!==state\\.messageLoadVersion\\|\\|state\\.active\\?\\.id!==conversationId\\)return false/);
+  assert.match(load, /if\(requestId!==state\.messageLoadVersion\|\|state\.active\?\.id!==conversationId\)return false/);
   assert.match(load, /state\\.messagePollCursor=\\(data\\|\\|\\)\\[0\\]/);
 });
 
 test('fallback synchronization is cursor-based and reconciles edits and deletions', () => {
   const poll = extractFunction('pollMessagesFallback');
   assert.match(poll, /messagePollCursor/);
-  assert.match(poll, /and\\(created_at\\.eq\\./);
-  assert.match(poll, /id\\.gt\\./);
-  assert.match(poll, /edited_at\\.gt\\./);
-  assert.match(poll, /deleted_at\\.gt\\./);
+  assert.match(poll, /and\(created_at\.eq\./);
+  assert.match(poll, /id\.gt\./);
+  assert.match(poll, /edited_at\.gt\./);
+  assert.match(poll, /deleted_at\.gt\./);
   assert.match(poll, /limit\\(200\\)/);
-  assert.match(poll, /messageRequestId!==state\\.messageLoadVersion/);
+  assert.match(poll, /messageRequestId!==state\.messageLoadVersion/);
 });
 
 test('send attempts reuse a stable message ID and uploaded attachment on retry', () => {
   const send = extractFunction('sendMessage');
   assert.match(send, /pendingMessageSends/);
-  assert.match(send, /id:crypto\\.randomUUID\\(\\)/);
-  assert.match(send, /insert\\(\\{id:pendingSend\\.id/);
-  assert.match(send, /eq\\('id',pendingSend\\.id\\)/);
-  assert.match(send, /pendingSend\\?\\.attachmentPath/);
-  assert.match(send, /Number\\(verified\\.edit_revision\\|\\|0\\)<=expectedRevision/);
-  assert.match(send, /finally\\{state\\.uploading=false;resizeComposer\\(\\)\\}/);
+  assert.match(send, /id:crypto\.randomUUID\(\)/);
+  assert.match(send, /insert\(\{id:pendingSend\.id/);
+  assert.match(send, /eq\('id',pendingSend\.id\)/);
+  assert.match(send, /pendingSend\?\.attachmentPath/);
+  assert.match(send, /Number\(verified\.edit_revision\|\|0\)<=expectedRevision/);
+  assert.match(send, /finally\{state\.uploading=false;resizeComposer\(\)\}/);
 });
 
 test('group-only-admin restrictions survive composer, polling and voice entry points', () => {
