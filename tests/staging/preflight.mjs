@@ -29,7 +29,7 @@ export function inspectStagingConfig(env = process.env) {
   if (url.protocol !== 'https:') {
     return { mode: 'BLOCKED_INSECURE_URL', missing: [], reason: 'Staging URL must use HTTPS.' };
   }
-  if (url.hostname.toLowerCase().replace(/\\.$/, '') === PRODUCTION_SUPABASE_HOST) {
+  if (url.hostname.toLowerCase().replace(/\.$/, '') === PRODUCTION_SUPABASE_HOST) {
     return { mode: 'BLOCKED_PRODUCTION_HOST', missing: [], reason: 'Production Supabase host is forbidden for staging tests.' };
   }
   if (url.username || url.password || url.search || url.hash || (url.pathname !== '/' && url.pathname !== '')) {
