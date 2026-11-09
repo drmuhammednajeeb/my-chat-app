@@ -29,28 +29,10 @@
       "parityNote": null
     },
     {
-      "nodeId": "storage.compat-buckets",
-      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/storage-buckets-compat.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
-    },
-    {
       "nodeId": "core.base",
       "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
-    },
-    {
-      "nodeId": "chat.voice",
-      "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/20261107080000_chat_voice_messages.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -120,19 +102,28 @@
       "parityNote": null
     },
     {
-      "nodeId": "chat.media-policies",
-      "status": "TEST_ONLY_CANDIDATE_NOT_PRODUCTION_SOURCE",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/chat-media-storage-policies-candidate.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Candidate local policy only; deployed chat-media policies are not present in the repository source."
-    },
-    {
       "nodeId": "core.profile-fks",
       "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/202611060004_reference_profiles.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.media-upload-path-hardening",
+      "status": "TEST_ONLY_SECURITY_HARDENING_CANDIDATE",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Replaces the canonical chat-media INSERT policy in the disposable replay to bind folder segment 2 to auth.uid(). Do not deploy without separate review."
+    },
+    {
+      "nodeId": "chat.voice",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107080000_chat_voice_messages.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -285,16 +276,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "chat.workspace-realtime",
-      "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
-        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
-    },
-    {
       "nodeId": "chat.workspace-indexes",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -331,15 +312,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "chat.message-edit-indexes",
-      "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/20261107131500_index_message_edit_history.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
-    },
-    {
       "nodeId": "chat.restore-message-edit-guard",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -349,10 +321,29 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.workspace-realtime",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
+        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
       "nodeId": "chat.team-admin-group-overrides",
       "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107130534_include_team_admins_in_group_management.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.message-edit-indexes",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107131500_index_message_edit_history.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -551,8 +542,8 @@
     },
     {
       "id": "DAG-013",
-      "severity": "REVIEW_REQUIRED_PRODUCTION_PARITY",
-      "issue": "The browser uploads and creates signed URLs from chat-media, but no repository SQL defines chat-media storage.objects policies. A candidate test-only INSERT/SELECT policy fixture is derived from the observed conversationId/userId/object path and active-membership helper. It must not be treated as authoritative production policy without source/schema verification."
+      "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
+      "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
     }
   ],
   "requiredSourceRecovery": [
@@ -560,7 +551,7 @@
   ],
   "safetyNotes": [
     "Candidate order is derived from the reviewed acyclic dependency graph.",
-    "Test-only copies and candidate policies are local fixtures, not production migrations.",
+    "Test-only SQL copies and the chat-media upload-path hardening fixture are local-only; they are not production migrations.",
     "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved."
   ]
 }
