@@ -1,0 +1,47 @@
+name: Local Supabase SQL manifest audit
+
+on:
+  push:
+    branches:
+      - "engineering/stability-css-extraction-20261109"
+  pull_request:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-sql-audit-\${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  read-only-sql-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run isolated audit unit tests
+        run: node --test tests/staging/local-supabase/audit-sql-manifest.test.mjs
+      - name: Audit repository SQL without executing it
+        run: |
+          node tests/staging/local-supabase/audit-sql-manifest.mjs > "$RUNNER_TEMP/sql-audit-report.json"
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const report = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/sql-audit-report.json', 'utf8'));
+            const blockers = report.findings.filter(item => item.severity === 'blocking');
+            console.log('SQL_AUDIT_MODE=' + report.auditMode);
+            console.log('MIGRATION_FILES=' + report.sourceDirectories[0].fileCount);
+            console.log('HISTORICAL_SQL_FILES=' + report.sourceDirectories[1].fileCount);
+            console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
+            console.log('LEGACY_BLOCKERS=' + report.legacyBlockers.length);
+            console.log('BOOTSTRAP_STATUS=' + report.bootstrap.status);
+            for (const item of blockers) console.log('BLOCKER=' + item.code + ': ' + item.message);
+            if (report.auditMode !== 'READ_ONLY' || report.bootstrap.executable !== false) process.exit(1);
+          "
