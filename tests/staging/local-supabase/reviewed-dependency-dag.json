@@ -307,7 +307,18 @@
       "requires": [
         "core.base",
         "team.admin",
-        "platform.auth"
+        "platform.auth",
+        "chat.preferences",
+        "chat.pins",
+        "chat.reactions",
+        "chat.groups",
+        "chat.channels-public",
+        "chat.channels-private",
+        "chat.notifications",
+        "chat.workspaces",
+        "chat.expiry",
+        "chat.expiry-purge",
+        "chat.workspace-realtime"
       ]
     },
     {
@@ -521,6 +532,50 @@
     ],
     [
       "platform.auth",
+      "membership.base"
+    ],
+    [
+      "chat.preferences",
+      "membership.base"
+    ],
+    [
+      "chat.pins",
+      "membership.base"
+    ],
+    [
+      "chat.reactions",
+      "membership.base"
+    ],
+    [
+      "chat.groups",
+      "membership.base"
+    ],
+    [
+      "chat.channels-public",
+      "membership.base"
+    ],
+    [
+      "chat.channels-private",
+      "membership.base"
+    ],
+    [
+      "chat.notifications",
+      "membership.base"
+    ],
+    [
+      "chat.workspaces",
+      "membership.base"
+    ],
+    [
+      "chat.expiry",
+      "membership.base"
+    ],
+    [
+      "chat.expiry-purge",
+      "membership.base"
+    ],
+    [
+      "chat.workspace-realtime",
       "membership.base"
     ]
   ],
