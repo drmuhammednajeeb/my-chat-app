@@ -94,3 +94,18 @@ test('all pre-membership policy sources are ordered before the dynamic membershi
     assert.ok(reaches(nodeId, 'membership.base'), 'policy source is not ordered before membership rewrite: ' + file.path);
   }
 });
+
+
+test('every repository SQL source is mapped once or explicitly excluded as an identical duplicate', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const inventory = await buildObjectInventory();
+  const mapped = new Set(dag.nodes.flatMap(node => node.source ?? []));
+  const duplicateCopies = new Set(dag.duplicateProvenance.map(item => item.duplicate));
+  for (const file of inventory.files) {
+    assert.ok(mapped.has(file.path) || duplicateCopies.has(file.path), 'unmapped SQL source: ' + file.path);
+  }
+  for (const item of dag.duplicateProvenance) {
+    assert.ok(mapped.has(item.canonicalTestSource), 'canonical duplicate source is not selected: ' + item.canonicalTestSource);
+    assert.equal(mapped.has(item.duplicate), false, 'duplicate source must not be replayed: ' + item.duplicate);
+  }
+});
