@@ -52,6 +52,7 @@ jobs:
             console.log('TRIGGERS=' + report.inventoryTotals.triggers);
             console.log('POLICIES=' + report.inventoryTotals.policies);
             console.log('POLICIES_AFTER_MEMBERSHIP_BASE=' + report.policyCoverage.policiesAfterMembershipBase.length);
+            console.log('POLICY_SOURCE_COUNTS=' + report.files.filter(file => file.policyDetails.length).map(file => file.path + ':' + file.policyDetails.length).join(';'));
             console.log('LATER_POLICIES_MISSING_ACTIVE_MEMBER_GUARD=' + JSON.stringify(report.policyCoverage.laterPoliciesMissingActiveMemberGuard));
             console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
             for (const group of report.duplicateGroups) console.log('DUPLICATE_SHA256=' + group.sha256 + ' PATHS=' + group.paths.join('|'));
