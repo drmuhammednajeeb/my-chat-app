@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "planId": "local-supabase-bootstrap-design-v1",
+  "mode": "DESIGN_ONLY",
+  "status": "BLOCKED",
+  "execution": {
+    "enabled": false,
+    "files": [],
+    "allowHistoricalChangesDirectory": false,
+    "allowCanonicalMigrationMutation": false,
+    "allowCloudSupabase": false,
+    "allowProductionData": false
+  },
+  "approval": {
+    "status": "NOT_APPROVED",
+    "requiredEvidence": [
+      "A complete object inventory covering tables, columns, constraints, indexes, sequences, functions, triggers, policies, grants, storage buckets, and publication membership",
+      "A dependency graph proving every referenced object exists before its first use",
+      "A corrected, separately reviewed test-only compatibility layer for legacy public.messages references, without modifying canonical SQL",
+      "Resolution of all cross-directory duplicate and ordering conflicts",
+      "A successful PostgreSQL parse and execution rehearsal against a disposable local-only database",
+      "A verified local-only Supabase endpoint guard and outbound network deny policy",
+      "A cleanup test proving the ephemeral stack and fixtures are destroyed after the job"
+    ]
+  },
+  "sources": {
+    "cliMigrations": {
+      "path": "supabase/migrations",
+      "fileCount": 10,
+      "executionAllowed": false,
+      "reason": "The current CLI sequence contains unresolved legacy-table references and dependencies on objects defined only in historical SQL."
+    },
+    "historicalSql": {
+      "path": "database/changes",
+      "fileCount": 43,
+      "executionAllowed": false,
+      "reason": "This directory is not a canonical ordered migration stream. Timestamp order alone does not prove dependencies, and some files are duplicated or syntactically invalid."
+    }
+  },
+  "dependencyLayers": [
+    {
+      "id": "managed-platform-prerequisites",
+      "purpose": "Supabase-managed auth, storage, realtime publication, roles, extensions, and platform schemas",
+      "status": "UNVERIFIED",
+      "dependencies": [],
+      "blockingChecks": [
+        "Confirm local CLI config and pinned CLI version",
+        "Confirm local-only roles, auth schema, storage schema, and supabase_realtime publication exist",
+        "Confirm required extensions and their installation schemas"
+      ]
+    },
+    {
+      "id": "core-chat-schema",
+      "purpose": "profiles, conversations, conversation_members, chat_messages, app_private helpers, core RLS and storage",
+      "status": "BLOCKED",
+      "dependencies": ["managed-platform-prerequisites"],
+      "blockingChecks": [
+        "Resolve public.messages assumptions in migrations 001 and 006",
+        "Prove table and FK order, including auth.users and profile references",
+        "Prove trigger functions exist before trigger creation"
+      ]
+    },
+    {
+      "id": "chat-feature-foundation",
+      "purpose": "direct-chat preferences, reactions, pins, delivery receipts, group capacity and team-admin helpers",
+      "status": "BLOCKED",
+      "dependencies": ["core-chat-schema"],
+      "blockingChecks": [
+        "Migrations 007 references message_pins, message_reactions, app_private.is_team_admin, app_private.enforce_group_member_limit, and app_private.get_or_create_direct_conversation_impl",
+        "Those objects are not established by the preceding CLI migration set",
+        "Historical source ordering is not formally declared"
+      ]
+    },
+    {
+      "id": "channels-groups-and-workspaces",
+      "purpose": "channels, group settings, member events, custom lists, workspaces, documents and private reply contexts",
+      "status": "BLOCKED",
+      "dependencies": ["chat-feature-foundation"],
+      "blockingChecks": [
+        "Resolve conversations.type constraint evolution before channel functions and policies",
+        "Resolve dependencies on team-admin and group-management helpers",
+        "Verify storage path ownership and private-document RLS as a single coherent model"
+      ]
+    },
+    {
+      "id": "notifications-and-realtime",
+      "purpose": "notification tables, triggers, indexes, publication membership and replica identity",
+      "status": "BLOCKED",
+      "dependencies": ["core-chat-schema", "chat-feature-foundation"],
+      "blockingChecks": [
+        "Ensure profiles, conversations, chat_messages and conversation_members exist before notification triggers",
+        "Deduplicate notification SQL only in a reviewed test manifest, never by silently choosing a file",
+        "Verify realtime publication membership idempotently"
+      ]
+    },
+    {
+      "id": "private-membership-and-auth-lifecycle",
+      "purpose": "team admins, membership invitations, signup triggers, official membership numbers and membership-state RPCs",
+      "status": "BLOCKED",
+      "dependencies": ["core-chat-schema"],
+      "blockingChecks": [
+        "Create team-admin authority before functions that call app_private.is_team_admin",
+        "Verify auth.users BEFORE/AFTER triggers and invitation acceptance transaction semantics",
+        "Resolve legacy and official membership-number format transitions",
+        "Fix the missing statement terminator in 20261107152733 before any rehearsal"
+      ]
+    },
+    {
+      "id": "final-privilege-and-security-hardening",
+      "purpose": "final table/column grants, RLS policies, function execution grants and security review",
+      "status": "BLOCKED",
+      "dependencies": [
+        "chat-feature-foundation",
+        "channels-groups-and-workspaces",
+        "notifications-and-realtime",
+        "private-membership-and-auth-lifecycle"
+      ],
+      "blockingChecks": [
+        "Apply final grants only after every referenced table, column and function exists",
+        "Verify SECURITY DEFINER search_path, function ownership and EXECUTE grants",
+        "Run negative RLS tests with at least two ordinary users and one unauthorized user"
+      ]
+    }
+  ],
+  "knownBlockers": [
+    {
+      "id": "LEGACY_MESSAGES_001",
+      "severity": "BLOCKER",
+      "source": "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
+      "detail": "Drops a policy, revokes privileges, and enables RLS on public.messages before proving the table exists."
+    },
+    {
+      "id": "LEGACY_MESSAGES_006",
+      "severity": "BLOCKER",
+      "source": "supabase/migrations/202611060006_explicit_legacy_deny.sql",
+      "detail": "Creates a policy on public.messages without a preceding table definition in the CLI migration set."
+    },
+    {
+      "id": "LATE_OBJECTS_007",
+      "severity": "BLOCKER",
+      "source": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
+      "detail": "References message_pins, message_reactions, app_private.is_team_admin, app_private.enforce_group_member_limit, app_private.get_or_create_direct_conversation_impl, and membership columns that are introduced in historical SQL or later changes."
+    },
+    {
+      "id": "CROSS_DIRECTORY_ORDER",
+      "severity": "BLOCKER",
+      "source": "database/changes",
+      "detail": "43 historical SQL files are not a canonical CLI migration sequence; filename timestamps and alphabetical order do not prove object dependencies."
+    },
+    {
+      "id": "DUPLICATE_SQL",
+      "severity": "REVIEW_REQUIRED",
+      "source": "database/changes",
+      "detail": "Three byte-identical pairs exist across the CLI and historical directories; a test plan must explicitly identify canonical source provenance."
+    },
+    {
+      "id": "SQL_TERMINATOR_20261107152733",
+      "severity": "BLOCKER",
+      "source": "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "detail": "The CREATE OR REPLACE FUNCTION body ends at $function$ without the required terminating semicolon before REVOKE/GRANT statements."
+    },
+    {
+      "id": "MEMBERSHIP_SCHEMA_DRIFT",
+      "severity": "BLOCKER",
+      "source": "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
+      "detail": "This migration expects app_private membership functions, member_invitations and constraints that are introduced in historical SQL, not in the preceding CLI migration stream."
+    }
+  ],
+  "networkPolicy": {
+    "requiredMode": "LOOPBACK_ONLY",
+    "allowedHosts": ["127.0.0.1", "localhost", "::1"],
+    "denyCloudSupabaseDomains": true,
+    "denyProductionProject": true,
+    "denyAllNonLoopbackDatabaseTargets": true,
+    "secretsRequired": false
+  },
+  "cleanup": {
+    "required": true,
+    "scope": "Ephemeral GitHub Actions job resources only",
+    "mustRunOn": ["success", "failure", "cancelled"],
+    "productionResourcesMayBeTouched": false
+  }
+}
