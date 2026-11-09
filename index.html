@@ -1787,7 +1787,7 @@ async function sendMessage(){
  }
  try{
   // Clear only the exact draft that was sent, and only while its conversation remains active.
-  if(state.active?.id===conversationId&&$('messageInput').value===draftValue&&state.attachment===file&&state.replyTarget?.id===replyTo&&((!state.editTarget&&!editTarget)||state.editTarget?.id===editTarget?.id)&&(!state.privateReplyPending||state.privateReplyPending.sourceMessageId===privateContext?.sourceMessageId)){
+  if(state.active?.id===conversationId&&$('messageInput').value===draftValue&&state.attachment===file&&(state.replyTarget?.id||null)===replyTo&&((!state.editTarget&&!editTarget)||state.editTarget?.id===editTarget?.id)&&(!state.privateReplyPending||state.privateReplyPending.sourceMessageId===privateContext?.sourceMessageId)){
    $('messageInput').value='';state.attachment=null;state.voiceDuration=0;$('fileInput').value='';$('attachmentPreview').replaceChildren();$('attachmentPreview').classList.add('hidden');state.replyTarget=null;state.editTarget=null;state.privateReplyPending=null;renderComposerContext();resizeComposer();publishTyping(false);
   }
   if(state.active?.id===conversationId){
