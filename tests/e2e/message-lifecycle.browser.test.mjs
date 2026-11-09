@@ -207,6 +207,49 @@ test('browser: a draft typed while persistence is pending is not erased by the e
   } finally { await page.close(); }
 });
 
+test('browser: group send restrictions block a non-admin before any persistence call', async () => {
+  const page = await newPage();
+  try {
+    await installSendHarness(page);
+    await page.evaluate(() => {
+      window.__state.active.type = 'group';
+      window.__state.active.members = [{ user_id: 'user-1', role: 'member' }];
+      window.__state.groupSettings = { only_admins_can_send: true };
+    });
+    await page.evaluate(() => window.__runSend());
+    const result = await page.evaluate(() => ({
+      inserts: window.__backend.insertCalls.length,
+      draft: document.getElementById('messageInput').value,
+      uploading: window.__state.uploading,
+      notices: window.__backend.notices
+    }));
+    assert.equal(result.inserts, 0);
+    assert.equal(result.draft, 'hello');
+    assert.equal(result.uploading, false);
+    assert.ok(result.notices.some(message => message.includes('مشرفي المجموعة')));
+  } finally { await page.close(); }
+});
+
+test('browser: obsolete render tokens are rejected before DOM work begins', async () => {
+  const page = await newPage();
+  try {
+    await page.evaluate(({ source }) => {
+      const state = { active: { id: 'conversation-1' }, messageLoadVersion: 9, messages: [], messageIds: new Set(), messageRenderPromises: new Map() };
+      window.__renderCalls = 0;
+      window.__runRender = new Function('state', 'renderMessageInternal', 'return (' + source + ');')(
+        state, async () => { window.__renderCalls += 1; return true; }
+      );
+      window.__runRenderState = state;
+    }, { source: renderSource });
+    const result = await page.evaluate(async () => ({
+      rendered: await window.__runRender({ id: 'stale-message' }, 'conversation-1', 8),
+      calls: window.__renderCalls
+    }));
+    assert.equal(result.rendered, false);
+    assert.equal(result.calls, 0);
+  } finally { await page.close(); }
+});
+
 test('browser: same-ID render requests serialize and retry using the newest in-memory message', async () => {
   const page = await newPage();
   try {
