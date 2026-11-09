@@ -75,3 +75,14 @@ test('application Storage buckets are compared with repository bucket declaratio
   assert.deepEqual(report.storageCoverage.clientBucketsWithoutStoragePolicies, []);
   assert.equal(report.storageCoverage.chatMediaUploadPathOwnershipGuard, false);
 });
+
+
+test('Supabase platform dependencies are inventoried before any local stack launch', async () => {
+  const report = await buildObjectInventory();
+  assert.equal(report.platformDependencies.authSchema, true);
+  assert.equal(report.platformDependencies.storageSchema, true);
+  assert.equal(report.platformDependencies.realtimePublication, true);
+  assert.equal(report.platformDependencies.pgcrypto, true);
+  assert.equal(report.platformDependencies.pgCron, true);
+  assert.equal(report.sourceCounts.supabaseConfigPresent, false);
+});
