@@ -64,3 +64,13 @@ test('fixed identity literals are inventoried for synthetic test substitution', 
   assert.ok(report.hardcodedIdentityReview.membershipNumberLiteralFiles.includes('database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql'));
   assert.ok(report.hardcodedIdentityReview.membershipNumberLiteralFiles.includes('database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql'));
 });
+
+
+test('application Storage buckets are compared with repository bucket declarations and policies', async () => {
+  const report = await buildObjectInventory();
+  assert.deepEqual(report.storageCoverage.clientBuckets, ['avatars', 'chat-media', 'conversation-documents']);
+  assert.deepEqual(report.storageCoverage.declaredBucketIds, ['avatars']);
+  assert.deepEqual(report.storageCoverage.missingBucketDeclarations, ['chat-media', 'conversation-documents']);
+  assert.deepEqual(report.storageCoverage.storageObjectPolicyBuckets, ['avatars', 'conversation-documents']);
+  assert.deepEqual(report.storageCoverage.clientBucketsWithoutStoragePolicies, ['chat-media']);
+});
