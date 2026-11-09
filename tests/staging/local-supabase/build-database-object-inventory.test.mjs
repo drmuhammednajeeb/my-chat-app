@@ -69,8 +69,8 @@ test('fixed identity literals are inventoried for synthetic test substitution', 
 test('application Storage buckets are compared with repository bucket declarations and policies', async () => {
   const report = await buildObjectInventory();
   assert.deepEqual(report.storageCoverage.clientBuckets, ['avatars', 'chat-media', 'conversation-documents']);
-  assert.deepEqual(report.storageCoverage.declaredBucketIds, ['avatars']);
-  assert.deepEqual(report.storageCoverage.missingBucketDeclarations, ['chat-media', 'conversation-documents']);
+  assert.deepEqual(report.storageCoverage.declaredBucketIds, ['avatars', 'conversation-documents']);
+  assert.deepEqual(report.storageCoverage.missingBucketDeclarations, ['chat-media']);
   assert.deepEqual(report.storageCoverage.storageObjectPolicyBuckets, ['avatars', 'conversation-documents']);
   assert.deepEqual(report.storageCoverage.clientBucketsWithoutStoragePolicies, ['chat-media']);
 });
