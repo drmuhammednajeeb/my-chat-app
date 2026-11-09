@@ -150,7 +150,15 @@ function inspect(file) {
   const sequences = matches(sql, /\bcreate\s+sequence\s+(?:if\s+not\s+exists\s+)?((?:[a-z_]\w*\.)?[a-z_]\w*)/gi, m => m[1].toLowerCase());
   const indexes = matches(sql, /\bcreate\s+(?:unique\s+)?index\s+(?:if\s+not\s+exists\s+)?([a-z_]\w*)\s+on\s+((?:[a-z_]\w*\.)?[a-z_]\w*)/gi, m => ({ name: m[1].toLowerCase(), table: m[2].toLowerCase() }));
   const triggers = matches(sql, /\bcreate\s+trigger\s+([a-z_]\w*)[\s\S]*?\bon\s+((?:[a-z_]\w*\.)?[a-z_]\w*)/gi, m => ({ name: m[1].toLowerCase(), table: m[2].toLowerCase() }));
-  const policies = matches(sql, /\bcreate\s+policy\s+"?([^"\r\n]+?)"?\s+on\s+((?:[a-z_]\w*\.)?[a-z_]\w*)/gi, m => ({ name: m[1].trim(), table: m[2].toLowerCase() }));
+  const policyDetails = matches(sql, /\bcreate\s+policy\s+"?([^"\r\n]+?)"?\s+on\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\b([\s\S]*?);/gi, m => {
+    const statement = m[3].replace(/\s+/g, ' ').trim();
+    const direct = /\bapp_private\.is_active_member\s*\(/i.test(statement);
+    const indirect = /\bapp_private\.(?:is_conversation_member|can_manage_conversation|is_team_admin)\s*\(/i.test(statement);
+    const denyAll = /\busing\s*\(\s*false\s*\)/i.test(statement) || /\bwith\s+check\s*\(\s*false\s*\)/i.test(statement);
+    const selfScoped = /\bauth\.uid\s*\(\s*\)/i.test(statement) || /\bowner_id\s*=/i.test(statement) || /\buser_id\s*=/i.test(statement);
+    return { name: m[1].trim(), table: m[2].toLowerCase(), statement, guardClass: denyAll ? 'DENY_ALL' : direct ? 'DIRECT_ACTIVE_MEMBER' : indirect ? 'INDIRECT_ACTIVE_MEMBER' : selfScoped ? 'SELF_SCOPE_ONLY' : 'NO_RECOGNIZED_GUARD' };
+  });
+  const policies = policyDetails.map(({ name, table }) => ({ name, table }));
   const constraints = matches(sql, /\badd\s+constraint\s+([a-z_]\w*)/gi, m => m[1].toLowerCase());
   const relationsReferenced = [...new Set(matches(sql, /\b(?:from|join|update|into|references)\s+((?:public|app_private|auth|storage|cron|extensions)\s*\.\s*[a-z_]\w*)/gi, m => m[1].replace(/\s+/g, '').toLowerCase()))].sort();
   const internalFunctionsReferenced = [...new Set([...sql.matchAll(/\bapp_private\s*\.\s*([a-z_]\w*)\s*\(/gi)]
@@ -163,10 +171,11 @@ function inspect(file) {
   const cronUsage = /\b(?:cron\.schedule|cron\.unschedule|create\s+extension\s+(?:if\s+not\s+exists\s+)?pg_cron)\b/i.test(sql);
   const grants = matches(sql, /\b(grant|revoke)\s+([^;]+?)\s+on\s+(?:table\s+)?((?:public|app_private|auth|storage|cron|extensions)\.[a-z_]\w*)\s+(to|from)\s+([^;]+);/gi, m => ({ action: m[1].toUpperCase(), privileges: m[2].replace(/\s+/g, ' ').trim(), object: m[3].toLowerCase(), direction: m[4].toUpperCase(), roles: m[5].replace(/\s+/g, ' ').trim() }));
   const syntaxHazards = matches(sql, /\$(?:function|body)?\$\s*\r?\n\s*(?:revoke|grant|create|alter|drop)\b/gi, m => ({ line: sql.slice(0, m.index).split('\n').length }));
-  const migrationTimestamp = file.kind === 'migration' ? file.path.split('/').at(-1).match(/^(\d{8,14})/)?.[1] ?? null : null;
+  const sourceTimestamp = file.path.split('/').at(-1).match(/^(\d{8,14})/)?.[1] ?? null;
+  const migrationTimestamp = file.kind === 'migration' ? sourceTimestamp : null;
   return { path: file.path, kind: file.kind, bytes: file.bytes, sha256, migrationTimestamp,
-    createdTables: [...new Set(createdTables)].sort(), tableDetails: tableDetails.tables, foreignKeys: tableDetails.foreignKeys, alteredTables: [...new Set(alteredTables)].sort(),
-    functions, sequences: [...new Set(sequences)].sort(), indexes, triggers, policies,
+    createdTables: [...new Set(createdTables)].sort(), tableDetails: tableDetails.tables, foreignKeys: tableDetails.foreignKeys, alteredTables: [...new Set(alteredTables)].sort(), sourceTimestamp,
+    functions, sequences: [...new Set(sequences)].sort(), indexes, triggers, policies, policyDetails,
     constraints: [...new Set(constraints)].sort(), grants, relationsReferenced, internalFunctionsReferenced,
     extensionCreates, storageBucketIds, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, cronUsage, syntaxHazards };
 }
@@ -197,6 +206,9 @@ export async function buildObjectInventory(root = ROOT) {
   const frontendRequires971Nine = /\^971\[0-9\]\{9\}\$/.test(membershipJs) && /\^971\[0-9\]\{9\}\$/.test(appHtml);
   const officialInviteStillLegacy = /\^971001\[0-9\]\{6\}\$/.test(officialSql);
   const finalCoversInviteImplementations = finalTargets.includes('admin_create_official_member_invites_impl') && finalTargets.includes('admin_set_member_official_number_impl');
+  const membershipBaseTimestamp = 20261107144109;
+  const policiesAfterMembershipBase = files.filter(file => file.sourceTimestamp && Number(file.sourceTimestamp) > membershipBaseTimestamp).flatMap(file => file.policyDetails.map(policy => ({ path: file.path, ...policy })));
+  const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
   const platformDependencies = {
     authSchema: files.some(file => file.relationsReferenced.some(name => name.startsWith('auth.'))),
     storageSchema: files.some(file => file.relationsReferenced.some(name => name.startsWith('storage.')) || file.storageBucketIds.length),
@@ -219,6 +231,7 @@ export async function buildObjectInventory(root = ROOT) {
       indexes: files.reduce((n, f) => n + f.indexes.length, 0),
       triggers: files.reduce((n, f) => n + f.triggers.length, 0),
       policies: files.reduce((n, f) => n + f.policies.length, 0),
+      policiesAfterMembershipBase: files.filter(f => f.sourceTimestamp && Number(f.sourceTimestamp) > 20261107144109).reduce((n, f) => n + f.policyDetails.length, 0),
       constraints: files.reduce((n, f) => n + f.constraints.length, 0)
     },
     platformDependencies,
@@ -236,6 +249,7 @@ export async function buildObjectInventory(root = ROOT) {
       status: frontendRequires971Nine && officialInviteStillLegacy && finalCoversInviteImplementations && finalTargets.length === 6 ? 'SEQUENCED_FORMAT_TRANSITION' : 'REVIEW_REQUIRED'
     },
     duplicateGroups,
+    policyCoverage: { membershipRewriteSource: 'database/changes/20261107144109_private_membership_system_20261107.sql', policiesAfterMembershipBase, laterPoliciesMissingActiveMemberGuard },
     syntaxHazards: files.flatMap(f => f.syntaxHazards.map(item => ({ path: f.path, ...item }))),
     files
   };
