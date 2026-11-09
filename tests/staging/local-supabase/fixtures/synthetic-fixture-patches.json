@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "mode": "TEST_COPY_ONLY",
+  "patches": [
+    {
+      "sourcePath": "database/changes/team_management_dashboard.sql",
+      "sourceGitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df",
+      "sourceSha256": "COMPUTED_BY_CI",
+      "testCopyPath": "tests/staging/local-supabase/fixtures/team_management_dashboard.sql",
+      "testCopySha256": "COMPUTED_BY_CI",
+      "replacement": {
+        "from": "drmuhammed.najeeb2020@gmail.com",
+        "to": "admin@bizmindmakers.test",
+        "expectedOccurrences": 1
+      }
+    },
+    {
+      "sourcePath": "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "sourceGitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f",
+      "sourceSha256": "COMPUTED_BY_CI",
+      "testCopyPath": "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "testCopySha256": "COMPUTED_BY_CI",
+      "replacement": {
+        "from": "971001726361",
+        "to": "971001000001",
+        "expectedOccurrences": 1
+      }
+    },
+    {
+      "sourcePath": "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "sourceGitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc",
+      "sourceSha256": "COMPUTED_BY_CI",
+      "testCopyPath": "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "testCopySha256": "COMPUTED_BY_CI",
+      "replacement": {
+        "from": "971001726361",
+        "to": "971001000001",
+        "expectedOccurrences": 1
+      }
+    },
+    {
+      "sourcePath": "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "sourceGitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
+      "sourceSha256": "COMPUTED_BY_CI",
+      "testCopyPath": "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "testCopySha256": "COMPUTED_BY_CI",
+      "replacement": {
+        "from": "$function$\n\nrevoke all on function app_private.admin_create_official_member_invites_impl(jsonb)",
+        "to": "$function$;\n\nrevoke all on function app_private.admin_create_official_member_invites_impl(jsonb)",
+        "expectedOccurrences": 1
+      }
+    }
+  ],
+  "fixtures": [
+    {
+      "path": "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
+      "runWhen": "After core schema and before team_management_dashboard.sql; before membership auth triggers."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
+      "runWhen": "After membership base SQL and before official membership verification SQL."
+    }
+  ],
+  "execution": {
+    "enabled": false,
+    "sqlExecuted": false,
+    "cloudAllowed": false,
+    "productionAllowed": false
+  }
+}
