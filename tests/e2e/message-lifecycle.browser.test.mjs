@@ -63,6 +63,8 @@ async function installSendHarness(page, { text = 'hello', attachment = false } =
       insertCalls: [], insertMode: 'success', verifyCommitted: false,
       delayInsert: false, releaseInsert: null, uploadCalls: 0, notices: []
     };
+    let uuidCounter = 0;
+    const testCrypto = { randomUUID: () => '00000000-0000-4000-8000-' + String(++uuidCounter).padStart(12, '0') };
     const rowFrom = payload => ({
       ...payload, created_at: '2026-11-09T10:00:00.000Z',
       edited_at: null, deleted_at: null, edit_revision: 0
@@ -107,7 +109,7 @@ async function installSendHarness(page, { text = 'hello', attachment = false } =
       async file => { backend.uploadCalls += 1; return { path: 'conversation-1/user-1/proof.pdf', type: file.type }; },
       () => {}, () => {}, () => {}, async () => true,
       async message => { state.messageIds.add(message.id); state.messages.push(message); return true; },
-      () => {}, console, crypto
+      () => {}, console, testCrypto
     );
   }, { source: sendSource, text, attachment });
   return page;
