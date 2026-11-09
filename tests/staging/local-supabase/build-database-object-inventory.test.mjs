@@ -73,4 +73,5 @@ test('application Storage buckets are compared with repository bucket declaratio
   assert.deepEqual(report.storageCoverage.missingBucketDeclarations, []);
   assert.deepEqual(report.storageCoverage.storageObjectPolicyBuckets, ['avatars', 'chat-media', 'conversation-documents']);
   assert.deepEqual(report.storageCoverage.clientBucketsWithoutStoragePolicies, []);
+  assert.equal(report.storageCoverage.chatMediaUploadPathOwnershipGuard, false);
 });
