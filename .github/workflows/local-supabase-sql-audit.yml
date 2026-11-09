@@ -52,6 +52,7 @@ jobs:
             console.log('TRIGGERS=' + report.inventoryTotals.triggers);
             console.log('POLICIES=' + report.inventoryTotals.policies);
             console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
+            for (const group of report.duplicateGroups) console.log('DUPLICATE_SHA256=' + group.sha256 + ' PATHS=' + group.paths.join('|'));
             console.log('UNRESOLVED_INTERNAL_FUNCTIONS=' + report.unresolvedInternalFunctions.join(','));
             console.log('MISSING_CLIENT_RPCS=' + report.missingClientRpcs.join(','));
             console.log('MEMBERSHIP_FORMAT_STATUS=' + report.membershipFormatReview.status);
@@ -79,6 +80,9 @@ jobs:
               ' | Grants/revokes: ' + report.inventoryTotals.grantStatements,
             ''
           ];
+          lines.push('## Byte-identical duplicate groups');
+          for (const group of report.duplicateGroups) lines.push('- SHA256 ' + group.sha256 + ': ' + group.paths.join(' = '));
+          lines.push('');
           for (const file of report.files) {
             lines.push('## ' + file.path);
             lines.push('- SHA256: ' + file.sha256);
