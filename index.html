@@ -1360,10 +1360,22 @@ async function loadOlderMessages(){
   return false;
  }finally{state.loadingOlderMessages=false;area.querySelector('.messages-history-loader')?.remove()}
 }
-function stopMessagePolling(){state.isLoadingMessages=false;state.loadingOlderMessages=false;state.hasMoreMessages=false;state.messagePollGeneration++;if(state.messagePollTimer){clearInterval(state.messagePollTimer);state.messagePollTimer=null}state.messagePollBusy=false;diagLog('poll-stopped',{generation:state.messagePollGeneration})}
+function messagePollingDelay(){
+ if(document.visibilityState!=='visible')return 60000;
+ return state.realtimeStatus==='SUBSCRIBED'?30000:8000;
+}
+function scheduleMessagePolling(conversationId,generation,delay=messagePollingDelay()){
+ if(generation!==state.messagePollGeneration||state.active?.id!==conversationId)return;
+ if(state.messagePollTimer)clearTimeout(state.messagePollTimer);
+ state.messagePollTimer=setTimeout(()=>{
+  state.messagePollTimer=null;
+  pollMessagesFallback(conversationId,generation);
+ },delay);
+}
+function stopMessagePolling(){state.isLoadingMessages=false;state.loadingOlderMessages=false;state.hasMoreMessages=false;state.messagePollGeneration++;if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}state.messagePollBusy=false;diagLog('poll-stopped',{generation:state.messagePollGeneration})}
 function startMessagePolling(conversationId){
  stopMessagePolling();const generation=state.messagePollGeneration;
- state.messagePollTimer=setInterval(()=>pollMessagesFallback(conversationId,generation),8000);diagLog('poll-started',{conversationId,generation});
+ scheduleMessagePolling(conversationId,generation);diagLog('poll-started',{conversationId,generation,delay:messagePollingDelay()});
 }
 async function pollMessagesFallback(conversationId,generation=state.messagePollGeneration){
  if(state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
@@ -1387,9 +1399,14 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
   const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole);if($('messageInput').disabled&&!channelReadOnly){$('messageInput').disabled=false;diagLog('composer-reenabled-by-poll')}
   resizeComposer();diagLog('poll-success',{fetched:fetched.length,added,rendered:$('messages').querySelectorAll('.message').length});
  }catch(error){diagLog('poll-error',{error:String(error?.message||error)});console.warn('Fallback message sync failed:',error)}
- finally{if(generation===state.messagePollGeneration)state.messagePollBusy=false;updateDiagnostics()}
+ finally{
+  if(generation===state.messagePollGeneration){
+   state.messagePollBusy=false;
+   scheduleMessagePolling(conversationId,generation);
+  }
+  updateDiagnostics();
+ }
 }
-
 function subscribeProfileUpdates(conversation){
  if(state.profileChannel)supabaseClient.removeChannel(state.profileChannel);
  let channel=supabaseClient.channel('profile-updates:'+state.user.id);
