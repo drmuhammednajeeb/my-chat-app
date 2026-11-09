@@ -192,7 +192,7 @@ test('browser: a draft typed while persistence is pending is not erased by the e
     await installSendHarness(page);
     const sendPromise = page.evaluate(() => {
       window.__backend.delayInsert = true;
-      window.__sendPromise = window.__runSend();
+      return window.__runSend();
     });
     await page.waitForFunction(() => window.__backend.insertCalls.length === 1 && typeof window.__backend.releaseInsert === 'function');
     await page.locator('#messageInput').fill('new draft while sending');
