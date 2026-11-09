@@ -1378,9 +1378,11 @@ async function loadMessages(){
   state.messages=messages;
   const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];const nextReplyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;if(!replyError)(parents||[]).forEach(x=>nextReplyMessages.set(x.id,x))}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;state.replyMessages=nextReplyMessages;
-  if(!await loadMessageReactions(conversationId,messages,requestId))return false;
-  if(!await loadMessagePins(conversationId,requestId))return false;
-  if(!await loadPrivateReplyContexts(conversationId,messages,requestId))return false;
+  await loadMessageReactions(conversationId,messages,requestId);
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  await loadMessagePins(conversationId,requestId);
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  await loadPrivateReplyContexts(conversationId,messages,requestId);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   // Reconcile again after auxiliary queries: Realtime INSERTs may arrive while those queries are in flight.
   const latest=new Map(messages.map(m=>[m.id,m]));
@@ -1429,8 +1431,9 @@ async function loadOlderMessages(){
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   const replyIds=[...new Set(state.messages.map(m=>m.reply_to).filter(id=>id&&!merged.has(id)))];
   if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;if(parentError)throw parentError;(parents||[]).forEach(parent=>state.replyMessages.set(parent.id,parent))}
-  if(!await loadMessageReactions(conversationId,older,requestId))return false;
-  if(!await loadMessagePins(conversationId,requestId))return false;
+  await loadMessageReactions(conversationId,older,requestId);
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  await loadMessagePins(conversationId,requestId);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   state.isLoadingMessages=true;area.style.overflowAnchor='none';area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
   for(const message of state.messages){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;await renderMessage(message,conversationId,requestId)}
@@ -1465,12 +1468,12 @@ function startMessagePolling(conversationId){
 }
 async function pollMessagesFallback(conversationId,generation=state.messagePollGeneration){
  if(state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
+ const messageRequestId=state.messageLoadVersion;
  state.messagePollBusy=true;state.diagnostics.lastPollAt=new Date().toLocaleTimeString('en-GB');
  try{
-  let pollQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)pollQuery=pollQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await pollQuery.order('created_at',{ascending:false}).limit(100);
+  let pollQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)pollQuery=pollQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await pollQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(100);
   if(error)throw error;
-  if(generation!==state.messagePollGeneration||state.active?.id!==conversationId)return;
-  const messageRequestId=state.messageLoadVersion;
+  if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
   const current=new Map((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>[m.id,m]));
   const fetched=(data||[]).slice().reverse();let added=0;
   for(const message of fetched){
@@ -1702,7 +1705,7 @@ async function sendMessage(){
   state.uploading=false;resizeComposer();return;
  }
  // Clear only the exact draft that was sent, and only while its conversation remains active.
- if(state.active?.id===conversationId&&$('messageInput').value===draftValue&&state.attachment===file&&state.replyTarget?.id===replyTo&&((!state.editTarget&&!editTarget)||state.editTarget?.id===editTarget?.id)){
+ if(state.active?.id===conversationId&&$('messageInput').value===draftValue&&state.attachment===file&&state.replyTarget?.id===replyTo&&((!state.editTarget&&!editTarget)||state.editTarget?.id===editTarget?.id)&&(!state.privateReplyPending||state.privateReplyPending.sourceMessageId===privateContext?.sourceMessageId)){
   $('messageInput').value='';state.attachment=null;state.voiceDuration=0;$('fileInput').value='';$('attachmentPreview').replaceChildren();$('attachmentPreview').classList.add('hidden');state.replyTarget=null;state.editTarget=null;state.privateReplyPending=null;renderComposerContext();resizeComposer();publishTyping(false);
  }
  if(state.active?.id===conversationId){
