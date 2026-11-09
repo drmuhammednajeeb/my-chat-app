@@ -63,7 +63,11 @@
         "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql"
       ],
       "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
-      "note": "Current client uses chat_messages and the two migrations only perform table-level policy/privilege operations. A minimal empty stub is permitted only in the disposable local replay fixture; it is not a model of the deployed legacy table."
+      "note": "Current client uses chat_messages and the two migrations only perform table-level policy/privilege operations. A minimal empty stub is permitted only in the disposable local replay fixture; it is not a model of the deployed legacy table.",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
+        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+      ]
     },
     {
       "id": "core.base",
@@ -83,6 +87,9 @@
         "platform.storage",
         "platform.realtime",
         "legacy.messages"
+      ],
+      "testSource": [
+        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
       ]
     },
     {
@@ -93,6 +100,10 @@
       ],
       "requires": [
         "core.base"
+      ],
+      "testSource": [
+        "supabase/migrations/202611060002_tighten_api_grants.sql",
+        "supabase/migrations/202611060003_minimum_table_privileges.sql"
       ]
     },
     {
@@ -105,6 +116,9 @@
       ],
       "requires": [
         "core.base"
+      ],
+      "testSource": [
+        "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
       ]
     },
     {
@@ -119,6 +133,9 @@
       "requires": [
         "core.base",
         "platform.auth"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql"
       ]
     },
     {
@@ -138,7 +155,10 @@
         "core.creator",
         "test-fixture.admin-auth-seed"
       ],
-      "status": "TEST_COPY_ONLY_SYNTHETIC_ADMIN_EMAIL"
+      "status": "TEST_COPY_ONLY_SYNTHETIC_ADMIN_EMAIL",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+      ]
     },
     {
       "id": "chat.preferences",
@@ -150,6 +170,9 @@
       ],
       "requires": [
         "core.base"
+      ],
+      "testSource": [
+        "database/changes/user_specific_direct_chat_preferences.sql"
       ]
     },
     {
@@ -164,6 +187,9 @@
       "requires": [
         "core.base",
         "team.admin"
+      ],
+      "testSource": [
+        "database/changes/professional_message_controls_and_receipts.sql"
       ]
     },
     {
@@ -177,6 +203,9 @@
       "requires": [
         "core.base",
         "platform.realtime"
+      ],
+      "testSource": [
+        "database/changes/message_reactions_and_whatsapp_typography.sql"
       ]
     },
     {
@@ -196,6 +225,9 @@
         "core.base",
         "chat.preferences",
         "team.admin"
+      ],
+      "testSource": [
+        "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
       ]
     },
     {
@@ -211,6 +243,9 @@
       "requires": [
         "core.base",
         "core.creator"
+      ],
+      "testSource": [
+        "database/changes/public_announcement_channels.sql"
       ]
     },
     {
@@ -228,6 +263,9 @@
         "chat.channels-public",
         "team.admin",
         "platform.pgcrypto"
+      ],
+      "testSource": [
+        "database/changes/private_channels_with_secure_invites.sql"
       ]
     },
     {
@@ -240,6 +278,12 @@
         "chat.reactions",
         "team.admin",
         "UNRESOLVED:get_or_create_direct_conversation_impl(uuid)"
+      ],
+      "testSource": [
+        "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
+      ],
+      "blockedBy": [
+        "DAG-002"
       ]
     },
     {
@@ -251,6 +295,10 @@
       "requires": [
         "core.base",
         "chat.channels-public"
+      ],
+      "testSource": [
+        "database/changes/20261107061012_self_message_conversation.sql",
+        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
       ]
     },
     {
@@ -265,6 +313,9 @@
       "requires": [
         "core.base",
         "platform.realtime"
+      ],
+      "testSource": [
+        "supabase/migrations/20261107014128_unified_user_notifications.sql"
       ]
     },
     {
@@ -274,6 +325,9 @@
       ],
       "requires": [
         "chat.notifications"
+      ],
+      "testSource": [
+        "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql"
       ]
     },
     {
@@ -290,6 +344,9 @@
         "chat.groups",
         "platform.storage",
         "platform.pgcrypto"
+      ],
+      "testSource": [
+        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
       ]
     },
     {
@@ -303,6 +360,10 @@
         "platform.realtime",
         "platform.storage",
         "chat.workspace-indexes"
+      ],
+      "testSource": [
+        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
+        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
       ]
     },
     {
@@ -313,6 +374,9 @@
       "requires": [
         "chat.groups",
         "platform.realtime"
+      ],
+      "testSource": [
+        "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
       ]
     },
     {
@@ -323,6 +387,9 @@
       "requires": [
         "chat.expiry",
         "platform.pg_cron"
+      ],
+      "testSource": [
+        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
       ]
     },
     {
@@ -334,6 +401,9 @@
         "core.base",
         "platform.storage",
         "platform.realtime"
+      ],
+      "testSource": [
+        "database/changes/20261107035500_user_avatars_storage.sql"
       ]
     },
     {
@@ -343,6 +413,9 @@
       ],
       "requires": [
         "chat.preferences"
+      ],
+      "testSource": [
+        "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
       ]
     },
     {
@@ -360,6 +433,9 @@
         "core.base",
         "chat.reactions",
         "team.admin"
+      ],
+      "testSource": [
+        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
       ]
     },
     {
@@ -369,6 +445,9 @@
       ],
       "requires": [
         "chat.account-settings-message-edit"
+      ],
+      "testSource": [
+        "database/changes/20261107124500_harden_message_edit_permissions.sql"
       ]
     },
     {
@@ -380,6 +459,9 @@
         "chat.groups",
         "team.admin",
         "chat.group-ownership-transfer"
+      ],
+      "testSource": [
+        "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
       ]
     },
     {
@@ -390,6 +472,9 @@
       "requires": [
         "chat.group-settings-hardening",
         "team.admin"
+      ],
+      "testSource": [
+        "database/changes/20261107130534_include_team_admins_in_group_management.sql"
       ]
     },
     {
@@ -400,6 +485,9 @@
       "requires": [
         "chat.team-admin-group-overrides",
         "team.admin"
+      ],
+      "testSource": [
+        "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
       ]
     },
     {
@@ -411,6 +499,9 @@
         "chat.account-settings-message-edit",
         "chat.message-edit-hardening",
         "chat.restore-message-edit-guard"
+      ],
+      "testSource": [
+        "database/changes/20261107131500_index_message_edit_history.sql"
       ]
     },
     {
@@ -452,6 +543,9 @@
         "chat.favorite-column",
         "chat.remove-duplicate-favorite",
         "chat.workspace-indexes"
+      ],
+      "testSource": [
+        "database/changes/20261107144109_private_membership_system_20261107.sql"
       ]
     },
     {
@@ -466,6 +560,9 @@
       "requires": [
         "membership.base",
         "test-fixture.admin-auth-seed"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql"
       ]
     },
     {
@@ -482,7 +579,10 @@
         "membership.invitation-policies",
         "membership.invitation-indexes"
       ],
-      "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER"
+      "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql"
+      ]
     },
     {
       "id": "membership.final-format",
@@ -498,6 +598,9 @@
         "membership.retire-sequence",
         "membership.restore-rpc",
         "membership.chat-rls-fix"
+      ],
+      "testSource": [
+        "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql"
       ]
     },
     {
@@ -509,6 +612,9 @@
       "status": "TEST_COPY_ONLY",
       "requires": [
         "membership.official"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ]
     },
     {
@@ -518,6 +624,9 @@
       ],
       "requires": [
         "membership.base"
+      ],
+      "testSource": [
+        "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
       ]
     },
     {
@@ -527,6 +636,9 @@
       ],
       "requires": [
         "membership.base"
+      ],
+      "testSource": [
+        "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
       ]
     },
     {
@@ -536,6 +648,9 @@
       ],
       "requires": [
         "membership.base"
+      ],
+      "testSource": [
+        "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
       ]
     },
     {
@@ -545,6 +660,9 @@
       ],
       "requires": [
         "membership.base"
+      ],
+      "testSource": [
+        "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
       ]
     },
     {
@@ -554,6 +672,9 @@
       ],
       "requires": [
         "membership.official"
+      ],
+      "testSource": [
+        "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
       ]
     },
     {
@@ -565,6 +686,9 @@
       "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
       "requires": [
         "membership.official"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ]
     },
     {
@@ -574,6 +698,9 @@
       ],
       "requires": [
         "membership.official"
+      ],
+      "testSource": [
+        "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
       ]
     },
     {
@@ -584,6 +711,9 @@
       "requires": [
         "membership.official",
         "chat.groups"
+      ],
+      "testSource": [
+        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
       ]
     },
     {
@@ -594,6 +724,9 @@
       "status": "READ_ONLY_TEST_ASSERTION",
       "requires": [
         "membership.final-format"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql"
       ]
     },
     {
@@ -607,6 +740,9 @@
       ],
       "requires": [
         "platform.storage"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/storage-buckets-compat.sql"
       ]
     },
     {
@@ -621,7 +757,11 @@
       "requires": [
         "core.base",
         "storage.compat-buckets"
-      ]
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/chat-media-storage-policies-candidate.sql"
+      ],
+      "parityNote": "Candidate local policy only; deployed chat-media policies are not present in the repository source."
     },
     {
       "id": "chat.voice",
@@ -630,6 +770,9 @@
       ],
       "requires": [
         "storage.compat-buckets"
+      ],
+      "testSource": [
+        "database/changes/20261107080000_chat_voice_messages.sql"
       ]
     },
     {
@@ -639,6 +782,9 @@
       ],
       "requires": [
         "core.base"
+      ],
+      "testSource": [
+        "supabase/migrations/202611060004_reference_profiles.sql"
       ]
     },
     {
@@ -649,6 +795,9 @@
       "requires": [
         "chat.groups",
         "team.admin"
+      ],
+      "testSource": [
+        "database/changes/20261107125616_secure_group_ownership_transfer.sql"
       ]
     },
     {
@@ -660,6 +809,9 @@
         "chat.groups",
         "chat.preferences",
         "platform.realtime"
+      ],
+      "testSource": [
+        "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
       ]
     },
     {
@@ -669,6 +821,9 @@
       ],
       "requires": [
         "chat.message-edit-hardening"
+      ],
+      "testSource": [
+        "database/changes/20261107130000_restore_message_edit_guard.sql"
       ]
     },
     {
@@ -678,6 +833,9 @@
       ],
       "requires": [
         "chat.groups"
+      ],
+      "testSource": [
+        "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
       ]
     },
     {
@@ -688,6 +846,9 @@
       "requires": [
         "chat.favorite-column",
         "chat.preferences"
+      ],
+      "testSource": [
+        "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
       ]
     },
     {
@@ -697,6 +858,9 @@
       ],
       "requires": [
         "chat.workspaces"
+      ],
+      "testSource": [
+        "database/changes/20261107134600_index_workspace_foreign_keys.sql"
       ]
     }
   ],
