@@ -25,8 +25,9 @@ test('inventory identifies the application/database Forever membership format co
   const report = await buildObjectInventory();
   assert.equal(report.membershipFormatReview.frontendRequires971PlusNineDigits, true);
   assert.equal(report.membershipFormatReview.officialInviteSourceStillContains971001PlusSixDigits, true);
-  assert.equal(report.membershipFormatReview.finalMigrationAlsoUpdatesOfficialInviteAndAdminSetImplementations, false);
-  assert.equal(report.membershipFormatReview.status, 'BLOCKED_FORMAT_CONFLICT');
+  assert.equal(report.membershipFormatReview.finalMigrationAlsoUpdatesOfficialInviteAndAdminSetImplementations, true);
+  assert.equal(report.membershipFormatReview.finalMigrationFunctionTargets.length, 6);
+  assert.equal(report.membershipFormatReview.status, 'SEQUENCED_FORMAT_TRANSITION');
 });
 
 test('inventory retains duplicate provenance and the known syntax hazard', async () => {
