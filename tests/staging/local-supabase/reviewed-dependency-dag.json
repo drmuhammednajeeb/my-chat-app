@@ -647,11 +647,11 @@
     },
     {
       "id": "DAG-006",
-      "severity": "REVIEW_REQUIRED",
+      "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
       "evidence": [
         "database/changes/20261107144109_private_membership_system_20261107.sql"
       ],
-      "issue": "Dynamic rewrite only affects authenticated policies present at execution time; later policies need active-member enforcement review."
+      "issue": "Static source review found three policy definitions timestamped after the membership rewrite; all three use a direct or indirect active-membership guard, with zero later unguarded policies detected. The DAG sequences all earlier feature policy sources before the rewrite. Runtime PostgreSQL RLS tests are still required."
     },
     {
       "id": "DAG-007",
