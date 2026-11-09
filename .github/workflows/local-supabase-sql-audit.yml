@@ -59,6 +59,9 @@ jobs:
             console.log('UNRESOLVED_INTERNAL_FUNCTIONS=' + report.unresolvedInternalFunctions.join(','));
             console.log('MISSING_CLIENT_RPCS=' + report.missingClientRpcs.join(','));
             console.log('MEMBERSHIP_FORMAT_STATUS=' + report.membershipFormatReview.status);
+            console.log('HARDCODED_EMAIL_FILES=' + report.hardcodedIdentityReview.emailLiteralFiles.join(','));
+            console.log('HARDCODED_UUID_FILES=' + report.hardcodedIdentityReview.uuidLiteralFiles.join(','));
+            console.log('HARDCODED_MEMBERSHIP_NUMBER_FILES=' + report.hardcodedIdentityReview.membershipNumberLiteralFiles.join(','));
             console.log('SQL_EXECUTION_AUTHORIZED=false');
             if (report.auditMode !== 'READ_ONLY_SOURCE_INVENTORY') process.exit(1);
           "
