@@ -275,6 +275,18 @@
       ]
     },
     {
+      "id": "chat.workspace-realtime",
+      "source": [
+        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
+        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
+      ],
+      "requires": [
+        "chat.workspaces",
+        "platform.realtime",
+        "platform.storage"
+      ]
+    },
+    {
       "id": "chat.expiry",
       "source": [
         "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
@@ -572,6 +584,18 @@
     [
       "chat.workspace-realtime",
       "membership.base"
+    ],
+    [
+      "chat.workspaces",
+      "chat.workspace-realtime"
+    ],
+    [
+      "platform.realtime",
+      "chat.workspace-realtime"
+    ],
+    [
+      "platform.storage",
+      "chat.workspace-realtime"
     ]
   ],
   "blockers": [
