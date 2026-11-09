@@ -89,12 +89,12 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
       reason: 'References public.messages, but no CREATE TABLE public.messages exists in the migration set.',
       classification: file.classification
     }));
-  const configExists = await stat(path.join(root, 'supabase/config.toml')).then(() => true).catch(() => false);
+  const syntaxHazards = inspected.flatMap(file => file.suspectedMissingFunctionTerminators.map(item => ({ path: file.path, ...item })));\n  const configExists = await stat(path.join(root, 'supabase/config.toml')).then(() => true).catch(() => false);
 
   const findings = [];
   if (!configExists) findings.push({ severity: 'blocking', code: 'SUPABASE_CONFIG_MISSING', message: 'supabase/config.toml is absent; the local CLI stack is not configured.' });
   if (migrationFiles.length === 0) findings.push({ severity: 'blocking', code: 'NO_MIGRATIONS', message: 'No SQL files were found in supabase/migrations/.' });
-  if (legacyBlockers.length) findings.push({ severity: 'blocking', code: 'UNRESOLVED_LEGACY_TABLE_DEPENDENCY', message: 'One or more migrations reference public.messages without defining it in the migration set.', files: legacyBlockers.map(item => item.path) });
+  if (legacyBlockers.length) findings.push({ severity: 'blocking', code: 'UNRESOLVED_LEGACY_TABLE_DEPENDENCY', message: 'One or more migrations reference public.messages without defining it in the migration set.', files: legacyBlockers.map(item => item.path) });\n  if (syntaxHazards.length) findings.push({ severity: 'blocking', code: 'SUSPECTED_MISSING_FUNCTION_TERMINATOR', message: 'A dollar-quoted function body is followed by another SQL statement without a visible semicolon.', files: syntaxHazards.map(item => item.path) });
   if (duplicateGroups.length) findings.push({ severity: 'warning', code: 'DUPLICATE_SQL_CONTENT', message: 'Byte-identical SQL files exist; they are reported, never automatically deduplicated.', groups: duplicateGroups });
 
   return {
