@@ -1311,7 +1311,7 @@ async function markConversationReceipt(conversationId,markRead=true,requestId=nu
 }
 async function publishTyping(isTyping){if(!state.typingChannel||!state.user)return;const now=Date.now();if(isTyping&&now-state.typingSent<1000)return;state.typingSent=now;try{await state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile?.display_name||'عضو',is_typing:isTyping}})}catch(e){console.debug('Typing broadcast failed',e?.message||e)}}
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
- if(!m?.id||!conversationId)return false;
+ if(!m?.id||!conversationId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
  state.messageRenderPromises ||= new Map();
  const pending=state.messageRenderPromises.get(m.id);
  if(pending){
