@@ -84,6 +84,7 @@ function inspect(file) {
   const extensionCreates = matches(sql, /\bcreate\s+extension\s+(?:if\s+not\s+exists\s+)?(?:with\s+schema\s+([a-z_]\w*)\s+)?([a-z_]\w*)/gi, m => ({ name: m[2].toLowerCase(), schema: m[1]?.toLowerCase() ?? null }));
   const storageBucketIds = matches(sql, /\binsert\s+into\s+storage\.buckets[\s\S]{0,300}?\bvalues\s*\(\s*'([^']+)'/gi, m => m[1]);
   const publicationTables = matches(sql, /\balter\s+publication\s+supabase_realtime\s+add\s+table\s+((?:public|app_private)\.[a-z_]\w*)/gi, m => m[1].toLowerCase());
+  const legacyMessagesReferences = matches(sql, /\bpublic\s*\.\s*messages\b/gi, m => m[0].replace(/\s+/g, ''));
   const cronUsage = /\b(?:cron\.schedule|cron\.unschedule|create\s+extension\s+(?:if\s+not\s+exists\s+)?pg_cron)\b/i.test(sql);
   const syntaxHazards = matches(sql, /\$(?:function|body)?\$\s*\r?\n\s*(?:revoke|grant|create|alter|drop)\b/gi, m => ({ line: sql.slice(0, m.index).split('\n').length }));
   const migrationTimestamp = file.kind === 'migration' ? file.path.split('/').at(-1).match(/^(\d{8,14})/)?.[1] ?? null : null;
@@ -91,7 +92,7 @@ function inspect(file) {
     createdTables: [...new Set(createdTables)].sort(), alteredTables: [...new Set(alteredTables)].sort(),
     functions, sequences: [...new Set(sequences)].sort(), indexes, triggers, policies,
     constraints: [...new Set(constraints)].sort(), relationsReferenced, internalFunctionsReferenced,
-    extensionCreates, storageBucketIds, publicationTables: [...new Set(publicationTables)].sort(), cronUsage, syntaxHazards };
+    extensionCreates, storageBucketIds, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, cronUsage, syntaxHazards };
 }
 
 export async function buildObjectInventory(root = ROOT) {
@@ -142,7 +143,7 @@ export async function buildObjectInventory(root = ROOT) {
     },
     platformDependencies,
     legacyMessages: {
-      referencedByMigrations: files.filter(f => f.kind === 'migration' && /\bpublic\s*\.\s*messages\b/i.test(stripComments(f.sql))).map(f => f.path),
+      referencedByMigrations: files.filter(f => f.kind === 'migration' && f.legacyMessagesReferences.length > 0).map(f => f.path),
       tableDefinitionFoundInRepositorySql: files.some(f => f.createdTables.includes('public.messages')),
       currentClientUsesLegacyMessagesTable: /\.from\(\s*['"]messages['"]\s*\)/i.test(appHtml)
     },
