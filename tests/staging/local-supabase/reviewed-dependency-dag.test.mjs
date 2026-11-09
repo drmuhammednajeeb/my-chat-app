@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import path from 'node:path';
+import { buildObjectInventory } from './build-database-object-inventory.mjs';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -9,6 +10,7 @@ const dagPath = path.join(root, 'tests/staging/local-supabase/reviewed-dependenc
 
 test('reviewed dependency graph references existing source files and known nodes', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const inventory = await buildObjectInventory();
   assert.equal(dag.status, 'BLOCKED');
   assert.equal(dag.executionAuthorized, false);
   assert.equal(dag.safety.sqlExecutionEnabled, false);
@@ -18,6 +20,9 @@ test('reviewed dependency graph references existing source files and known nodes
       if (dependency.startsWith('UNRESOLVED:')) continue;
       assert.ok(dag.explicitEdges.some(edge => edge[0] === dependency && edge[1] === node.id), 'missing direct dependency edge: ' + dependency + ' -> ' + node.id);
     }
+  }
+  for (const group of inventory.duplicateGroups) {
+    assert.ok(dag.duplicateProvenance.some(item => item.sha256 === group.sha256 && group.paths.includes(item.canonicalTestSource) && group.paths.includes(item.duplicate)), 'duplicate provenance mismatch: ' + group.paths.join(' / '));
   }
   for (const edge of dag.explicitEdges) {
     assert.equal(ids.has(edge[0]), true, 'unknown dependency source: ' + edge[0]);
