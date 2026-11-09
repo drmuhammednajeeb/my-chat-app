@@ -1441,12 +1441,12 @@
     },
     {
       "id": "DAG-009",
-      "severity": "REVIEW_REQUIRED_IDENTITY_AUDIT",
+      "severity": "RESOLVED_FOR_CLEAN_LOCAL_REPLAY",
       "evidence": [
         "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
         "database/changes/team_management_dashboard.sql"
       ],
-      "issue": "The known fixed email and membership-number statements have synthetic test-only copies. A final repository-wide scan of hard-coded identity literals is still required before replay."
+      "issue": "The identity scan isolates one fixed email (team-admin seed) and two fixed membership-number statements; all are replaced only in synthetic test copies with reserved .test identity and a synthetic number. The only UUID literal is a ranking preference in membership base; the disposable database starts without that profile, and the synthetic admin profile is inserted after the backfill. No production user row is imported."
     },
     {
       "id": "DAG-010",
