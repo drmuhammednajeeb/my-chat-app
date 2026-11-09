@@ -59,6 +59,10 @@
     {
       "path": "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "runWhen": "After membership base SQL and before official membership verification SQL."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql",
+      "runWhen": "After the final membership format migration; read-only assertion."
     }
   ],
   "execution": {
