@@ -73,7 +73,8 @@ GitHub Actions runs this suite on branch pushes and pull requests. These are sou
 2. An uploaded Storage object can remain orphaned if upload succeeds but the message is never persisted and the user abandons the draft. The client deliberately does not delete an object after an ambiguous insert result because the message may already reference it. Safe cleanup needs a server-side reconciliation/retention policy.
 3. Receipt serialization is per browser session, not cross-device or cross-tab atomicity. The existing schema stores conversation-level last_delivered_at and last_read_at, not a per-message receipt ledger.
 4. The regression suite does not prove Supabase RLS behavior, Realtime delivery, Storage signed URLs, microphone behavior, or actual DOM rendering in a browser.
-5. Before release, run two-account browser tests for direct chats, groups and channels; test equal timestamps, edit/delete during load, switching conversations during attachment signing, network interruption with more than 100 incoming messages, duplicate-send retry, attachment retry, and read/delivery updates.
-6. A third non-member account must confirm that backend authorization still blocks unauthorized reads. UI checks are not a security boundary.
+5. Fallback polling processes at most 200 rows per pass. The message-insert cursor can continue through larger new-message backlogs over successive polls, but more than 200 edit/delete updates in one watermark interval is not proven to be exhaustively paged; this needs a dedicated update-stream cursor before claiming unbounded recovery.
+6. Before release, run two-account browser tests for direct chats, groups and channels; test equal timestamps, edit/delete during load, switching conversations during attachment signing, network interruption with more than 100 incoming messages, duplicate-send retry, attachment retry, and read/delivery updates.
+7. A third non-member account must confirm that backend authorization still blocks unauthorized reads. UI checks are not a security boundary.
 
 No test in this document is a claim of production capacity or a concurrent-user benchmark.
