@@ -178,7 +178,8 @@ export async function buildObjectInventory(root = ROOT) {
   const files = [...migrations, ...historical].map(inspect).sort((a, b) => a.path.localeCompare(b.path));
   const definitions = new Set(files.flatMap(file => file.functions.map(fn => fn.name)));
   const referenced = new Set(files.flatMap(file => file.internalFunctionsReferenced.map(name => 'app_private.' + name)));
-  const unresolvedInternalFunctions = [...referenced].filter(name => !definitions.has(name)).sort();
+  const relationDefinitions = new Set(files.flatMap(file => [...file.createdTables, ...file.alteredTables]));
+  const unresolvedInternalFunctions = [...referenced].filter(name => !definitions.has(name) && !relationDefinitions.has(name)).sort();
   const hashGroups = new Map();
   for (const file of files) { const list = hashGroups.get(file.sha256) ?? []; list.push(file.path); hashGroups.set(file.sha256, list); }
   const duplicateGroups = [...hashGroups.entries()].filter(([, paths]) => paths.length > 1)
