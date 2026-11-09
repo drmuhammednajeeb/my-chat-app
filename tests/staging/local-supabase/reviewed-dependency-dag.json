@@ -1037,31 +1037,31 @@
     },
     {
       "id": "DAG-003",
-      "severity": "REVIEW_REQUIRED",
+      "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
       "evidence": [
         "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
         "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
         "membership.js",
         "index.html"
       ],
-      "issue": "The format transition is intentionally sequential: the historical manual-verification SQL uses 971001 + six digits, and the final CLI migration rewrites six functions—including admin_create_official_member_invites_impl and admin_set_member_official_number_impl—to 971 + nine digits. The test manifest must run the final migration after the historical membership SQL and verify all six replacements before app-level acceptance tests."
+      "issue": "The historical-to-final membership format transition is represented and the final migration allowlist is tested for all six function targets, including both admin RPC implementations. A PostgreSQL local apply test must still prove the replacement and resulting constraints."
     },
     {
       "id": "DAG-004",
-      "severity": "BLOCKER",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
       "evidence": [
         "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ],
-      "issue": "Function terminator lacks semicolon before REVOKE/GRANT; correction only in test-only copy."
+      "issue": "A test-only copy adds exactly the missing semicolon; CI verifies its byte-level diff and SHA-256. The canonical historical file remains unchanged and is not selected for replay."
     },
     {
       "id": "DAG-005",
-      "severity": "BLOCKER",
+      "severity": "RESOLVED_BY_DEPENDENCY_DAG",
       "evidence": [
         "database/changes/20261107144109_private_membership_system_20261107.sql",
         "database/changes/team_management_dashboard.sql"
       ],
-      "issue": "Membership system depends on app_private.team_admins and is_team_admin; establish team-admin schema first."
+      "issue": "The DAG explicitly places team_management_dashboard before membership.base and the test-admin fixture is seeded before the team-admin SQL."
     },
     {
       "id": "DAG-006",
@@ -1090,12 +1090,12 @@
     },
     {
       "id": "DAG-009",
-      "severity": "REVIEW_REQUIRED",
+      "severity": "REVIEW_REQUIRED_IDENTITY_AUDIT",
       "evidence": [
         "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
         "database/changes/team_management_dashboard.sql"
       ],
-      "issue": "Historical data statements contain fixed production identity and membership-number assumptions. The local replay must use synthetic test-only variants for the team-admin seed and official-number verification; the canonical files must remain unchanged."
+      "issue": "The known fixed email and membership-number statements have synthetic test-only copies. A final repository-wide scan of hard-coded identity literals is still required before replay."
     },
     {
       "id": "DAG-010",
