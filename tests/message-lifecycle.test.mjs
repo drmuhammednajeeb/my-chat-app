@@ -42,8 +42,8 @@ function extractFunction(name) {
 }
 
 test('all inline JavaScript blocks parse without a bundler', () => {
-  const blocks = [...source.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-    .filter(match => !/\\bsrc\\s*=/.test(match[1]) && match[2].trim());
+  const blocks = [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(match => !/\bsrc\s*=/.test(match[1]) && match[2].trim());
   assert.ok(blocks.length > 0, 'Expected inline application scripts');
   blocks.forEach((match, index) => {
     new vm.Script(match[2], { filename: 'inline-script-' + index + '.js' });
