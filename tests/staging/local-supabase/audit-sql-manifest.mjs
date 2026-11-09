@@ -38,15 +38,18 @@ function stripSqlComments(sql) {
 function inspectFile(file) {
   const sql = stripSqlComments(file.content);
   const digest = createHash('sha256').update(file.content, 'utf8').digest('hex');
-  const legacyRefs = [...sql.matchAll(/\b(?:public\s*\.\s*)?messages\b/gi)].map(match => ({
+  const legacyRefs = [...sql.matchAll(/\bpublic\s*\.\s*messages\b/gi)].map(match => ({
     token: match[0].replace(/\s+/g, ''),
     line: sql.slice(0, match.index).split('\n').length
   }));
   const creates = [...sql.matchAll(/\bcreate\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\s*\.\s*)?([a-z_][\w$]*)/gi)].map(m => m[1].toLowerCase());
   const referencedPublicTables = [...new Set([...sql.matchAll(/\b(?:from|join|update|into|on|references)\s+public\s*\.\s*([a-z_][\w$]*)/gi)].map(m => m[1].toLowerCase()))].sort();
   const timestamp = file.kind === 'migration' ? file.path.split('/').at(-1).match(/^(\d{14}|\d{12}|\d{8})/)?.[1] ?? null : null;
-  const hasLegacyMessages = /\bpublic\s*\.\s*messages\b/i.test(sql);
   const hasCurrentChatMessages = /\bpublic\s*\.\s*chat_messages\b/i.test(sql);
+  const missingFunctionTerminators = [...sql.matchAll(/\$(?:function)?\$\s*\r?\n\s*(?:revoke|grant|create|alter|drop)\b/gi)].map(match => ({
+    line: sql.slice(0, match.index).split('\n').length,
+    followingStatement: match[0].trim().split(/\s+/).at(-1).toLowerCase()
+  }));
   return {
     path: file.path,
     kind: file.kind,
@@ -56,7 +59,8 @@ function inspectFile(file) {
     createsTables: [...new Set(creates)].sort(),
     referencedPublicTables,
     legacyMessagesReferences: legacyRefs,
-    classification: hasLegacyMessages
+    suspectedMissingFunctionTerminators: missingFunctionTerminators,
+    classification: legacyRefs.length
       ? (hasCurrentChatMessages ? 'mixed_current_and_legacy_reference' : 'legacy_messages_reference')
       : 'no_legacy_messages_reference'
   };
@@ -89,16 +93,20 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
       reason: 'References public.messages, but no CREATE TABLE public.messages exists in the migration set.',
       classification: file.classification
     }));
-  const syntaxHazards = inspected.flatMap(file => file.suspectedMissingFunctionTerminators.map(item => ({ path: file.path, ...item })));\n  const configExists = await stat(path.join(root, 'supabase/config.toml')).then(() => true).catch(() => false);
+  const syntaxHazards = inspected.flatMap(file =>
+    file.suspectedMissingFunctionTerminators.map(item => ({ path: file.path, ...item }))
+  );
+  const configExists = await stat(path.join(root, 'supabase/config.toml')).then(() => true).catch(() => false);
 
   const findings = [];
   if (!configExists) findings.push({ severity: 'blocking', code: 'SUPABASE_CONFIG_MISSING', message: 'supabase/config.toml is absent; the local CLI stack is not configured.' });
   if (migrationFiles.length === 0) findings.push({ severity: 'blocking', code: 'NO_MIGRATIONS', message: 'No SQL files were found in supabase/migrations/.' });
-  if (legacyBlockers.length) findings.push({ severity: 'blocking', code: 'UNRESOLVED_LEGACY_TABLE_DEPENDENCY', message: 'One or more migrations reference public.messages without defining it in the migration set.', files: legacyBlockers.map(item => item.path) });\n  if (syntaxHazards.length) findings.push({ severity: 'blocking', code: 'SUSPECTED_MISSING_FUNCTION_TERMINATOR', message: 'A dollar-quoted function body is followed by another SQL statement without a visible semicolon.', files: syntaxHazards.map(item => item.path) });
+  if (legacyBlockers.length) findings.push({ severity: 'blocking', code: 'UNRESOLVED_LEGACY_TABLE_DEPENDENCY', message: 'One or more migrations reference public.messages without defining it in the migration set.', files: legacyBlockers.map(item => item.path) });
+  if (syntaxHazards.length) findings.push({ severity: 'blocking', code: 'SUSPECTED_MISSING_FUNCTION_TERMINATOR', message: 'A dollar-quoted function body is followed by another SQL statement without a visible semicolon.', files: syntaxHazards.map(item => item.path) });
   if (duplicateGroups.length) findings.push({ severity: 'warning', code: 'DUPLICATE_SQL_CONTENT', message: 'Byte-identical SQL files exist; they are reported, never automatically deduplicated.', groups: duplicateGroups });
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     auditMode: 'READ_ONLY',
     sourceDirectories: [
       { path: 'supabase/migrations', role: 'Supabase CLI migration candidates', fileCount: migrations.length },
@@ -108,6 +116,7 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
     files: inspected.sort((a, b) => a.path.localeCompare(b.path)),
     duplicateGroups,
     legacyBlockers,
+    syntaxHazards,
     bootstrap: {
       status: findings.some(item => item.severity === 'blocking') ? 'BLOCKED' : 'AUDIT_ONLY_NOT_APPROVED',
       executable: false,
