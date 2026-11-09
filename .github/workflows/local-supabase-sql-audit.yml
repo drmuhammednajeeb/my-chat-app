@@ -62,6 +62,9 @@ jobs:
             console.log('HARDCODED_EMAIL_FILES=' + report.hardcodedIdentityReview.emailLiteralFiles.join(','));
             console.log('HARDCODED_UUID_FILES=' + report.hardcodedIdentityReview.uuidLiteralFiles.join(','));
             console.log('HARDCODED_MEMBERSHIP_NUMBER_FILES=' + report.hardcodedIdentityReview.membershipNumberLiteralFiles.join(','));
+            console.log('CLIENT_STORAGE_BUCKETS=' + report.storageCoverage.clientBuckets.join(','));
+            console.log('MISSING_STORAGE_BUCKETS=' + report.storageCoverage.missingBucketDeclarations.join(','));
+            console.log('CLIENT_BUCKETS_WITHOUT_STORAGE_POLICIES=' + report.storageCoverage.clientBucketsWithoutStoragePolicies.join(','));
             console.log('SQL_EXECUTION_AUTHORIZED=false');
             if (report.auditMode !== 'READ_ONLY_SOURCE_INVENTORY') process.exit(1);
           "
