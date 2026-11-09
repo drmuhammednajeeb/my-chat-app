@@ -542,7 +542,11 @@
     }
   ],
   "requiredSourceRecovery": [
-    "Authoritative definition and dependencies for app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation(uuid). The current repository invokes/references them but does not define them."
+    {
+      "requirement": "Authoritative definition and dependencies for app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation(uuid).",
+      "instructions": "docs/RECOVER_DIRECT_CONVERSATION_RPC.md",
+      "note": "Read-only source extraction only; no deployed database changes."
+    }
   ],
   "safetyNotes": [
     "Candidate order is derived from the reviewed acyclic dependency graph.",
