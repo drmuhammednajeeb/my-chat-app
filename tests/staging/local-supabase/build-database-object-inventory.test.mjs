@@ -7,6 +7,9 @@ test('source inventory covers all known SQL files and remains read-only', async 
   assert.equal(report.auditMode, 'READ_ONLY_SOURCE_INVENTORY');
   assert.deepEqual(report.sourceCounts, { migrations: 10, historicalSql: 43, totalSqlFiles: 53 });
   assert.ok(report.inventoryTotals.createdTables > 0);
+  assert.ok(report.inventoryTotals.columns > 0);
+  assert.ok(report.inventoryTotals.foreignKeys > 0);
+  assert.ok(report.inventoryTotals.grantStatements > 0);
   assert.ok(report.inventoryTotals.functionDefinitions > 0);
   assert.ok(report.files.every(file => /^[a-f0-9]{64}$/.test(file.sha256)));
   assert.equal(report.scope, 'Repository SQL definitions and references only; not a live deployed database catalog.');
@@ -18,6 +21,7 @@ test('inventory exposes unresolved legacy and missing RPC dependencies', async (
   assert.ok(report.legacyMessages.referencedByMigrations.includes('supabase/migrations/202611060001_ultra_chat_pro_v2.sql'));
   assert.ok(report.legacyMessages.referencedByMigrations.includes('supabase/migrations/202611060006_explicit_legacy_deny.sql'));
   assert.ok(report.unresolvedInternalFunctions.includes('app_private.get_or_create_direct_conversation_impl'));
+  assert.deepEqual(report.unresolvedInternalFunctions, ['app_private.get_or_create_direct_conversation_impl']);
   assert.ok(report.missingClientRpcs.includes('get_or_create_direct_conversation'));
 });
 
