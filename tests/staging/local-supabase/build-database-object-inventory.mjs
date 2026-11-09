@@ -116,11 +116,15 @@ function extractTableDetails(sql) {
     for (const definition of splitTopLevel(sql.slice(open + 1, close))) {
       const fk = definition.match(/\bforeign\s+key\s*\(([^)]+)\)\s+references\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\s*\(([^)]+)\)/i)
         || definition.match(/^\s*([a-z_]\w*)[\s\S]*?\breferences\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\s*\(([^)]+)\)/i);
-      if (fk) foreignKeys.push({
-        source: name, constraint: definition.match(/\bconstraint\s+([a-z_]\w*)/i)?.[1] ?? null,
-        columns: (definition.match(/\\bforeign\\s+key\\s*\\(([^)]+)\\)/i)?.[1] ?? definition.match(/^\\s*(\"?[\\w$]+\"?)/)?.[1] ?? '').split(',').filter(Boolean).map(x => x.trim()),
-        target: fk[2].toLowerCase(), targetColumns: fk[3].split(',').map(x => x.trim())
-      });
+      if (fk) {
+        const localColumns = definition.match(/\bforeign\s+key\s*\(([^)]+)\)/i)?.[1]
+          ?? definition.match(/^\s*("?[\w$]+"?)/)?.[1] ?? '';
+        foreignKeys.push({
+          source: name, constraint: definition.match(/\bconstraint\s+([a-z_]\w*)/i)?.[1] ?? null,
+          columns: localColumns.split(',').filter(Boolean).map(x => x.trim()),
+          target: fk[2].toLowerCase(), targetColumns: fk[3].split(',').map(x => x.trim())
+        });
+      }
       if (!/^\s*(?:constraint|primary\s+key|foreign\s+key|unique|check|exclude)\b/i.test(definition)) {
         const column = definition.match(/^\s*("?[\w$]+"?)/);
         if (column) columns.push({ name: column[1].replace(/"/g, ''), declaration: definition.replace(/\s+/g, ' ').trim() });
@@ -149,7 +153,9 @@ function inspect(file) {
   const policies = matches(sql, /\bcreate\s+policy\s+"?([^"\r\n]+?)"?\s+on\s+((?:[a-z_]\w*\.)?[a-z_]\w*)/gi, m => ({ name: m[1].trim(), table: m[2].toLowerCase() }));
   const constraints = matches(sql, /\badd\s+constraint\s+([a-z_]\w*)/gi, m => m[1].toLowerCase());
   const relationsReferenced = [...new Set(matches(sql, /\b(?:from|join|update|into|references)\s+((?:public|app_private|auth|storage|cron|extensions)\s*\.\s*[a-z_]\w*)/gi, m => m[1].replace(/\s+/g, '').toLowerCase()))].sort();
-  const internalFunctionsReferenced = [...new Set([...sql.matchAll(/\bapp_private\s*\.\s*([a-z_]\w*)\s*\(/gi)]\n    .filter(m => !/\b(?:into|from|join|update|references|table)\s*$/i.test(sql.slice(Math.max(0, m.index - 32), m.index)))\n    .map(m => m[1].toLowerCase()))].sort();
+  const internalFunctionsReferenced = [...new Set([...sql.matchAll(/\bapp_private\s*\.\s*([a-z_]\w*)\s*\(/gi)]
+    .filter(m => !/\b(?:into|from|join|update|references|table)\s*$/i.test(sql.slice(Math.max(0, m.index - 32), m.index)))
+    .map(m => m[1].toLowerCase()))].sort();
   const extensionCreates = matches(sql, /\bcreate\s+extension\s+(?:if\s+not\s+exists\s+)?(?:with\s+schema\s+([a-z_]\w*)\s+)?([a-z_]\w*)/gi, m => ({ name: m[2].toLowerCase(), schema: m[1]?.toLowerCase() ?? null }));
   const storageBucketIds = matches(sql, /\binsert\s+into\s+storage\.buckets[\s\S]{0,300}?\bvalues\s*\(\s*'([^']+)'/gi, m => m[1]);
   const publicationTables = matches(sql, /\balter\s+publication\s+supabase_realtime\s+add\s+table\s+((?:public|app_private)\.[a-z_]\w*)/gi, m => m[1].toLowerCase());
