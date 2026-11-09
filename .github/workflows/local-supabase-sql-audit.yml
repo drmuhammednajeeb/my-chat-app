@@ -51,6 +51,8 @@ jobs:
             console.log('INDEXES=' + report.inventoryTotals.indexes);
             console.log('TRIGGERS=' + report.inventoryTotals.triggers);
             console.log('POLICIES=' + report.inventoryTotals.policies);
+            console.log('POLICIES_AFTER_MEMBERSHIP_BASE=' + report.policyCoverage.policiesAfterMembershipBase.length);
+            console.log('LATER_POLICIES_MISSING_ACTIVE_MEMBER_GUARD=' + JSON.stringify(report.policyCoverage.laterPoliciesMissingActiveMemberGuard));
             console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
             for (const group of report.duplicateGroups) console.log('DUPLICATE_SHA256=' + group.sha256 + ' PATHS=' + group.paths.join('|'));
             console.log('UNRESOLVED_INTERNAL_FUNCTIONS=' + report.unresolvedInternalFunctions.join(','));
@@ -94,7 +96,7 @@ jobs:
             lines.push('- Sequences: ' + (file.sequences.join(', ') || 'none'));
             lines.push('- Indexes: ' + (file.indexes.map(index => index.name + ' ON ' + index.table).join('; ') || 'none'));
             lines.push('- Triggers: ' + (file.triggers.map(trigger => trigger.name + ' ON ' + trigger.table).join('; ') || 'none'));
-            lines.push('- Policies: ' + (file.policies.map(policy => policy.name + ' ON ' + policy.table).join('; ') || 'none'));
+            lines.push('- Policies: ' + (file.policyDetails.map(policy => policy.name + ' ON ' + policy.table + ' [' + policy.guardClass + ']').join('; ') || 'none'));
             lines.push('- Constraints: ' + (file.constraints.join(', ') || 'none'));
             lines.push('- GRANT/REVOKE: ' + (file.grants.map(grant => grant.action + ' ' + grant.privileges + ' ON ' + grant.object + ' ' + grant.direction + ' ' + grant.roles).join('; ') || 'none'));
             lines.push('- Referenced relations: ' + (file.relationsReferenced.join(', ') || 'none'));
