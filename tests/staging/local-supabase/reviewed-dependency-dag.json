@@ -619,19 +619,19 @@
       "logicalChange": "chat privilege hardening",
       "canonicalTestSource": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
       "duplicate": "database/changes/chat_table_privilege_hardening.sql",
-      "sha256": "e164e04680c5c0a768bfbd39f4387e0d038a9749"
+      "sha256": "400e727c552cea4b32602f43be6eed6d722406847e3f0f4bd3a19ae37814cdf4"
     },
     {
       "logicalChange": "unified notifications",
       "canonicalTestSource": "supabase/migrations/20261107014128_unified_user_notifications.sql",
       "duplicate": "database/changes/unified_notifications.sql",
-      "sha256": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e"
+      "sha256": "9bec9867db333ddd5c7950fc8cdd0c04c76ca554e1117cf71d53e7b6b818fda8"
     },
     {
       "logicalChange": "notification indexes",
       "canonicalTestSource": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
       "duplicate": "database/changes/index_user_notification_foreign_keys.sql",
-      "sha256": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7"
+      "sha256": "c59daeb5b307f67ed8148611530d94f4330ac9fedbbe52df0e9c908a2b687ea2"
     }
   ],
   "safety": {
