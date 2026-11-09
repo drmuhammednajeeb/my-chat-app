@@ -24,7 +24,7 @@ function extractFunction(name) {
     }
     if (char === '/' && next === '/') { lineComment = true; i += 1; continue; }
     if (char === '/' && next === '*') { blockComment = true; i += 1; continue; }
-    if (char === "'" || char === '"' || char === '\`') { quote = char; continue; }
+    if (char === "'" || char === '"' || char === '\x60') { quote = char; continue; }
     if (char === '{') depth += 1;
     if (char === '}') { depth -= 1; if (depth === 0) return html.slice(start, i + 1); }
   }
@@ -40,11 +40,7 @@ after(async () => { await browser?.close(); });
 
 async function newPage() {
   const page = await browser.newPage();
-  await page.setContent(\`<!doctype html><html><body>
-    <textarea id="messageInput"></textarea><button id="sendBtn"></button>
-    <input id="fileInput" type="file"><div id="attachmentPreview"></div>
-    <div id="messages"></div>
-  </body></html>\`);
+  await page.setContent('<!doctype html><html><body><textarea id="messageInput"></textarea><button id="sendBtn"></button><input id="fileInput" type="file"><div id="attachmentPreview"></div><div id="messages"></div></body></html>');
   return page;
 }
 
