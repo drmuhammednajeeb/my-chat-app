@@ -60,8 +60,9 @@ test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime 
   assert.equal(visited, nodes.length, 'dependency graph contains a cycle');
   assert.ok(dag.blockers.some(item => item.id === 'DAG-002' && item.severity === 'RESOLVED_FOR_LOCAL_REPLAY'));
   assert.ok(dag.blockers.some(item => item.id === 'DAG-014' && item.severity === 'BLOCKER'));
-  assert.ok(dag.nodes.some(node => node.id === 'chat.direct-conversation-rpc' && node.provides.includes('app_private.get_or_create_direct_conversation_impl(uuid)')));
-  assert.ok(dag.nodes.some(node => node.id === 'chat.hardening' && node.requires.includes('chat.direct-conversation-rpc') && node.blockedBy.includes('DAG-014')));
+  assert.ok(dag.blockers.some(item => item.id === 'DAG-015' && item.severity === 'BLOCKER'));
+  assert.ok(dag.nodes.some(node => node.id === 'chat.direct-conversation-rpc' && node.provides.includes('app_private.get_or_create_direct_conversation_impl(uuid)') && node.blockedBy.includes('DAG-015')));
+  assert.ok(dag.nodes.some(node => node.id === 'chat.hardening' && node.requires.includes('chat.direct-conversation-rpc') && node.blockedBy.includes('DAG-014') && node.blockedBy.includes('DAG-015')));
 });
 
 test('test-only fixtures are present and canonical SQL remains outside the fixture tree', async () => {
