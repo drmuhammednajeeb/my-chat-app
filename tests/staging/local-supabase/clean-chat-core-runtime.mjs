@@ -103,6 +103,18 @@ async function clearLocalChatStorage() {
   }
 
   for (const bucket of ['chat-media', 'conversation-documents', 'channel-avatars']) {
+    const probePath = '__clean_core_reset_probe__/' + randomUUID() + '.txt';
+    const uploadHeaders = {
+      apikey: serviceKey,
+      Authorization: 'Bearer ' + serviceKey,
+      'Content-Type': 'text/plain',
+      'x-upsert': 'true'
+    };
+    const upload = await fetch(new URL('/storage/v1/object/' + encodeURIComponent(bucket) + '/' + probePath.split('/').map(encodeURIComponent).join('/'), api), {
+      method: 'POST', headers: uploadHeaders, body: 'clean-core-storage-reset-probe',
+      signal: AbortSignal.timeout(15000)
+    });
+    if (!upload.ok) throw new Error('Storage probe upload failed for ' + bucket + ' (HTTP ' + upload.status + ')');
     const paths = await listPrefix(bucket);
     for (let i = 0; i < paths.length; i += 100) {
       const batch = paths.slice(i, i + 100);
@@ -113,7 +125,7 @@ async function clearLocalChatStorage() {
     }
     const remaining = await listPrefix(bucket);
     if (remaining.length) throw new Error('Storage cleanup left ' + remaining.length + ' objects in ' + bucket);
-    console.log('CLEAN_CHAT_STORAGE_BUCKET=' + bucket + ' REMOVED=' + paths.length + ' VERIFIED_EMPTY=true');
+    console.log('CLEAN_CHAT_STORAGE_BUCKET=' + bucket + ' PROBE_UPLOADED=true REMOVED=' + paths.length + ' VERIFIED_EMPTY=true');
   }
 }
 await clearLocalChatStorage();
