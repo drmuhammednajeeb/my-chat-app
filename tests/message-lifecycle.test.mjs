@@ -166,6 +166,22 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
   assert.doesNotMatch(update, /Deleted message refresh failed/);
 });
 
+test('hard-deleting the final message restores the empty-conversation state', () => {
+  const state = {
+    active: { id: 'c1' }, messages: [{ id: 'm1', conversation_id: 'c1' }],
+    messageIds: new Set(['m1']), reactions: new Map(), pinnedMessages: new Map(),
+    replyMessages: new Map(), conversations: []
+  };
+  const area = { innerHTML: '' };
+  const handler = vm.runInNewContext('(' + extractFunction('handleMessageDeleteRealtime') + ')', {
+    state, document: { querySelectorAll: () => [] }, $: () => area,
+    reconcileMessageTimeline() {}
+  });
+  assert.equal(handler({ old: { id: 'm1' } }, 'c1'), true);
+  assert.equal(state.messages.length, 0);
+  assert.match(area.innerHTML, /بداية محادثة جديدة/);
+});
+
 test('duplicate soft-delete events do not repeatedly replace the tombstone row', () => {
   const deletedAt = '2026-11-10T10:00:00.000Z';
   const row = { dataset: { messageId: 'm1' }, querySelector: selector => selector === '.bubble.deleted' ? {} : null };
