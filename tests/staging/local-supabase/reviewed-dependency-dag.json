@@ -1056,12 +1056,14 @@
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
-        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
+        "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
+        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Manual runtime runner is loopback-only and applies the test overlay, read-only catalog postconditions, then rollback-only CRUD/RPC tests for message creation/edit audit, chat-list and starred-message upserts, and cross-user isolation. The runtime has not been executed. A separate loopback-only Storage API probe exercises chat-media uploader-folder spoof denial, private/shared conversation-document signed reads, owner-only delete, avatar upsert, and public avatar delivery; it requires local Auth and Storage services and has not been executed."
+      "note": "Manual runtime runner is loopback-only and applies the test overlay, read-only catalog postconditions, then rollback-only CRUD/RPC tests for message creation/edit audit, chat-list and starred-message upserts, and cross-user isolation. The runtime has not been executed. A separate loopback-only Storage API probe exercises chat-media uploader-folder spoof denial, private/shared conversation-document signed reads, owner-only delete, avatar upsert, and public avatar delivery; it requires local Auth and Storage services and has not been executed. A dedicated GitHub Actions workflow provisions a fresh temporary Supabase CLI v3.0.0 project with PostgreSQL 17, replays only the exact topological manifest order through loopback ports, executes the local RLS/CRUD, concurrency, pg_cron and Storage API probes, and destroys the stack in an always-run cleanup step. No cloud link, production credentials, or production data are used."
     }
   ],
   "explicitEdges": [
