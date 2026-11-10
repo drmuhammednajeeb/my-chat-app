@@ -1614,7 +1614,9 @@ function handleMessageUpdateRealtime(payload,conversationId){
  if(incoming.deleted_at){
   state.reactions?.delete(incoming.id);state.pinnedMessages?.delete(incoming.id);
   const deletedRow=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===incoming.id);
-  if(deletedRow){deletedRow.remove();state.messageIds.delete(incoming.id);reconcileMessageTimeline($('messages'))}
+  if(deletedRow)deletedRow.remove();
+  state.messageIds.delete(incoming.id);
+  reconcileMessageTimeline($('messages'));
   renderMessage(incoming,conversationId,state.messageLoadVersion).catch(error=>console.error('Deleted message render failed:',error));
   const conversation=state.conversations.find(item=>item.id===conversationId);
   if(conversation?.last_message?.id===incoming.id)loadConversations().catch(error=>console.warn('Conversation preview refresh failed:',error));
