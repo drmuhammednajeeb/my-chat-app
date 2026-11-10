@@ -205,6 +205,11 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   const inventory = await buildObjectInventory();
   assert.equal(manifest.sourceCoverage.sqlFiles, inventory.files.length);
   assert.equal(manifest.sourceCoverage.mappedSources, inventory.files.length - duplicateCopies.size);
+  assert.equal(manifest.sourceCoverage.mappedSourcesReplacedByFixtures, patchManifest.patches.length);
+  assert.equal(manifest.sourceCoverage.executedMappedSources, manifest.sourceCoverage.mappedSources - patchManifest.patches.length);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, manifest.sourceCoverage.testOnlySqlFixtures);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, manifest.sourceCoverage.executedMappedSources + manifest.sourceCoverage.executedTestOnlySqlFixtures);
+  assert.equal(new Set(selected.filter(source => source.endsWith('.sql'))).size, manifest.sourceCoverage.executedSqlFiles);
   for (const source of selected) await access(path.join(root, source));
   for (const file of inventory.files) {
     if (duplicateCopies.has(file.path) || patchedCanonicalSources.has(file.path)) continue;
