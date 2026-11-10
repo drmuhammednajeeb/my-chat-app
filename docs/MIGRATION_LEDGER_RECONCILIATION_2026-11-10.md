@@ -26,7 +26,7 @@ The mapping is not one-to-one: some historical SQL files contain multiple logica
 
 Three original migration files are absent from the current repository. Their current deployed catalog state has now been captured read-only in `docs/CATALOG_STATE_RECOVERY_2026-11-10.md`, but that does not recreate the original migration bodies:
 
-- `20261107032150 tighten_direct_chat_preference_scope`: The base `user_specific_direct_chat_preferences.sql` exists, but the separate change that produced the final active-member policy is absent.
+- `20261107032150 tighten_direct_chat_preference_scope`: The base `user_specific_direct_chat_preferences.sql` exists, but the final live policy differs from that source. The exact SQL delta and whether this ledger entry produced every part of the final policy cannot be established without the original migration file.
 - `20261107160647 channel_visibility_avatar_group_background`: Original DDL is absent; current `conversations`/`conversation_group_settings` columns and policy state are captured in the catalog recovery document.
 - `20261107160733 harden_channel_rpc_wrappers`: Original wrapper-hardening migration is absent; current function definitions, signatures, ACLs and behavior are captured in the catalog recovery document.
 
