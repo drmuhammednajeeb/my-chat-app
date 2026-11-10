@@ -253,6 +253,24 @@ if (expectedSqlCount !== manifest.sourceCoverage.executedMappedSources + manifes
   fail('declared executed SQL coverage does not reconcile with mapped-source replacements');
 }
 if (seenSql.size !== expectedSqlCount) fail('executed SQL coverage mismatch: expected ' + expectedSqlCount + ', found ' + seenSql.size);
+
+// The following destructive reset is intentionally outside the historical replay manifest.
+// It runs only after every legacy-runtime assertion has passed, on the loopback-only
+// disposable database validated at the top of this runner.
+const cleanChatCoreFixture = path.join(ROOT, 'tests/staging/local-supabase/fixtures/clean-chat-core-rebuild.test-only.sql');
+const cleanChatCoreRunner = path.join(ROOT, 'tests/staging/local-supabase/clean-chat-core-runtime.mjs');
+if (!fs.existsSync(cleanChatCoreFixture) || !fs.existsSync(cleanChatCoreRunner)) {
+  fail('clean chat core test-only rebuild fixture or runtime runner is missing');
+}
+run('psql', ['--no-psqlrc', '--set=ON_ERROR_STOP=1', '--file', cleanChatCoreFixture, raw], env, 'clean-chat-core-destructive-local-reset');
+run(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs')
+], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1', LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, 'clean-chat-core-direct-conversation-concurrency');
+run(process.execPath, [
+  cleanChatCoreRunner
+], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1', LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, 'clean-chat-core-message-reactions-stars');
+
 console.log('LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED');
+console.log('CLEAN_CHAT_CORE_LOCAL_RUNTIME=PASSED');
 console.log('LOCAL_SUPABASE_SQL_SOURCE_REPLACEMENTS=' + replacedSourcePaths.size);
 console.log('LOCAL_SUPABASE_SQL_FILES_EXECUTED=' + seenSql.size);
