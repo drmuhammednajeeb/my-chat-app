@@ -110,7 +110,7 @@ async function setPassword(user) {
   // in the same disposable database instead of depending on GoTrue to discover
   // rows inserted after its startup. The replay runner has already enforced
   // a loopback-only database URL before invoking this probe.
-  if (!/^[0-9a-f-]{36}$/i.test(user.id) || !/^[A-Za-z0-9!]+$/.test(password)) {
+  if (!/^[0-9a-f-]{36}$/i.test(user.id) || !/^[A-Za-z0-9!-]+$/.test(password)) {
     throw new Error('refusing unsafe synthetic Auth password setup input');
   }
   const sql = "UPDATE auth.users SET encrypted_password = crypt('" + password
