@@ -396,6 +396,32 @@ test('ambiguous reaction writes are verified against the authoritative row befor
   assert.deepEqual(state.reactions.get('m1'), [verified]);
 });
 
+test('reaction state stays pending for refresh when both write and verification reads fail', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
+    reactions: new Map([['m1', []]]), messages: [{ id: 'm1', conversation_id: 'c1' }]
+  };
+  const supabaseClient = {
+    from(table) {
+      assert.equal(table, 'message_reactions');
+      return {
+        async upsert() { return { error: { message: 'write response lost' } }; },
+        select() {
+          const query = { eq() { return query; }, async maybeSingle() { return { data: null, error: { message: 'verification unavailable' } }; } };
+          return query;
+        }
+      };
+    }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
+    state, supabaseClient, MESSAGE_REACTION_OPTIONS,
+    document: { querySelectorAll: () => [] }, renderReactionBar() {}, toast() {}, console
+  });
+  assert.equal(await toggle({ id: 'm1', conversation_id: 'c1' }, 'heart', null), false);
+  assert.equal(state.reactions.get('m1')[0].reaction_type, 'heart');
+  assert.equal(state.reactionVerificationNeeded.has('m1'), true);
+});
+
 test('message stars persist, serialize, and verify ambiguous outcomes before changing local state', async () => {
   const state = {
     user: { id: 'u1' }, active: { id: 'c1' },
@@ -447,6 +473,30 @@ test('message stars persist, serialize, and verify ambiguous outcomes before cha
   assert.equal(await toggle('m1', true), false);
   assert.equal(state.starredMessageIds.has('m1'), false);
   assert.ok(notices.length > 0);
+});
+
+test('star action rejects a duplicate in-flight operation for the same message', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' },
+    messages: [{ id: 'm1', conversation_id: 'c1' }],
+    starredMessageIds: new Set()
+  };
+  let release, calls = 0;
+  const supabaseClient = {
+    from(table) {
+      assert.equal(table, 'user_message_stars');
+      return { upsert() { calls += 1; return new Promise(resolve => { release = resolve; }); } };
+    }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageStar') + ')', {
+    state, supabaseClient, toast() {}, console
+  });
+  const first = toggle('m1', true);
+  assert.equal(await toggle('m1', false), false);
+  assert.equal(calls, 1);
+  release({ error: null });
+  assert.equal(await first, true);
+  assert.equal(state.starredMessageIds.has('m1'), true);
 });
 
 test('chat attachment MIME resolution handles browsers that omit file.type', () => {
