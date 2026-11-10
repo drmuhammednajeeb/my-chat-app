@@ -1042,7 +1042,9 @@
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
       ],
       "requires": [
-        "membership.final-format"
+        "membership.final-format",
+        "test-fixture.direct-chat-runtime",
+        "test-fixture.direct-chat-concurrency"
       ],
       "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
       "testSource": [
@@ -1686,6 +1688,14 @@
     ],
     [
       "membership.final-format",
+      "security.least-privilege-overlay"
+    ],
+    [
+      "test-fixture.direct-chat-runtime",
+      "security.least-privilege-overlay"
+    ],
+    [
+      "test-fixture.direct-chat-concurrency",
       "security.least-privilege-overlay"
     ]
   ],
