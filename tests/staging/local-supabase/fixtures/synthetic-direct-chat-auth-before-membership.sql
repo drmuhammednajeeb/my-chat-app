@@ -85,6 +85,17 @@ SET user_id = excluded.user_id,
 
 DO $assert$
 BEGIN
+  IF (SELECT count(*) FROM auth.identities
+      WHERE user_id IN (
+        '22222222-2222-4222-8222-222222222201'::uuid,
+        '22222222-2222-4222-8222-222222222202'::uuid,
+        '22222222-2222-4222-8222-222222222203'::uuid,
+        '22222222-2222-4222-8222-222222222204'::uuid,
+        '22222222-2222-4222-8222-222222222205'::uuid,
+        '22222222-2222-4222-8222-222222222206'::uuid
+      ) AND provider = 'email') <> 6 THEN
+    RAISE EXCEPTION 'Synthetic email identities are incomplete';
+  END IF;
   IF (SELECT count(*) FROM auth.users
       WHERE id IN (
         '22222222-2222-4222-8222-222222222201'::uuid,
