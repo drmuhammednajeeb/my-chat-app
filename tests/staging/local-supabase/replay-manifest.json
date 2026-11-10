@@ -216,15 +216,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "chat.media-and-reactions",
-      "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
-    },
-    {
       "nodeId": "chat.self",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -341,6 +332,15 @@
       "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107134600_index_workspace_foreign_keys.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.media-and-reactions",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql"
       ],
       "blockedBy": [],
       "parityNote": null

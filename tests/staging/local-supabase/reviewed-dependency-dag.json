@@ -1078,7 +1078,8 @@
       "requires": [
         "chat.reactions",
         "chat.voice",
-        "platform.storage"
+        "platform.storage",
+        "chat.workspaces"
       ],
       "testSource": [
         "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql"
@@ -1744,6 +1745,10 @@
     ],
     [
       "platform.storage",
+      "chat.media-and-reactions"
+    ],
+    [
+      "chat.workspaces",
       "chat.media-and-reactions"
     ]
   ],
