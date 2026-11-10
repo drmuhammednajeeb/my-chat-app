@@ -1,0 +1,95 @@
+name: Disposable local Supabase runtime verification
+
+on:
+  push:
+    branches:
+      - "engineering/stability-css-extraction-20261109"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: disposable-local-supabase-runtime-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  local-supabase-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.0.0
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create an isolated temporary Supabase project
+        env:
+          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
+        run: |
+          mkdir -p "$RUNTIME_PROJECT_DIR"
+          cd "$RUNTIME_PROJECT_DIR"
+          supabase init
+          mkdir -p supabase/migrations
+          find supabase/migrations -type f -name '*.sql' -delete
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const file = process.env.RUNTIME_PROJECT_DIR + '/supabase/config.toml';
+          let config = fs.readFileSync(file, 'utf8');
+          if (/^major_version\s*=\s*\d+/m.test(config)) {
+            config = config.replace(/^major_version\s*=\s*\d+/m, 'major_version = 17');
+          } else {
+            config += '\n[db]\nmajor_version = 17\n';
+          }
+          fs.writeFileSync(file, config);
+          NODE
+
+      - name: Start disposable Supabase and execute the reviewed replay
+        env:
+          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
+          ALLOW_DISPOSABLE_LOCAL_REPLAY: "1"
+        run: |
+          cd "$RUNTIME_PROJECT_DIR"
+          if ! supabase start --exclude studio,analytics,edge-runtime,vector,pooler > "$RUNNER_TEMP/supabase-start.log" 2>&1; then
+            cat "$RUNNER_TEMP/supabase-start.log"
+            exit 1
+          fi
+          supabase status -o env > "$RUNNER_TEMP/supabase-runtime.env"
+          set -a
+          . "$RUNNER_TEMP/supabase-runtime.env"
+          set +a
+          test -n "$API_URL"
+          test -n "$DB_URL"
+          test -n "$ANON_KEY"
+          test -n "$SERVICE_ROLE_KEY"
+          echo "::add-mask::$ANON_KEY"
+          echo "::add-mask::$SERVICE_ROLE_KEY"
+          export LOCAL_SUPABASE_URL="$API_URL"
+          export LOCAL_SUPABASE_DB_URL="$DB_URL"
+          export LOCAL_SUPABASE_ANON_KEY="$ANON_KEY"
+          export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          cd "$GITHUB_WORKSPACE"
+          node tests/staging/local-supabase/local-supabase-replay-runtime.mjs
+
+      - name: Stop and destroy the disposable Supabase stack
+        if: always()
+        env:
+          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
+        run: |
+          if [ -d "$RUNTIME_PROJECT_DIR" ]; then
+            cd "$RUNTIME_PROJECT_DIR"
+            supabase stop || true
+          fi
