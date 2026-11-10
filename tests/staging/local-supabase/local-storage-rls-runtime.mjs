@@ -150,7 +150,6 @@ try {
 
   // Private conversation documents: owner-only until explicitly shared with conversation members.
   const pdfPath = conversationId + '/' + userA.id + '/runtime-' + nonce + '.pdf';
-  const pdf = Buffer.from('%PDF-1.4\n% local RLS runtime probe\n');
   await upload('conversation-documents', pdfPath, pdf, tokenA, false, 'application/pdf');
   const metadata = assertOk(await rest('conversation_documents', tokenA, 'POST', {
     owner_id: userA.id,
