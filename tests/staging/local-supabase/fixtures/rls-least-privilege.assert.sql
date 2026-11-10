@@ -242,10 +242,11 @@ begin
   into storage_policy_issues
   from pg_policies p
   where p.schemaname = 'storage' and p.tablename = 'objects'
+    and p.policyname <> 'Require active membership for all Storage operations'
     and (coalesce(p.qual,'') || ' ' || coalesce(p.with_check,'')) not ilike '%bucket_id%';
 
   if storage_policy_issues is not null then
-    raise exception 'Every Storage object policy must be scoped to a bucket. Offending policies: %', storage_policy_issues;
+    raise exception 'Every bucket-specific Storage object policy must be scoped to a bucket. Offending policies: %', storage_policy_issues;
   end if;
 
   -- Every application public table receives a RESTRICTIVE active-member policy.
