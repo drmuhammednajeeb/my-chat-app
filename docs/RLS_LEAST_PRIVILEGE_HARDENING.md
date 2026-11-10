@@ -4,7 +4,7 @@
 
 This work is a disposable-local test overlay, not a production migration. It must never be applied to a hosted Supabase project. The overlay requires database `postgres`, role `postgres`, and a loopback server address. It has not been executed.
 
-Production was inspected read-only. The observed application tables had RLS enabled, but the effective ACLs and default ACLs showed broader privileges than the application needs. In particular, the `postgres` default ACL for the `public` schema granted all table privileges to `anon` and `authenticated`; current application tables inherited table privileges including `TRUNCATE`, `REFERENCES`, `TRIGGER`, and (on the inspected PostgreSQL version) `MAINTAIN`. These privileges are not constrained by row policies.
+Production was inspected read-only. The observed application tables had RLS enabled, but the effective ACLs and default ACLs showed broader privileges than the application needs. In particular, the `postgres` default ACL for the `public` schema granted all table privileges to `anon` and `authenticated`; current application tables inherited table privileges including `TRUNCATE`, `REFERENCES`, `TRIGGER`, and (on the inspected PostgreSQL version) `MAINTAIN`. A focused effective-privilege count confirmed that `anon` held `TRUNCATE`, `REFERENCES`, and `TRIGGER` on 13 of 24 application tables, while `authenticated` held them on 14 of 24. These privileges are not constrained by row policies.
 
 ## Test-only overlay
 
@@ -25,7 +25,7 @@ The overlay is followed by `rls-least-privilege.assert.sql`, which is read-only 
 - Storage object policies were restricted to `authenticated`. The private `chat-media`, `conversation-documents`, and `channel-avatars` buckets were private. The `avatars` bucket was explicitly public by design; public delivery bypasses object SELECT policies, so only content intended for public viewing belongs there.
 - The production `chat-media` INSERT policy did not bind path segment 2 to `auth.uid()`. A separate test-only replacement policy adds this uploader-folder check; it still requires disposable-local upload and cross-user path tests.
 - Every authenticated `public` policy in the inspected catalog included the active-member predicate, except the legacy `public.messages` deny policy which targets `anon`.
-- The application `public` table default ACL for role `postgres` granted all table privileges to `anon` and `authenticated`. The same broad default existed for sequences and function EXECUTE.
+- The application `public` table default ACL for role `postgres` granted all table privileges to `anon` and `authenticated`. The same broad default existed for sequences and function EXECUTE. Effective ACL checks counted 13/24 tables with the three non-RLS privileges for `anon` and 14/24 for `authenticated`.
 - Several authenticated roles had non-RLS table privileges and direct DML permissions beyond their intended contract.
 - The Security Advisor separately reported leaked-password protection disabled.
 
