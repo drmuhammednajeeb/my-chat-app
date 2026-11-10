@@ -68,3 +68,10 @@ A local-only catalog gate is now prepared:
 6. Only after those pass, design a separate bounded concurrency test with explicit request rate, duration, and cleanup rules.
 
 **No capacity, production readiness, or real-backend E2E claim may be made from the simulations or preflight.**
+
+
+## RLS and least-privilege hardening
+
+The production catalog was inspected read-only. RLS was enabled on the application tables examined, but the `postgres` default ACL for the `public` schema granted broad table, sequence, and function privileges to API roles. Existing tables therefore had non-RLS privileges that must be removed independently of row policies.
+
+A loopback-only test overlay is prepared in `tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql`, followed by read-only assertions in `rls-least-privilege.assert.sql`. It is sequenced last in the reviewed local replay. It has **not** been executed and is not a production migration. See `docs/RLS_LEAST_PRIVILEGE_HARDENING.md` for the observed catalog evidence and required runtime matrix.
