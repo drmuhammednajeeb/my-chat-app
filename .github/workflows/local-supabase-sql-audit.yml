@@ -39,6 +39,7 @@ jobs:
             tests/staging/local-supabase/direct-conversation-rpc.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
+            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \
             tests/staging/local-supabase/rls-least-privilege.test.mjs \
             tests/staging/local-supabase/storage-rls-runtime.test.mjs \
             tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs
