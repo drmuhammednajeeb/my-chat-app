@@ -196,7 +196,10 @@ export async function buildObjectInventory(root = ROOT) {
   for (const file of files) { const list = hashGroups.get(file.sha256) ?? []; list.push(file.path); hashGroups.set(file.sha256, list); }
   const duplicateGroups = [...hashGroups.entries()].filter(([, paths]) => paths.length > 1)
     .map(([sha256, paths]) => ({ sha256, paths: paths.sort() })).sort((a, b) => a.paths[0].localeCompare(b.paths[0]));
-  const appHtml = await readFile(path.join(root, 'index.html'), 'utf8').catch(() => '');
+  const appHtmlDocument = await readFile(path.join(root, 'index.html'), 'utf8').catch(() => '');
+  const appModuleNames = (await readdir(path.join(root, 'js')).catch(() => [])).filter(name => name.endsWith('.js')).sort();
+  const appModules = await Promise.all(appModuleNames.map(name => readFile(path.join(root, 'js', name), 'utf8')));
+  const appHtml = [appHtmlDocument, ...appModules].join('\n');
   const membershipJs = await readFile(path.join(root, 'membership.js'), 'utf8').catch(() => '');
   const clientRpcNames = [...new Set(matches(appHtml, /\.rpc\(\s*['"]([a-z_]\w*)['"]/gi, m => m[1]))].sort();
   const publicFunctionNames = new Set(files.flatMap(file => file.functions.filter(fn => fn.name.startsWith('public.')).map(fn => fn.name.slice(7))));
