@@ -201,5 +201,42 @@ begin
     raise exception 'Channel avatar read helper must enforce active membership';
   end if;
 
+
+  -- Every application public table receives a RESTRICTIVE active-member policy.
+  if exists (
+    select 1
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind in ('r','p')
+      and c.relowner = 'postgres'::regrole
+      and not exists (
+        select 1 from pg_policies p
+        where p.schemaname = 'public'
+          and p.tablename = c.relname
+          and p.policyname = 'Require active membership for all API operations'
+          and p.permissive = 'RESTRICTIVE'
+          and p.cmd = 'ALL'
+          and 'authenticated' = any(p.roles)
+          and coalesce(p.qual,'') ilike '%is_active_member%'
+          and coalesce(p.with_check,'') ilike '%is_active_member%'
+      )
+  ) then
+    raise exception 'A public application table is missing its restrictive active-member guard';
+  end if;
+  if not exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'storage'
+      and p.tablename = 'objects'
+      and p.policyname = 'Require active membership for all Storage operations'
+      and p.permissive = 'RESTRICTIVE'
+      and p.cmd = 'ALL'
+      and 'authenticated' = any(p.roles)
+      and coalesce(p.qual,'') ilike '%is_active_member%'
+      and coalesce(p.with_check,'') ilike '%is_active_member%'
+  ) then
+    raise exception 'storage.objects is missing its restrictive active-member guard';
+  end if;
+
 end;
 $assert$;
