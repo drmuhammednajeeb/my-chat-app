@@ -320,5 +320,16 @@ test('chat composer media types and reaction persistence constraints stay aligne
     assert.match(html, new RegExp("type:\\s*['\\\"]" + reaction + "['\\\"]"));
     assert.ok(migration.includes("'" + reaction + "'"), 'database constraint is missing ' + reaction);
   }
+  for (const mime of [
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'text/csv'
+  ]) {
+    assert.ok(html.includes(mime), 'workspace document picker is missing ' + mime);
+    assert.ok(migration.includes(mime), 'conversation-documents allow-list is missing ' + mime);
+  }
   assert.match(html, /attachment_type\?\.startsWith\('video\/'\)/);
 });
