@@ -9,10 +9,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 test('concurrency probe establishes its synthetic pair after rollback-only eligibility tests', async () => {
   const source = await readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8');
   assert.match(source, /localDatabaseUrl\(\)/);
+  assert.match(source, /LOCAL_SYNTHETIC_AUTH_USERS_JSON/);
+  assert.match(source, /syntheticIds\?\.direct_a/);
+  assert.match(source, /syntheticIds\?\.direct_b/);
   assert.match(source, /admin_set_member_official_number/);
   assert.match(source, /11111111-1111-4111-8111-111111111111/);
-  assert.match(source, /22222222-2222-4222-8222-222222222201/);
-  assert.match(source, /22222222-2222-4222-8222-222222222202/);
+  assert.doesNotMatch(source, /22222222-2222-4222-8222-22222222220[12]/);
   assert.match(source, /971001000002/);
   assert.match(source, /971001000003/);
   assert.ok(source.indexOf('admin_set_member_official_number') < source.indexOf('const eligibleSql'));
