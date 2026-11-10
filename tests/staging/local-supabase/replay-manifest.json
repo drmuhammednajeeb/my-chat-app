@@ -779,9 +779,24 @@
   ],
   "requiredSourceRecovery": [
     {
-      "requirement": "Authoritative definition and dependencies for app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation(uuid).",
-      "instructions": "docs/RECOVER_DIRECT_CONVERSATION_RPC.md",
-      "note": "Read-only source extraction only; no deployed database changes."
+      "requirement": "Original historical migration bodies for remote versions 20261106102326 atomic_direct_conversation_creation and 20261106102443 hide_atomic_direct_rpc_implementation.",
+      "instructions": "Recover from Git history, release artifacts, or verified deployment records. docs/RECOVER_DIRECT_CONVERSATION_RPC.md preserves current catalog definitions only.",
+      "note": "The current catalog-derived fixture is not the original migration body and must remain test-only."
+    },
+    {
+      "requirement": "Original SQL source for remote version 20261107032150 tighten_direct_chat_preference_scope.",
+      "instructions": "Search Git history and release artifacts; compare with docs/CATALOG_STATE_RECOVERY_2026-11-10.md.",
+      "note": "The base user-specific preference source exists, but the exact historical delta is not recoverable from the current repository tree."
+    },
+    {
+      "requirement": "Original SQL source for remote version 20261107160647 channel_visibility_avatar_group_background.",
+      "instructions": "Search Git history and release artifacts; compare with docs/CATALOG_STATE_RECOVERY_2026-11-10.md.",
+      "note": "Current deployed columns/policies are captured read-only; historical DDL and intent remain unknown."
+    },
+    {
+      "requirement": "Original SQL source for remote version 20261107160733 harden_channel_rpc_wrappers.",
+      "instructions": "Search Git history and release artifacts; compare with docs/CATALOG_STATE_RECOVERY_2026-11-10.md.",
+      "note": "Current deployed wrapper definitions and ACLs are captured read-only; historical changes remain unknown."
     }
   ],
   "safetyNotes": [
