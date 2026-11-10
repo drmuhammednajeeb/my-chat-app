@@ -34,7 +34,9 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
     'REVOKE UPDATE ON public.user_message_stars',
     'REVOKE DELETE ON public.user_settings',
     'REVOKE UPDATE ON public.chat_list_items',
-    'REVOKE DELETE ON public.conversation_group_settings'
+    'REVOKE DELETE ON public.conversation_group_settings',
+    'as restrictive for all to authenticated',
+    'Require active membership for all Storage operations'
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing hardening clause: ' + token);
   assert.match(sql, /revoke maintain on all tables in schema public from authenticated/i);
 });
@@ -53,7 +55,9 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     'storage.objects',
     'can_access_channel_avatar',
     'foldername(name)',
-    'search_path=""'
+    'search_path=""',
+    'RESTRICTIVE',
+    'Require active membership for all API operations'
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing assertion: ' + token);
   assert.doesNotMatch(sql, /\b(insert\s+into|update\s+\w|delete\s+from|create\s+table|alter\s+table)\b/i);
 });
