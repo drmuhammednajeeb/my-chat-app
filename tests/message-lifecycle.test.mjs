@@ -290,6 +290,19 @@ test('receipt writes are serialized per conversation in one client session', asy
   assert.equal(state.receiptQueues.size, 0);
 });
 
+test('loadMessages keeps render completion state in the shared scope used by receipt handling', () => {
+  const load = extractFunction('loadMessages');
+  const declaration = load.indexOf('let allMessagesRendered=true;');
+  const emptyBranch = load.indexOf('if(!messages.length)');
+  const receiptGuard = load.indexOf('if(allMessagesRendered&&');
+  assert.ok(declaration >= 0, 'Expected one render-completion declaration');
+  assert.ok(emptyBranch > declaration, 'Declaration must precede the empty/non-empty branch');
+  assert.ok(receiptGuard > emptyBranch, 'Receipt guard must run after the branch');
+  assert.equal((load.match(/let allMessagesRendered=true;/g) || []).length, 1);
+  assert.doesNotMatch(load, /else\\{\\s*let allMessagesRendered=true;/,
+    'The declaration must not be scoped to the non-empty branch');
+});
+
 test('render and initial-load paths retain stale-result guards', () => {
   const render = extractFunction('renderMessageInternal'), load = extractFunction('loadMessages');
   assert.match(render, /if\(!isCurrent\(\)\)return false/);
