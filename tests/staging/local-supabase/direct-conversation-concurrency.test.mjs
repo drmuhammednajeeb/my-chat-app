@@ -19,6 +19,10 @@ test('concurrency probe establishes its synthetic pair after rollback-only eligi
   assert.match(source, /971001000003/);
   assert.ok(source.indexOf('admin_set_member_official_number') < source.indexOf('const eligibleSql'));
   assert.match(source, /Synthetic participant pair is not fully eligible/);
+  assert.match(source, /Array\.from\(\{ length: 24 \}/);
+  assert.match(source, /Array\.from\(\{ length: 40 \}/);
+  assert.match(source, /public\.chat_messages\(conversation_id, sender_id, content\)/);
+  assert.match(source, /40 concurrent authenticated message writes persisted uniquely/);
 });
 
 test('concurrency probe remains loopback-only and cleans only its generated conversation', async () => {
