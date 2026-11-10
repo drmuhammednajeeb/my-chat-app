@@ -565,7 +565,8 @@
         "chat.favorite-column",
         "chat.remove-duplicate-favorite",
         "chat.workspace-indexes",
-        "chat.media-upload-path-hardening"
+        "chat.media-upload-path-hardening",
+        "test-fixture.direct-chat-auth-seed"
       ],
       "testSource": [
         "database/changes/20261107144109_private_membership_system_20261107.sql"
@@ -600,7 +601,8 @@
         "membership.auth-fix",
         "test-fixture.admin-profile",
         "membership.invitation-policies",
-        "membership.invitation-indexes"
+        "membership.invitation-indexes",
+        "test-fixture.direct-chat-profiles"
       ],
       "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
       "testSource": [
@@ -876,7 +878,8 @@
         "test-only caller and target eligibility guard for direct-conversation RPC"
       ],
       "requires": [
-        "chat.direct-conversation-rpc"
+        "chat.direct-conversation-rpc",
+        "membership.final-format"
       ],
       "status": "TEST_ONLY_GUARD_IMPLEMENTED_RUNTIME_VALIDATION_BLOCKED",
       "testSource": [
@@ -887,6 +890,66 @@
         "DAG-014",
         "DAG-015"
       ]
+    },
+    {
+      "id": "test-fixture.direct-chat-auth-seed",
+      "source": [
+        "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql"
+      ],
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "provides": [
+        "six synthetic auth.users identities for direct-chat eligibility tests"
+      ],
+      "requires": [
+        "core.base",
+        "platform.auth"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql"
+      ],
+      "note": "Must run before membership.base installs auth.users invitation/profile triggers; all identities use reserved .test emails and synthetic IDs."
+    },
+    {
+      "id": "test-fixture.direct-chat-profiles",
+      "source": [
+        "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+      ],
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "provides": [
+        "five synthetic profiles; one seeded Auth user intentionally has no profile"
+      ],
+      "requires": [
+        "membership.base",
+        "test-fixture.direct-chat-auth-seed"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+      ],
+      "note": "Runs after membership.base profile guard and before membership.official adds verified-number column; deliberately omits the missing-profile identity."
+    },
+    {
+      "id": "test-fixture.direct-chat-runtime",
+      "source": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql"
+      ],
+      "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
+      "provides": [
+        "rollback-only PostgreSQL assertions for eligibility, rejection boundaries, reuse, and ACL"
+      ],
+      "requires": [
+        "membership.final-format",
+        "test-fixture.admin-assertion",
+        "chat.direct-conversation-rpc-eligibility-guard",
+        "test-fixture.direct-chat-profiles"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "note": "Disposable-local runtime script only. Requires the full approved replay; no CI or production SQL execution. Two-session reversed-pair concurrency remains separately blocked."
     }
   ],
   "explicitEdges": [
@@ -1421,6 +1484,42 @@
     [
       "chat.direct-conversation-rpc",
       "chat.direct-conversation-rpc-eligibility-guard"
+    ],
+    [
+      "test-fixture.direct-chat-auth-seed",
+      "membership.base"
+    ],
+    [
+      "membership.base",
+      "test-fixture.direct-chat-profiles"
+    ],
+    [
+      "test-fixture.direct-chat-auth-seed",
+      "test-fixture.direct-chat-profiles"
+    ],
+    [
+      "test-fixture.direct-chat-profiles",
+      "membership.official"
+    ],
+    [
+      "membership.final-format",
+      "chat.direct-conversation-rpc-eligibility-guard"
+    ],
+    [
+      "membership.final-format",
+      "test-fixture.direct-chat-runtime"
+    ],
+    [
+      "test-fixture.admin-assertion",
+      "test-fixture.direct-chat-runtime"
+    ],
+    [
+      "chat.direct-conversation-rpc-eligibility-guard",
+      "test-fixture.direct-chat-runtime"
+    ],
+    [
+      "test-fixture.direct-chat-profiles",
+      "test-fixture.direct-chat-runtime"
     ]
   ],
   "blockers": [
