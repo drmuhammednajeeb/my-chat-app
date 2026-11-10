@@ -76,5 +76,39 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'The unconfirmed-email fixture must remain unconfirmed';
   END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('22222222-2222-4222-8222-222222222201'::uuid, 'direct-a@bizmindmakers.test', '971001000002', true, true),
+      ('22222222-2222-4222-8222-222222222202'::uuid, 'direct-b@bizmindmakers.test', '971001000003', true, true),
+      ('22222222-2222-4222-8222-222222222203'::uuid, 'direct-suspended@bizmindmakers.test', '971001000004', true, true),
+      ('22222222-2222-4222-8222-222222222204'::uuid, 'direct-unverified@bizmindmakers.test', '971001000005', false, true),
+      ('22222222-2222-4222-8222-222222222205'::uuid, 'direct-unconfirmed@bizmindmakers.test', '971001000006', true, false),
+      ('22222222-2222-4222-8222-222222222206'::uuid, 'direct-missing-profile@bizmindmakers.test', '971001000007', true, true)
+    ) AS expected(id, email, membership_number, verified, confirmed)
+    LEFT JOIN auth.users u ON u.id = expected.id
+    WHERE u.id IS NULL
+       OR u.email IS DISTINCT FROM expected.email
+       OR u.raw_app_meta_data->>'membership_number' IS DISTINCT FROM expected.membership_number
+       OR coalesce((u.raw_app_meta_data->>'membership_number_verified')::boolean, false)
+            IS DISTINCT FROM expected.verified
+       OR (u.email_confirmed_at IS NOT NULL) IS DISTINCT FROM expected.confirmed
+  ) THEN
+    RAISE EXCEPTION 'Synthetic Auth identities do not match the reviewed eligibility matrix';
+  END IF;
+
+  IF (SELECT count(DISTINCT raw_app_meta_data->>'membership_number')
+      FROM auth.users
+      WHERE id IN (
+        '22222222-2222-4222-8222-222222222201'::uuid,
+        '22222222-2222-4222-8222-222222222202'::uuid,
+        '22222222-2222-4222-8222-222222222203'::uuid,
+        '22222222-2222-4222-8222-222222222204'::uuid,
+        '22222222-2222-4222-8222-222222222205'::uuid,
+        '22222222-2222-4222-8222-222222222206'::uuid
+      )) <> 6 THEN
+    RAISE EXCEPTION 'Synthetic membership numbers must be unique';
+  END IF;
 END
 $assert$;
