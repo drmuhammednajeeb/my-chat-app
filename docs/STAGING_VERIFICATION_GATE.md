@@ -38,6 +38,7 @@ A local-only catalog gate is now prepared:
 
 - `tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql` must run immediately after the disposable local stack starts and before application SQL. It is read-only and verifies Auth/Storage/Realtime schemas and objects, required roles, the Realtime publication, pgcrypto's required `extensions` placement, and pg_cron availability.
 - `tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql` must run after the workspace and expiry-purge nodes. It verifies pgcrypto function resolution and the expected `cron.job` definition. It does not prove that the scheduler actually executed the job.
+- `tests/staging/local-supabase/local-pg-cron-runtime.mjs` is a separate loopback-only runtime probe. It schedules a uniquely named `SELECT 1` job, waits up to 90 seconds for a successful run, then unschedules it and removes only its own run details. It has not been executed.
 - Synthetic direct-chat Auth identities are created before membership triggers; Profiles are created after the membership profile guard. The runtime SQL fixture promotes eligible synthetic identities through the real local admin RPCs and ends in `ROLLBACK`.
 - `tests/staging/local-supabase/direct-conversation-concurrency.mjs` is a separate two-session reversed-pair test. It accepts only a disposable loopback PostgreSQL endpoint on port 54322 and refuses cloud targets.
 
