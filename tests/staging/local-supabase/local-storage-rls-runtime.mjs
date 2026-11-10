@@ -48,7 +48,7 @@ function localDatabaseProbe(sql) {
   const rawDb = required('LOCAL_SUPABASE_DB_URL');
   let db;
   try { db = new URL(rawDb); } catch { fail('invalid LOCAL_SUPABASE_DB_URL'); }
-  const dbHost = db.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+  const dbHost = db.hostname.replace(/^\[|\]$/g, '').toLowerCase();
   if (!['postgres:', 'postgresql:'].includes(db.protocol)
     || !['127.0.0.1', 'localhost', '::1'].includes(dbHost)
     || db.port !== '54322'
@@ -187,7 +187,7 @@ SELECT coalesce(array_to_string(storage.foldername('${diagnosticPath}'), '|'), '
 ROLLBACK;`);
   console.log('STORAGE_POLICY_PROBE=' + diagnostic);
   const probeParts = diagnostic.split('|');
-  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== 'true' || probeParts[4] !== 'true') {
+  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || !['t', 'true'].includes(probeParts[3]) || !['t', 'true'].includes(probeParts[4])) {
     throw new Error('Storage policy preconditions failed: folder ownership, active membership, or conversation membership is false');
   }
 
