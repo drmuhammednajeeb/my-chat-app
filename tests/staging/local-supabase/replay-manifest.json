@@ -7,9 +7,22 @@
     "mappedSources": 50,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 1,
+    "testOnlySqlFixtures": 14,
     "testOnlySqlFixturePaths": [
-      "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+      "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql",
+      "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql",
+      "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+      "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+      "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+      "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
+      "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
+      "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
+      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ]
   },
   "execution": {
@@ -578,8 +591,13 @@
   "blockers": [
     {
       "id": "DAG-002",
-      "severity": "BLOCKER",
-      "issue": "app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation RPC are not defined in reviewed SQL sources."
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Resolved for source recovery: authoritative internal and public direct-conversation RPC definitions and inspected ACLs were recovered read-only from the Supabase catalog and preserved in a test-only fixture with SHA-256 provenance. Runtime behavior remains blocked separately by DAG-014 and DAG-015.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
+        "docs/RECOVER_DIRECT_CONVERSATION_RPC.md"
+      ]
     },
     {
       "id": "DAG-003",
@@ -610,6 +628,16 @@
       "id": "DAG-013",
       "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
       "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
+    },
+    {
+      "id": "DAG-014",
+      "severity": "BLOCKER",
+      "issue": "Direct-conversation RPC runtime validation is still required in a disposable local Supabase environment: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, reversed-pair concurrent creation without duplicates, exact ACL enforcement, and active-membership gating. Do not enable replay until these tests pass."
+    },
+    {
+      "id": "DAG-015",
+      "severity": "BLOCKER",
+      "issue": "The recovered production RPC lacks caller and target eligibility checks. A separately reviewed test-only overlay now checks both participants against active membership, verified membership number, valid number format, and confirmed Auth email while locking authoritative rows. Runtime PostgreSQL validation, negative cases, concurrency, and exact ACL behavior remain blocked; no production migration is authorized."
     }
   ],
   "requiredSourceRecovery": [
