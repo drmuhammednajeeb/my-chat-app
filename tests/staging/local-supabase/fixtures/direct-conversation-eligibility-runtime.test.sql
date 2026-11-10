@@ -20,7 +20,8 @@ SELECT public.admin_set_member_official_number(
 SELECT public.admin_update_membership_status(
   '22222222-2222-4222-8222-222222222203', 'suspended');
 
--- Confirm that the fixtures represent the intended authoritative DB states.
+-- Verify fixture rows as the privileged local test connection; auth.users is not client-readable.
+RESET ROLE;
 DO $fixtures$
 BEGIN
   IF NOT EXISTS (
@@ -81,6 +82,8 @@ BEGIN
   END IF;
 END
 $fixtures$;
+
+SET LOCAL ROLE authenticated;
 
 -- Successful creation, idempotent reuse, and direct internal invocation under authenticated.
 DO $success$
