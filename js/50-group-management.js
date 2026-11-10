@@ -1,3 +1,4 @@
+'use strict';
 async function loadGroupCandidates(term=''){
  const request=++groupSearchRequest;const results=$('groupMemberResults');
  results.innerHTML='<div class="group-hint" style="padding:12px">جارٍ البحث عن الأعضاء…</div>';
