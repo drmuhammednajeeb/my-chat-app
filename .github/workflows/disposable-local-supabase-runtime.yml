@@ -63,7 +63,7 @@ jobs:
           ALLOW_DISPOSABLE_LOCAL_REPLAY: "1"
         run: |
           cd "$RUNTIME_PROJECT_DIR"
-          if ! supabase start --exclude studio,analytics,edge-runtime,vector,pooler > "$RUNNER_TEMP/supabase-start.log" 2>&1; then
+          if ! supabase start --exclude studio,edge-runtime,logflare,vector,supavisor,postgres-meta > "$RUNNER_TEMP/supabase-start.log" 2>&1; then
             cat "$RUNNER_TEMP/supabase-start.log"
             exit 1
           fi
