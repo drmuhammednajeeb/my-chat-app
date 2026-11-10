@@ -3,11 +3,12 @@
 -- The missing-profile account is intentional and must remain without a public.profiles row.
 
 INSERT INTO auth.users (
-  id, aud, role, email, encrypted_password, email_confirmed_at,
+  id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data
 ) VALUES
 (
   '22222222-2222-4222-8222-222222222201'::uuid,
+  '00000000-0000-0000-0000-000000000000'::uuid,
   'authenticated', 'authenticated', 'direct-a@bizmindmakers.test', '',
   now(),
   jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
@@ -16,6 +17,7 @@ INSERT INTO auth.users (
 ),
 (
   '22222222-2222-4222-8222-222222222202'::uuid,
+  '00000000-0000-0000-0000-000000000000'::uuid,
   'authenticated', 'authenticated', 'direct-b@bizmindmakers.test', '',
   now(),
   jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
@@ -24,6 +26,7 @@ INSERT INTO auth.users (
 ),
 (
   '22222222-2222-4222-8222-222222222203'::uuid,
+  '00000000-0000-0000-0000-000000000000'::uuid,
   'authenticated', 'authenticated', 'direct-suspended@bizmindmakers.test', '',
   now(),
   jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
@@ -32,6 +35,7 @@ INSERT INTO auth.users (
 ),
 (
   '22222222-2222-4222-8222-222222222204'::uuid,
+  '00000000-0000-0000-0000-000000000000'::uuid,
   'authenticated', 'authenticated', 'direct-unverified@bizmindmakers.test', '',
   now(),
   jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
@@ -40,6 +44,7 @@ INSERT INTO auth.users (
 ),
 (
   '22222222-2222-4222-8222-222222222205'::uuid,
+  '00000000-0000-0000-0000-000000000000'::uuid,
   'authenticated', 'authenticated', 'direct-unconfirmed@bizmindmakers.test', '',
   NULL,
   jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
@@ -48,6 +53,7 @@ INSERT INTO auth.users (
 ),
 (
   '22222222-2222-4222-8222-222222222206'::uuid,
+  '00000000-0000-0000-0000-000000000000'::uuid,
   'authenticated', 'authenticated', 'direct-missing-profile@bizmindmakers.test', '',
   now(),
   jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
