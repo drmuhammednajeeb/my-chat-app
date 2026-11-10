@@ -346,3 +346,26 @@ test('chat composer media types and reaction persistence constraints stay aligne
   }
   assert.match(html, /attachment_type\?\.startsWith\('video\/'\)/);
 });
+
+
+test('production baseline remains blocked until original migration provenance is resolved', async () => {
+  const [dag, manifest] = await Promise.all([
+    readFile(dagPath, 'utf8').then(JSON.parse),
+    readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8').then(JSON.parse)
+  ]);
+  assert.equal(dag.status, 'BLOCKED');
+  assert.equal(dag.executionAuthorized, false);
+  assert.equal(dag.safety.sqlExecutionEnabled, false);
+  assert.equal(manifest.status, 'BLOCKED');
+  assert.equal(manifest.execution.enabled, false);
+  assert.equal(manifest.execution.cloudAllowed, false);
+  assert.equal(manifest.execution.productionAllowed, false);
+  assert.equal(dag.blockers.find(item => item.id === 'DAG-017')?.severity, 'BLOCKER');
+  assert.equal(manifest.blockers.find(item => item.id === 'DAG-017')?.severity, 'BLOCKER');
+  assert.equal(manifest.requiredSourceRecovery.length, 4);
+  for (const item of manifest.requiredSourceRecovery) {
+    assert.match(item.requirement, /2026110/);
+    assert.ok(item.instructions);
+    assert.ok(item.note);
+  }
+});
