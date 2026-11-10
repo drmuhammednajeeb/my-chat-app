@@ -9,7 +9,7 @@
 
 Do not delete or recreate the existing Supabase project. The live database contains application data and a functioning multi-feature schema. Rebuild the database delivery system around a canonical, reproducible migration stream, validate it in disposable local Supabase, and only then plan a controlled staging/production transition.
 
-The current source tree is not a single executable migration history. It contains 10 files under `supabase/migrations` and 43 historical SQL files under `database/changes`. The remote migration ledger contains 60 applied migration records. A reviewed replay manifest maps sources and fixtures into an execution order, but that is not yet a canonical production migration stream.
+The current source tree is not a single executable migration history. It contains 10 files under `supabase/migrations` and 44 historical SQL files under `database/changes`. The live remote migration ledger returned 59 applied migration records on 2026-11-10. Three identical SQL copies are excluded from the reviewed source DAG, leaving 51 unique mapped SQL sources. Three ledger records have no original SQL source in the current repository, and two direct-conversation RPC records are represented only by catalog-recovered test fixtures, not original migration files. See the separate migration reconciliation report in PR #78 for the full version-to-source matrix. A reviewed replay manifest maps sources and fixtures into an execution order, but that is not yet a canonical production migration stream.
 
 ## 1. Live database observations (read-only)
 
