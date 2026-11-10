@@ -27,8 +27,13 @@ if (endpoint.protocol !== 'http:'
   fail('refusing non-local API target; expected http://loopback:54321 without credentials/query/hash');
 }
 
-const userA = { id: '22222222-2222-4222-8222-222222222201', email: 'direct-a@bizmindmakers.test' };
-const userB = { id: '22222222-2222-4222-8222-222222222202', email: 'direct-b@bizmindmakers.test' };
+const rawSyntheticIds = required('LOCAL_SYNTHETIC_AUTH_USERS_JSON');
+let syntheticIds;
+try { syntheticIds = JSON.parse(rawSyntheticIds); } catch { fail('invalid LOCAL_SYNTHETIC_AUTH_USERS_JSON'); }
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const userA = { id: syntheticIds?.direct_a, email: 'direct-a@bizmindmakers.test' };
+const userB = { id: syntheticIds?.direct_b, email: 'direct-b@bizmindmakers.test' };
+if (!uuidPattern.test(userA.id || '') || !uuidPattern.test(userB.id || '')) fail('synthetic Storage participants must use Auth-generated UUIDs');
 const password = required('LOCAL_SYNTHETIC_AUTH_PASSWORD');
 if (password.length < 32 || !/^[A-Za-z0-9!-]+$/.test(password)) fail('LOCAL_SYNTHETIC_AUTH_PASSWORD is invalid');
 const nonce = randomUUID();
