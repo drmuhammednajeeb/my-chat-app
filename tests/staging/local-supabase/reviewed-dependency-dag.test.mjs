@@ -39,7 +39,7 @@ test('reviewed dependency graph references existing source files and known nodes
   }
 });
 
-test('reviewed dependency graph is acyclic and preserves the direct-RPC blocker', async () => {
+test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime blocker', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const nodes = [...dag.platformNodes, ...dag.nodes].map(node => node.id);
   const indegree = new Map(nodes.map(id => [id, 0]));
@@ -58,8 +58,10 @@ test('reviewed dependency graph is acyclic and preserves the direct-RPC blocker'
     }
   }
   assert.equal(visited, nodes.length, 'dependency graph contains a cycle');
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-002' && item.severity === 'BLOCKER'));
-  assert.ok(dag.nodes.some(node => node.id === 'chat.hardening' && node.requires.includes('UNRESOLVED:get_or_create_direct_conversation_impl(uuid)')));
+  assert.ok(dag.blockers.some(item => item.id === 'DAG-002' && item.severity === 'RESOLVED_FOR_LOCAL_REPLAY'));
+  assert.ok(dag.blockers.some(item => item.id === 'DAG-014' && item.severity === 'BLOCKER'));
+  assert.ok(dag.nodes.some(node => node.id === 'chat.direct-conversation-rpc' && node.provides.includes('app_private.get_or_create_direct_conversation_impl(uuid)')));
+  assert.ok(dag.nodes.some(node => node.id === 'chat.hardening' && node.requires.includes('chat.direct-conversation-rpc') && node.blockedBy.includes('DAG-014')));
 });
 
 test('test-only fixtures are present and canonical SQL remains outside the fixture tree', async () => {
@@ -71,7 +73,8 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'synthetic-auth-admin-before-membership.sql',
     'synthetic-admin-profile-after-membership.sql',
     'assert-synthetic-admin-active.sql',
-    'chat-media-upload-path-hardening.sql'
+    'chat-media-upload-path-hardening.sql',
+    'direct-conversation-rpc.sql'
   ];
   for (const name of requiredFixtures) await access(path.join(root, 'tests/staging/local-supabase/fixtures', name));
   for (const fixture of patchManifest.fixtures) await access(path.join(root, fixture.path));
@@ -160,7 +163,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(selected.includes(file.path), 'candidate replay source missing: ' + file.path);
   }
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
-  assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-002')));
+  assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
 
 
