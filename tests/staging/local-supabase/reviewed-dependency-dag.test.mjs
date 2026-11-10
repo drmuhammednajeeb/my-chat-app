@@ -61,6 +61,7 @@ test('reviewed dependency graph records local runtime success while preserving t
   assert.ok(dag.blockers.some(item => item.id === 'DAG-002' && item.severity === 'RESOLVED_FOR_LOCAL_REPLAY'));
   assert.equal(dag.status, 'BLOCKED');
   assert.equal(dag.executionAuthorized, false);
+  assert.equal(dag.blockers.find(item => item.id === 'DAG-017')?.severity, 'BLOCKER');
   for (const id of ['DAG-003', 'DAG-007', 'DAG-008', 'DAG-010', 'DAG-011', 'DAG-013', 'DAG-014', 'DAG-015', 'DAG-016']) {
     const item = dag.blockers.find(blocker => blocker.id === id);
     assert.equal(item?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME', 'local runtime evidence missing for ' + id);
