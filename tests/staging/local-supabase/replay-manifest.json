@@ -33,15 +33,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "test-fixture.direct-chat-auth-seed",
-      "status": "SYNTHETIC_TEST_DATA_ONLY",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Must run before membership.base installs auth.users invitation/profile triggers; all identities use reserved .test emails and synthetic IDs."
-    },
-    {
       "nodeId": "core.base",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -151,6 +142,15 @@
         "DAG-015"
       ],
       "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests."
+    },
+    {
+      "nodeId": "test-fixture.direct-chat-auth-seed",
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Must run before membership.base installs auth.users invitation/profile triggers; all identities use reserved .test emails and synthetic IDs."
     },
     {
       "nodeId": "chat.channels-public",
