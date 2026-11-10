@@ -1,6 +1,6 @@
 # Clean Chat Core Rebuild — Engineering Baseline
 
-**Status:** modular client and disposable-local destructive rebuild candidate implemented; SQL audit, destructive local reset, Storage API cleanup, concurrency checks, 33 lifecycle/source-contract tests, and 8 Chromium tests passed on 2026-11-11. Authenticated Staging E2E, live Supabase Realtime integration, and larger load tests remain release gates.  
+**Status:** modular client and disposable-local destructive rebuild candidate implemented; SQL audit, destructive local reset, Storage API cleanup, concurrency checks, 33 lifecycle/source-contract tests, and 8 Chromium tests passed on 2026-11-11. A new authenticated local Supabase Realtime WebSocket acceptance runner has been added and its first CI execution is pending. Authenticated Staging E2E and larger load tests remain release gates.  
 **Database execution:** disposable local only. No cloud or production DDL is authorized by this document.  
 **Data policy:** legacy message rows are disposable. The rebuild does not attempt to restore or migrate old message content.
 
@@ -148,8 +148,8 @@ The selected design must pass cross-conversation isolation, revoked-membership, 
 
 ### Realtime
 - Unit coverage verifies the Postgres Changes subscription filters by conversation, rejects stale events, and triggers authoritative reload after simulated reconnect.
-- Chromium tests cover rendered message controls, not a live multi-account Realtime WebSocket session.
-- Still required: live local authenticated subscribe/insert/delete tests, cross-conversation isolation, actual disconnect/reconnect gap recovery, and membership revocation against the running Realtime service.
+- The new `local-realtime-runtime.mjs` exercises authenticated local WebSocket delivery for messages and reactions, cross-conversation filtering, non-member reads, and canonical reconciliation after a real channel unsubscribe/re-subscribe.
+- Pending CI confirmation: the first live Realtime runtime execution. Still required after it passes: authenticated hosted Staging E2E, real membership-revocation behavior on the live Realtime service, and broader multi-device browser tests.
 
 ### Browser and load
 - Chromium end-to-end tests with two authenticated users;
@@ -174,7 +174,7 @@ It then adds:
 
 The local acceptance runner exercises symmetric direct-conversation identity, duplicate message-ID rejection, direct/group timeline isolation, shared reactions, owner-private stars, inactive-user denial, invalid reaction rejection, star impersonation denial, and cross-conversation foreign-key rejection. The same runtime job repeats the 24-request reversed-pair and 40-write concurrency test after the reset.
 
-The disposable-local runtime passed on 2026-11-11. It verified the destructive reset, three real PNG Storage probes removed through Storage API with independent read-only catalog count verification, 24 concurrent reversed-pair requests, 40 concurrent message writes, direct-pair uniqueness, message-ID idempotency, reaction visibility, private stars, inactive-user denial, invalid reaction rejection, cross-conversation foreign-key rejection, and direct/group timeline isolation. The 33 lifecycle/source-contract tests and 8 Chromium browser tests also passed. The Realtime callback/reconnect test currently uses a deterministic mocked channel in Node; it does not yet prove a live authenticated WebSocket subscription against the local Realtime service. This candidate must not be copied to a hosted project or treated as production-ready until live Realtime and authenticated staging gates pass.
+The disposable-local database runtime passed on 2026-11-11. It verified the destructive reset, three real PNG Storage probes removed through Storage API with independent read-only catalog count verification, 24 concurrent reversed-pair requests, 40 concurrent message writes, direct-pair uniqueness, message-ID idempotency, reaction visibility, private stars, inactive-user denial, invalid reaction rejection, cross-conversation foreign-key rejection, and direct/group timeline isolation. The 33 lifecycle/source-contract tests and 8 Chromium browser tests also passed. The existing callback/reconnect unit test uses a deterministic mocked channel. To close that gap, `local-realtime-runtime.mjs` now signs in three synthetic users against the disposable Auth service and exercises actual Realtime WebSocket delivery, conversation-filtered isolation, reaction events, non-member PostgREST denial, and missed-message reconciliation after unsubscribe/re-subscribe. Its first CI execution is pending. This candidate must not be copied to a hosted project or treated as production-ready until the live Realtime run and authenticated staging gates pass.
 
 ## 10. Cutover and destructive reset
 
