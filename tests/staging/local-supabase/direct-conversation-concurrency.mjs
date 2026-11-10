@@ -21,7 +21,7 @@ function psql(databaseUrl, sql) {
     const child = spawn('psql', [
       '--no-psqlrc', '--quiet', '--tuples-only', '--no-align',
       '--set=ON_ERROR_STOP=1', '--command', sql, databaseUrl
-    ], { stdio: ['ignore', 'pipe', 'pipe'] });
+    ], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PGCONNECT_TIMEOUT: '5' } });
     let stdout = '';
     let stderr = '';
     child.stdout.setEncoding('utf8').on('data', chunk => { stdout += chunk; });
