@@ -1044,7 +1044,8 @@
       "requires": [
         "membership.final-format",
         "test-fixture.direct-chat-runtime",
-        "test-fixture.direct-chat-concurrency"
+        "test-fixture.direct-chat-concurrency",
+        "chat.media-upload-path-hardening"
       ],
       "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
       "testSource": [
@@ -1696,6 +1697,10 @@
     ],
     [
       "test-fixture.direct-chat-concurrency",
+      "security.least-privilege-overlay"
+    ],
+    [
+      "chat.media-upload-path-hardening",
       "security.least-privilege-overlay"
     ]
   ],
