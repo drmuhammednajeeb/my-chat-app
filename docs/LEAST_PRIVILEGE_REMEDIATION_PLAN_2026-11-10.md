@@ -124,7 +124,7 @@ The `supabase_admin` default ACL is separately observed as broad, but it is a pl
 - Keep channel-avatar write paths restricted to authorized channel administrators.
 - Test the actual Storage HTTP API, not only direct SQL policy evaluation.
 
-## 3. Disposable-local test coverage
+## 4. Disposable-local test coverage
 
 The existing local-only overlay and assertions already test:
 - RLS enabled and active-member policy coverage.
@@ -144,7 +144,7 @@ The new security branch extends this coverage to:
 
 **Verified:** disposable local runtime run [42863700280](https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280) passed. It confirms the updated overlay and assertions in an isolated Supabase/PostgreSQL 17 stack; it does not authorize production changes.
 
-## 4. Production change sequence — not yet authorized
+## 5. Production change sequence — not yet authorized
 
 1. Finish source reconciliation for all 59 remote migration records.
 2. Complete the API privilege contract: every table/column/sequence/function grant mapped to a real client query, RPC, trigger, or platform operation.
@@ -155,7 +155,7 @@ The new security branch extends this coverage to:
 7. Capture and verify a recoverable backup and a restore rehearsal.
 8. Obtain explicit approval for a production maintenance window and apply only the reviewed migration.
 
-## 5. Hard stop conditions
+## 6. Hard stop conditions
 
 Stop and do not deploy if:
 - Any of the 59 migration records lacks a documented source/recovery classification.
