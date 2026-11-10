@@ -22,6 +22,7 @@ const host = endpoint.hostname.replace(/^\[|\]$/g, '').toLowerCase();
 if (endpoint.protocol !== 'http:'
   || !['127.0.0.1', 'localhost', '::1'].includes(host)
   || endpoint.port !== '54321'
+  || endpoint.pathname !== '/'
   || endpoint.username || endpoint.password
   || endpoint.search || endpoint.hash) {
   fail('refusing non-local API target; expected http://loopback:54321 without credentials/query/hash');
