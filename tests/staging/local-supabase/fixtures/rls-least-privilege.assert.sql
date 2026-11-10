@@ -56,6 +56,11 @@ begin
     raise exception 'An authenticated public policy is missing the active-member guard';
   end if;
 
+  if not has_table_privilege('authenticated','public.user_message_stars','UPDATE')
+     or not has_table_privilege('authenticated','public.chat_list_items','UPDATE') then
+    raise exception 'Upsert-backed user_message_stars/chat_list_items must retain UPDATE privilege';
+  end if;
+
   if has_table_privilege('authenticated','public.conversation_member_events','INSERT')
      or has_table_privilege('authenticated','public.conversation_member_events','UPDATE')
      or has_table_privilege('authenticated','public.conversation_member_events','DELETE') then
