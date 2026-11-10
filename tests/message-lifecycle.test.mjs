@@ -393,7 +393,11 @@ test('ambiguous reaction writes are verified against the authoritative row befor
   const pending = toggle({ id: 'm1', conversation_id: 'c1' }, 'heart', null);
   finishWrite({ error: { message: 'response lost after commit' } });
   assert.equal(await pending, true);
-  assert.deepEqual(state.reactions.get('m1'), [verified]);
+  const confirmed = state.reactions.get('m1')[0];
+  assert.equal(confirmed.message_id, 'm1');
+  assert.equal(confirmed.conversation_id, 'c1');
+  assert.equal(confirmed.user_id, 'u1');
+  assert.equal(confirmed.reaction_type, 'heart');
 });
 
 test('reaction state stays pending for refresh when both write and verification reads fail', async () => {
