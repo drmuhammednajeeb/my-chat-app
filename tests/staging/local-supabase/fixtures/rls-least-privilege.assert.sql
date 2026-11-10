@@ -200,8 +200,31 @@ begin
   if not exists (select 1 from storage.buckets where id='avatars' and public is true) then
     raise exception 'The explicitly public avatars bucket configuration changed; review before proceeding';
   end if;
-  if position('is_active_member' in pg_get_functiondef('app_private.can_access_channel_avatar(uuid)'::regprocedure)) = 0 then
-    raise exception 'Channel avatar read helper must enforce active membership';
+  -- Avatar delivery is intentionally public, but all writes must remain owner-scoped.
+  if not exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'storage' and p.tablename = 'objects'
+      and p.policyname = 'Users upload own avatar' and p.cmd = 'INSERT'
+      and lower(coalesce(p.with_check,'')) like '%bucket_id%'
+      and lower(coalesce(p.with_check,'')) like '%avatars%'
+      and lower(coalesce(p.with_check,'')) like '%storage.foldername(name)%'
+      and lower(coalesce(p.with_check,'')) like '%auth.uid()%'
+  ) or not exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'storage' and p.tablename = 'objects'
+      and p.policyname = 'Users update own avatar' and p.cmd = 'UPDATE'
+      and lower(coalesce(p.qual,'')) like '%storage.foldername(name)%'
+      and lower(coalesce(p.qual,'')) like '%auth.uid()%'
+      and lower(coalesce(p.with_check,'')) like '%storage.foldername(name)%'
+      and lower(coalesce(p.with_check,'')) like '%auth.uid()%'
+  ) or not exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'storage' and p.tablename = 'objects'
+      and p.policyname = 'Users delete own avatar' and p.cmd = 'DELETE'
+      and lower(coalesce(p.qual,'')) like '%storage.foldername(name)%'
+      and lower(coalesce(p.qual,'')) like '%auth.uid()%'
+  ) then
+    raise exception 'Avatar upload/update/delete policies must remain owner-scoped';
   end if;
 
 
