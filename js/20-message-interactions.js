@@ -113,7 +113,8 @@ async function toggleMessageReaction(message,reactionType,button){
    if(!committed){
     const reconciled=current.filter(row=>row.user_id!==userId);if(verified)reconciled.push(verified);
     state.reactions.set(message.id,reconciled);renderCurrent();
-    throw write.error;
+    toast('تغير التفاعل من جلسة أخرى؛ تم تحديث الحالة من الخادم');
+    return false;
    }
    const reconciled=current.filter(row=>row.user_id!==userId);if(verified)reconciled.push(verified);
    state.reactions.set(message.id,reconciled);renderCurrent();
