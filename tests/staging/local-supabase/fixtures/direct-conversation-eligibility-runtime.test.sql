@@ -266,7 +266,9 @@ BEGIN
   BEGIN
     PERFORM public.get_or_create_direct_conversation(
       '22222222-2222-4222-8222-222222222202');
-  EXCEPTION WHEN SQLSTATE '28000' THEN
+  EXCEPTION WHEN SQLSTATE '28000' OR insufficient_privilege THEN
+    -- The local/production ACL may reject service_role at app_private schema resolution
+    -- before the wrapper reaches auth.uid(); either SQLSTATE is a secure fail-closed denial.
     v_rejected := true;
   END;
   IF NOT v_rejected THEN
