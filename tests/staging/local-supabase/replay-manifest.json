@@ -632,12 +632,23 @@
     {
       "id": "DAG-014",
       "severity": "BLOCKER",
-      "issue": "Direct-conversation RPC runtime validation is still required in a disposable local Supabase environment: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, reversed-pair concurrent creation without duplicates, exact ACL enforcement, and active-membership gating. Do not enable replay until these tests pass."
+      "issue": "The direct-conversation RPC source is restored and rollback-only PostgreSQL assertions plus a two-session reversed-pair runner are prepared. Runtime execution is still required in a disposable local Supabase environment to prove unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exactly-one concurrent creation, exact ACL enforcement, and active-membership gating. Do not enable replay until those runtime tests pass.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+      ]
     },
     {
       "id": "DAG-015",
       "severity": "BLOCKER",
-      "issue": "The recovered production RPC lacks caller and target eligibility checks. A separately reviewed test-only overlay now checks both participants against active membership, verified membership number, valid number format, and confirmed Auth email while locking authoritative rows. Runtime PostgreSQL validation, negative cases, concurrency, and exact ACL behavior remain blocked; no production migration is authorized."
+      "issue": "The recovered production RPC lacked caller and target eligibility checks. A separate test-only overlay now checks both participants against active membership, verified membership number, final number format, and confirmed Auth email while locking authoritative rows. The overlay and negative-case PostgreSQL assertions are prepared, but runtime validation, concurrency, and exact ACL behavior remain blocked; no production migration is authorized.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+      ]
     }
   ],
   "requiredSourceRecovery": [
