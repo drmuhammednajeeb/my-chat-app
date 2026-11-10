@@ -169,7 +169,12 @@ test('group-only-admin restrictions survive composer, polling and voice entry po
 
 
 test('chat attachment MIME resolution handles browsers that omit file.type', () => {
-  const resolve = vm.runInNewContext('(' + extractFunction('resolveChatAttachmentMime') + ')');
+  const resolve = vm.runInNewContext('(' + extractFunction('resolveChatAttachmentMime') + ')', {
+    CHAT_ATTACHMENT_MIME_BY_EXTENSION: {
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      mov: 'video/quicktime', webm: 'video/webm', txt: 'text/plain'
+    }
+  });
   assert.equal(resolve({ name: 'report.docx', type: '' }), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
   assert.equal(resolve({ name: 'clip.mov', type: 'application/octet-stream' }), 'video/quicktime');
   assert.equal(resolve({ name: 'voice.webm', type: 'audio/webm;codecs=opus' }), 'audio/webm');
