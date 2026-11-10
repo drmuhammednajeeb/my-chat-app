@@ -117,6 +117,7 @@ test('two-session concurrency runner is restricted to disposable loopback Postgr
   assert.match(runner, /const eligibleSql/);
   assert.match(runner, /statement_timeout = '20s'/);
   assert.match(runner, /lock_timeout = '10s'/);
+  assert.match(runner, /PGCONNECT_TIMEOUT: '5'/);
   assert.match(runner, /127\.0\.0\.1/);
   assert.match(runner, /url\.port !== '54322'/);
   assert.match(runner, /url\.username !== 'postgres'/);
