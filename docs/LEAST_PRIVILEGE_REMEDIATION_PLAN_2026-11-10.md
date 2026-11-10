@@ -46,7 +46,7 @@ The live catalog shows:
 - `app_private.enforce_chat_message_reply_parent()` is also executable by `authenticated` and must be classified as a trigger implementation before finalizing the allowlist.
 - Public RPCs used by the client and authenticated app_private helpers must be preserved deliberately; do not blanket-revoke every function from `authenticated`.
 
-The test-only overlay now removes PUBLIC/API-role EXECUTE from trigger-returning functions in `public` and `app_private`, then asserts that none remain directly executable by `PUBLIC`, `anon`, or `authenticated`. This must pass in disposable local Supabase before the proposed production migration is drafted.
+The test-only overlay removes PUBLIC/API-role EXECUTE from trigger-returning functions in `public` and `app_private`, then asserts that none remain directly executable by `PUBLIC`, `anon`, or `authenticated`. This passed in disposable local runtime run [42863700280](https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280).
 
 ### Sequences
 
@@ -138,7 +138,7 @@ The new security branch extends this coverage to:
 - Local platform preflight verification that `supabase_admin` exists, while explicitly leaving its platform-owned default ACL untouched.
 - A catalog assertion that public application tables, sequences, and functions are owned by the approved `postgres` migration role.
 
-**The updated branch has not yet passed CI.** Do not treat these added checks as verified until the workflow completes successfully.
+**Verified:** disposable local runtime run [42863700280](https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280) passed. It confirms the updated overlay and assertions in an isolated Supabase/PostgreSQL 17 stack; it does not authorize production changes.
 
 ## 4. Production change sequence — not yet authorized
 
