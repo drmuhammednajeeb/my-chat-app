@@ -22,7 +22,7 @@ async function provisionSyntheticDirectChatAuthUsers() {
   if (!rawApi || !serviceKey) fail('local Supabase API URL and service key are required for synthetic Auth provisioning');
   let api;
   try { api = new URL(rawApi); } catch { fail('invalid LOCAL_SUPABASE_URL for synthetic Auth provisioning'); }
-  const apiHost = api.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+  const apiHost = api.hostname.replace(/^\[|\]$/g, '').toLowerCase();
   if (api.protocol !== 'http:'
     || !['127.0.0.1', 'localhost', '::1'].includes(apiHost)
     || api.port !== '54321'
