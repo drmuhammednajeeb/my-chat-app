@@ -312,6 +312,17 @@ test('loadMessages declares render completion before both empty and non-empty br
     'The declaration must not be scoped to the non-empty branch');
 });
 
+test('optional reply, pin and private-reply metadata failures do not abort primary message loading', () => {
+  const load = extractFunction('loadMessages');
+  assert.match(load, /catch\(replyLoadError\)/);
+  assert.match(load, /catch\(pinLoadError\)/);
+  assert.match(load, /catch\(privateReplyLoadError\)/);
+  assert.match(load, /reply-parent-load-warning/);
+  assert.match(load, /message-pins-load-warning/);
+  assert.match(load, /private-reply-context-load-warning/);
+  assert.match(load, /recordPerf\('message_load_total',[\s\S]*?\{success:true,rows:messages\.length\}/);
+});
+
 test('fallback synchronization is cursor-based and reconciles edits and deletions', () => {
   const poll = extractFunction('pollMessagesFallback');
   assert.match(poll, /messagePollCursor/);
