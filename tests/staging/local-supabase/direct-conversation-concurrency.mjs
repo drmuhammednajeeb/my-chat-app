@@ -7,8 +7,9 @@ let syntheticIds;
 try { syntheticIds = JSON.parse(rawSyntheticIds); } catch { throw new Error('Invalid LOCAL_SYNTHETIC_AUTH_USERS_JSON.'); }
 const callerA = syntheticIds?.direct_a;
 const callerB = syntheticIds?.direct_b;
+const callerC = syntheticIds?.direct_c;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-if (!uuidPattern.test(callerA || '') || !uuidPattern.test(callerB || '')) {
+if (!uuidPattern.test(callerA || '') || !uuidPattern.test(callerB || '') || !uuidPattern.test(callerC || '')) {
   throw new Error('Synthetic direct-chat participants must be valid Auth-generated UUIDs.');
 }
 
@@ -45,21 +46,21 @@ function psql(databaseUrl, sql) {
 
 const db = localDatabaseUrl();
 
-// The preceding eligibility matrix is intentionally rollback-only. Promote only the
-// two reserved synthetic users in this disposable database so concurrency and later
-// CRUD/Storage probes have a stable eligible pair for their own transactions.
-await psql(db, `BEGIN;\nSET LOCAL statement_timeout = '60s';\nSET LOCAL lock_timeout = '30s';\nSET LOCAL ROLE authenticated;\nSELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);\nSELECT public.admin_set_member_official_number('${callerA}', '971001000002');\nSELECT public.admin_set_member_official_number('${callerB}', '971001000003');\nCOMMIT;`);
+// The preceding eligibility matrix is intentionally rollback-only. Promote the three
+// reserved synthetic users in this disposable database so the live Realtime test has
+// a third eligible identity without changing any hosted account.
+await psql(db, `BEGIN;\nSET LOCAL statement_timeout = '60s';\nSET LOCAL lock_timeout = '30s';\nSET LOCAL ROLE authenticated;\nSELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);\nSELECT public.admin_set_member_official_number('${callerA}', '971001000002');\nSELECT public.admin_set_member_official_number('${callerB}', '971001000003');\nSELECT public.admin_set_member_official_number('${callerC}', '971001000008');\nCOMMIT;`);
 
 const eligibleSql = `SELECT count(*)::text
 FROM public.profiles p
 JOIN auth.users u ON u.id = p.id
-WHERE p.id IN ('${callerA}'::uuid, '${callerB}'::uuid)
+WHERE p.id IN ('${callerA}'::uuid, '${callerB}'::uuid, '${callerC}'::uuid)
   AND p.membership_status = 'active'
   AND p.membership_number_verified IS TRUE
   AND p.membership_number ~ '^971[0-9]{9}$'
   AND u.email_confirmed_at IS NOT NULL;`;
 const eligible = await psql(db, eligibleSql);
-if (eligible !== '2') throw new Error('Synthetic participant pair is not fully eligible.');
+if (eligible !== '3') throw new Error('Three synthetic Realtime participants are not fully eligible.');
 
 const preflight = `SELECT count(*)::text
 FROM public.conversations c
