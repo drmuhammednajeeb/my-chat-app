@@ -1032,7 +1032,7 @@ async function loadMessageReactions(conversationId,messages,requestId=null){
 }
 const CHAT_STICKERS=['❤️','😍','😂','🤣','🥰','😘','🔥','👏','👍','🙏','🎉','💯','🌹','✨','🤝','💪','🥳','😎','🤩','😭','😮','🙌','💐','⭐'];
 function encodeChatSticker(emoji){return '[[bizmind-sticker:'+emoji+']]'}
-function decodeChatSticker(content){const match=String(content||'').match(/^\\[\\[bizmind-sticker:([^\\]]+)\\]\\]$/);return match&&CHAT_STICKERS.includes(match[1])?match[1]:null}
+function decodeChatSticker(content){const value=String(content||''),prefix='[[bizmind-sticker:',suffix=']]';if(!value.startsWith(prefix)||!value.endsWith(suffix))return null;const emoji=value.slice(prefix.length,-suffix.length);return CHAT_STICKERS.includes(emoji)?emoji:null}
 function openChatStickerPicker(){
  if(!state.active||state.uploading||state.voiceRecorder)return;
  const grid=document.createElement('div');grid.className='chat-sticker-grid';
