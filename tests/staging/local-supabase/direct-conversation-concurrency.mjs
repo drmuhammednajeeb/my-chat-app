@@ -35,18 +35,23 @@ function psql(databaseUrl, sql) {
 }
 
 const db = localDatabaseUrl();
-const eligible = await psql(db, `SELECT count(*)::text
+const eligibleSql = \`SELECT count(*)::text
 FROM public.profiles p
 JOIN auth.users u ON u.id = p.id
-WHERE p.id IN ('${callerA}'::uuid, '${callerB}'::uuid)
+WHERE p.id IN ('\${callerA}'::uuid, '\${callerB}'::uuid)
   AND p.membership_status = 'active'
   AND p.membership_number_verified IS TRUE
-  AND p.membership_number ~ '^971[0-9]{9} `SELECT count(*)::text
+  AND p.membership_number ~ '^971[0-9]{9}$'
+  AND u.email_confirmed_at IS NOT NULL;\`;
+const eligible = await psql(db, eligibleSql);
+if (eligible !== '2') throw new Error('Synthetic participant pair is not fully eligible.');
+
+const preflight = \`SELECT count(*)::text
 FROM public.conversations c
 WHERE c.type = 'direct'
-  AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerA}'::uuid)
-  AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerB}'::uuid)
-  AND (SELECT count(*) FROM public.conversation_members m WHERE m.conversation_id=c.id)=2;`;
+  AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='\${callerA}'::uuid)
+  AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='\${callerB}'::uuid)
+  AND (SELECT count(*) FROM public.conversation_members m WHERE m.conversation_id=c.id)=2;\`;
 const existing = await psql(db, preflight);
 if (existing !== '0') throw new Error('Refusing to run: a direct conversation already exists for the synthetic pair.');
 
