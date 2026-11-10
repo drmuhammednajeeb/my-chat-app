@@ -109,7 +109,9 @@ async function clearLocalChatStorage() {
       });
       if (!response.ok) throw new Error('Storage removal failed for ' + bucket + ' (HTTP ' + response.status + ')');
     }
-    console.log('CLEAN_CHAT_STORAGE_BUCKET=' + bucket + ' REMOVED=' + paths.length);
+    const remaining = await listPrefix(bucket);
+    if (remaining.length) throw new Error('Storage cleanup left ' + remaining.length + ' objects in ' + bucket);
+    console.log('CLEAN_CHAT_STORAGE_BUCKET=' + bucket + ' REMOVED=' + paths.length + ' VERIFIED_EMPTY=true');
   }
 }
 await clearLocalChatStorage();
