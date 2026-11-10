@@ -49,7 +49,11 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     'has_sequence_privilege',
     'has_function_privilege',
     'pg_default_acl',
-    'aclexplode'
+    'aclexplode',
+    'storage.objects',
+    'can_access_channel_avatar',
+    'foldername(name)',
+    'search_path=""'
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing assertion: ' + token);
   assert.doesNotMatch(sql, /\b(insert\s+into|update\s+\w|delete\s+from|create\s+table|alter\s+table)\b/i);
 });
