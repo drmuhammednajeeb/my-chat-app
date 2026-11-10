@@ -577,18 +577,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "security.least-privilege-overlay",
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
-        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
-      ],
-      "blockedBy": [
-        "DAG-016"
-      ],
-      "parityNote": "Test-only privilege overlay, loopback-guarded and not executed. Must be the final SQL overlay after all application schema/policy sources."
-    },
-    {
       "nodeId": "test-fixture.direct-chat-runtime",
       "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
       "testSources": [
@@ -611,6 +599,18 @@
         "DAG-015"
       ],
       "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production."
+    },
+    {
+      "nodeId": "security.least-privilege-overlay",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": "Test-only privilege overlay, loopback-guarded and not executed. Must be the final SQL overlay after all application schema/policy sources."
     }
   ],
   "duplicateSelection": [
