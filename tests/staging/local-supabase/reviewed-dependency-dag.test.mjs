@@ -39,7 +39,7 @@ test('reviewed dependency graph references existing source files and known nodes
   }
 });
 
-test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime blocker', async () => {
+test('reviewed dependency graph records local runtime success while preserving the production release gate', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const nodes = [...dag.platformNodes, ...dag.nodes].map(node => node.id);
   const indegree = new Map(nodes.map(id => [id, 0]));
@@ -59,8 +59,13 @@ test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime 
   }
   assert.equal(visited, nodes.length, 'dependency graph contains a cycle');
   assert.ok(dag.blockers.some(item => item.id === 'DAG-002' && item.severity === 'RESOLVED_FOR_LOCAL_REPLAY'));
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-014' && item.severity === 'BLOCKER'));
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-015' && item.severity === 'BLOCKER'));
+  assert.equal(dag.status, 'BLOCKED');
+  assert.equal(dag.executionAuthorized, false);
+  for (const id of ['DAG-007', 'DAG-008', 'DAG-010', 'DAG-013', 'DAG-014', 'DAG-015', 'DAG-016']) {
+    const item = dag.blockers.find(blocker => blocker.id === id);
+    assert.equal(item?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME', 'local runtime evidence missing for ' + id);
+    assert.equal(item?.runtimeEvidence?.runId, 42863700280);
+  }
   for (const id of ['DAG-014', 'DAG-015']) {
     const blocker = dag.blockers.find(item => item.id === id);
     assert.ok(blocker.evidence?.includes('tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
@@ -182,8 +187,8 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(dag.blockers.find(item => item.id === id)?.evidence?.some(path => path.includes('local-platform-')));
   }
   for (const id of ['DAG-014', 'DAG-015']) {
-    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
-    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
+    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME');
+    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME');
   }
   const allNodes = [...dag.platformNodes, ...dag.nodes];
   const ids = allNodes.map(node => node.id);
@@ -249,8 +254,9 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.local-pg-cron-runtime');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED');
-  assert.ok(node.blockedBy.includes('DAG-008'));
+  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED');
+  assert.equal(node.blockedBy?.includes('DAG-008') ?? false, false);
+  assert.equal(node.runtimeEvidence?.runId, 42863700280);
   assert.ok(node.requires.includes('test-fixture.local-platform-postflight'));
   assert.ok(dag.blockers.find(item => item.id === 'DAG-008').evidence.includes('tests/staging/local-supabase/local-pg-cron-runtime.mjs'));
   assert.equal(dag.executionAuthorized, false);
@@ -271,7 +277,7 @@ test('local platform preflight and postflight are read-only, ordered, and fail c
   assert.match(preflight, /pg_available_extensions WHERE name = 'pg_cron'/);
   assert.match(postflight, /cron\.job/);
   assert.match(postflight, /purge-expired-chat-messages/);
-  assert.match(postflight, /scheduler execution still requires a separate runtime check/i);
+  assert.match(postflight, /scheduler execution is verified by a separate runtime probe/i);
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const preNode = dag.nodes.find(node => node.id === 'test-fixture.local-platform-preflight');
   const postNode = dag.nodes.find(node => node.id === 'test-fixture.local-platform-postflight');
@@ -285,7 +291,7 @@ test('local platform preflight and postflight are read-only, ordered, and fail c
 });
 
 
-test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', async () => {
+test('least-privilege overlay is a test-only, locally validated, loopback-only SQL fixture', async () => {
   const overlay = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql'), 'utf8');
   const assertion = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql'), 'utf8');
   assert.match(overlay, /TEST-ONLY/i);
@@ -300,7 +306,8 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
   assert.match(assertion, /pg_default_acl/);
   const node = JSON.parse(await readFile(dagPath, 'utf8')).nodes.find(item => item.id === 'security.least-privilege-overlay');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED');
+  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATED_LOCAL');
+  assert.equal(node.runtimeEvidence?.runId, 42863700280);
   assert.ok(node.requires.includes('membership.final-format'));
   assert.ok(node.blockedBy.includes('DAG-016'));
   assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
