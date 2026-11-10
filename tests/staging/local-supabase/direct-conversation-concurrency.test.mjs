@@ -30,7 +30,7 @@ test('concurrency probe remains loopback-only and cleans only its generated conv
     readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8'),
     readFile(path.join(root, 'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql'), 'utf8')
   ]);
-  for (const token of ["'127.0.0.1'", "'localhost'", "'::1'", "url.port !== '54322'", "url.username !== 'postgres'", "url.pathname !== '/postgres'", 'Promise.allSettled', 'pg_sleep(1.5)', 'DELETE FROM public.conversations']) {
+  for (const token of ["'127.0.0.1'", "'localhost'", "'::1'", "url.port !== '54322'", "url.username !== 'postgres'", "url.pathname !== '/postgres'", 'Promise.allSettled', 'pg_sleep(0.25)', 'DELETE FROM public.conversations']) {
     assert.ok(source.includes(token), 'missing concurrency safety/behavior check: ' + token);
   }
   assert.match(rpc, /pg_advisory_xact_lock/i);
