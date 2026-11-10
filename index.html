@@ -1098,7 +1098,7 @@ function bindMessageGestures(row,message){
 }
 const pendingReactionKeys=new Set();
 async function toggleMessageReaction(message,reactionType,button){
- const conversationId=message.conversation_id||state.active?.id,userId=state.user?.id;
+ const conversationId=message.conversation_id||state.active?.id,userId=state.user?.id,requestVersion=state.messageLoadVersion;
  if(!conversationId||!userId||state.active?.id!==conversationId||message.deleted_at)return;
  const pendingKey=message.id+':'+userId;if(pendingReactionKeys.has(pendingKey))return;
  pendingReactionKeys.add(pendingKey);
@@ -1114,10 +1114,13 @@ async function toggleMessageReaction(message,reactionType,button){
   else result=await supabaseClient.from('message_reactions').upsert({conversation_id:conversationId,message_id:message.id,user_id:userId,reaction_type:reactionType},{onConflict:'message_id,user_id'});
   if(result.error)throw result.error;
  }catch(error){
-  state.reactions.set(message.id,current);
-  const activeRow=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);
-  if(activeRow)renderReactionBar(activeRow,message);
-  console.error('Message reaction failed:',error);toast('تعذر حفظ التفاعل. أُعيدت الحالة السابقة؛ حاول مجدداً');
+  if(state.active?.id===conversationId&&state.messageLoadVersion===requestVersion){
+   state.reactions.set(message.id,current);
+   const activeRow=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);
+   if(activeRow)renderReactionBar(activeRow,message);
+   toast('تعذر حفظ التفاعل. أُعيدت الحالة السابقة؛ حاول مجدداً');
+  }
+  console.error('Message reaction failed:',error);
  }finally{pendingReactionKeys.delete(pendingKey);if(button?.isConnected)button.disabled=false}
 }
 function handleReactionRealtime(payload,conversationId){
