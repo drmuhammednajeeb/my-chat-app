@@ -239,7 +239,7 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
     'PGOPTIONS'
   ]) assert.ok(runner.includes(fragment), 'missing local pg_cron probe safeguard: ' + fragment);
   assert.match(runner, /Refusing non-local database target/);
-  assert.doesNotMatch(runner, /supabase\\.co|SUPABASE_SERVICE_ROLE_KEY|service_role key/i);
+  assert.doesNotMatch(runner, /supabase\.co|SUPABASE_SERVICE_ROLE_KEY|service_role key/i);
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.local-pg-cron-runtime');
   assert.ok(node);
