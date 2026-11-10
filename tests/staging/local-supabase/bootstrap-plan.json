@@ -222,5 +222,20 @@
       "cancelled"
     ],
     "productionResourcesMayBeTouched": false
+  },
+  "localRuntimeExecution": {
+    "mode": "DISPOSABLE_LOCAL_SUPABASE_ONLY",
+    "status": "PREPARED_NOT_EXECUTED",
+    "workflow": ".github/workflows/disposable-local-supabase-runtime.yml",
+    "runner": "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
+    "explicitGate": "ALLOW_DISPOSABLE_LOCAL_REPLAY=1",
+    "localDatabase": "postgres@loopback:54322/postgres",
+    "localApi": "http://loopback:54321",
+    "postgresMajorVersion": 17,
+    "usesProductionData": false,
+    "cloudConnectionsAllowed": false,
+    "productionAllowed": false,
+    "canonicalSqlMutationAllowed": false,
+    "cleanup": "The temporary Supabase project is stopped in an always-run workflow cleanup step."
   }
 }
