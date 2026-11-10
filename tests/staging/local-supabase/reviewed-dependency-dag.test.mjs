@@ -233,6 +233,7 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
     'cron.job_run_details',
     "result.startsWith('succeeded|')",
     'cron.unschedule(',
+    'SELECT jobid::text FROM cron.job WHERE jobname=',
     'DELETE FROM cron.job_run_details',
     'Date.now() + 90000',
     'PGCONNECT_TIMEOUT',
