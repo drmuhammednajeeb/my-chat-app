@@ -866,6 +866,27 @@
         "core.base"
       ],
       "parityNote": "Replaces the canonical chat-media INSERT policy in the disposable replay to bind folder segment 2 to auth.uid(). Do not deploy without separate review."
+    },
+    {
+      "id": "chat.direct-conversation-rpc-eligibility-guard",
+      "source": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql"
+      ],
+      "provides": [
+        "test-only caller and target eligibility guard for direct-conversation RPC"
+      ],
+      "requires": [
+        "chat.direct-conversation-rpc"
+      ],
+      "status": "TEST_ONLY_GUARD_IMPLEMENTED_RUNTIME_VALIDATION_BLOCKED",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ]
     }
   ],
   "explicitEdges": [
@@ -1396,6 +1417,10 @@
     [
       "chat.direct-conversation-rpc",
       "chat.hardening"
+    ],
+    [
+      "chat.direct-conversation-rpc",
+      "chat.direct-conversation-rpc-eligibility-guard"
     ]
   ],
   "blockers": [
@@ -1526,7 +1551,11 @@
         "database/changes/20261107144109_private_membership_system_20261107.sql",
         "index.html"
       ],
-      "issue": "Security review finding: the recovered internal RPC is SECURITY DEFINER but only checks that auth.uid() is non-null; it does not call app_private.is_active_member() for the caller. Its target check only requires a profiles row and does not check active status, verified membership number, or confirmed email. The deployed profiles SELECT policy checks the caller's active status, while this SECURITY DEFINER function bypasses RLS. A suspended account with a still-valid JWT may therefore invoke the RPC, and an active caller may target an inactive profile. Confirm intended policy and add a separately reviewed test-only guard before runtime approval or production changes."
+      "issue": "The recovered production RPC lacks caller and target eligibility checks. A separately reviewed test-only overlay now checks both participants against active membership, verified membership number, valid number format, and confirmed Auth email while locking the authoritative rows. Runtime PostgreSQL validation, including negative cases, concurrency, and exact ACL behavior, remains blocked; no production migration is authorized.",
+      "mitigation": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs"
+      ]
     }
   ],
   "duplicateProvenance": [
