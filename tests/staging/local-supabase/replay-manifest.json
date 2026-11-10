@@ -407,6 +407,17 @@
       "parityNote": null
     },
     {
+      "nodeId": "test-fixture.local-pg-cron-runtime",
+      "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED",
+      "testSources": [
+        "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
+      ],
+      "blockedBy": [
+        "DAG-008"
+      ],
+      "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@loopback:54322/postgres. Schedules a unique SELECT 1 probe, waits up to 90 seconds for succeeded status, then unschedules and removes only its own job-run details. Never run against cloud or production."
+    },
+    {
       "nodeId": "chat.scope-team-admin-overrides",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -637,7 +648,10 @@
     {
       "id": "DAG-008",
       "severity": "REVIEW_REQUIRED",
-      "issue": "Verify local pg_cron availability and job behavior before inclusion."
+      "issue": "pg_cron availability and the expected purge-job definition now have read-only local pre/postflight assertions. A separate loopback-only probe runner is prepared to prove actual scheduler execution using a temporary SELECT 1 job with scoped cleanup. Neither the probe nor the scheduler has been run; this blocker remains until disposable-local runtime evidence exists.",
+      "evidence": [
+        "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
+      ]
     },
     {
       "id": "DAG-010",
