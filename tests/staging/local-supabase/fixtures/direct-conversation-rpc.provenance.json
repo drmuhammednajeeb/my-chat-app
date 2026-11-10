@@ -38,9 +38,11 @@
   "fixturePath": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
   "fixtureSha256": "14164d82eae82dba70c8d5b4d6922eec8357dada2bbba509544524b76721072f",
   "reviewNotes": [
+    "The SECURITY DEFINER implementation checks only that auth.uid() is non-null; it does not call app_private.is_active_member() for the caller. This can bypass the dynamic active-membership gate for a still-valid JWT after suspension.",
     "The internal function validates auth.uid(), rejects null/self targets, and requires the target profile to exist.",
     "The function serializes each user pair with pg_advisory_xact_lock and reuses an existing direct conversation with exactly two members.",
-    "The recovered function body does not itself contain an explicit active-membership predicate; intended membership gating must be reviewed separately before runtime approval."
+    "The recovered function body does not itself contain an explicit active-membership predicate; intended membership gating must be reviewed separately before runtime approval.",
+    "The target check requires only a profiles row. It does not validate target membership_status, membership_number_verified, membership-number format, or auth.users.email_confirmed_at."
   ],
   "execution": {
     "enabled": false,
