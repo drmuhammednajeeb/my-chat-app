@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
   const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
@@ -40,6 +41,11 @@ function extractFunction(name) {
   }
   throw new Error('Unbalanced function body: ' + name);
 }
+
+test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring', () => {
+  assert.match(overrides, /#chat \.messages\{overflow-anchor:none\}/);
+  assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
+});
 
 test('all inline JavaScript blocks parse without a bundler', () => {
   const blocks = [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
