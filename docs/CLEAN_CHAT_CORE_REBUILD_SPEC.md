@@ -159,7 +159,25 @@ The selected design must pass cross-conversation isolation, revoked-membership, 
 - concurrent authenticated message writes persist uniquely;
 - then progressively test 100, 500, and 5,000 simulated users; do not infer production capacity from small local tests.
 
-## 9. Cutover and destructive reset
+## 9. Implemented disposable-local candidate
+
+The current rebuild branch now contains an explicitly test-only destructive fixture:
+- `tests/staging/local-supabase/fixtures/clean-chat-core-rebuild.test-only.sql`
+- `tests/staging/local-supabase/clean-chat-core-runtime.mjs`
+
+The fixture is not a canonical migration and is not part of the historical replay manifest. It is invoked only by the runtime runner after the runner validates a loopback PostgreSQL URL and the test-only GUC. It truncates `public.conversations CASCADE` (thereby clearing conversation-dependent data) while preserving `auth.users` and `public.profiles`.
+
+It then adds:
+- canonical `direct_user_low/direct_user_high` columns, a pair check, and a unique partial index;
+- a direct-conversation RPC that checks active/verified eligibility, takes an advisory transaction lock, and relies on the unique index as the final invariant;
+- composite conversation/message foreign keys for reactions, stars, pins, and private reply contexts;
+- a stable conversation timeline index.
+
+The local acceptance runner exercises symmetric direct-conversation identity, duplicate message-ID rejection, direct/group timeline isolation, shared reactions, owner-private stars, inactive-user denial, invalid reaction rejection, star impersonation denial, and cross-conversation foreign-key rejection. The same runtime job repeats the 24-request reversed-pair and 40-write concurrency test after the reset.
+
+This candidate is still under CI validation. It must not be copied to a hosted project or treated as production-ready until the complete runtime result and subsequent authenticated staging gates pass.
+
+## 10. Cutover and destructive reset
 
 A clean reset is permitted because old message data is explicitly disposable. The reset is still staged:
 
@@ -173,7 +191,7 @@ A clean reset is permitted because old message data is explicitly disposable. Th
 
 No operation in this document authorizes touching the separate store project.
 
-## 10. Current Supabase platform constraints
+## 11. Current Supabase platform constraints
 
 - Supabase CLI v3 changed database commands to local-by-default; hosted changes require explicit `--remote` and confirmation behavior. Existing CI currently pins the CLI, so keep it pinned until a dedicated v3 migration is tested.
 - New public tables are no longer assumed to be exposed automatically through the Data API; exposure and grants must be explicit.
