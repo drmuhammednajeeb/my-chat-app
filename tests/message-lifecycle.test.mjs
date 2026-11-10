@@ -82,6 +82,89 @@ test('message renderer serializes same-ID work and retries with the newest row',
   assert.equal(state.messageRenderPromises.size, 0);
 });
 
+test('renderer never retries a message after it has been removed from the active conversation', async () => {
+  const state = { active: { id: 'c1' }, messageLoadVersion: 4, messages: [], messageIds: new Set(), messageRenderPromises: new Map() };
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  let calls = 0;
+  const renderMessageInternal = async () => { calls += 1; await gate; return false; };
+  const renderMessage = vm.runInNewContext('(' + extractFunction('renderMessage') + ')', { state, renderMessageInternal });
+  const pending = renderMessage({ id: 'deleted-1' }, 'c1', 4);
+  await Promise.resolve();
+  state.messages = [];
+  release();
+  assert.equal(await pending, false);
+  assert.equal(calls, 1);
+  assert.equal(state.messageRenderPromises.size, 0);
+});
+
+test('timeline reconciler sorts concurrent rows and keeps one day divider per date', () => {
+  const makeNode = (kind, day, createdAt, id) => ({
+    classList: { contains: name => name === kind },
+    dataset: { day, createdAt, messageId: id },
+    textContent: day,
+  });
+  const area = {
+    children: [
+      makeNode('message', 'Tue', '2026-11-10T10:02:00Z', 'm2'),
+      makeNode('day-divider', 'Tue', '', ''),
+      makeNode('message', 'Tue', '2026-11-10T10:01:00Z', 'm1'),
+      makeNode('day-divider', 'Tue', '', ''),
+    ],
+    querySelectorAll(selector) { assert.equal(selector, ':scope > .message'); return this.children.filter(node => node.classList.contains('message')); },
+    replaceChildren(...nodes) { this.children = nodes; }
+  };
+  const document = { createElement: () => ({ classList: { contains: name => name === 'day-divider' }, dataset: {}, textContent: '' }) };
+  const reconcile = vm.runInNewContext('(' + extractFunction('reconcileMessageTimeline') + ')', { document, Date, String, Array });
+  reconcile(area);
+  const ids = area.children.filter(node => node.classList.contains('message')).map(node => node.dataset.messageId);
+  const dividers = area.children.filter(node => node.classList.contains('day-divider'));
+  assert.deepEqual(ids, ['m1', 'm2']);
+  assert.equal(dividers.length, 1);
+});
+
+test('hard-delete realtime handler removes the row and all local message indexes', () => {
+  let removed = false;
+  const row = { dataset: { messageId: 'm1' }, remove() { removed = true; } };
+  const area = {};
+  const state = {
+    active: { id: 'c1' },
+    messages: [{ id: 'm1', conversation_id: 'c1' }, { id: 'm2', conversation_id: 'c1' }],
+    messageIds: new Set(['m1', 'm2']),
+    reactions: new Map([['m1', []]]),
+    pinnedMessages: new Map([['m1', {}]]),
+    replyMessages: new Map([['m1', {}]]),
+    conversations: []
+  };
+  const document = { querySelectorAll: selector => selector === '.message' ? [row] : [] };
+  const handler = vm.runInNewContext('(' + extractFunction('handleMessageDeleteRealtime') + ')', {
+    state, document, $: () => area, reconcileMessageTimeline: () => {}
+  });
+  assert.equal(handler({ old: { id: 'm1' } }, 'c1'), true);
+  assert.deepEqual(state.messages.map(message => message.id), ['m2']);
+  assert.equal(state.messageIds.has('m1'), false);
+  assert.equal(state.reactions.has('m1'), false);
+  assert.equal(state.pinnedMessages.has('m1'), false);
+  assert.equal(state.replyMessages.has('m1'), false);
+  assert.equal(removed, true);
+});
+
+test('conversation subscription listens for hard deletes and soft-delete rendering is local', () => {
+  const subscribe = extractFunction('subscribeConversation');
+  const update = extractFunction('handleMessageUpdateRealtime');
+  assert.match(subscribe, /event:'DELETE',schema:'public',table:'chat_messages'/);
+  assert.match(subscribe, /handleMessageDeleteRealtime\(p,id\)/);
+  assert.match(update, /renderMessage\(incoming,conversationId,state\.messageLoadVersion\)/);
+  assert.doesNotMatch(update, /Deleted message refresh failed/);
+});
+
+test('initial message snapshot removes stale rows inside its authoritative window', () => {
+  const load = extractFunction('loadMessages');
+  assert.match(load, /fetchedIds=new Set\(fetchedRows\.map\(m=>m\.id\)\)/);
+  assert.match(load, /isOlderHistory=fetchedRows\.length===50/);
+  assert.match(load, /if\(fetchedIds\.has\(m\.id\)\|\|isNewerRealtime\|\|isOlderHistory\|\|arrivedDuringEmptyFetch\)/);
+});
+
 test('renderer rejects an obsolete request token before starting work', async () => {
   const state = { active: { id: 'c1' }, messageLoadVersion: 9, messages: [], messageIds: new Set(), messageRenderPromises: new Map() };
   let calls = 0;
