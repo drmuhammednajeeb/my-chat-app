@@ -1,8 +1,15 @@
 import { spawn } from 'node:child_process';
 
-const callerA = '22222222-2222-4222-8222-222222222201';
-const callerB = '22222222-2222-4222-8222-222222222202';
+const rawSyntheticIds = process.env.LOCAL_SYNTHETIC_AUTH_USERS_JSON;
+if (!rawSyntheticIds) throw new Error('Set LOCAL_SYNTHETIC_AUTH_USERS_JSON from the disposable Auth provisioning step.');
+let syntheticIds;
+try { syntheticIds = JSON.parse(rawSyntheticIds); } catch { throw new Error('Invalid LOCAL_SYNTHETIC_AUTH_USERS_JSON.'); }
+const callerA = syntheticIds?.direct_a;
+const callerB = syntheticIds?.direct_b;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+if (!uuidPattern.test(callerA || '') || !uuidPattern.test(callerB || '')) {
+  throw new Error('Synthetic direct-chat participants must be valid Auth-generated UUIDs.');
+}
 
 function localDatabaseUrl() {
   const raw = process.env.LOCAL_SUPABASE_DB_URL;
