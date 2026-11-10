@@ -7,7 +7,7 @@
     "mappedSources": 51,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 20,
+    "testOnlySqlFixtures": 21,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
@@ -28,12 +28,13 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql",
-      "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql"
+      "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql",
+      "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
     "executedMappedSources": 47,
-    "executedTestOnlySqlFixtures": 20,
-    "executedSqlFiles": 67
+    "executedTestOnlySqlFixtures": 21,
+    "executedSqlFiles": 68
   },
   "execution": {
     "enabled": false,
@@ -576,6 +577,15 @@
         "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
         "scope": "disposable local Supabase/PostgreSQL 17 only"
       }
+    },
+    {
+      "nodeId": "chat.channel-avatar-catalog-reconstruction",
+      "status": "TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Test-only subset extracted from current catalog; not original historical migration source."
     },
     {
       "nodeId": "test-fixture.direct-chat-runtime",
