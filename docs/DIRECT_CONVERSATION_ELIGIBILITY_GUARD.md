@@ -75,6 +75,8 @@ and non-postgres database users. It is not part of CI and has not been run.
 - target with no profile or no matching Auth user: rejected;
 - unauthenticated caller, null target, and self-target: rejected;
 - existing direct conversation is reused;
+- all six membership validation functions and both membership-format constraints use the final `971` plus nine-digit format;
+- the official membership admin RPC rejects an invalid number;
 - concurrent reversed-pair calls create exactly one direct conversation;
 - authenticated can invoke the public wrapper and the internal function according to the recovered ACL; the internal function still enforces caller and target eligibility;
 - anon and PUBLIC cannot execute either function;
