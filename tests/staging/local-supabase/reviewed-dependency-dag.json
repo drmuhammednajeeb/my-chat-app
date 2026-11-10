@@ -108,15 +108,20 @@
       "requires": [
         "core.base"
       ],
-      "status": "TEST_ONLY_RESTORED_PRODUCTION_SOURCE",
+      "status": "TEST_ONLY_RESTORED_CATALOG_SOURCE_RUNTIME_VERIFIED_LOCAL",
       "testSource": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
       ],
       "provenance": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
-      "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests.",
+      "parityNote": "Current function definitions and ACLs were extracted read-only from the production catalog and preserved with provenance. The test-only eligibility overlay and runtime matrix passed in disposable local Supabase. The original historical migration body is still missing; no production SQL was executed.",
       "blockedBy": [
         "DAG-015"
-      ]
+      ],
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "core.grants",
@@ -867,11 +872,16 @@
       "testSource": [
         "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql"
       ],
-      "status": "TEST_ONLY_SECURITY_HARDENING_CANDIDATE",
+      "status": "TEST_ONLY_SECURITY_HARDENING_VALIDATED_LOCAL_STORAGE_API",
       "requires": [
         "core.base"
       ],
-      "parityNote": "Replaces the canonical chat-media INSERT policy in the disposable replay to bind folder segment 2 to auth.uid(). Do not deploy without separate review."
+      "parityNote": "The test-only replacement policy passed the disposable local Storage API probe, including valid chat-media upload and cross-user uploader-folder spoof denial. The canonical production policy remains unchanged; no deployment is authorized.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "chat.direct-conversation-rpc-eligibility-guard",
@@ -885,7 +895,7 @@
         "chat.direct-conversation-rpc",
         "membership.final-format"
       ],
-      "status": "TEST_ONLY_GUARD_IMPLEMENTED_RUNTIME_VALIDATION_BLOCKED",
+      "status": "TEST_ONLY_GUARD_RUNTIME_VERIFIED_LOCAL",
       "testSource": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs"
@@ -893,7 +903,13 @@
       "blockedBy": [
         "DAG-014",
         "DAG-015"
-      ]
+      ],
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      },
+      "parityNote": "The test-only caller/target eligibility guard passed disposable-local PostgreSQL runtime assertions and concurrency. It is not a production migration; the original historical source remains missing."
     },
     {
       "id": "test-fixture.direct-chat-auth-seed",
@@ -936,7 +952,7 @@
       "source": [
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql"
       ],
-      "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
+      "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_PASSED_LOCAL",
       "provides": [
         "rollback-only PostgreSQL assertions for eligibility, rejection boundaries, reuse, and ACL"
       ],
@@ -953,14 +969,19 @@
         "DAG-014",
         "DAG-015"
       ],
-      "note": "Disposable-local runtime script only. Requires the full approved replay; no CI or production SQL execution. Two-session reversed-pair concurrency remains separately blocked."
+      "note": "Passed in disposable local PostgreSQL runtime: eligibility rejection boundaries, valid creation/reuse, and exact RPC ACL assertions.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "test-fixture.direct-chat-concurrency",
       "source": [
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
       ],
-      "status": "TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_NOT_EXECUTED",
+      "status": "TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_PASSED",
       "provides": [
         "24-session reversed-pair concurrency verification and 40 concurrent authenticated message inserts, with one-conversation assertion and scoped cleanup"
       ],
@@ -977,14 +998,19 @@
         "DAG-014",
         "DAG-015"
       ],
-      "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production. The runner promotes only the two reserved synthetic participants through the real admin RPC after the preceding rollback-only eligibility matrix, then races 24 PostgreSQL sessions from both sides of the same pair and performs 40 authenticated message inserts concurrently. It cleans only its generated messages and conversation. The promotion persists only in the disposable database so subsequent CRUD/Storage probes also have eligible test identities."
+      "note": "Passed in disposable local runtime: 24 reversed-pair concurrent requests converged on one conversation and 40 authenticated message writes persisted uniquely; cleanup was scoped to synthetic test data.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "test-fixture.local-platform-preflight",
       "source": [
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
       ],
-      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_NOT_EXECUTED",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_PASSED",
       "provides": [
         "read-only assertions for local Supabase Auth, Storage, Realtime, roles, pgcrypto placement, and pg_cron availability"
       ],
@@ -998,14 +1024,19 @@
       "testSource": [
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
       ],
-      "note": "Run only after the disposable local stack starts and before application SQL replay. It performs catalog reads and raises on missing prerequisites; it never installs extensions or mutates data."
+      "note": "Passed in the disposable local Supabase runtime workflow before application SQL replay. Read-only assertions only; no extension or data mutation.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "test-fixture.local-platform-postflight",
       "source": [
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
-      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_POSTFLIGHT_NOT_EXECUTED",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_POSTFLIGHT_PASSED",
       "provides": [
         "read-only assertions for pgcrypto function schema and the expected pg_cron purge job definition"
       ],
@@ -1017,14 +1048,19 @@
       "testSource": [
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
-      "note": "Run only after the relevant disposable-local replay nodes. Confirms extension placement and job definition, not actual scheduler execution."
+      "note": "Passed after the relevant disposable-local replay. Extension placement and expected purge-job definition verified; scheduler execution was separately verified by the temporary local probe.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "test-fixture.local-pg-cron-runtime",
       "source": [
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
       ],
-      "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED",
+      "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED",
       "provides": [
         "real local pg_cron scheduler execution evidence with a temporary probe job and scoped cleanup"
       ],
@@ -1034,10 +1070,13 @@
       "testSource": [
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
       ],
-      "blockedBy": [
-        "DAG-008"
-      ],
-      "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@loopback:54322/postgres. Schedules a unique SELECT 1 probe, waits up to 90 seconds for succeeded status, then unschedules and removes only its own job-run details. Never run against cloud or production."
+      "blockedBy": [],
+      "note": "Passed in the disposable local workflow: unique temporary SELECT 1 job succeeded and was unscheduled; only its own job-run details were cleaned. Loopback-only; no cloud or production target.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "security.least-privilege-overlay",
@@ -1051,7 +1090,7 @@
         "test-fixture.direct-chat-concurrency",
         "chat.media-upload-path-hardening"
       ],
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATED_LOCAL",
       "testSource": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
@@ -1064,7 +1103,12 @@
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Manual runtime runner is loopback-only and applies the test overlay, read-only catalog postconditions, then rollback-only CRUD/RPC tests for message creation/edit audit, chat-list and starred-message upserts, and cross-user isolation. The runtime has not been executed. A separate loopback-only Storage API probe exercises chat-media uploader-folder spoof denial, private/shared conversation-document signed reads, owner-only delete, avatar upsert, and public avatar delivery; it requires local Auth and Storage services and has not been executed. A dedicated GitHub Actions workflow provisions a fresh temporary Supabase CLI v3.0.0 project with PostgreSQL 17, replays only the exact topological manifest order through loopback ports, executes the local RLS/CRUD, concurrency, pg_cron and Storage API probes, and destroys the stack in an always-run cleanup step. No cloud link, production credentials, or production data are used."
+      "note": "Passed in disposable local Supabase: read-only privilege postconditions, postgres-owner default ACLs, trigger-function ACLs, active-member policy coverage, rollback-only CRUD/upsert and membership-trigger compatibility, plus Storage API RLS. No production grants or policies were changed.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "chat.media-and-reactions",
@@ -1811,25 +1855,35 @@
     },
     {
       "id": "DAG-007",
-      "severity": "REVIEW_REQUIRED",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "database/changes/private_channels_with_secure_invites.sql",
         "database/changes/20261107134500_conversation_workspaces_private_documents.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
-      "issue": "Verify pgcrypto extension schema and extensions.digest / extensions.gen_random_bytes resolution locally."
+      "issue": "pgcrypto is installed in schema extensions and extensions.digest/extensions.gen_random_bytes resolution passed local preflight/postflight.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-008",
-      "severity": "REVIEW_REQUIRED",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "database/changes/20261107130851_schedule_expired_group_message_purge.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
       ],
-      "issue": "pg_cron availability and the expected purge-job definition now have read-only local pre/postflight assertions. A separate loopback-only probe runner is prepared to prove actual scheduler execution using a temporary SELECT 1 job with scoped cleanup. Neither the probe nor the scheduler has been run; this blocker remains until disposable-local runtime evidence exists."
+      "issue": "pg_cron availability and the expected purge-job definition passed local preflight/postflight. A disposable SELECT 1 probe job executed successfully and was removed with scoped cleanup. This proves the local scheduler executes; it does not claim the production purge job itself was run.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-009",
@@ -1842,12 +1896,17 @@
     },
     {
       "id": "DAG-010",
-      "severity": "REVIEW_REQUIRED",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
       ],
-      "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
+      "issue": "The disposable local platform preflight passed for Supabase Auth, Storage, Realtime, required roles, pgcrypto, and pg_cron.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-011",
@@ -1861,17 +1920,22 @@
     },
     {
       "id": "DAG-013",
-      "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "index.html",
         "database/changes/20261107080000_chat_voice_messages.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
       ],
-      "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
+      "issue": "The test-only chat-media policy bound uploader path segment 2 to auth.uid(). Storage API runtime passed, including valid upload, member signed read, cross-user uploader-folder spoof denial, private document visibility, owner-only delete, avatar upsert, and public avatar delivery. The live production policy remains unchanged.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-014",
-      "severity": "BLOCKER",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
@@ -1879,11 +1943,16 @@
         "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
       ],
-      "issue": "The direct-conversation RPC source is restored and rollback-only PostgreSQL assertions plus a two-session reversed-pair runner are prepared. Runtime execution is still required in a disposable local Supabase environment to prove unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exactly-one concurrent creation, exact ACL enforcement, and active-membership gating. Do not enable replay until those runtime tests pass."
+      "issue": "Disposable-local PostgreSQL eligibility assertions passed: unauthenticated/null/self/missing-profile and ineligible participant cases were rejected; valid create/reuse and exact RPC ACL checks passed. The reversed-pair concurrency probe converged 24 concurrent requests on one direct conversation, and 40 concurrent authenticated message writes persisted uniquely. The original historical migration source remains absent and production is not authorized.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-015",
-      "severity": "BLOCKER",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
@@ -1894,15 +1963,20 @@
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
       ],
-      "issue": "The recovered production RPC lacked caller and target eligibility checks. A separate test-only overlay now checks both participants against active membership, verified membership number, final number format, and confirmed Auth email while locking authoritative rows. The overlay and negative-case PostgreSQL assertions are prepared, but runtime validation, concurrency, and exact ACL behavior remain blocked; no production migration is authorized.",
+      "issue": "The test-only caller/target eligibility guard passed local PostgreSQL runtime tests for active status, verified membership number, final format, and confirmed Auth email, including negative cases and concurrent creation. This is local validation only; the guard has not been applied to production.",
       "mitigation": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs"
-      ]
+      ],
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-016",
-      "severity": "BLOCKER",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
@@ -1910,7 +1984,12 @@
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
       ],
-      "issue": "Read-only production catalog inspection found postgres-owned public-schema default ACLs granting all table/sequence privileges and function EXECUTE to anon/authenticated. Existing app tables consequently expose non-RLS privileges (including TRUNCATE, REFERENCES, TRIGGER and PostgreSQL 17+ MAINTAIN) and unnecessary direct DML. A loopback-only test overlay and read-only postconditions are prepared; neither has been executed. Production remains unchanged until local CRUD compatibility, RPC grants, and default-ACL behavior pass runtime tests."
+      "issue": "The local-only least-privilege overlay and read-only assertions passed. The run verified postgres-owned default ACL reduction, table/sequence/function privileges, trigger-function EXECUTE restrictions, public-object ownership, restrictive active-member policies, rollback-only CRUD/upsert compatibility, membership-trigger behavior, and Storage API RLS. Production grants and policies remain unchanged.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     }
   ],
   "duplicateProvenance": [
