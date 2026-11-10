@@ -1093,12 +1093,17 @@
         "chat.channels-public",
         "platform.storage"
       ],
-      "status": "TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION",
+      "status": "TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION_RUNTIME_VERIFIED_LOCAL",
       "testSource": [
         "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql"
       ],
       "provenance": "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.provenance.json",
-      "note": "Reconstructs only the deployed channel-avatar bucket/helper/policies for disposable local RLS testing. It is not the missing historical migration and does not reproduce channel-visibility or group-background behavior."
+      "note": "The channel-avatar bucket/helper/four Storage policies were reconstructed only as a test fixture from current catalog state. Runtime RLS matrix passed in disposable local Supabase. This is not the original migration and does not reproduce channel-visibility or group-background behavior.",
+      "runtimeEvidence": {
+        "runId": 42912189296,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42912189296",
+        "scope": "disposable local Supabase/PostgreSQL 17 only; channel-avatar RLS active/public/private/non-member/suspended matrix and least-privilege/Storage runtime passed; temporary stack cleanup passed"
+      }
     },
     {
       "id": "security.least-privilege-overlay",
@@ -1892,7 +1897,7 @@
     },
     {
       "id": "DAG-006",
-      "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "database/changes/20261107144109_private_membership_system_20261107.sql",
         "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql",
@@ -1900,7 +1905,12 @@
         "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql",
         "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.provenance.json"
       ],
-      "issue": "The post-membership channel-avatar Storage SELECT policy delegates to app_private.can_access_channel_avatar(uuid), which enforces active membership indirectly. A partial catalog-derived test fixture and rollback-only PostgreSQL matrix now cover active public-channel readers, private-channel members/non-members, and suspended users. Existing least-privilege assertions cover direct active-member predicates on other authenticated policies. Keep open until the disposable-local runtime run passes; the partial fixture is not historical source recovery."
+      "issue": "Resolved for disposable local runtime: the catalog-derived channel-avatar helper and policy passed rollback-only PostgreSQL RLS assertions for active public-channel readers, private-channel members/non-members, and suspended users. Existing least-privilege assertions cover direct active-member predicates on the remaining authenticated policies. This is local-only evidence; it does not recover the missing historical migration or authorize production changes.",
+      "runtimeEvidence": {
+        "runId": 42912189296,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42912189296",
+        "scope": "disposable local Supabase/PostgreSQL 17 only; channel-avatar RLS active/public/private/non-member/suspended matrix and least-privilege/Storage runtime passed; temporary stack cleanup passed"
+      }
     },
     {
       "id": "DAG-007",
