@@ -104,3 +104,25 @@ test('runtime fixture remains design-only and cannot authorize local/cloud execu
   assert.equal(manifest.execution.cloudAllowed, false);
   assert.equal(manifest.execution.productionAllowed, false);
 });
+
+test('two-session concurrency runner is restricted to disposable loopback PostgreSQL', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8');
+  assert.match(runner, /LOCAL_SUPABASE_DB_URL/);
+  assert.match(runner, /127\\.0\\.0\\.1/);
+  assert.match(runner, /url\.port !== '54322'/);
+  assert.match(runner, /url\.username !== 'postgres'/);
+  assert.match(runner, /Promise\.allSettled/);
+  assert.match(runner, /callSql\(callerA, callerB\)/);
+  assert.match(runner, /callSql\(callerB, callerA\)/);
+  assert.match(runner, /Refusing non-local database target/);
+  assert.match(runner, /NOT EXISTS \(SELECT 1 FROM public\.chat_messages/);
+  assert.match(runner, /conversationIds/);
+  assert.doesNotMatch(runner, /supabase\.co|service_role key|SUPABASE_SERVICE_ROLE_KEY/i);
+  const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-concurrency');
+  assert.ok(node);
+  assert.equal(node.status, 'TEST_ONLY_LOCAL_TWO_SESSION_CONCURRENCY_HARNESS_NOT_EXECUTED');
+  assert.ok(node.blockedBy.includes('DAG-014'));
+  assert.ok(node.blockedBy.includes('DAG-015'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.direct-chat-runtime' && to === node.id));
+});
