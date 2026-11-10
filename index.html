@@ -116,7 +116,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
   <button id="newMessagesJump" class="new-messages-jump hidden" type="button" aria-live="polite" aria-label="الانتقال إلى أحدث الرسائل"><i class="ph ph-arrow-down"></i><span id="newMessagesJumpText">رسائل جديدة</span></button>
   <div id="typing" class="typing"></div>
   <div class="composer-wrap"><div id="composerContext" class="composer-context hidden"><div class="composer-context-copy"><small id="composerContextLabel">الرد على</small><strong id="composerContextText"></strong></div><button id="composerContextCancel" type="button" title="إلغاء"><i class="ph ph-x"></i></button></div><div class="composer">
-   <button id="voiceRecordBtn" class="voice-record-btn" type="button" title="تسجيل رسالة صوتية" aria-label="تسجيل رسالة صوتية"><i class="ph ph-microphone"></i></button><button id="voiceCancelBtn" class="voice-record-btn voice-cancel-btn hidden" type="button" title="إلغاء التسجيل" aria-label="إلغاء التسجيل"><i class="ph ph-x"></i></button><button id="attachBtn" class="attach" title="إرفاق صورة أو ملف"><i class="ph ph-paperclip"></i></button>
+   <button id="voiceRecordBtn" class="voice-record-btn" type="button" title="تسجيل رسالة صوتية" aria-label="تسجيل رسالة صوتية"><i class="ph ph-microphone"></i></button><button id="voiceCancelBtn" class="voice-record-btn voice-cancel-btn hidden" type="button" title="إلغاء التسجيل" aria-label="إلغاء التسجيل"><i class="ph ph-x"></i></button><button id="stickerBtn" class="attach sticker-composer-btn" type="button" title="إرسال ملصق" aria-label="إرسال ملصق"><i class="ph ph-sticker"></i></button><button id="attachBtn" class="attach" title="إرفاق صورة أو ملف"><i class="ph ph-paperclip"></i></button>
    <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,video/quicktime,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv" class="hidden">
    <textarea id="messageInput" rows="1" maxlength="5000" placeholder="اكتب رسالتك هنا…" aria-label="رسالة جديدة" disabled></textarea>
    <div id="voiceRecordingControls" class="voice-recording-controls hidden" role="group" aria-label="التحكم في التسجيل الصوتي">
@@ -1030,6 +1030,15 @@ async function loadMessageReactions(conversationId,messages,requestId=null){
   state.reactions=next;return true;
  }catch(error){console.warn('Message reactions could not be loaded:',error?.message||error);return false}
 }
+const CHAT_STICKERS=['❤️','😍','😂','🤣','🥰','😘','🔥','👏','👍','🙏','🎉','💯','🌹','✨','🤝','💪','🥳','😎','🤩','😭','😮','🙌','💐','⭐'];
+function encodeChatSticker(emoji){return '[[bizmind-sticker:'+emoji+']]'}
+function decodeChatSticker(content){const match=String(content||'').match(/^\\[\\[bizmind-sticker:([^\\]]+)\\]\\]$/);return match&&CHAT_STICKERS.includes(match[1])?match[1]:null}
+function openChatStickerPicker(){
+ if(!state.active||state.uploading||state.voiceRecorder)return;
+ const grid=document.createElement('div');grid.className='chat-sticker-grid';
+ CHAT_STICKERS.forEach(emoji=>{const button=document.createElement('button');button.type='button';button.className='chat-sticker-option';button.textContent=emoji;button.setAttribute('aria-label','إرسال ملصق '+emoji);button.onclick=()=>{document.querySelector('.message-detail-overlay')?.remove();$('messageInput').value=encodeChatSticker(emoji);sendMessage()};grid.append(button)});
+ showMessageDetailModal('اختر ملصقاً',grid);
+}
 const MESSAGE_REACTION_OPTIONS=[
  {type:'like',emoji:'👍',label:'إعجاب'},
  {type:'heart',emoji:'❤️',label:'أحببت'},
@@ -1384,7 +1393,11 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
     else if(m.attachment_type?.startsWith('audio/')){const audio=document.createElement('audio');audio.className='message-audio';audio.controls=true;audio.preload='metadata';audio.src=signed.signedUrl;audio.setAttribute('aria-label','رسالة صوتية');let signedAt=Date.now(),refreshing=false,retried=false;const refreshAudioUrl=async(resume=false)=>{if(refreshing)return;refreshing=true;try{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;if(!isCurrent()||!audio.isConnected)return;audio.src=renewed.signedUrl;signedAt=Date.now();audio.load();if(resume)await audio.play().catch(()=>{})}catch(error){console.warn('Audio URL refresh failed:',error?.message||error);toast('تعذر فتح الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}finally{refreshing=false}};audio.addEventListener('play',()=>{if(Date.now()-signedAt>50*60*1000){audio.pause();refreshAudioUrl(true)}});audio.addEventListener('error',()=>{if(!retried){retried=true;refreshAudioUrl(false)}});audio.setAttribute('playsinline','');bubble.append(audio)}
     else{const a=document.createElement('a');a.href=signed.signedUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}
    }
-   if(m.content){const t=document.createElement('div');t.className='message-content';t.textContent=m.content;bubble.append(t)}
+   if(m.content){
+    const sticker=decodeChatSticker(m.content);
+    if(sticker){const visual=document.createElement('div');visual.className='message-sticker';visual.textContent=sticker;visual.setAttribute('role','img');visual.setAttribute('aria-label','ملصق');bubble.append(visual)}
+    else{const t=document.createElement('div');t.className='message-content';t.textContent=m.content;bubble.append(t)}
+   }
   }
   const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · تم تعديلها':'');bubble.append(meta);renderMessageStatus(m,bubble);
   if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-dots-three-vertical"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption('إضافة تفاعل','ph-smiley',()=>openMessageReactions(row));addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
@@ -1726,7 +1739,7 @@ function setVoiceComposerActive(active){
  composer?.classList.toggle('voice-recording-active',!!active);
  $('voiceRecordingControls')?.classList.toggle('hidden',!active);
  if(!active){
-  const send=$('sendBtn');if(send)send.innerHTML='<i class="ph ph-paper-plane-tilt"></i>';
+  const send=$('sendBtn');if(send){send.innerHTML='<i class="ph ph-paper-plane-tilt"></i>';send.title='إرسال';send.setAttribute('aria-label','إرسال')}
  }
 }
 function cleanupVoiceCapture(){
@@ -1816,7 +1829,7 @@ async function startVoiceRecording(){
    if(shouldSend){setTimeout(()=>{if(state.attachment===file)sendMessage()},0)}
   };
   if(recorder instanceof (window.MediaRecorder||Function)){recorder.start()}
-  $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').title='التسجيل الصوتي جارٍ';$('voiceCancelBtn').classList.add('hidden');setVoiceComposerActive(true);$('sendBtn').disabled=false;updateVoiceRecordingUI();
+  $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').title='التسجيل الصوتي جارٍ';$('voiceCancelBtn').classList.add('hidden');setVoiceComposerActive(true);$('sendBtn').disabled=false;$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';$('sendBtn').title='إرسال التسجيل الصوتي';$('sendBtn').setAttribute('aria-label','إرسال التسجيل الصوتي');updateVoiceRecordingUI();
   state.voiceTimer=setInterval(()=>{const elapsed=Math.floor(currentVoiceElapsedMs()/1000);updateVoiceRecordingUI();if(elapsed>=180){state.voiceSendOnStop=false;stopVoiceRecording()}},250);
  }catch(error){
   if(stream){stream.getTracks().forEach(track=>track.stop())}
@@ -2215,6 +2228,7 @@ $('createGroupBtn').onclick=async()=>{
  document.addEventListener('pointercancel',reset,{passive:true});
 })();
 
+$('stickerBtn').onclick=openChatStickerPicker;
 $('voiceRecordBtn').onclick=()=>state.voiceRecorder?stopVoiceRecording():startVoiceRecording();
 $('voiceCancelBtn').onclick=cancelVoiceRecording;
 $('attachBtn').onclick=()=>$('fileInput').click();
