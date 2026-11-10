@@ -950,6 +950,29 @@
         "DAG-015"
       ],
       "note": "Disposable-local runtime script only. Requires the full approved replay; no CI or production SQL execution. Two-session reversed-pair concurrency remains separately blocked."
+    },
+    {
+      "id": "test-fixture.direct-chat-concurrency",
+      "source": [
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+      ],
+      "status": "TEST_ONLY_LOCAL_TWO_SESSION_CONCURRENCY_HARNESS_NOT_EXECUTED",
+      "provides": [
+        "two-session reversed-pair concurrency verification with one-conversation assertion and scoped cleanup"
+      ],
+      "requires": [
+        "test-fixture.direct-chat-runtime",
+        "membership.final-format",
+        "chat.direct-conversation-rpc-eligibility-guard"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production."
     }
   ],
   "explicitEdges": [
@@ -1528,6 +1551,18 @@
     [
       "platform.auth",
       "test-fixture.direct-chat-auth-seed"
+    ],
+    [
+      "test-fixture.direct-chat-runtime",
+      "test-fixture.direct-chat-concurrency"
+    ],
+    [
+      "membership.final-format",
+      "test-fixture.direct-chat-concurrency"
+    ],
+    [
+      "chat.direct-conversation-rpc-eligibility-guard",
+      "test-fixture.direct-chat-concurrency"
     ]
   ],
   "blockers": [
