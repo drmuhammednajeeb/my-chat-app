@@ -13,7 +13,7 @@ test('least-privilege overlay is explicitly local-only and loopback guarded', as
   assert.match(sql, /TEST-ONLY/i);
   assert.match(sql, /current_database\(\)\s*<>\s*'postgres'/i);
   assert.match(sql, /current_user\s*<>\s*'postgres'/i);
-  assert.match(sql, /inet_server_addr\(\)/i);
+  assert.match(sql, /app\.test_only_local_replay/i);
   assert.match(sql, /127\.0\.0\.0\/8/);
   assert.match(sql, /::1/);
   assert.doesNotMatch(sql, /https?:\/\//i);
@@ -69,4 +69,23 @@ test('assertion file is guarded to a disposable local database', async () => {
   assert.match(sql, /current_database\(\)\s*<>\s*'postgres'/i);
   assert.match(sql, /current_user\s*<>\s*'postgres'/i);
   assert.match(sql, /inet_server_addr\(\)/i);
+});
+
+
+test('manual RLS runtime runner refuses cloud targets and runs only loopback PostgreSQL', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs'), 'utf8');
+  for (const fragment of [
+    'LOCAL_SUPABASE_DB_URL',
+    "url.port !== '54322'",
+    "url.username !== 'postgres'",
+    "url.pathname !== '/postgres'",
+    "127.0.0.1",
+    "'localhost'",
+    "'::1'",
+    'app.test_only_local_replay=enabled',
+    'rls-least-privilege-overlay.test-only.sql',
+    'rls-least-privilege.assert.sql'
+  ]) assert.ok(runner.includes(fragment), 'missing local runner safeguard: ' + fragment);
+  assert.match(runner, /refusing non-local database target/i);
+  assert.doesNotMatch(runner, /supabase\.co|SUPABASE_SERVICE_ROLE_KEY|service_role key/i);
 });
