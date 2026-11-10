@@ -3,10 +3,14 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 54,
-    "mappedSources": 51,
+    "sqlFiles": 53,
+    "mappedSources": 50,
     "identicalDuplicateCopiesExcluded": 3,
-    "allSourcesMappedOrExplicitlyExcluded": true
+    "allSourcesMappedOrExplicitlyExcluded": true,
+    "testOnlySqlFixtures": 1,
+    "testOnlySqlFixturePaths": [
+      "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+    ]
   },
   "execution": {
     "enabled": false,
