@@ -37,6 +37,7 @@ function extractFunction(name) {
 const sendSource = extractFunction('sendMessage');
 const renderSource = extractFunction('renderMessage');
 const reactionSource = extractFunction('toggleMessageReaction');
+const reactionBarSource = extractFunction('renderReactionBar');
 const starSource = extractFunction('toggleMessageStar');
 let browser;
 
@@ -116,11 +117,11 @@ async function installSendHarness(page, { text = 'hello', attachment = false } =
   return page;
 }
 
-test('browser: reaction and star buttons persist and toggle without cross-conversation state leakage', async () => {
+test('browser: rendered reaction buttons and star menu action persist and toggle', async () => {
   const page = await browser.newPage();
   try {
-    await page.setContent('<!doctype html><html><body><div class="message" data-message-id="m1"></div><button id="reactionBtn">React</button><button id="starBtn">Star</button></body></html>');
-    await page.evaluate(({ reactionSource, starSource }) => {
+    await page.setContent('<!doctype html><html><body><div class="message" data-message-id="m1"></div><button id="starBtn">Star</button></body></html>');
+    await page.evaluate(({ reactionSource, reactionBarSource, starSource }) => {
       const message = { id: 'm1', conversation_id: 'c1', deleted_at: null };
       const state = window.__state = {
         user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
@@ -153,33 +154,37 @@ test('browser: reaction and star buttons persist and toggle without cross-conver
           };
         }
       };
-      const options = ['like','heart','wow','pray','fire','celebrate'].map(type => ({ type }));
-      const renderReactionBar = () => {};
+      const options = ['like','heart','wow','pray','fire','celebrate'].map(type => ({ type, label: type, emoji: '❤️' }));
       const toast = message => backend.notices.push(message);
-      window.__runReaction = new Function(
+      const toggleReaction = new Function(
         'state','supabaseClient','MESSAGE_REACTION_OPTIONS','document','renderReactionBar','toast','console',
         'return (' + reactionSource + ');'
-      )(state, supabaseClient, options, document, renderReactionBar, toast, console);
+      );
+      window.__runReaction = (...args) => {
+        window.__reactionPromise = toggleReaction(state, supabaseClient, options, document, window.__renderReactionBar, toast, console)(...args);
+        return window.__reactionPromise;
+      };
+      window.__renderReactionBar = new Function(
+        'state','document','MESSAGE_REACTION_OPTIONS','showReactionMembers','positionMessageReactionBar','toggleMessageReaction',
+        'return (' + reactionBarSource + ');'
+      )(state, document, options, () => {}, () => {}, window.__runReaction);
+      window.__renderReactionBar(document.querySelector('.message'), message);
       window.__runStar = new Function(
         'state','supabaseClient','toast','console',
         'return (' + starSource + ');'
       )(state, supabaseClient, toast, console);
-      document.getElementById('reactionBtn').addEventListener('click', () => {
-        window.__reactionPromise = window.__runReaction(message, 'heart', document.getElementById('reactionBtn'));
-      });
       document.getElementById('starBtn').addEventListener('click', () => {
         window.__starPromise = window.__runStar('m1', !state.starredMessageIds.has('m1'));
       });
-    }, { reactionSource, starSource });
+    }, { reactionSource, reactionBarSource, starSource });
 
-    await page.locator('#reactionBtn').click();
-    await page.waitForFunction(() => window.__reactionPromise);
+    await page.locator('.reaction-btn[data-reaction="heart"]').click();
     await page.evaluate(() => window.__reactionPromise);
-    assert.equal(await page.evaluate(() => window.__state.reactions.get('m1')[0]?.reaction_type), 'heart');
+    assert.equal(await page.locator('.reaction-btn[data-reaction="heart"]').getAttribute('aria-pressed'), 'true');
 
-    await page.locator('#reactionBtn').click();
+    await page.locator('.reaction-btn[data-reaction="heart"]').click();
     await page.evaluate(() => window.__reactionPromise);
-    assert.equal(await page.evaluate(() => window.__state.reactions.get('m1').length), 0);
+    assert.equal(await page.locator('.reaction-btn[data-reaction="heart"]').getAttribute('aria-pressed'), 'false');
 
     await page.locator('#starBtn').click();
     await page.evaluate(() => window.__starPromise);
