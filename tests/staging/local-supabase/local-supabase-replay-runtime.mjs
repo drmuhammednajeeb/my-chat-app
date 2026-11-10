@@ -214,7 +214,6 @@ run(process.execPath, [
   ...env,
   LOCAL_SUPABASE_URL: process.env.LOCAL_SUPABASE_URL ?? '',
   LOCAL_SUPABASE_ANON_KEY: process.env.LOCAL_SUPABASE_ANON_KEY ?? '',
-  LOCAL_SUPABASE_SERVICE_ROLE_KEY: process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY ?? '',
   LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? ''
 }, 'storage-api-rls-runtime');
 
