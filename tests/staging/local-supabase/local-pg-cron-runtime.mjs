@@ -4,7 +4,8 @@ function localDatabaseUrl() {
   const raw = process.env.LOCAL_SUPABASE_DB_URL;
   if (!raw) throw new Error('Set LOCAL_SUPABASE_DB_URL to the disposable local Supabase PostgreSQL URL.');
   const url = new URL(raw);
-  if (!['127.0.0.1', 'localhost', '::1'].includes(url.hostname) ||
+  const host = url.hostname.replace(/^\\[|\\]$/g, '');
+  if (!['127.0.0.1', 'localhost', '::1'].includes(host) ||
       url.port !== '54322' || url.username !== 'postgres' || url.pathname !== '/postgres' ||
       !['postgres:', 'postgresql:'].includes(url.protocol) ||
       url.search || url.hash) {
@@ -18,7 +19,7 @@ function psql(databaseUrl, sql) {
     const child = spawn('psql', [
       '--no-psqlrc', '--quiet', '--tuples-only', '--no-align',
       '--set=ON_ERROR_STOP=1', '--command', sql, databaseUrl
-    ], { stdio: ['ignore', 'pipe', 'pipe'], env: { PATH: process.env.PATH, PGCONNECT_TIMEOUT: '5' } });
+    ], { stdio: ['ignore', 'pipe', 'pipe'], env: { PATH: process.env.PATH, PGCONNECT_TIMEOUT: '5', PGOPTIONS: '-c statement_timeout=10s -c lock_timeout=5s' } });
     let stdout = '';
     let stderr = '';
     child.stdout.setEncoding('utf8').on('data', chunk => { stdout += chunk; });
