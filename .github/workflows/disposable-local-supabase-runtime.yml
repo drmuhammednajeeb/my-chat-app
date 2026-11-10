@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: disposable-local-supabase-runtime-${{ github.ref }}-${{ github.sha }}
+  group: disposable-local-supabase-runtime-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
