@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - "engineering/stability-css-extraction-20261109"
+  pull_request:
+    branches:
+      - "engineering/stability-css-extraction-20261109"
   workflow_dispatch:
 
 permissions:
@@ -16,7 +19,7 @@ concurrency:
 jobs:
   local-supabase-runtime:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Check out reviewed source
         uses: actions/checkout@v4
@@ -25,6 +28,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Run direct-conversation static regression tests
+        run: |
+          node --test \
+            tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
+            tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
+            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs
 
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@v1
@@ -49,10 +59,10 @@ jobs:
           import fs from 'node:fs';
           const file = process.env.RUNTIME_PROJECT_DIR + '/supabase/config.toml';
           let config = fs.readFileSync(file, 'utf8');
-          if (/^major_version\s*=\s*\d+/m.test(config)) {
-            config = config.replace(/^major_version\s*=\s*\d+/m, 'major_version = 17');
+          if (/^major_version\\s*=\\s*\\d+/m.test(config)) {
+            config = config.replace(/^major_version\\s*=\\s*\\d+/m, 'major_version = 17');
           } else {
-            config += '\n[db]\nmajor_version = 17\n';
+            config += '\\n[db]\\nmajor_version = 17\\n';
           }
           fs.writeFileSync(file, config);
           NODE
