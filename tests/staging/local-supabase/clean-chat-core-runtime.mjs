@@ -80,7 +80,7 @@ async function clearLocalChatStorage() {
     while (true) {
       const response = await fetch(new URL('/storage/v1/object/list/' + encodeURIComponent(bucket), api), {
         method: 'POST', headers,
-        body: JSON.stringify({ prefix: prefix ? prefix + '/' : '', limit: 1000, offset, sortBy: { column: 'name', order: 'asc' } })
+        body: JSON.stringify({ prefix: prefix ? prefix + '/' : '', limit: 100, offset, sortBy: { column: 'name', order: 'asc' } })
       });
       if (!response.ok) throw new Error('Storage list failed for ' + bucket + ' (HTTP ' + response.status + ')');
       const entries = await response.json();
@@ -96,7 +96,7 @@ async function clearLocalChatStorage() {
           paths.push(objectPath);
         }
       }
-      if (entries.length < 1000) break;
+      if (entries.length < 100) break;
       offset += entries.length;
     }
     return paths;
