@@ -113,7 +113,7 @@ begin
     from pg_default_acl d
     join pg_namespace n on n.oid = d.defaclnamespace
     cross join lateral aclexplode(d.defaclacl) a
-    where d.defaclrole in ('postgres'::regrole, 'supabase_admin'::regrole)
+    where d.defaclrole = 'postgres'::regrole
       and n.nspname = 'public'
       and d.defaclobjtype in ('r','S','f')
       and a.grantee in (
@@ -143,6 +143,30 @@ begin
       )
   ) then
     raise exception 'A trigger implementation function remains executable by PUBLIC or API roles';
+  end if;
+
+
+  -- The application migration owner is postgres. Do not try to mutate the
+  -- platform-owned supabase_admin default ACL from the postgres migration role.
+  -- Confirm every current public application object remains owned by postgres.
+  if exists (
+    select 1
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind in ('r','p','S')
+      and c.relowner <> 'postgres'::regrole
+  ) then
+    raise exception 'A public application table/sequence is not owned by the approved postgres migration role';
+  end if;
+  if exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proowner <> 'postgres'::regrole
+  ) then
+    raise exception 'A public application function is not owned by the approved postgres migration role';
   end if;
 
   -- Private application schema: helper functions may be callable by authenticated,
