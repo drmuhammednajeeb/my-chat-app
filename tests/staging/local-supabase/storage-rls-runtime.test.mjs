@@ -11,7 +11,6 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
   for (const token of [
     'LOCAL_SUPABASE_URL',
     'LOCAL_SUPABASE_ANON_KEY',
-    'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
     "endpoint.protocol !== 'http:'",
     "endpoint.port !== '54321'",
     "'127.0.0.1'",
@@ -19,7 +18,9 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
     "'::1'",
     'direct-a@bizmindmakers.test',
     'direct-b@bizmindmakers.test',
-    '/auth/v1/admin/users/',
+    'LOCAL_SUPABASE_DB_URL',
+    "spawnSync('psql'",
+    'encrypted_password = crypt',
     '/auth/v1/token?grant_type=password',
     '/storage/v1/object/sign/',
     'conversation-documents',
