@@ -1,4 +1,3 @@
-<script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
 const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
@@ -518,3 +517,4 @@ function setSidebarView(view){
  else if(users){renderDirectory();if(!state.directoryUsers.length&&!state.directoryLoading)loadDirectory()}
  else if(channels){renderMyChannels()}else renderConversations();
 }
+
