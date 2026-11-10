@@ -117,6 +117,8 @@ test('two-session concurrency runner is restricted to disposable loopback Postgr
   assert.match(runner, /url\.port !== '54322'/);
   assert.match(runner, /url\.username !== 'postgres'/);
   assert.match(runner, /Promise\.allSettled/);
+  assert.match(runner, /pg_sleep\(0\.5\)/);
+  assert.match(runner, /SELECT count\(\*\)::text FROM public\.conversations/);
   assert.match(runner, /callSql\(callerA, callerB\)/);
   assert.match(runner, /callSql\(callerB, callerA\)/);
   assert.match(runner, /Refusing non-local database target/);
