@@ -199,6 +199,9 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   const patchManifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
   const patchedCanonicalSources = new Set(patchManifest.patches.map(item => item.sourcePath));
   const selected = manifest.candidateNodeOrder.flatMap(node => node.testSources);
+  for (const fixture of manifest.sourceCoverage.testOnlySqlFixturePaths) {
+    assert.ok(selected.includes(fixture), 'test-only SQL fixture is not in candidate replay order: ' + fixture);
+  }
   const inventory = await buildObjectInventory();
   assert.equal(manifest.sourceCoverage.sqlFiles, inventory.files.length);
   assert.equal(manifest.sourceCoverage.mappedSources, inventory.files.length - duplicateCopies.size);
