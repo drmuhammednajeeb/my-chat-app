@@ -84,7 +84,9 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'direct-conversation-rpc-eligibility-guard.sql',
     'synthetic-direct-chat-auth-before-membership.sql',
     'synthetic-direct-chat-profiles-after-membership.sql',
-    'direct-conversation-eligibility-runtime.test.sql'
+    'direct-conversation-eligibility-runtime.test.sql',
+    'local-platform-prerequisites.assert.sql',
+    'local-platform-postconditions.assert.sql'
   ];
   for (const name of requiredFixtures) await access(path.join(root, 'tests/staging/local-supabase/fixtures', name));
   for (const fixture of patchManifest.fixtures) await access(path.join(root, fixture.path));
@@ -155,7 +157,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   assert.equal(manifest.execution.cloudAllowed, false);
   assert.equal(manifest.execution.productionAllowed, false);
   assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, manifest.sourceCoverage.testOnlySqlFixturePaths.length);
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 14);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 16);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
@@ -164,6 +166,13 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     'tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(fixture), 'SQL fixture missing from replay coverage: ' + fixture);
   assert.equal(manifest.blockers.find(item => item.id === 'DAG-002')?.severity, 'RESOLVED_FOR_LOCAL_REPLAY');
+  for (const fixture of [
+    'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql',
+    'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql'
+  ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(fixture));
+  for (const id of ['DAG-007', 'DAG-008', 'DAG-010']) {
+    assert.ok(dag.blockers.find(item => item.id === id)?.evidence?.some(path => path.includes('local-platform-')));
+  }
   for (const id of ['DAG-014', 'DAG-015']) {
     assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
     assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
@@ -201,4 +210,33 @@ test('direct conversation RPC recovery instructions are read-only', async () => 
   assert.match(doc, /get_or_create_direct_conversation_impl/);
   assert.match(doc, /read-only/i);
   assert.doesNotMatch(doc, /^\s*(insert|update|delete|create|alter|drop)\s+/im);
+});
+
+test('local platform preflight and postflight are read-only, ordered, and fail closed', async () => {
+  const [preflight, postflight] = await Promise.all([
+    readFile(path.join(root, 'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql'), 'utf8'),
+    readFile(path.join(root, 'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql'), 'utf8')
+  ]);
+  for (const sql of [preflight, postflight]) {
+    assert.match(sql, /TEST ONLY/i);
+    assert.doesNotMatch(sql, /^\\s*(insert|update|delete|create|alter|drop|truncate|grant|revoke)\\b/im);
+  }
+  assert.match(preflight, /auth\\.users/);
+  assert.match(preflight, /storage\\.objects/);
+  assert.match(preflight, /supabase_realtime/);
+  assert.match(preflight, /extensions\\.digest/);
+  assert.match(preflight, /pg_available_extensions WHERE name = 'pg_cron'/);
+  assert.match(postflight, /cron\\.job/);
+  assert.match(postflight, /purge-expired-chat-messages/);
+  assert.match(postflight, /scheduler execution still requires a separate runtime check/i);
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const preNode = dag.nodes.find(node => node.id === 'test-fixture.local-platform-preflight');
+  const postNode = dag.nodes.find(node => node.id === 'test-fixture.local-platform-postflight');
+  assert.ok(preNode && postNode);
+  assert.ok(dag.nodes.find(node => node.id === 'core.base').requires.includes(preNode.id));
+  assert.ok(postNode.requires.includes('chat.workspaces'));
+  assert.ok(postNode.requires.includes('chat.expiry-purge'));
+  assert.ok(postNode.requires.includes(preNode.id));
+  assert.equal(dag.executionAuthorized, false);
+  assert.equal(dag.safety.sqlExecutionEnabled, false);
 });
