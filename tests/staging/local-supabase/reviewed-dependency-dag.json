@@ -109,7 +109,10 @@
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
       ],
       "provenance": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
-      "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests."
+      "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests.",
+      "blockedBy": [
+        "DAG-015"
+      ]
     },
     {
       "id": "core.grants",
@@ -302,7 +305,8 @@
         "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
       ],
       "blockedBy": [
-        "DAG-014"
+        "DAG-014",
+        "DAG-015"
       ]
     },
     {
@@ -1512,6 +1516,17 @@
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json"
       ],
       "issue": "The direct-conversation RPC source is restored, but runtime validation is still required in a disposable local Supabase environment: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, concurrent creation without duplicates, exact ACL enforcement, and review of active-membership gating. Do not enable replay until these tests pass."
+    },
+    {
+      "id": "DAG-015",
+      "severity": "BLOCKER",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
+        "database/changes/20261107144109_private_membership_system_20261107.sql",
+        "index.html"
+      ],
+      "issue": "Security review finding: the recovered internal RPC is SECURITY DEFINER but only checks that auth.uid() is non-null; it does not call app_private.is_active_member() for the caller. Its target check only requires a profiles row and does not check active status, verified membership number, or confirmed email. The deployed profiles SELECT policy checks the caller's active status, while this SECURITY DEFINER function bypasses RLS. A suspended account with a still-valid JWT may therefore invoke the RPC, and an active caller may target an inactive profile. Confirm intended policy and add a separately reviewed test-only guard before runtime approval or production changes."
     }
   ],
   "duplicateProvenance": [
