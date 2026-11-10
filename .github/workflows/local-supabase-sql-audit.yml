@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "engineering/stability-css-extraction-20261109"
+      - "rebuild/clean-chat-core-storage-api-final-verified-20261111"
   pull_request:
     branches:
       - "main"
