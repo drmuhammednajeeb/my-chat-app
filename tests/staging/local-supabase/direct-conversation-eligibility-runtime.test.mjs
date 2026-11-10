@@ -57,7 +57,7 @@ test('synthetic profiles are inserted after the profile guard and before officia
 
 test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL inside rollback', async () => {
   const sql = await read('direct-conversation-eligibility-runtime.test.sql');
-  assert.match(sql, /(^|\\n)BEGIN;/);
+  assert.equal(sql.trimStart().startsWith('BEGIN;'), true);
   assert.match(sql.trimEnd(), /ROLLBACK;$/);
   assert.match(sql, /public\.admin_set_member_official_number/);
   assert.match(sql, /public\.admin_update_membership_status/);
@@ -108,7 +108,7 @@ test('runtime fixture remains design-only and cannot authorize local/cloud execu
 test('two-session concurrency runner is restricted to disposable loopback PostgreSQL', async () => {
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8');
   assert.match(runner, /LOCAL_SUPABASE_DB_URL/);
-  assert.match(runner, /127\\.0\\.0\\.1/);
+  assert.match(runner, /127\.0\.0\.1/);
   assert.match(runner, /url\.port !== '54322'/);
   assert.match(runner, /url\.username !== 'postgres'/);
   assert.match(runner, /Promise\.allSettled/);
