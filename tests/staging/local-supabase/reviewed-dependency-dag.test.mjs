@@ -231,7 +231,7 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
     "url.username !== 'postgres'",
     "cron.schedule('",
     'cron.job_run_details',
-    "status.startsWith('succeeded|')",
+    "result.startsWith('succeeded|')",
     'cron.unschedule(',
     'DELETE FROM cron.job_run_details',
     'Date.now() + 90000',
