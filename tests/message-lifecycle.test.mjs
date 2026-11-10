@@ -83,12 +83,12 @@ test('all ordered classic JavaScript modules parse independently and as one shar
     new vm.Script(module, { filename: modulePaths[index] });
   });
   new vm.Script(moduleSource, { filename: 'combined-classic-app.js' });
-  const inlineBlocks = [...indexSource.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-    .filter(match => !/\\bsrc\\s*=/.test(match[1]) && match[2].trim());
+  const inlineBlocks = [...indexSource.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(match => !/\bsrc\s*=/.test(match[1]) && match[2].trim());
   inlineBlocks.forEach((match, index) => {
     new vm.Script(match[2], { filename: 'inline-bootstrap-' + index + '.js' });
   });
-  const externalPaths = [...indexSource.matchAll(/<script\\b[^>]*src=["']([^"']+\\.js)["']/gi)].map(match => match[1]);
+  const externalPaths = [...indexSource.matchAll(/<script\b[^>]*src=["']([^"']+\.js)["']/gi)].map(match => match[1]);
   assert.deepEqual(externalPaths.filter(path => path.startsWith('./js/')), modulePaths.map(path => './' + path));
 });
 
