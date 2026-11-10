@@ -86,6 +86,8 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'synthetic-admin-profile-after-membership.sql',
     'assert-synthetic-admin-active.sql',
     'chat-media-upload-path-hardening.sql',
+    'channel-avatar-catalog-reconstruction.test-only.sql',
+    'channel-avatar-rls-runtime.test.sql',
     'direct-conversation-rpc.sql',
     'direct-conversation-rpc-eligibility-guard.sql',
     'synthetic-direct-chat-auth-before-membership.sql',
@@ -101,6 +103,8 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'team.admin').testSource.some(source => source.includes('team_management_dashboard.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'chat.channel-avatar-catalog-reconstruction')?.status === 'TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION');
+  assert.ok(dag.nodes.find(node => node.id === 'security.least-privilege-overlay')?.testSource.includes('tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-auth-seed').source.some(source => source.includes('synthetic-direct-chat-auth-before-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-profiles').source.some(source => source.includes('synthetic-direct-chat-profiles-after-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-runtime').source.some(source => source.includes('direct-conversation-eligibility-runtime.test.sql')));
@@ -171,7 +175,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 19);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 21);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
