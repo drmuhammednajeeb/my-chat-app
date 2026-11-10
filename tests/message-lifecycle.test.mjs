@@ -303,6 +303,16 @@ test('loadMessages keeps render completion state in the shared scope used by rec
     'The declaration must not be scoped to the non-empty branch');
 });
 
+test('optional message metadata failures do not abort primary timeline loading', () => {
+  const load = extractFunction('loadMessages');
+  assert.match(load, /catch\(replyLoadError\)/);
+  assert.match(load, /catch\(pinLoadError\)/);
+  assert.match(load, /catch\(privateReplyLoadError\)/);
+  assert.match(load, /reply-parent-load-warning/);
+  assert.match(load, /message-pins-load-warning/);
+  assert.match(load, /private-reply-context-load-warning/);
+});
+
 test('render and initial-load paths retain stale-result guards', () => {
   const render = extractFunction('renderMessageInternal'), load = extractFunction('loadMessages');
   assert.match(render, /if\(!isCurrent\(\)\)return false/);
