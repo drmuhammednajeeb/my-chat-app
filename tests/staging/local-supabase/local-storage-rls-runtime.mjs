@@ -188,7 +188,8 @@ SELECT coalesce(array_to_string(storage.foldername('${diagnosticPath}'), '|'), '
   || '|' || coalesce((storage.foldername('${diagnosticPath}'))[2], 'NULL')
   || '|' || coalesce(auth.uid()::text, 'NULL')
   || '|' || app_private.is_active_member()::text
-  || '|' || app_private.is_conversation_member('${conversationId}'::uuid)::text;
+  || '|' || app_private.is_conversation_member('${conversationId}'::uuid)::text
+  || '|' || EXISTS (SELECT 1 FROM storage.buckets b WHERE b.id = 'chat-media')::text;
 ROLLBACK;`);
   console.log('STORAGE_POLICY_PROBE=' + diagnostic);
   const policySet = localDatabaseProbe(`SELECT coalesce(string_agg(
@@ -229,7 +230,7 @@ ROLLBACK;`);
     throw new Error('Direct authenticated SQL insert into storage.objects failed: ' + directInsertResult);
   }
   const probeParts = diagnostic.split('|');
-  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== userA.id || !['t', 'true'].includes(probeParts[4]) || !['t', 'true'].includes(probeParts[5])) {
+  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== userA.id || !['t', 'true'].includes(probeParts[4]) || !['t', 'true'].includes(probeParts[5]) || !['t', 'true'].includes(probeParts[6])) {
     throw new Error('Storage policy preconditions failed: folder ownership, active membership, or conversation membership is false');
   }
 
