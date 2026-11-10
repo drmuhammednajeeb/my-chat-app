@@ -168,6 +168,49 @@ test('group-only-admin restrictions survive composer, polling and voice entry po
 });
 
 
+test('message stars persist before updating local state and recover from backend failures', async () => {
+  const state = {
+    user: { id: 'u1' },
+    messages: [{ id: 'm1', conversation_id: 'c1' }],
+    starredMessageIds: new Set()
+  };
+  const calls = [];
+  let fail = false;
+  const supabaseClient = {
+    from(table) {
+      assert.equal(table, 'user_message_stars');
+      return {
+        async upsert(row, options) {
+          calls.push({ operation: 'upsert', row, options });
+          return { error: fail ? { message: 'denied' } : null };
+        },
+        delete() {
+          return { eq(key, value) {
+            calls.push({ operation: 'delete-user', key, value });
+            return { async eq(secondKey, secondValue) {
+              calls.push({ operation: 'delete-message', key: secondKey, value: secondValue });
+              return { error: fail ? { message: 'denied' } : null };
+            } };
+          } };
+        }
+      };
+    }
+  };
+  const notices = [];
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageStar') + ')', {
+    state, supabaseClient, toast: message => notices.push(message), console
+  });
+  assert.equal(await toggle('m1', true), true);
+  assert.equal(state.starredMessageIds.has('m1'), true);
+  assert.deepEqual(calls[0].options, { onConflict: 'user_id,message_id' });
+  assert.equal(await toggle('m1', false), true);
+  assert.equal(state.starredMessageIds.has('m1'), false);
+  fail = true;
+  assert.equal(await toggle('m1', true), false);
+  assert.equal(state.starredMessageIds.has('m1'), false);
+  assert.ok(notices.length > 0);
+});
+
 test('chat attachment MIME resolution handles browsers that omit file.type', () => {
   const resolve = vm.runInNewContext('(' + extractFunction('resolveChatAttachmentMime') + ')', {
     CHAT_ATTACHMENT_MIME_BY_EXTENSION: {
