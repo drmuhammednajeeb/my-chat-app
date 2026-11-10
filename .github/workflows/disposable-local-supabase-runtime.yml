@@ -16,7 +16,7 @@ concurrency:
 jobs:
   local-supabase-runtime:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 15
     steps:
       - name: Check out reviewed source
         uses: actions/checkout@v4
