@@ -168,6 +168,34 @@ test('group-only-admin restrictions survive composer, polling and voice entry po
 });
 
 
+test('late reaction failures cannot mutate the next conversation state', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
+    reactions: new Map(), messages: []
+  };
+  let finishUpsert;
+  const supabaseClient = {
+    from(table) {
+      assert.equal(table, 'message_reactions');
+      return { upsert: () => new Promise(resolve => { finishUpsert = resolve; }) };
+    }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
+    state, supabaseClient, pendingReactionKeys: new Set(),
+    document: { querySelectorAll: () => [] }, renderReactionBar() {},
+    toast() {}, console
+  });
+  const pending = toggle({ id: 'm1', conversation_id: 'c1' }, 'heart', null);
+  assert.equal(state.reactions.has('m1'), true);
+  state.active = { id: 'c2' };
+  state.messageLoadVersion = 2;
+  state.reactions = new Map([['m2', []]]);
+  finishUpsert({ error: { message: 'simulated network failure' } });
+  await pending;
+  assert.equal(state.reactions.has('m1'), false);
+  assert.equal(state.reactions.has('m2'), true);
+});
+
 test('message stars persist before updating local state and recover from backend failures', async () => {
   const state = {
     user: { id: 'u1' },
