@@ -230,7 +230,8 @@ ROLLBACK;`);
     throw new Error('Direct authenticated SQL insert into storage.objects failed: ' + directInsertResult);
   }
   const probeParts = diagnostic.split('|');
-  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== userA.id || !['t', 'true'].includes(probeParts[4]) || !['t', 'true'].includes(probeParts[5]) || !['t', 'true'].includes(probeParts[6])) {
+  console.log('STORAGE_BUCKET_VISIBILITY_PROBE=' + probeParts[6]);
+  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== userA.id || !['t', 'true'].includes(probeParts[4]) || !['t', 'true'].includes(probeParts[5])) {
     throw new Error('Storage policy preconditions failed: folder ownership, active membership, or conversation membership is false');
   }
 
