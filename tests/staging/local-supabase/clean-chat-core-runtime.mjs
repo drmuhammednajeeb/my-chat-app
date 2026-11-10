@@ -73,6 +73,10 @@ try {
   const reverseId = lastUuid(psql(asUser(b, `SELECT public.get_or_create_direct_conversation('${a}'::uuid);`), { label: 'reverse-order direct conversation lookup' }));
   if (reverseId !== directConversationId) throw new Error('A→B and B→A did not resolve to the same direct conversation');
   process.stdout.write('PASS: direct conversation identity is symmetric and idempotent.\n');
+  psql(`INSERT INTO public.conversations(type, title, created_by, direct_user_low, direct_user_high)
+    VALUES ('direct', NULL, '${a}'::uuid, LEAST('${a}'::uuid, '${b}'::uuid), GREATEST('${a}'::uuid, '${b}'::uuid));`,
+    { expectFailure: true, expectedError: /duplicate key value violates unique constraint/i, label: 'direct pair unique index must reject a duplicate row' });
+  process.stdout.write('PASS: the database unique index independently rejects duplicate direct pairs.\\n');
 
   psql(asUser(a, `INSERT INTO public.chat_messages(id, conversation_id, sender_id, content)
     VALUES ('${directMessageId}'::uuid, '${directConversationId}'::uuid, '${a}'::uuid, '${messageContent}');`), { label: 'insert direct message' });
@@ -128,10 +132,10 @@ try {
     VALUES ('${directConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'clap');`), { expectFailure: true, expectedError: /violates check constraint/i, label: 'invalid reaction type must be rejected' });
   psql(asUser(b, `INSERT INTO public.user_message_stars(user_id, conversation_id, message_id)
     VALUES ('${a}'::uuid, '${directConversationId}'::uuid, '${directMessageId}'::uuid);`), { expectFailure: true, expectedError: /row-level security policy/i, label: 'star impersonation must be rejected' });
-  psql(asUser(a, `INSERT INTO public.message_reactions(conversation_id, message_id, user_id, reaction_type)
-    VALUES ('${groupConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'like');`), { expectFailure: true, expectedError: /violates foreign key constraint/i, label: 'cross-conversation reaction reference must be rejected' });
-  psql(asUser(a, `INSERT INTO public.user_message_stars(user_id, conversation_id, message_id)
-    VALUES ('${a}'::uuid, '${groupConversationId}'::uuid, '${directMessageId}'::uuid);`), { expectFailure: true, expectedError: /violates foreign key constraint/i, label: 'cross-conversation star reference must be rejected' });
+  psql(`INSERT INTO public.message_reactions(conversation_id, message_id, user_id, reaction_type)
+    VALUES ('${groupConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'like');`, { expectFailure: true, expectedError: /violates foreign key constraint/i, label: 'cross-conversation reaction reference must be rejected' });
+  psql(`INSERT INTO public.user_message_stars(user_id, conversation_id, message_id)
+    VALUES ('${a}'::uuid, '${groupConversationId}'::uuid, '${directMessageId}'::uuid);`, { expectFailure: true, expectedError: /violates foreign key constraint/i, label: 'cross-conversation star reference must be rejected' });
   process.stdout.write('PASS: invalid reaction types, star impersonation, and cross-conversation references are rejected.\n');
 
   const directCount = psql(`SELECT count(*) FROM public.chat_messages WHERE conversation_id='${directConversationId}'::uuid;`).split(/\s+/).at(-1);
