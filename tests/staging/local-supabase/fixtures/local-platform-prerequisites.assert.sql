@@ -20,7 +20,7 @@ BEGIN
   END IF;
 
   SELECT array_agg(required.name ORDER BY required.name) INTO v_missing
-  FROM (VALUES ('anon'), ('authenticated'), ('service_role')) AS required(name)
+  FROM (VALUES ('anon'), ('authenticated'), ('service_role'), ('supabase_admin')) AS required(name)
   WHERE NOT EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname = required.name);
   IF coalesce(array_length(v_missing, 1), 0) > 0 THEN
     RAISE EXCEPTION 'Required Supabase roles are missing: %', array_to_string(v_missing, ', ');
