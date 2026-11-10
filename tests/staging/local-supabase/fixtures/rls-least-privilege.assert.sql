@@ -1,0 +1,124 @@
+-- Read-only assertions after rls-least-privilege-overlay.test-only.sql.
+-- Disposable local Supabase only. This file performs catalog reads only.
+do $assert$
+declare
+  r record;
+  v_addr inet := inet_server_addr();
+begin
+  if current_database() <> 'postgres'
+     or current_user <> 'postgres'
+     or v_addr is null
+     or not (v_addr <<= '127.0.0.0/8'::cidr or v_addr = '::1'::inet) then
+    raise exception 'RLS privilege assertions require loopback postgres@postgres';
+  end if;
+
+  for r in
+    select c.oid, c.relname, c.relrowsecurity
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind in ('r','p')
+      and c.relowner = 'postgres'::regrole
+  loop
+    if not r.relrowsecurity then
+      raise exception 'RLS is disabled on public.%', r.relname;
+    end if;
+    if not exists (
+      select 1 from pg_policies p
+      where p.schemaname = 'public' and p.tablename = r.relname
+    ) then
+      raise exception 'No RLS policy exists on public.%', r.relname;
+    end if;
+    if has_table_privilege('anon', r.oid, 'SELECT')
+       or has_table_privilege('anon', r.oid, 'INSERT')
+       or has_table_privilege('anon', r.oid, 'UPDATE')
+       or has_table_privilege('anon', r.oid, 'DELETE')
+       or has_table_privilege('anon', r.oid, 'TRUNCATE')
+       or has_table_privilege('anon', r.oid, 'REFERENCES')
+       or has_table_privilege('anon', r.oid, 'TRIGGER') then
+      raise exception 'anon retains a table privilege on public.%', r.relname;
+    end if;
+    if has_table_privilege('authenticated', r.oid, 'TRUNCATE')
+       or has_table_privilege('authenticated', r.oid, 'REFERENCES')
+       or has_table_privilege('authenticated', r.oid, 'TRIGGER') then
+      raise exception 'authenticated retains a non-RLS table privilege on public.%', r.relname;
+    end if;
+    if current_setting('server_version_num')::integer >= 170000
+       and has_table_privilege('authenticated', r.oid, 'MAINTAIN') then
+      raise exception 'authenticated retains MAINTAIN on public.%', r.relname;
+    end if;
+  end loop;
+
+  if exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'public'
+      and 'authenticated' = any(p.roles)
+      and (coalesce(p.qual,'') || ' ' || coalesce(p.with_check,'')) not ilike '%is_active_member%'
+  ) then
+    raise exception 'An authenticated public policy is missing the active-member guard';
+  end if;
+
+  if has_table_privilege('authenticated','public.conversation_member_events','INSERT')
+     or has_table_privilege('authenticated','public.conversation_member_events','UPDATE')
+     or has_table_privilege('authenticated','public.conversation_member_events','DELETE') then
+    raise exception 'conversation_member_events must be read-only for API clients';
+  end if;
+  if has_table_privilege('authenticated','public.message_edit_history','INSERT') then
+    raise exception 'message_edit_history writes must remain behind edit_message_secure';
+  end if;
+  if has_table_privilege('authenticated','public.private_reply_contexts','UPDATE')
+     or has_table_privilege('authenticated','public.private_reply_contexts','DELETE') then
+    raise exception 'private_reply_contexts must not be directly mutable by clients';
+  end if;
+  if has_table_privilege('authenticated','public.user_message_stars','UPDATE')
+     or has_table_privilege('authenticated','public.user_settings','DELETE')
+     or has_table_privilege('authenticated','public.chat_list_items','UPDATE')
+     or has_table_privilege('authenticated','public.conversation_group_settings','DELETE') then
+    raise exception 'An application table has an unnecessary direct DML privilege';
+  end if;
+
+  if exists (
+    select 1 from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind = 'S'
+      and (has_sequence_privilege('anon',c.oid,'USAGE')
+        or has_sequence_privilege('anon',c.oid,'SELECT')
+        or has_sequence_privilege('authenticated',c.oid,'USAGE')
+        or has_sequence_privilege('authenticated',c.oid,'SELECT')
+        or has_sequence_privilege('anon',c.oid,'UPDATE')
+        or has_sequence_privilege('authenticated',c.oid,'UPDATE'))
+  ) then
+    raise exception 'anon/authenticated retain direct public sequence privileges';
+  end if;
+
+  if exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and (has_function_privilege('anon',p.oid,'EXECUTE')
+        or exists (
+          select 1 from aclexplode(coalesce(p.proacl, acldefault('f',p.proowner))) a
+          where a.grantee = 0 and a.privilege_type = 'EXECUTE'
+        ))
+  ) then
+    raise exception 'A public-schema function remains executable by anon or PUBLIC';
+  end if;
+
+  if exists (
+    select 1
+    from pg_default_acl d
+    join pg_namespace n on n.oid = d.defaclnamespace
+    cross join lateral aclexplode(d.defaclacl) a
+    where d.defaclrole = 'postgres'::regrole
+      and n.nspname = 'public'
+      and d.defaclobjtype in ('r','S','f')
+      and a.grantee in (
+        0,
+        (select oid from pg_roles where rolname = 'anon'),
+        (select oid from pg_roles where rolname = 'authenticated')
+      )
+  ) then
+    raise exception 'Unsafe default privileges remain for public objects';
+  end if;
+end;
+$assert$;
