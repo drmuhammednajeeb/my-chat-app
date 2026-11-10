@@ -960,9 +960,9 @@
       "source": [
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
       ],
-      "status": "TEST_ONLY_LOCAL_TWO_SESSION_CONCURRENCY_HARNESS_NOT_EXECUTED",
+      "status": "TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_NOT_EXECUTED",
       "provides": [
-        "two-session reversed-pair concurrency verification with one-conversation assertion and scoped cleanup"
+        "24-session reversed-pair concurrency verification and 40 concurrent authenticated message inserts, with one-conversation assertion and scoped cleanup"
       ],
       "requires": [
         "test-fixture.direct-chat-runtime",
@@ -977,7 +977,7 @@
         "DAG-014",
         "DAG-015"
       ],
-      "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production. The runner promotes only the two reserved synthetic participants through the real admin RPC after the preceding rollback-only eligibility matrix, then performs the reversed-pair concurrency race. The promotion persists only in the disposable database so subsequent CRUD/Storage probes also have eligible test identities."
+      "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production. The runner promotes only the two reserved synthetic participants through the real admin RPC after the preceding rollback-only eligibility matrix, then races 24 PostgreSQL sessions from both sides of the same pair and performs 40 authenticated message inserts concurrently. It cleans only its generated messages and conversation. The promotion persists only in the disposable database so subsequent CRUD/Storage probes also have eligible test identities."
     },
     {
       "id": "test-fixture.local-platform-preflight",
