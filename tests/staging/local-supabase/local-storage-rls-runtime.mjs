@@ -163,6 +163,11 @@ try {
   console.log('STORAGE_PROBE_STEP=authenticate pre-provisioned synthetic users');
   tokenA = await login(userA);
   tokenB = await login(userB);
+  const tokenClaims = JSON.parse(Buffer.from(tokenA.split('.')[1], 'base64url').toString('utf8'));
+  if (tokenClaims.sub !== userA.id || tokenClaims.role !== 'authenticated' || Number(tokenClaims.exp) * 1000 <= Date.now()) {
+    throw new Error('Storage upload token does not identify the expected active authenticated user');
+  }
+  console.log('STORAGE_JWT_PROBE=subject_matches:true;role:authenticated;not_expired:true');
 
   console.log('STORAGE_PROBE_STEP=create direct conversation');
   const rpc = assertOk(await rest('rpc/get_or_create_direct_conversation', tokenA, 'POST', { p_other_user_id: userB.id }), 'direct conversation RPC');
