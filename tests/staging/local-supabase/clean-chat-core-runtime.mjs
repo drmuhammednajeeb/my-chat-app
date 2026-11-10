@@ -61,6 +61,58 @@ function lastUuid(output) {
   const matches = output.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi) || [];
   return matches.at(-1);
 }
+
+async function clearLocalChatStorage() {
+  const rawApi = process.env.LOCAL_SUPABASE_URL;
+  const serviceKey = process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY;
+  if (!rawApi || !serviceKey) throw new Error('Local Supabase API URL and service role key are required for Storage cleanup');
+  const api = new URL(rawApi);
+  const apiHost = api.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+  if (api.protocol !== 'http:' || !['127.0.0.1','localhost','::1'].includes(apiHost)
+    || api.port !== '54321' || api.pathname !== '/' || api.username || api.password || api.search || api.hash) {
+    throw new Error('Refusing Storage cleanup against a non-local Supabase API');
+  }
+  const headers = { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, 'Content-Type': 'application/json' };
+
+  async function listPrefix(bucket, prefix = '') {
+    const paths = [];
+    let offset = 0;
+    while (true) {
+      const response = await fetch(new URL('/storage/v1/object/list/' + encodeURIComponent(bucket), api), {
+        method: 'POST', headers,
+        body: JSON.stringify({ prefix, limit: 1000, offset, sortBy: { column: 'name', order: 'asc' } })
+      });
+      if (!response.ok) throw new Error('Storage list failed for ' + bucket + ' (HTTP ' + response.status + ')');
+      const entries = await response.json();
+      if (!Array.isArray(entries)) throw new Error('Storage list returned a non-array result for ' + bucket);
+      for (const entry of entries) {
+        if (!entry || typeof entry.name !== 'string' || !entry.name) continue;
+        const objectPath = prefix ? prefix + '/' + entry.name : entry.name;
+        if (entry.id == null && entry.metadata == null) {
+          paths.push(...await listPrefix(bucket, objectPath));
+        } else {
+          paths.push(objectPath);
+        }
+      }
+      if (entries.length < 1000) break;
+      offset += entries.length;
+    }
+    return paths;
+  }
+
+  for (const bucket of ['chat-media', 'conversation-documents', 'channel-avatars']) {
+    const paths = await listPrefix(bucket);
+    for (let i = 0; i < paths.length; i += 100) {
+      const batch = paths.slice(i, i + 100);
+      const response = await fetch(new URL('/storage/v1/object/' + encodeURIComponent(bucket), api), {
+        method: 'DELETE', headers, body: JSON.stringify({ prefixes: batch })
+      });
+      if (!response.ok) throw new Error('Storage removal failed for ' + bucket + ' (HTTP ' + response.status + ')');
+    }
+    console.log('CLEAN_CHAT_STORAGE_BUCKET=' + bucket + ' REMOVED=' + paths.length);
+  }
+}
+await clearLocalChatStorage();
 const directConversationId = lastUuid(psql(asUser(a, `SELECT public.get_or_create_direct_conversation('${b}'::uuid);`), { label: 'create clean direct conversation' }));
 if (!directConversationId) throw new Error('Direct conversation RPC returned no UUID');
 let groupConversationId = null;
