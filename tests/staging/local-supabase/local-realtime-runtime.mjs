@@ -117,6 +117,22 @@ async function subscribeToConversation(client, conversationId) {
   });
   return channel;
 }
+async function subscribeUnfilteredMessages(client) {
+  const channel = client.channel('clean-core-realtime-unfiltered:' + randomUUID());
+  channel.on('postgres_changes', {
+    event: 'INSERT', schema: 'public', table: 'chat_messages'
+  }, payload => record({ kind: 'message_unfiltered', payload }));
+  console.log('LOCAL_REALTIME_BINDINGS=' + JSON.stringify(channel.bindings.map(binding => ({ type: binding.type, filter: binding.filter || null }))));
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Unfiltered Realtime subscription timed out')), 12000);
+    channel.subscribe((status, error) => {
+      console.log('LOCAL_REALTIME_UNFILTERED_STATUS=' + status + (error ? ' ERROR=' + String(error.message || error) : ''));
+      if (status === 'SUBSCRIBED') { clearTimeout(timer); resolve(); }
+      if (['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) { clearTimeout(timer); reject(new Error('Unfiltered Realtime subscription failed: ' + status + ' ' + String(error?.message || ''))); }
+    });
+  });
+  return channel;
+}
 async function insertMessage(client, conversationId, senderId, content) {
   const id = randomUUID();
   const { error } = await client.from('chat_messages').insert({
@@ -127,6 +143,7 @@ async function insertMessage(client, conversationId, senderId, content) {
 }
 
 let channel = null;
+let unfilteredChannel = null;
 let secondConversationId = null;
 try {
   console.log('LOCAL_REALTIME_STEP=authenticate-synthetic-users');
@@ -138,18 +155,25 @@ try {
 
   console.log('LOCAL_REALTIME_STEP=subscribe-authenticated-channel');
   channel = await subscribeToConversation(clientA, directConversationId);
+  unfilteredChannel = await subscribeUnfilteredMessages(clientA);
   console.log('LOCAL_REALTIME_STEP=insert-and-await-message-event');
   const firstMessageId = await insertMessage(clientA, directConversationId, userA, 'local realtime delivery probe');
   const { data: persistedMessage, error: persistedMessageError } = await clientA.from('chat_messages').select('id,conversation_id').eq('conversation_id', directConversationId).eq('id', firstMessageId).maybeSingle();
   if (persistedMessageError || persistedMessage?.id !== firstMessageId) throw new Error('PostgREST could not read the just-inserted message: ' + (persistedMessageError?.message || 'row missing'));
   console.log('PASS: authenticated PostgREST insert and read are consistent before Realtime delivery.');
+  const unfilteredDelivery = await waitForEvent(
+    event => event.kind === 'message_unfiltered' && event.payload.eventType === 'INSERT'
+      && event.payload.new?.id === firstMessageId,
+    'unfiltered authenticated chat_messages INSERT'
+  );
+  if (unfilteredDelivery.payload.new.conversation_id !== directConversationId) throw new Error('Unfiltered Realtime delivered a message with the wrong conversation ID');
   const delivered = await waitForEvent(
     event => event.kind === 'message' && event.conversationId === directConversationId
       && event.payload.eventType === 'INSERT' && event.payload.new?.id === firstMessageId,
-    'authenticated chat_messages INSERT'
+    'conversation-filtered authenticated chat_messages INSERT'
   );
   if (delivered.payload.new.conversation_id !== directConversationId) throw new Error('Realtime delivered a message with the wrong conversation ID');
-  console.log('PASS: authenticated local Realtime delivered a new message over WebSocket.');
+  console.log('PASS: authenticated local Realtime delivered both unfiltered and conversation-filtered message events over WebSocket.');
 
   console.log('LOCAL_REALTIME_STEP=verify-cross-conversation-isolation');
   const secondMessageId = await insertMessage(clientA, secondConversationId, userA, 'cross-conversation isolation probe');
@@ -201,6 +225,7 @@ try {
 } finally {
   const cleanup = Promise.allSettled([
     channel ? channel.unsubscribe() : Promise.resolve(),
+    unfilteredChannel ? unfilteredChannel.unsubscribe() : Promise.resolve(),
     clientA.removeAllChannels(),
     clientC.removeAllChannels(),
     clientA.auth.signOut(),
