@@ -87,7 +87,7 @@ async function clearLocalChatStorage() {
       if (!Array.isArray(entries)) throw new Error('Storage list returned a non-array result for ' + bucket);
       for (const entry of entries) {
         if (!entry || typeof entry.name !== 'string' || !entry.name) continue;
-        const entryName = entry.name.replace(/\\/+$/, '');
+        const entryName = entry.name.replace(/\/+$/, '');
         if (!entryName) continue;
         const objectPath = prefix ? prefix + '/' + entryName : entryName;
         if (entry.id == null && entry.metadata == null) {
