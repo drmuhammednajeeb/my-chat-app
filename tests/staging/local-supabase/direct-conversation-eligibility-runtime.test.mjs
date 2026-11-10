@@ -113,7 +113,7 @@ test('runtime fixture remains design-only and cannot authorize local/cloud execu
     path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-runtime');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED');
+  assert.equal(node.status, 'TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_PASSED_LOCAL');
   assert.ok(node.blockedBy.includes('DAG-014'));
   assert.ok(node.blockedBy.includes('DAG-015'));
   assert.ok(node.requires.includes('membership.final-format'));
