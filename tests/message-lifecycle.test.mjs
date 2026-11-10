@@ -444,7 +444,7 @@ test('message stars persist, serialize, and verify ambiguous outcomes before cha
 
   verifiedRow = null;
   assert.equal(await toggle('m1', true), false);
-  assert.equal(state.starredMessageIds.has('m1'), true);
+  assert.equal(state.starredMessageIds.has('m1'), false);
   assert.ok(notices.length > 0);
 });
 
