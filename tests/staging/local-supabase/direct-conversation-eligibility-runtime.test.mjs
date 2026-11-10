@@ -17,7 +17,7 @@ test('synthetic Auth identities are seeded before membership triggers without by
   const dag = JSON.parse(dagText);
   assert.match(authSeed, /GoTrue Admin API creates these reserved/i);
   assert.doesNotMatch(authSeed, /INSERT INTO auth\.users|INSERT INTO auth\.identities/i);
-  assert.match(authSeed, /JOIN auth\.identities i/i);
+  assert.match(authSeed, /FROM auth\.identities i/i);
   assert.match(authSeed, /i\.provider = 'email'/i);
   assert.doesNotMatch(authSeed, /session_replication_role|DISABLE TRIGGER|DROP TRIGGER/i);
   assert.match(authSeed, /direct-unconfirmed@bizmindmakers\.test/);
