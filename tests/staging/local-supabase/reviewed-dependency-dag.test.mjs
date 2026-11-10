@@ -62,7 +62,7 @@ test('reviewed dependency graph records local runtime success while preserving t
   assert.equal(dag.status, 'BLOCKED');
   assert.equal(dag.executionAuthorized, false);
   assert.equal(dag.blockers.find(item => item.id === 'DAG-017')?.severity, 'BLOCKER');
-  for (const id of ['DAG-003', 'DAG-007', 'DAG-008', 'DAG-010', 'DAG-011', 'DAG-013', 'DAG-014', 'DAG-015', 'DAG-016']) {
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
   const dag006 = dag.blockers.find(item => item.id === 'DAG-006');
   assert.equal(dag006?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME');
   assert.equal(dag006?.runtimeEvidence?.runId, 42912189296);
@@ -70,6 +70,7 @@ test('reviewed dependency graph records local runtime success while preserving t
   const manifestDag006 = manifest.blockers.find(item => item.id === 'DAG-006');
   assert.equal(manifestDag006?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME');
   assert.equal(manifestDag006?.runtimeEvidence?.runId, 42912189296);
+  for (const id of ['DAG-003', 'DAG-007', 'DAG-008', 'DAG-010', 'DAG-011', 'DAG-013', 'DAG-014', 'DAG-015', 'DAG-016']) {
     const item = dag.blockers.find(blocker => blocker.id === id);
     assert.equal(item?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME', 'local runtime evidence missing for ' + id);
     assert.equal(item?.runtimeEvidence?.runId, 42863700280);
