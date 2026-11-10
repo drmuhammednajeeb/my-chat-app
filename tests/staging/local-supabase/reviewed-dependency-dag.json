@@ -1520,6 +1520,14 @@
     [
       "test-fixture.direct-chat-profiles",
       "test-fixture.direct-chat-runtime"
+    ],
+    [
+      "core.base",
+      "test-fixture.direct-chat-auth-seed"
+    ],
+    [
+      "platform.auth",
+      "test-fixture.direct-chat-auth-seed"
     ]
   ],
   "blockers": [
