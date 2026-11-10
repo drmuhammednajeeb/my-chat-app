@@ -80,6 +80,28 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
 });
 
+test('a completed star request cannot mutate the next active conversation state', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' },
+    messages: [{ id: 'm1', conversation_id: 'c1' }],
+    starredMessageIds: new Set(), pendingStarMessageKeys: new Set()
+  };
+  let release;
+  const supabaseClient = {
+    from() { return { upsert() { return new Promise(resolve => { release = resolve; }); } }; }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageStar') + ')', {
+    state, supabaseClient, toast() {}, console
+  });
+  const pending = toggle('m1', true);
+  state.active = { id: 'c2' };
+  state.messages = [];
+  state.starredMessageIds = new Set();
+  release({ error: null });
+  assert.equal(await pending, true);
+  assert.equal(state.starredMessageIds.has('m1'), false);
+});
+
 test('rendered message controls are wired to the persisted reaction and star actions', () => {
   const messageRenderer = extractFunction('renderMessageInternal');
   const reactionBar = extractFunction('renderReactionBar');
