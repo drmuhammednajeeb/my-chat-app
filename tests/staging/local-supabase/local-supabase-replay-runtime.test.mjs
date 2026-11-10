@@ -30,6 +30,8 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
     'candidate replay order is not the exact reviewed topological DAG order',
     'test-fixture.local-platform-preflight',
     'local-rls-least-privilege-runtime.mjs',
+    'channel-avatar-rls-runtime.test.sql',
+    'DAG-006:channel-avatar-rls-runtime',
     'direct-conversation-concurrency.mjs',
     'local-pg-cron-runtime.mjs',
     'local-storage-rls-runtime.mjs',
