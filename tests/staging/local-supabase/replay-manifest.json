@@ -41,6 +41,15 @@
   },
   "candidateNodeOrder": [
     {
+      "nodeId": "test-fixture.local-platform-preflight",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_NOT_EXECUTED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Run only after the disposable local stack starts and before application SQL replay. It performs catalog reads and raises on missing prerequisites; it never installs extensions or mutates data."
+    },
+    {
       "nodeId": "legacy.messages",
       "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
       "testSources": [
@@ -49,15 +58,6 @@
       ],
       "blockedBy": [],
       "parityNote": null
-    },
-    {
-      "nodeId": "test-fixture.local-platform-preflight",
-      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_NOT_EXECUTED",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Run only after the disposable local stack starts and before application SQL replay. It performs catalog reads and raises on missing prerequisites; it never installs extensions or mutates data."
     },
     {
       "nodeId": "core.base",
