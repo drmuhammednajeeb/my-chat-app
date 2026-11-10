@@ -37,6 +37,7 @@ async function provisionSyntheticDirectChatAuthUsers() {
   const users = [
     { key: 'direct_a', email: 'direct-a@bizmindmakers.test', number: '971001000002', verified: true, confirmed: true, username: 'direct_a', displayName: 'Direct Test A' },
     { key: 'direct_b', email: 'direct-b@bizmindmakers.test', number: '971001000003', verified: true, confirmed: true, username: 'direct_b', displayName: 'Direct Test B' },
+    { key: 'direct_c', email: 'direct-c@bizmindmakers.test', number: '971001000008', verified: true, confirmed: true, username: 'direct_c', displayName: 'Direct Test C' },
     { key: 'direct_suspended', email: 'direct-suspended@bizmindmakers.test', number: '971001000004', verified: true, confirmed: true, username: 'direct_suspended', displayName: 'Direct Test Suspended' },
     { key: 'direct_unverified', email: 'direct-unverified@bizmindmakers.test', number: '971001000005', verified: false, confirmed: true, username: 'direct_unverified', displayName: 'Direct Test Unverified' },
     { key: 'direct_unconfirmed', email: 'direct-unconfirmed@bizmindmakers.test', number: '971001000006', verified: true, confirmed: false, username: 'direct_unconfirmed', displayName: 'Direct Test Unconfirmed' },
@@ -271,6 +272,14 @@ run(process.execPath, [
 run(process.execPath, [
   cleanChatCoreRunner
 ], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1', LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, 'clean-chat-core-message-reactions-stars');
+
+const localRealtimeRunner = path.join(ROOT, 'tests/staging/local-supabase/local-realtime-runtime.mjs');
+if (!fs.existsSync(localRealtimeRunner)) fail('local authenticated Realtime runner is missing');
+run(process.execPath, [localRealtimeRunner], {
+  ...env,
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}),
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? ''
+}, 'clean-chat-core-authenticated-local-realtime');
 
 console.log('LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED');
 console.log('CLEAN_CHAT_CORE_LOCAL_RUNTIME=PASSED');
