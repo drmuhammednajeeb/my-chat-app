@@ -11,8 +11,8 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
   const source = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
   for (const token of [
     'ALLOW_DISPOSABLE_LOCAL_REPLAY',
-    "dbUrl.port !== '54322'",
-    "dbUrl.username !== 'postgres'",
+    "url.port !== '54322'",
+    "url.username !== 'postgres'",
     "url.pathname !== '/postgres'",
     "'127.0.0.1'",
     "'localhost'",
@@ -63,8 +63,8 @@ test('clean chat core reset is destructive only inside the loopback disposable r
   const syntax = spawnSync(process.execPath, ['--check', path.join(root, 'tests/staging/local-supabase/clean-chat-core-runtime.mjs')], { encoding: 'utf8' });
   assert.equal(syntax.status, 0, syntax.stderr || 'clean core runner syntax check failed');
   for (const token of [
-    "url.port !== '54322'",
-    "url.username !== 'postgres'",
+    "dbUrl.port !== '54322'",
+    "dbUrl.username !== 'postgres'",
     "ALLOW_DISPOSABLE_LOCAL_REPLAY",
     'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
     'public.get_or_create_direct_conversation',
