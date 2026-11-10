@@ -9,6 +9,7 @@ const moduleSources = await Promise.all(modulePaths.map(path => readFile(new URL
 // Keep this order aligned with the classic script tags in index.html.
 const moduleSource = moduleSources.join('\n');
 const source = moduleSource + '\n' + indexSource;
+const MESSAGE_REACTION_OPTIONS = ['like','heart','wow','pray','fire','celebrate'].map(type => ({ type }));
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
