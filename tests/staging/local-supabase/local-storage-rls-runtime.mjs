@@ -186,6 +186,13 @@ SELECT coalesce(array_to_string(storage.foldername('${diagnosticPath}'), '|'), '
   || '|' || app_private.is_conversation_member('${conversationId}'::uuid)::text;
 ROLLBACK;`);
   console.log('STORAGE_POLICY_PROBE=' + diagnostic);
+  const policySet = localDatabaseProbe(`SELECT coalesce(string_agg(
+    policyname || ' [' || permissive || '/' || cmd || '] ' || coalesce(with_check, ''),
+    E'\\n' ORDER BY policyname
+  ), 'none')
+  FROM pg_policies
+  WHERE schemaname = 'storage' AND tablename = 'objects';`);
+  console.log('STORAGE_POLICY_SET=' + policySet.replaceAll('\\n', ' || '));
   const probeParts = diagnostic.split('|');
   if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== userA.id || !['t', 'true'].includes(probeParts[4]) || !['t', 'true'].includes(probeParts[5])) {
     throw new Error('Storage policy preconditions failed: folder ownership, active membership, or conversation membership is false');
