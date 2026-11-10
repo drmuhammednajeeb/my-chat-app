@@ -1819,14 +1819,19 @@
     },
     {
       "id": "DAG-003",
-      "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
         "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
         "membership.js",
         "index.html"
       ],
-      "issue": "The historical-to-final membership format transition is represented and the final migration allowlist is tested for all six function targets, including both admin RPC implementations. A PostgreSQL local apply test must still prove the replacement and resulting constraints."
+      "issue": "The final membership-format migration executed successfully in disposable local PostgreSQL. Its own DO block verified that all six target function definitions contained the legacy format before replacement and raised unless exactly six were updated; the final profile constraints were installed. The synthetic-admin postcondition then verified an active, verified member under the resulting format. No production migration was run.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-004",
@@ -1910,13 +1915,18 @@
     },
     {
       "id": "DAG-011",
-      "severity": "RESOLVED_FOR_LOCAL_FIXTURES",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
       "evidence": [
         "database/changes/team_management_dashboard.sql",
         "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
         "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ],
-      "issue": "Resolved for disposable local replay by reserved .test synthetic Auth/profile fixtures and test-only copies substituting a synthetic membership number. The canonical production seed SQL remains unchanged; actual Supabase Auth schema compatibility still needs local rehearsal."
+      "issue": "Supabase Auth compatibility was exercised in the disposable local stack: synthetic Auth identities were created through the local Auth API before/after the membership triggers, invitation/signup triggers ran, synthetic profiles were created, and the admin-active postcondition passed. No production identity or Auth data was imported.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-013",
