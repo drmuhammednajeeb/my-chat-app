@@ -98,7 +98,7 @@ const env = {
   PATH: process.env.PATH ?? '',
   LOCAL_SUPABASE_DB_URL: raw,
   PGCONNECT_TIMEOUT: '5',
-  PGOPTIONS: '-c statement_timeout=60s -c lock_timeout=10s'
+  PGOPTIONS: '-c app.test_only_local_replay=enabled -c statement_timeout=60s -c lock_timeout=10s'
 };
 const seenSql = new Set();
 for (const node of manifest.candidateNodeOrder) {
