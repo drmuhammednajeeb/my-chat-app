@@ -202,6 +202,19 @@ begin
   end if;
 
 
+
+  if has_schema_privilege('anon','public','CREATE')
+     or has_schema_privilege('authenticated','public','CREATE') then
+    raise exception 'API roles must not be able to create objects in public';
+  end if;
+  if exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'storage' and p.tablename = 'objects'
+      and (coalesce(p.qual,'') || ' ' || coalesce(p.with_check,'')) not ilike '%bucket_id%'
+  ) then
+    raise exception 'Every Storage object policy must be scoped to a bucket';
+  end if;
+
   -- Every application public table receives a RESTRICTIVE active-member policy.
   if exists (
     select 1
