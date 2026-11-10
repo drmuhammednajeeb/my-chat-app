@@ -25,7 +25,9 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
     'REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA public FROM authenticated',
     'REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM public, anon, authenticated',
     'REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM public, anon',
+    'REVOKE ALL ON FUNCTION %I.%I(%s) FROM PUBLIC, ANON, AUTHENTICATED, SERVICE_ROLE',
     'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public',
+    'ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public',
     'REVOKE INSERT, UPDATE, DELETE ON public.conversation_member_events',
     'REVOKE UPDATE, DELETE ON public.private_reply_contexts',
     'REVOKE DELETE ON public.user_settings',
@@ -39,7 +41,7 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
   assert.match(sql, /revoke maintain on all tables in schema public from authenticated/i);
 });
 
-test('read-only assertions cover RLS, active membership, table, sequence, function and default ACLs', async () => {
+test('read-only assertions cover RLS, active membership, table, sequence, function, trigger and both migration-owner default ACLs', async () => {
   const sql = await readFile(assertionPath, 'utf8');
   for (const token of [
     'relrowsecurity',
@@ -49,6 +51,8 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     'has_sequence_privilege',
     'has_function_privilege',
     'pg_default_acl',
+    "d.defaclrole in ('postgres'::regrole, 'supabase_admin'::regrole)",
+    "p.prorettype = 'trigger'::regtype",
     'aclexplode',
     'storage.objects',
     'Users upload own avatar',
