@@ -180,34 +180,35 @@ async function openStarredMessages(){
  $('starredModal').classList.add('open');$('starredModal').setAttribute('aria-hidden','false');
 }
 async function toggleMessageStar(messageId,star=true){
- const userId=state.user?.id,m=state.messages.find(x=>x.id===messageId);
- if(!userId||!m?.conversation_id){toast('تعذر تحديد الرسالة أو الحساب الحالي');return false}
+ const userId=state.user?.id,m=(state.messages||[]).find(x=>x.id===messageId);
+ if(!userId||!m?.conversation_id||state.active?.id!==m.conversation_id){toast('تعذر تحديد الرسالة أو المحادثة الحالية');return false}
  state.starredMessageIds ||= new Set();
+ state.pendingStarMessageKeys ||= new Set();
+ const conversationId=m.conversation_id,key=conversationId+':'+messageId+':'+userId;
+ if(state.pendingStarMessageKeys.has(key))return false;
+ state.pendingStarMessageKeys.add(key);
+ const isCurrent=()=>state.user?.id===userId&&state.active?.id===conversationId;
  try{
   const query=supabaseClient.from('user_message_stars');
   const result=star
-   ?await query.upsert({user_id:userId,conversation_id:m.conversation_id,message_id:m.id},{onConflict:'user_id,message_id'})
+   ?await query.upsert({user_id:userId,conversation_id:conversationId,message_id:m.id},{onConflict:'user_id,message_id'})
    :await query.delete().eq('user_id',userId).eq('message_id',m.id);
-  if(result?.error)throw result.error;
-  if(star)state.starredMessageIds.add(messageId);else state.starredMessageIds.delete(messageId);
+  if(result?.error){
+   if(!isCurrent())throw result.error;
+   const {data:verified,error:verifyError}=await supabaseClient.from('user_message_stars').select('message_id').eq('user_id',userId).eq('conversation_id',conversationId).eq('message_id',m.id).maybeSingle();
+   if(verifyError)throw result.error;
+   const persisted=!!verified;
+   if(persisted!==!!star){
+    if(isCurrent()){if(persisted)state.starredMessageIds.add(messageId);else state.starredMessageIds.delete(messageId)}
+    throw result.error;
+   }
+  }
+  if(isCurrent()){if(star)state.starredMessageIds.add(messageId);else state.starredMessageIds.delete(messageId)}
   return true;
- }catch(error){console.error('Message star update failed:',error);toast(error?.message||'تعذر تحديث تمييز الرسالة. حاول مجدداً');return false}
+ }catch(error){console.error('Message star update failed:',error);if(isCurrent())toast(error?.message||'تعذر تأكيد تحديث تمييز الرسالة. حاول مجدداً');return false}
+ finally{state.pendingStarMessageKeys.delete(key)}
 }
-function setMessageSelectionMode(enabled){
- state.selectionMode=!!enabled;state.selectedMessageIds.clear();
- const bar=$('messageSelectionToolbar');bar?.classList.toggle('active',state.selectionMode);
- document.querySelectorAll('.message').forEach(row=>decorateMessageSelection(row,state.messages.find(m=>m.id===row.dataset.messageId)));
- updateMessageSelectionToolbar();if(state.selectionMode)closeChatHeaderMenu();
-}
-function decorateMessageSelection(row,message){
- if(!row||!message)return;row.querySelector('.message-select-check')?.remove();row.classList.remove('selected-for-action');
- if(!state.selectionMode)return;
- const check=document.createElement('input');check.type='checkbox';check.className='message-select-check';check.checked=state.selectedMessageIds.has(message.id);check.setAttribute('aria-label','تحديد الرسالة');
- check.onchange=()=>{if(check.checked)state.selectedMessageIds.add(message.id);else state.selectedMessageIds.delete(message.id);row.classList.toggle('selected-for-action',check.checked);updateMessageSelectionToolbar()};
- row.prepend(check);
- row.addEventListener('click',function selectionClick(e){if(!state.selectionMode||e.target.closest('button,input,a,audio'))return;if(!e.target.closest('.bubble'))return;check.checked=!check.checked;check.dispatchEvent(new Event('change'))});
-}
-function updateMessageSelectionToolbar(){const count=state.selectedMessageIds.size;$('messageSelectionCount').textContent=count.toLocaleString('ar-SA')+' محددة'}
+
 async function starSelectedMessages(){const ids=[...state.selectedMessageIds];let succeeded=0;for(const id of ids){if(await toggleMessageStar(id,true))succeeded++}toast('تم تمييز '+succeeded+' من '+ids.length+' رسالة');setMessageSelectionMode(false)}
 function exportSelectedMessages(){const ids=state.selectedMessageIds,items=state.messages.filter(m=>ids.has(m.id));downloadMessages(items,'messages-selected.txt');setMessageSelectionMode(false)}
 function downloadMessages(messages,filename){
