@@ -667,8 +667,13 @@
     },
     {
       "id": "DAG-003",
-      "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
-      "issue": "The historical-to-final membership format transition is represented and the final migration allowlist is tested for all six function targets, including both admin RPC implementations. A PostgreSQL local apply test must still prove the replacement and resulting constraints."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The final membership-format migration executed successfully in disposable local PostgreSQL. Its own DO block verified that all six target function definitions contained the legacy format before replacement and raised unless exactly six were updated; the final profile constraints were installed. The synthetic-admin postcondition then verified an active, verified member under the resulting format. No production migration was run.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-006",
