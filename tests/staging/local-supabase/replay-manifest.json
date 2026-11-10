@@ -763,6 +763,18 @@
         "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
         "scope": "disposable local Supabase/PostgreSQL 17 only"
       }
+    },
+    {
+      "id": "DAG-017",
+      "severity": "BLOCKER",
+      "issue": "The original SQL bodies for three remote ledger records are absent from the repository: 20261107032150 tighten_direct_chat_preference_scope, 20261107160647 channel_visibility_avatar_group_background, and 20261107160733 harden_channel_rpc_wrappers. Two additional direct-conversation RPC records (20261106102326 and 20261106102443) are represented only by current catalog-recovered test fixtures, not their original historical migration bodies. Catalog state snapshots preserve the deployed state but do not prove historical intent or exact migration deltas. Do not approve a canonical production baseline until the original sources are recovered or the catalog-only reconstruction is explicitly reviewed and accepted.",
+      "evidence": [
+        "docs/MIGRATION_LEDGER_RECONCILIATION_2026-11-10.md",
+        "docs/CATALOG_STATE_RECOVERY_2026-11-10.md",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json"
+      ],
+      "recoveryInstructions": "Recover original SQL from Git history, release artifacts, or verified deployment records. If unavailable, obtain explicit review/acceptance of a catalog-derived replacement baseline and record that it is a new migration design, not historical source recovery."
     }
   ],
   "requiredSourceRecovery": [
