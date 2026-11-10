@@ -328,7 +328,10 @@ test('least-privilege overlay is a test-only, locally validated, loopback-only S
 
 
 test('chat composer media types and reaction persistence constraints stay aligned', async () => {
-  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  const appHtml = await readFile(path.join(root, 'index.html'), 'utf8');
+  const appModuleNames = ['00-bootstrap.js','10-conversations.js','20-message-interactions.js','30-receipts-rendering.js','40-message-runtime.js','50-group-management.js','60-personal-chat-settings.js','70-workspace.js'];
+  const appModules = await Promise.all(appModuleNames.map(name => readFile(path.join(root, 'js', name), 'utf8')));
+  const html = [appHtml, ...appModules].join('\n');
   const migration = await readFile(path.join(root, 'database/changes/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
   for (const mime of [
     'video/mp4',
