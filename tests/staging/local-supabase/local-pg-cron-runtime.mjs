@@ -66,7 +66,7 @@ try {
       LIMIT 1), 'pending');`);
     if (result.startsWith('succeeded|')) {
       passed = true;
-      process.stdout.write('PASS: disposable local pg_cron probe executed successfully.\\n');
+      process.stdout.write('PASS: disposable local pg_cron probe executed successfully.\n');
       break;
     }
     if (result.startsWith('failed|')) {
