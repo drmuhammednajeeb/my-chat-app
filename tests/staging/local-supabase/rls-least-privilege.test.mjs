@@ -127,6 +127,8 @@ test('CRUD runtime fixture verifies upsert, secure edit, and cross-user isolatio
   for (const token of [
     'get_or_create_direct_conversation',
     'chat_messages',
+    'conversation_members',
+    'Owner read-state update or membership trigger failed after overlay',
     'chat_lists',
     'chat_list_items',
     'ON CONFLICT(user_id,list_id,conversation_id)',
