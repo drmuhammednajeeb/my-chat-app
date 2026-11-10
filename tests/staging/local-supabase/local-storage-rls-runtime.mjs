@@ -2,6 +2,7 @@
 // Disposable-local Supabase Storage API RLS integration probe.
 // Requires the fully replayed synthetic local Auth/profile fixtures and RLS overlay.
 import { randomUUID } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 
 function fail(message) {
   console.error('STORAGE_RLS_RUNTIME_BLOCKED=' + message);
@@ -42,6 +43,33 @@ let documentId = null;
 let conversationId = null;
 let tokenA = null;
 let tokenB = null;
+
+function localDatabaseProbe(sql) {
+  const rawDb = required('LOCAL_SUPABASE_DB_URL');
+  let db;
+  try { db = new URL(rawDb); } catch { fail('invalid LOCAL_SUPABASE_DB_URL'); }
+  const dbHost = db.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+  if (!['postgres:', 'postgresql:'].includes(db.protocol)
+    || !['127.0.0.1', 'localhost', '::1'].includes(dbHost)
+    || db.port !== '54322'
+    || db.username !== 'postgres'
+    || db.pathname !== '/postgres'
+    || db.search || db.hash) {
+    fail('refusing non-local database diagnostic target');
+  }
+  const result = spawnSync('psql', [
+    '--no-psqlrc', '--quiet', '--tuples-only', '--no-align',
+    '--set=ON_ERROR_STOP=1', '--command', sql, rawDb
+  ], {
+    encoding: 'utf8',
+    timeout: 15000,
+    env: { PATH: process.env.PATH ?? '', PGCONNECT_TIMEOUT: '5' }
+  });
+  if (result.error || result.status !== 0) {
+    fail('local Storage policy diagnostic failed: ' + (result.error?.message || result.stderr || result.status));
+  }
+  return String(result.stdout || '').trim();
+}
 
 async function fetchWithTimeout(url, options = {}) {
   return fetch(url, { ...options, signal: AbortSignal.timeout(20000) });
@@ -140,6 +168,28 @@ try {
   const rpc = assertOk(await rest('rpc/get_or_create_direct_conversation', tokenA, 'POST', { p_other_user_id: userB.id }), 'direct conversation RPC');
   conversationId = typeof rpc === 'string' ? rpc : rpc?.id;
   if (!conversationId || !/^[0-9a-f-]{36}$/i.test(conversationId)) throw new Error('direct conversation RPC returned an invalid UUID');
+
+  const members = assertOk(await rest('conversation_members?conversation_id=eq.' + encodeURIComponent(conversationId) + '&select=user_id', tokenA), 'verify direct conversation membership');
+  if (!Array.isArray(members) || !members.some(row => row.user_id === userA.id) || !members.some(row => row.user_id === userB.id)) {
+    throw new Error('direct conversation RPC did not persist both expected membership rows');
+  }
+
+  // Evaluate each Storage RLS predicate with the same Auth identity before the API upload.
+  const diagnosticPath = conversationId + '/' + userA.id + '/policy-probe.bin';
+  const diagnostic = localDatabaseProbe(`BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '${userA.id}', true);
+SELECT coalesce(array_to_string(storage.foldername('${diagnosticPath}'), '|'), '')
+  || '|' || coalesce((storage.foldername('${diagnosticPath}'))[2], 'NULL')
+  || '|' || coalesce(auth.uid()::text, 'NULL')
+  || '|' || app_private.is_active_member()::text
+  || '|' || app_private.is_conversation_member('${conversationId}'::uuid)::text;
+ROLLBACK;`);
+  console.log('STORAGE_POLICY_PROBE=' + diagnostic);
+  const probeParts = diagnostic.split('|');
+  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== 'true' || probeParts[4] !== 'true') {
+    throw new Error('Storage policy preconditions failed: folder ownership, active membership, or conversation membership is false');
+  }
 
   // Chat media: valid uploader folder succeeds; another member cannot impersonate it.
   const pdf = Buffer.from('%PDF-1.4\\n% local RLS runtime probe\\n');
