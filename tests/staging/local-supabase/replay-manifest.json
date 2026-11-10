@@ -138,7 +138,9 @@
       "testSources": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
       ],
-      "blockedBy": [],
+      "blockedBy": [
+        "DAG-015"
+      ],
       "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests."
     },
     {
@@ -230,7 +232,8 @@
         "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
       ],
       "blockedBy": [
-        "DAG-014"
+        "DAG-014",
+        "DAG-015"
       ],
       "parityNote": null
     },
