@@ -63,6 +63,7 @@ function waitForEvent(predicate, label, timeoutMs = 10000) {
 async function signIn(client, email) {
   const { data, error } = await client.auth.signInWithPassword({ email, password });
   if (error || !data?.session?.access_token) throw new Error('Synthetic Auth sign-in failed for ' + email + ': ' + (error?.message || 'no session'));
+  client.realtime.setAuth(data.session.access_token);
   return data.user.id;
 }
 async function createDirect(client, otherUserId) {
@@ -83,6 +84,7 @@ async function subscribeToConversation(client, conversationId) {
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Realtime subscription timed out for ' + conversationId)), 12000);
     channel.subscribe(status => {
+      console.log('LOCAL_REALTIME_CHANNEL_STATUS=' + status + ' CONVERSATION=' + conversationId);
       if (status === 'SUBSCRIBED') { clearTimeout(timer); resolve(); }
       if (['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) { clearTimeout(timer); reject(new Error('Realtime subscription failed: ' + status)); }
     });
