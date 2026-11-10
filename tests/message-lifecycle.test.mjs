@@ -80,6 +80,64 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
 });
 
+test('realtime receives only the active conversation and reconciles missed messages after reconnect', async () => {
+  const registrations = [];
+  let statusCallback;
+  const makeChannel = name => ({
+    name,
+    on(event, filter, handler) { registrations.push({ channel: name, event, filter, handler }); return this; },
+    subscribe(callback) { if (name.startsWith('chat:')) statusCallback = callback; return this; }
+  });
+  const state = {
+    active: { id: 'c1' }, channel: null, typingChannel: null,
+    diagnostics: {}, messages: [], messageLoadVersion: 7,
+    user: { id: 'u1' }, activeChatPreference: null,
+    privateReplyContexts: new Map(), messagePollTimer: 1, messagePollGeneration: 3
+  };
+  const rendered = [], receipts = [];
+  let reloads = 0, pollingSchedules = 0;
+  const context = {
+    state,
+    supabaseClient: { removeChannel() {}, channel: makeChannel },
+    diagLog() {},
+    renderMessage: async message => rendered.push(message.id),
+    markConversationReceipt: (...args) => receipts.push(args),
+    handleMessageUpdateRealtime() {}, handleMessageDeleteRealtime() {},
+    handleReactionRealtime() {}, handlePinRealtime() {}, handleMembershipRealtime() {},
+    loadConversations: async () => {}, openGroupManagement: async () => {},
+    applyGroupTheme() {}, updateGroupComposerPermission() {},
+    loadConversationDocuments: async () => {}, renderPrivateReplyQuote() {},
+    loadMessages: async () => { reloads += 1; },
+    scheduleMessagePolling: () => { pollingSchedules += 1; },
+    convName: () => 'Conversation', renderConversations() {},
+    document: { visibilityState: 'visible' },
+    isMessagesNearBottom: () => true,
+    $: () => ({ textContent: '', classList: { contains: () => false } }),
+    clearTimeout() {}, setTimeout: () => 1, console
+  };
+  const subscribe = vm.runInNewContext('(' + extractFunction('subscribeConversation') + ')', context);
+  subscribe();
+  const insert = registrations.find(item => item.channel === 'chat:c1' && item.filter?.table === 'chat_messages' && item.event === 'postgres_changes' && item.filter.event === 'INSERT');
+  assert.ok(insert, 'chat_messages INSERT subscription must be registered');
+  assert.equal(insert.filter.filter, 'conversation_id=eq.c1');
+
+  await insert.handler({ new: { id: 'm1', conversation_id: 'c1', sender_id: 'u2', created_at: '2026-11-11T10:00:00Z' } });
+  assert.deepEqual(state.messages.map(message => message.id), ['m1']);
+  assert.deepEqual(rendered, ['m1']);
+  assert.equal(receipts.length, 1);
+
+  statusCallback('SUBSCRIBED');
+  statusCallback('CHANNEL_ERROR');
+  statusCallback('SUBSCRIBED');
+  await Promise.resolve();
+  assert.equal(reloads, 1, 'reconnect must reload the active timeline to recover missed events');
+  assert.ok(pollingSchedules >= 1, 'connection loss must retain fallback polling');
+
+  state.active = { id: 'c2' };
+  await insert.handler({ new: { id: 'stale', conversation_id: 'c1', sender_id: 'u2', created_at: '2026-11-11T10:01:00Z' } });
+  assert.deepEqual(state.messages.map(message => message.id), ['m1'], 'events from a previous conversation must be ignored');
+});
+
 test('a completed star request cannot mutate the next active conversation state', async () => {
   const state = {
     user: { id: 'u1' }, active: { id: 'c1' },
