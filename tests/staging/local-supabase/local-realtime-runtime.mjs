@@ -2,6 +2,7 @@
 // Exercises the real local Supabase Auth + Realtime WebSocket + PostgREST path.
 // This runner is only valid against the disposable loopback stack created by CI.
 import { randomUUID } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { createClient } from '@supabase/supabase-js';
 
 function fail(message) {
@@ -20,6 +21,31 @@ if (api.protocol !== 'http:' || !['127.0.0.1', 'localhost', '::1'].includes(host
   fail('refusing non-loopback Supabase API target');
 }
 if (!anonKey || !password) fail('local anon key and synthetic Auth password are required');
+
+const rawDb = process.env.LOCAL_SUPABASE_DB_URL;
+let db;
+try { db = new URL(rawDb); } catch { fail('invalid local PostgreSQL URL'); }
+const dbHost = db.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+if (!['postgres:', 'postgresql:'].includes(db.protocol)
+  || !['127.0.0.1', 'localhost', '::1'].includes(dbHost)
+  || db.port !== '54322' || db.username !== 'postgres' || db.pathname !== '/postgres'
+  || db.search || db.hash) fail('refusing non-loopback PostgreSQL catalog target');
+function psql(sql) {
+  const result = spawnSync('psql', ['--no-psqlrc', '--tuples-only', '--no-align', '--set=ON_ERROR_STOP=1', '--command', sql, rawDb], {
+    encoding: 'utf8', env: { PATH: process.env.PATH, PGCONNECT_TIMEOUT: '5' }
+  });
+  if (result.error || result.status !== 0) throw new Error('Local PostgreSQL diagnostic query failed: ' + (result.stderr || result.error?.message || result.status));
+  return result.stdout.trim();
+}
+const realtimeTables = psql(`SELECT string_agg(tablename, ',' ORDER BY tablename)
+  FROM pg_publication_tables
+  WHERE pubname='supabase_realtime' AND schemaname='public'
+    AND tablename IN ('chat_messages','message_reactions');`);
+if (realtimeTables !== 'chat_messages,message_reactions') {
+  throw new Error('Required chat tables are not both in supabase_realtime publication: ' + realtimeTables);
+}
+console.log('LOCAL_REALTIME_PUBLICATION_TABLES=' + realtimeTables);
+
 
 let users;
 try { users = JSON.parse(process.env.LOCAL_SYNTHETIC_AUTH_USERS_JSON || '{}'); } catch { fail('invalid synthetic Auth identity map'); }
