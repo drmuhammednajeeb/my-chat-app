@@ -3,13 +3,11 @@
 do $assert$
 declare
   r record;
-  v_addr inet := inet_server_addr();
 begin
   if current_database() <> 'postgres'
      or current_user <> 'postgres'
-     or v_addr is null
-     or not (v_addr <<= '127.0.0.0/8'::cidr or v_addr = '::1'::inet) then
-    raise exception 'RLS privilege assertions require loopback postgres@postgres';
+     or current_setting('app.test_only_local_replay', true) <> 'enabled' then
+    raise exception 'RLS privilege assertions require the guarded local runner';
   end if;
 
   for r in
