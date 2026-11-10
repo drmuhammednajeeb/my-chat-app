@@ -78,6 +78,8 @@ test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL
   ]) assert.ok(sql.includes(signature), 'missing membership format assertion for ' + signature);
   assert.match(sql, /Invalid official membership number was accepted/);
   assert.match(sql, /public\.get_or_create_direct_conversation/);
+  assert.match(sql, /SET LOCAL statement_timeout = '30s'/);
+  assert.match(sql, /SET LOCAL lock_timeout = '10s'/);
   assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
   for (const label of [
     'suspended target', 'suspended caller', 'unverified target', 'unverified caller',
