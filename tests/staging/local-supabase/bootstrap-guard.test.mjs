@@ -96,3 +96,20 @@ test('rejects an approved-looking plan that enables cloud access', async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('bootstrap plan requires platform, direct-RPC, concurrency, and cron runtime evidence while remaining disabled', async () => {
+  const plan = JSON.parse(await readFile(new URL('./bootstrap-plan.json', import.meta.url), 'utf8'));
+  assert.equal(plan.mode, 'DESIGN_ONLY');
+  assert.equal(plan.status, 'BLOCKED');
+  assert.equal(plan.execution.enabled, false);
+  assert.equal(plan.execution.allowCloudSupabase, false);
+  assert.equal(plan.execution.allowProductionData, false);
+  const platform = plan.dependencyLayers.find(layer => layer.id === 'managed-platform-prerequisites');
+  assert.equal(platform.status, 'READ_ONLY_ASSERTIONS_PREPARED_NOT_EXECUTED');
+  for (const evidence of [
+    'A successful read-only local platform preflight and postflight',
+    'A successful rollback-only PostgreSQL direct-conversation eligibility',
+    'A successful two-session reversed-pair concurrency test',
+    'A local pg_cron scheduler execution check'
+  ]) assert.ok(plan.approval.requiredEvidence.some(item => item.includes(evidence)), 'missing bootstrap approval evidence: ' + evidence);
+});
