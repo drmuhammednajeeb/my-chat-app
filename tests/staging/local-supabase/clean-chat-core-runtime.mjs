@@ -27,7 +27,7 @@ for (const [name, value] of Object.entries({ direct_a: a, direct_b: b, direct_su
   if (!uuid.test(value || '')) throw new Error('Invalid synthetic Auth identity: ' + name);
 }
 
-function psql(sql, { expectFailure = false, label = 'SQL assertion' } = {}) {
+function psql(sql, { expectFailure = false, expectedError = null, label = 'SQL assertion' } = {}) {
   const result = spawnSync('psql', [
     '--no-psqlrc', '--quiet', '--tuples-only', '--no-align',
     '--set=ON_ERROR_STOP=1', '--command', sql, rawDb
@@ -43,7 +43,9 @@ function psql(sql, { expectFailure = false, label = 'SQL assertion' } = {}) {
   if (result.error) throw new Error(label + ' could not start: ' + result.error.message);
   if (expectFailure) {
     if (result.status === 0) throw new Error(label + ' unexpectedly succeeded');
-    return result.stderr || '';
+    const output = (result.stderr || '') + (result.stdout || '');
+    if (expectedError && !expectedError.test(output)) throw new Error(label + ' failed for an unexpected reason: ' + output.trim());
+    return output;
   }
   if (result.status !== 0) throw new Error(label + ' failed: ' + (result.stderr || result.stdout).trim());
   return result.stdout.trim();
@@ -75,7 +77,7 @@ try {
   psql(asUser(a, `INSERT INTO public.chat_messages(id, conversation_id, sender_id, content)
     VALUES ('${directMessageId}'::uuid, '${directConversationId}'::uuid, '${a}'::uuid, '${messageContent}');`), { label: 'insert direct message' });
   psql(asUser(a, `INSERT INTO public.chat_messages(id, conversation_id, sender_id, content)
-    VALUES ('${directMessageId}'::uuid, '${directConversationId}'::uuid, '${a}'::uuid, '${messageContent}');`), { expectFailure: true, label: 'duplicate message ID must be rejected' });
+    VALUES ('${directMessageId}'::uuid, '${directConversationId}'::uuid, '${a}'::uuid, '${messageContent}');`), { expectFailure: true, expectedError: /duplicate key value violates unique constraint/i, label: 'duplicate message ID must be rejected' });
   process.stdout.write('PASS: stable client message ID prevents duplicate persistence on retry.\n');
 
   const groupOutput = psql(`INSERT INTO public.conversations(type, title, created_by)
@@ -123,13 +125,13 @@ try {
   process.stdout.write('PASS: suspended/non-member identity cannot read the conversation timeline.\n');
 
   psql(asUser(a, `INSERT INTO public.message_reactions(conversation_id, message_id, user_id, reaction_type)
-    VALUES ('${directConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'clap');`), { expectFailure: true, label: 'invalid reaction type must be rejected' });
+    VALUES ('${directConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'clap');`), { expectFailure: true, expectedError: /violates check constraint/i, label: 'invalid reaction type must be rejected' });
   psql(asUser(b, `INSERT INTO public.user_message_stars(user_id, conversation_id, message_id)
-    VALUES ('${a}'::uuid, '${directConversationId}'::uuid, '${directMessageId}'::uuid);`), { expectFailure: true, label: 'star impersonation must be rejected' });
+    VALUES ('${a}'::uuid, '${directConversationId}'::uuid, '${directMessageId}'::uuid);`), { expectFailure: true, expectedError: /row-level security policy/i, label: 'star impersonation must be rejected' });
   psql(asUser(a, `INSERT INTO public.message_reactions(conversation_id, message_id, user_id, reaction_type)
-    VALUES ('${groupConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'like');`), { expectFailure: true, label: 'cross-conversation reaction reference must be rejected' });
+    VALUES ('${groupConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'like');`), { expectFailure: true, expectedError: /violates foreign key constraint/i, label: 'cross-conversation reaction reference must be rejected' });
   psql(asUser(a, `INSERT INTO public.user_message_stars(user_id, conversation_id, message_id)
-    VALUES ('${a}'::uuid, '${groupConversationId}'::uuid, '${directMessageId}'::uuid);`), { expectFailure: true, label: 'cross-conversation star reference must be rejected' });
+    VALUES ('${a}'::uuid, '${groupConversationId}'::uuid, '${directMessageId}'::uuid);`), { expectFailure: true, expectedError: /violates foreign key constraint/i, label: 'cross-conversation star reference must be rejected' });
   process.stdout.write('PASS: invalid reaction types, star impersonation, and cross-conversation references are rejected.\n');
 
   const directCount = psql(`SELECT count(*) FROM public.chat_messages WHERE conversation_id='${directConversationId}'::uuid;`).split(/\s+/).at(-1);
