@@ -56,16 +56,19 @@ In a disposable local Supabase database only:
    dependency replay in the DAG's topological order.
 3. After `chat.workspaces` and `chat.expiry-purge`, run
    `fixtures/local-platform-postconditions.assert.sql` to verify pgcrypto
-   function resolution and the expected pg_cron job definition. This does not
-   prove scheduler execution; that remains a separate runtime check.
-4. Apply `fixtures/direct-conversation-rpc.sql` to restore the authoritative
+   function resolution and the expected pg_cron job definition.
+4. Run `node tests/staging/local-supabase/local-pg-cron-runtime.mjs` to verify
+   that the local scheduler actually executes a temporary `SELECT 1` job.
+   The runner waits up to 90 seconds and removes only its own job and run
+   details. It is loopback-only and has not been executed.
+5. Apply `fixtures/direct-conversation-rpc.sql` to restore the authoritative
    function source and inspected ACL.
-5. Apply `fixtures/direct-conversation-rpc-eligibility-guard.sql` only after
+6. Apply `fixtures/direct-conversation-rpc-eligibility-guard.sql` only after
    the final membership-format migration.
-6. Run `fixtures/direct-conversation-eligibility-runtime.test.sql`. It checks
+7. Run `fixtures/direct-conversation-eligibility-runtime.test.sql`. It checks
    eligible success, caller/target rejection cases, self/null/unauthenticated
    boundaries, reuse, and RPC ACL inside a transaction that ends in ROLLBACK.
-7. Run `node tests/staging/local-supabase/direct-conversation-concurrency.mjs`
+8. Run `node tests/staging/local-supabase/direct-conversation-concurrency.mjs`
    with `LOCAL_SUPABASE_DB_URL` set to the disposable local
    `postgres@127.0.0.1:54322/postgres` URL. It launches two independent psql
    sessions in reversed participant order, requires one shared conversation
