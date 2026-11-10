@@ -60,7 +60,7 @@ SET LOCAL statement_timeout = '20s';
 SET LOCAL lock_timeout = '10s';
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '${caller}', true);
-SELECT pg_sleep(0.5);
+SELECT pg_sleep(1.5);
 SELECT public.get_or_create_direct_conversation('${target}'::uuid);
 COMMIT;`;
 }
