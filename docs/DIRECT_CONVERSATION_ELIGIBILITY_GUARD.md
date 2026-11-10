@@ -102,3 +102,8 @@ and non-postgres database users. It is not part of CI and has not been run.
 - No local SQL, cloud SQL, production SQL, or data mutation has been run.
 - Static contract tests do not constitute PostgreSQL runtime verification.
 - DAG-014/DAG-015 remain blockers until the disposable local runtime suite passes.
+
+
+### Disposable concurrency fixture lifecycle
+
+The membership/eligibility matrix is intentionally wrapped in a transaction and rolled back. Its temporary admin RPC promotions therefore do not survive. Immediately before the separate two-session concurrency probe, the local-only runner promotes only the two reserved synthetic accounts through the real admin RPCs using the synthetic admin identity. This is committed only inside the disposable PostgreSQL instance so the concurrency, CRUD, and Storage tests share a stable eligible pair. The temporary database is destroyed at workflow cleanup; no production profile or membership record is touched.
