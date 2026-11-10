@@ -58,14 +58,13 @@ ON CONFLICT (id) DO NOTHING;
 
 -- GoTrue password sign-in requires the matching email identity as well as auth.users.
 INSERT INTO auth.identities (
-  provider_id, user_id, identity_data, provider, email, created_at, updated_at
+  provider_id, user_id, identity_data, provider, created_at, updated_at
 )
 SELECT
   u.id::text,
   u.id,
   jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', u.email_confirmed_at IS NOT NULL),
   'email',
-  u.email,
   now(),
   now()
 FROM auth.users u
@@ -80,7 +79,6 @@ WHERE u.id IN (
 ON CONFLICT (provider_id, provider) DO UPDATE
 SET user_id = excluded.user_id,
     identity_data = excluded.identity_data,
-    email = excluded.email,
     updated_at = now();
 
 DO $assert$
