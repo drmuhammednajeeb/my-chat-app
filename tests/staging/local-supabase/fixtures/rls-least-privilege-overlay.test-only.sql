@@ -65,4 +65,42 @@ revoke execute on all functions in schema public from public, anon;
 revoke all on function public.guard_chat_message_content_update()
   from public, anon, authenticated, service_role;
 
+
+-- Add a restrictive membership gate in addition to each table's feature-specific
+-- permissive policy. PostgreSQL combines permissive policies with OR, so this
+-- restrictive guard prevents a later permissive policy from bypassing active status.
+do $public_restrictive_guard$
+declare
+  r record;
+begin
+  for r in
+    select c.relname
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind in ('r','p')
+      and c.relowner = 'postgres'::regrole
+      and c.relrowsecurity
+  loop
+    execute format(
+      'drop policy if exists %I on public.%I',
+      'Require active membership for all API operations',
+      r.relname
+    );
+    execute format(
+      'create policy %I on public.%I as restrictive for all to authenticated using ((select app_private.is_active_member())) with check ((select app_private.is_active_member()))',
+      'Require active membership for all API operations',
+      r.relname
+    );
+  end loop;
+end;
+$public_restrictive_guard$;
+
+-- Apply the same non-bypassable active-member boundary to Storage API operations.
+drop policy if exists "Require active membership for all Storage operations" on storage.objects;
+create policy "Require active membership for all Storage operations"
+on storage.objects as restrictive for all to authenticated
+using ((select app_private.is_active_member()))
+with check ((select app_private.is_active_member()));
+
 commit;
