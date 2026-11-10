@@ -18,7 +18,7 @@ The Supabase project named `my-chat-app` is active on PostgreSQL 17.11.0.018.
 - 24 base tables were observed in the `public` schema; all 24 had RLS enabled at the time of inspection.
 - The legacy `public.messages` table still exists. The table inventory reported zero rows. Do not drop it until all legacy references, backups, and application dependencies are formally retired.
 - The current schema includes profiles, conversations, conversation_members, chat_messages, notifications, reactions, pins, workspaces/documents, private reply contexts, user preferences/lists, and membership administration objects.
-- The remote migration ledger reports 60 applied migration records. This differs from the present source layout (10 CLI migration files plus 43 historical SQL files) and requires a version-by-version source-to-ledger reconciliation.
+- The live remote migration ledger returned 59 applied migration records. The current repository contains 10 CLI migration files plus 44 historical SQL files. The full mapping and unresolved source gaps are documented separately.
 
 ### Critical privilege findings
 
