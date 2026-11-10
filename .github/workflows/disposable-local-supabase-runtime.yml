@@ -5,6 +5,9 @@ on:
     branches:
       - "engineering/stability-css-extraction-20261109"
       - "fix/message-render-scope-20261110"
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
