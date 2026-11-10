@@ -54,10 +54,15 @@ if (manifest.mode !== 'DESIGN_ONLY'
   || manifest.execution?.cloudAllowed !== false
   || manifest.execution?.productionAllowed !== false
   || manifest.execution?.sqlExecuted !== false
+  || manifest.execution?.localStackStarted !== false
+  || manifest.execution?.networkEgressAllowed !== false
   || dag.executionAuthorized !== false
+  || dag.safety?.sqlExecutionEnabled !== false
+  || dag.safety?.supabaseStartupAuthorized !== false
   || dag.safety?.cloudConnectionsAllowed !== false
   || dag.safety?.productionDataAllowed !== false
-  || dag.safety?.canonicalSqlMutationAllowed !== false) {
+  || dag.safety?.canonicalSqlMutationAllowed !== false
+  || dag.safety?.costBearingResourcesAllowed !== false) {
   fail('the reviewed source manifests no longer match the fail-closed local-only contract');
 }
 
@@ -98,6 +103,12 @@ const env = {
 const seenSql = new Set();
 for (const node of manifest.candidateNodeOrder) {
   if (node.nodeId === 'security.least-privilege-overlay') {
+    for (const relative of node.testSources.filter(item => item.endsWith('.sql'))) {
+      if (seenSql.has(relative)) fail('SQL source is selected more than once: ' + relative);
+      const absolute = path.resolve(ROOT, relative);
+      if (!absolute.startsWith(ROOT + path.sep) || !fs.existsSync(absolute)) fail('SQL source is missing or escapes the repository: ' + relative);
+      seenSql.add(relative);
+    }
     run(process.execPath, [
       path.join(ROOT, 'tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs')
     ], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1' }, node.nodeId);
@@ -136,5 +147,7 @@ run(process.execPath, [
   LOCAL_SUPABASE_SERVICE_ROLE_KEY: process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY ?? ''
 }, 'storage-api-rls-runtime');
 
+const expectedSqlCount = manifest.sourceCoverage.mappedSources + manifest.sourceCoverage.testOnlySqlFixtures;
+if (seenSql.size !== expectedSqlCount) fail('executed SQL coverage mismatch: expected ' + expectedSqlCount + ', found ' + seenSql.size);
 console.log('LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED');
 console.log('LOCAL_SUPABASE_SQL_FILES_EXECUTED=' + seenSql.size);
