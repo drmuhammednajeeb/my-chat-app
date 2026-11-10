@@ -42,7 +42,7 @@ In a disposable local Supabase database only:
 - unverified membership number on either side: rejected;
 - malformed or missing membership number on either side: rejected;
 - unconfirmed email on either side: rejected;
-- unauthenticated caller, null target, and self-target: rejected;
+- target with no profile or no matching Auth user: rejected;\n- unauthenticated caller, null target, and self-target: rejected;
 - existing direct conversation is reused;
 - concurrent reversed-pair calls create exactly one direct conversation;
 - authenticated can call only the public wrapper, not the internal function;
