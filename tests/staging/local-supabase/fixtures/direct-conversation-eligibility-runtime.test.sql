@@ -1,7 +1,7 @@
 -- TEST ONLY: PostgreSQL runtime assertions for the direct-conversation eligibility overlay.
 -- Run only in the approved disposable local Supabase database after the full dependency replay.
 -- All data mutations and the test conversation are rolled back at the end.
--- Two-session reversed-pair concurrency is a separate required test and remains a release blocker.
+-- 24-session reversed-pair and concurrent-message stress is a separate required test and remains a release blocker.
 
 BEGIN;
 SELECT set_config('app.test.direct_a_id', :'direct_a_id', true);
