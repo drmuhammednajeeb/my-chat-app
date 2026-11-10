@@ -1,3 +1,4 @@
+'use strict';
 async function loadDirectory(reset=true){
  if(!state.user||(!reset&&state.directoryLoading))return;
  if(reset){state.directoryOffset=0;state.directoryUsers=[];state.directoryHasMore=false;state.directoryRequestId++}
