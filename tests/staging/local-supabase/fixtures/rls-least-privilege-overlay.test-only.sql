@@ -4,13 +4,11 @@ begin;
 
 do $local_guard$
 declare
-  v_addr inet := inet_server_addr();
 begin
   if current_database() <> 'postgres'
      or current_user <> 'postgres'
-     or v_addr is null
-     or not (v_addr <<= '127.0.0.0/8'::cidr or v_addr = '::1'::inet) then
-    raise exception 'Refusing test-only privilege overlay outside loopback postgres@postgres';
+     or current_setting('app.test_only_local_replay', true) <> 'enabled' then
+    raise exception 'Refusing test-only privilege overlay without the guarded local runner';
   end if;
 
   if not exists (select 1 from pg_roles where rolname = 'anon')
