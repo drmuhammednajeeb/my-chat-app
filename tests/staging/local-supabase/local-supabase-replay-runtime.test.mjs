@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { Script } from 'node:vm';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -54,6 +55,29 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
   ]) assert.ok(source.includes(token), 'missing replay safety/coverage token: ' + token);
   assert.match(source, /refusing non-local database target/i);
   assert.doesNotMatch(source, /supabase\.co|--remote|--linked/i);
+});
+
+test('clean chat core reset is destructive only inside the loopback disposable runner', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/clean-chat-core-runtime.mjs'), 'utf8');
+  const fixture = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/clean-chat-core-rebuild.test-only.sql'), 'utf8');
+  new Script(runner, { filename: 'clean-chat-core-runtime.mjs' });
+  for (const token of [
+    "url.port !== '54322'",
+    "url.username !== 'postgres'",
+    "ALLOW_DISPOSABLE_LOCAL_REPLAY",
+    'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
+    'public.get_or_create_direct_conversation',
+    'message_reactions',
+    'user_message_stars',
+    'direct_user_low',
+    'direct_user_high'
+  ]) assert.ok(runner.includes(token), 'missing clean core runtime safety/coverage token: ' + token);
+  assert.ok(fixture.includes("current_setting('app.test_only_local_replay', true) IS DISTINCT FROM 'enabled'"));
+  assert.ok(fixture.includes('TRUNCATE TABLE public.conversations CASCADE'));
+  assert.ok(fixture.includes('conversations_direct_pair_unique_idx'));
+  assert.ok(fixture.includes('message_reactions_conversation_message_v2_fkey'));
+  assert.ok(fixture.includes('user_message_stars_conversation_message_v2_fkey'));
+  assert.ok(fixture.includes('app_private.get_or_create_direct_conversation_impl'));
 });
 
 test('runtime workflow uses an isolated temporary project and pinned local CLI only', async () => {
