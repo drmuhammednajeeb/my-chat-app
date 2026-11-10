@@ -317,7 +317,7 @@ test('chat composer media types and reaction persistence constraints stay aligne
     assert.ok(migration.includes(mime), 'Storage allow-list is missing ' + mime);
   }
   for (const reaction of ['like', 'heart', 'wow', 'pray', 'fire', 'celebrate']) {
-    assert.match(html, new RegExp("type: ['\\\"]" + reaction + "['\\\"]"));
+    assert.match(html, new RegExp("type:\\s*['\\\"]" + reaction + "['\\\"]"));
     assert.ok(migration.includes("'" + reaction + "'"), 'database constraint is missing ' + reaction);
   }
   assert.match(html, /attachment_type\?\.startsWith\('video\/'\)/);

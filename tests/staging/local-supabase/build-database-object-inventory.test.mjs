@@ -5,7 +5,7 @@ import { buildObjectInventory } from './build-database-object-inventory.mjs';
 test('source inventory covers all known SQL files and remains read-only', async () => {
   const report = await buildObjectInventory();
   assert.equal(report.auditMode, 'READ_ONLY_SOURCE_INVENTORY');
-  assert.deepEqual(report.sourceCounts, { migrations: 10, historicalSql: 43, totalSqlFiles: 53, supabaseConfigPresent: false });
+  assert.deepEqual(report.sourceCounts, { migrations: 10, historicalSql: 44, totalSqlFiles: 54, supabaseConfigPresent: false });
   assert.ok(report.inventoryTotals.createdTables > 0);
   assert.ok(report.inventoryTotals.columns > 0);
   assert.ok(report.inventoryTotals.foreignKeys > 0);
