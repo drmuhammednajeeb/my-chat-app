@@ -15,6 +15,7 @@ function fail(message) {
   process.exit(1);
 }
 let syntheticAuthPassword = null;
+let syntheticAuthIds = null;
 
 async function provisionSyntheticDirectChatAuthUsers() {
   const rawApi = process.env.LOCAL_SUPABASE_URL;
@@ -22,7 +23,7 @@ async function provisionSyntheticDirectChatAuthUsers() {
   if (!rawApi || !serviceKey) fail('local Supabase API URL and service key are required for synthetic Auth provisioning');
   let api;
   try { api = new URL(rawApi); } catch { fail('invalid LOCAL_SUPABASE_URL for synthetic Auth provisioning'); }
-  const apiHost = api.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  const apiHost = api.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
   if (api.protocol !== 'http:'
     || !['127.0.0.1', 'localhost', '::1'].includes(apiHost)
     || api.port !== '54321'
@@ -32,17 +33,18 @@ async function provisionSyntheticDirectChatAuthUsers() {
   }
 
   syntheticAuthPassword = 'RlsRuntime-' + randomBytes(24).toString('hex') + '!aA9';
+  syntheticAuthIds = {};
   const users = [
-    { id: '22222222-2222-4222-8222-222222222201', email: 'direct-a@bizmindmakers.test', number: '971001000002', verified: true, confirmed: true, username: 'direct_a', displayName: 'Direct Test A' },
-    { id: '22222222-2222-4222-8222-222222222202', email: 'direct-b@bizmindmakers.test', number: '971001000003', verified: true, confirmed: true, username: 'direct_b', displayName: 'Direct Test B' },
-    { id: '22222222-2222-4222-8222-222222222203', email: 'direct-suspended@bizmindmakers.test', number: '971001000004', verified: true, confirmed: true, username: 'direct_suspended', displayName: 'Direct Test Suspended' },
-    { id: '22222222-2222-4222-8222-222222222204', email: 'direct-unverified@bizmindmakers.test', number: '971001000005', verified: false, confirmed: true, username: 'direct_unverified', displayName: 'Direct Test Unverified' },
-    { id: '22222222-2222-4222-8222-222222222205', email: 'direct-unconfirmed@bizmindmakers.test', number: '971001000006', verified: true, confirmed: false, username: 'direct_unconfirmed', displayName: 'Direct Test Unconfirmed' },
-    { id: '22222222-2222-4222-8222-222222222206', email: 'direct-missing-profile@bizmindmakers.test', number: '971001000007', verified: true, confirmed: true, username: 'direct_missing_profile', displayName: 'Direct Test Missing Profile' }
+    { key: 'direct_a', email: 'direct-a@bizmindmakers.test', number: '971001000002', verified: true, confirmed: true, username: 'direct_a', displayName: 'Direct Test A' },
+    { key: 'direct_b', email: 'direct-b@bizmindmakers.test', number: '971001000003', verified: true, confirmed: true, username: 'direct_b', displayName: 'Direct Test B' },
+    { key: 'direct_suspended', email: 'direct-suspended@bizmindmakers.test', number: '971001000004', verified: true, confirmed: true, username: 'direct_suspended', displayName: 'Direct Test Suspended' },
+    { key: 'direct_unverified', email: 'direct-unverified@bizmindmakers.test', number: '971001000005', verified: false, confirmed: true, username: 'direct_unverified', displayName: 'Direct Test Unverified' },
+    { key: 'direct_unconfirmed', email: 'direct-unconfirmed@bizmindmakers.test', number: '971001000006', verified: true, confirmed: false, username: 'direct_unconfirmed', displayName: 'Direct Test Unconfirmed' },
+    { key: 'direct_missing_profile', email: 'direct-missing-profile@bizmindmakers.test', number: '971001000007', verified: true, confirmed: true, username: 'direct_missing_profile', displayName: 'Direct Test Missing Profile' }
   ];
 
   for (const user of users) {
-    const response = await fetch(new URL('/auth/v1/admin/users/' + user.id, api.origin), {
+    const response = await fetch(new URL('/auth/v1/admin/users', api.origin), {
       method: 'POST',
       headers: {
         apikey: serviceKey,
@@ -73,9 +75,11 @@ async function provisionSyntheticDirectChatAuthUsers() {
       fail('GoTrue Admin API could not provision synthetic user ' + user.email
         + ' (HTTP ' + response.status + '): ' + bodyText.slice(0, 300));
     }
-    if (data?.id !== user.id) {
-      fail('GoTrue Admin API returned an unexpected identity for ' + user.email);
+    if (typeof data?.id !== 'string'
+      || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.id)) {
+      fail('GoTrue Admin API returned an invalid identity for ' + user.email);
     }
+    syntheticAuthIds[user.key] = data.id;
     console.log('LOCAL_AUTH_FIXTURE_PROVISIONED=' + user.email);
   }
 }
@@ -181,7 +185,7 @@ for (const node of manifest.candidateNodeOrder) {
     }
     run(process.execPath, [
       path.join(ROOT, 'tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs')
-    ], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1' }, node.nodeId);
+    ], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1', LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, node.nodeId);
     continue;
   }
 
@@ -193,13 +197,14 @@ for (const node of manifest.candidateNodeOrder) {
     if (!absolute.startsWith(ROOT + path.sep) || !fs.existsSync(absolute)) {
       fail('SQL source is missing or escapes the repository: ' + relative);
     }
-    run('psql', ['--no-psqlrc', '--set=ON_ERROR_STOP=1', '--file', absolute, raw], env, node.nodeId + ':' + relative);
+    const identityArgs = syntheticAuthIds ? Object.entries(syntheticAuthIds).map(([key, id]) => '--set=' + key + '_id=' + id) : [];
+    run('psql', ['--no-psqlrc', '--set=ON_ERROR_STOP=1', ...identityArgs, '--file', absolute, raw], env, node.nodeId + ':' + relative);
   }
 
   if (node.nodeId === 'test-fixture.direct-chat-concurrency') {
     run(process.execPath, [
       path.join(ROOT, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs')
-    ], env, node.nodeId);
+    ], { ...env, LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, node.nodeId);
   }
   if (node.nodeId === 'test-fixture.local-pg-cron-runtime') {
     run(process.execPath, [
@@ -214,7 +219,8 @@ run(process.execPath, [
   ...env,
   LOCAL_SUPABASE_URL: process.env.LOCAL_SUPABASE_URL ?? '',
   LOCAL_SUPABASE_ANON_KEY: process.env.LOCAL_SUPABASE_ANON_KEY ?? '',
-  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? ''
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? '',
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
 }, 'storage-api-rls-runtime');
 
 const expectedSqlCount = manifest.sourceCoverage.mappedSources + manifest.sourceCoverage.testOnlySqlFixtures;
