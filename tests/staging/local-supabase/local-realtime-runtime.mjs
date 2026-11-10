@@ -1,0 +1,166 @@
+#!/usr/bin/env node
+// Exercises the real local Supabase Auth + Realtime WebSocket + PostgREST path.
+// This runner is only valid against the disposable loopback stack created by CI.
+import { randomUUID } from 'node:crypto';
+import { createClient } from '@supabase/supabase-js';
+
+function fail(message) {
+  console.error('LOCAL_REALTIME_RUNTIME_BLOCKED=' + message);
+  process.exit(1);
+}
+
+const rawApi = process.env.LOCAL_SUPABASE_URL;
+const anonKey = process.env.LOCAL_SUPABASE_ANON_KEY;
+const password = process.env.LOCAL_SYNTHETIC_AUTH_PASSWORD;
+let api;
+try { api = new URL(rawApi); } catch { fail('invalid local Supabase API URL'); }
+const host = api.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+if (api.protocol !== 'http:' || !['127.0.0.1', 'localhost', '::1'].includes(host)
+  || api.port !== '54321' || api.pathname !== '/' || api.username || api.password || api.search || api.hash) {
+  fail('refusing non-loopback Supabase API target');
+}
+if (!anonKey || !password) fail('local anon key and synthetic Auth password are required');
+
+let users;
+try { users = JSON.parse(process.env.LOCAL_SYNTHETIC_AUTH_USERS_JSON || '{}'); } catch { fail('invalid synthetic Auth identity map'); }
+for (const key of ['direct_a', 'direct_b', 'direct_c']) {
+  if (typeof users[key] !== 'string') fail('missing synthetic identity ' + key);
+}
+
+const makeClient = () => createClient(api.origin, anonKey, {
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  realtime: { params: { eventsPerSecond: 20 } }
+});
+const clientA = makeClient();
+const clientC = makeClient();
+const events = [];
+const waiters = [];
+
+function record(event) {
+  events.push(event);
+  for (let i = waiters.length - 1; i >= 0; i -= 1) {
+    const waiter = waiters[i];
+    if (!waiter.predicate(event)) continue;
+    waiters.splice(i, 1);
+    clearTimeout(waiter.timer);
+    waiter.resolve(event);
+  }
+}
+function waitForEvent(predicate, label, timeoutMs = 10000) {
+  const existing = events.find(predicate);
+  if (existing) return Promise.resolve(existing);
+  return new Promise((resolve, reject) => {
+    const waiter = { predicate, resolve, timer: null };
+    waiter.timer = setTimeout(() => {
+      const index = waiters.indexOf(waiter);
+      if (index >= 0) waiters.splice(index, 1);
+      reject(new Error('Timed out waiting for Realtime event: ' + label));
+    }, timeoutMs);
+    waiters.push(waiter);
+  });
+}
+async function signIn(client, email) {
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  if (error || !data?.session?.access_token) throw new Error('Synthetic Auth sign-in failed for ' + email + ': ' + (error?.message || 'no session'));
+  return data.user.id;
+}
+async function createDirect(client, otherUserId) {
+  const { data, error } = await client.rpc('get_or_create_direct_conversation', { p_other_user_id: otherUserId });
+  if (error || typeof data !== 'string') throw new Error('Direct conversation RPC failed: ' + (error?.message || 'invalid conversation ID'));
+  return data;
+}
+async function subscribeToConversation(client, conversationId) {
+  const channel = client.channel('clean-core-realtime:' + conversationId + ':' + randomUUID());
+  channel.on('postgres_changes', {
+    event: '*', schema: 'public', table: 'chat_messages',
+    filter: 'conversation_id=eq.' + conversationId
+  }, payload => record({ kind: 'message', conversationId, payload }));
+  channel.on('postgres_changes', {
+    event: '*', schema: 'public', table: 'message_reactions',
+    filter: 'conversation_id=eq.' + conversationId
+  }, payload => record({ kind: 'reaction', conversationId, payload }));
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Realtime subscription timed out for ' + conversationId)), 12000);
+    channel.subscribe(status => {
+      if (status === 'SUBSCRIBED') { clearTimeout(timer); resolve(); }
+      if (['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) { clearTimeout(timer); reject(new Error('Realtime subscription failed: ' + status)); }
+    });
+  });
+  return channel;
+}
+async function insertMessage(client, conversationId, senderId, content) {
+  const id = randomUUID();
+  const { error } = await client.from('chat_messages').insert({
+    id, conversation_id: conversationId, sender_id: senderId, content
+  });
+  if (error) throw new Error('Authenticated message insert failed: ' + error.message);
+  return id;
+}
+
+let channel = null;
+let secondConversationId = null;
+try {
+  const userA = await signIn(clientA, 'direct-a@bizmindmakers.test');
+  await signIn(clientC, 'direct-c@bizmindmakers.test');
+  const directConversationId = await createDirect(clientA, users.direct_b);
+  secondConversationId = await createDirect(clientA, users.direct_c);
+
+  channel = await subscribeToConversation(clientA, directConversationId);
+  const firstMessageId = await insertMessage(clientA, directConversationId, userA, 'local realtime delivery probe');
+  const delivered = await waitForEvent(
+    event => event.kind === 'message' && event.conversationId === directConversationId
+      && event.payload.eventType === 'INSERT' && event.payload.new?.id === firstMessageId,
+    'authenticated chat_messages INSERT'
+  );
+  if (delivered.payload.new.conversation_id !== directConversationId) throw new Error('Realtime delivered a message with the wrong conversation ID');
+  console.log('PASS: authenticated local Realtime delivered a new message over WebSocket.');
+
+  const secondMessageId = await insertMessage(clientA, secondConversationId, userA, 'cross-conversation isolation probe');
+  await new Promise(resolve => setTimeout(resolve, 900));
+  if (events.some(event => event.kind === 'message' && event.payload.new?.id === secondMessageId)) {
+    throw new Error('Realtime leaked a message from another conversation into the subscribed channel');
+  }
+  console.log('PASS: conversation-filtered Realtime did not deliver an unrelated conversation message.');
+
+  const { data: unauthorizedRows, error: unauthorizedError } = await clientC
+    .from('chat_messages').select('id').eq('conversation_id', directConversationId);
+  if (unauthorizedError) throw new Error('Non-member read probe failed unexpectedly: ' + unauthorizedError.message);
+  if ((unauthorizedRows || []).length !== 0) throw new Error('Non-member user read messages from a conversation they do not belong to');
+  console.log('PASS: authenticated non-member cannot read the subscribed conversation through PostgREST.');
+
+  const reactionId = randomUUID();
+  const { error: reactionError } = await clientA.from('message_reactions').insert({
+    conversation_id: directConversationId,
+    message_id: firstMessageId,
+    user_id: userA,
+    reaction_type: 'heart'
+  });
+  if (reactionError) throw new Error('Authenticated reaction insert failed: ' + reactionError.message);
+  const reactionEvent = await waitForEvent(
+    event => event.kind === 'reaction' && event.payload.eventType === 'INSERT'
+      && event.payload.new?.message_id === firstMessageId && event.payload.new?.reaction_type === 'heart',
+    'authenticated message_reactions INSERT'
+  );
+  if (reactionEvent.payload.new.conversation_id !== directConversationId) throw new Error('Reaction event conversation mismatch');
+  console.log('PASS: authenticated local Realtime delivered a message reaction event.');
+
+  await channel.unsubscribe();
+  channel = null;
+  const missedMessageId = await insertMessage(clientA, directConversationId, userA, 'reconnect reconciliation probe');
+  channel = await subscribeToConversation(clientA, directConversationId);
+  const { data: reconciled, error: reconcileError } = await clientA.from('chat_messages')
+    .select('id,conversation_id').eq('conversation_id', directConversationId).eq('id', missedMessageId).maybeSingle();
+  if (reconcileError || reconciled?.id !== missedMessageId || reconciled?.conversation_id !== directConversationId) {
+    throw new Error('Post-reconnect canonical query did not recover the missed message: ' + (reconcileError?.message || 'row missing'));
+  }
+  console.log('PASS: after a real channel disconnect/re-subscribe, canonical Postgres reconciliation recovered the missed message.');
+  console.log('LOCAL_REALTIME_RUNTIME=PASSED');
+} catch (error) {
+  console.error('LOCAL_REALTIME_RUNTIME=FAILED');
+  console.error(error?.stack || error);
+  process.exitCode = 1;
+} finally {
+  if (channel) await channel.unsubscribe().catch(() => {});
+  await Promise.all([clientA.removeAllChannels(), clientC.removeAllChannels()]);
+  await Promise.all([clientA.auth.signOut(), clientC.auth.signOut()]);
+}
