@@ -86,7 +86,8 @@
         "platform.auth",
         "platform.storage",
         "platform.realtime",
-        "legacy.messages"
+        "legacy.messages",
+        "test-fixture.local-platform-preflight"
       ],
       "testSource": [
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
@@ -973,6 +974,46 @@
         "DAG-015"
       ],
       "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production."
+    },
+    {
+      "id": "test-fixture.local-platform-preflight",
+      "source": [
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
+      ],
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_NOT_EXECUTED",
+      "provides": [
+        "read-only assertions for local Supabase Auth, Storage, Realtime, roles, pgcrypto placement, and pg_cron availability"
+      ],
+      "requires": [
+        "platform.auth",
+        "platform.storage",
+        "platform.realtime",
+        "platform.pgcrypto",
+        "platform.pg_cron"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
+      ],
+      "note": "Run only after the disposable local stack starts and before application SQL replay. It performs catalog reads and raises on missing prerequisites; it never installs extensions or mutates data."
+    },
+    {
+      "id": "test-fixture.local-platform-postflight",
+      "source": [
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
+      ],
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_POSTFLIGHT_NOT_EXECUTED",
+      "provides": [
+        "read-only assertions for pgcrypto function schema and the expected pg_cron purge job definition"
+      ],
+      "requires": [
+        "test-fixture.local-platform-preflight",
+        "chat.workspaces",
+        "chat.expiry-purge"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
+      ],
+      "note": "Run only after the relevant disposable-local replay nodes. Confirms extension placement and job definition, not actual scheduler execution."
     }
   ],
   "explicitEdges": [
@@ -1563,6 +1604,42 @@
     [
       "chat.direct-conversation-rpc-eligibility-guard",
       "test-fixture.direct-chat-concurrency"
+    ],
+    [
+      "platform.auth",
+      "test-fixture.local-platform-preflight"
+    ],
+    [
+      "platform.storage",
+      "test-fixture.local-platform-preflight"
+    ],
+    [
+      "platform.realtime",
+      "test-fixture.local-platform-preflight"
+    ],
+    [
+      "platform.pgcrypto",
+      "test-fixture.local-platform-preflight"
+    ],
+    [
+      "platform.pg_cron",
+      "test-fixture.local-platform-preflight"
+    ],
+    [
+      "test-fixture.local-platform-preflight",
+      "core.base"
+    ],
+    [
+      "test-fixture.local-platform-preflight",
+      "test-fixture.local-platform-postflight"
+    ],
+    [
+      "chat.workspaces",
+      "test-fixture.local-platform-postflight"
+    ],
+    [
+      "chat.expiry-purge",
+      "test-fixture.local-platform-postflight"
     ]
   ],
   "blockers": [
@@ -1627,7 +1704,9 @@
       "severity": "REVIEW_REQUIRED",
       "evidence": [
         "database/changes/private_channels_with_secure_invites.sql",
-        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+        "database/changes/20261107134500_conversation_workspaces_private_documents.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
       "issue": "Verify pgcrypto extension schema and extensions.digest / extensions.gen_random_bytes resolution locally."
     },
@@ -1635,7 +1714,9 @@
       "id": "DAG-008",
       "severity": "REVIEW_REQUIRED",
       "evidence": [
-        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+        "database/changes/20261107130851_schedule_expired_group_message_purge.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
       "issue": "Verify local pg_cron availability and job behavior before inclusion."
     },
@@ -1652,7 +1733,8 @@
       "id": "DAG-010",
       "severity": "REVIEW_REQUIRED",
       "evidence": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
       ],
       "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
     },
