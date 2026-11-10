@@ -17,6 +17,8 @@ test('synthetic Auth identities are seeded before membership triggers without by
   const dag = JSON.parse(dagText);
   assert.match(authSeed, /TEST ONLY/i);
   assert.match(authSeed, /INSERT INTO auth\.users/i);
+  assert.match(authSeed, /id, instance_id, aud, role, email, encrypted_password/i);
+  assert.equal((authSeed.match(/'00000000-0000-0000-0000-000000000000'::uuid/g) || []).length, 6);
   const identityStart = authSeed.indexOf('INSERT INTO auth.identities');
   const identityEnd = authSeed.indexOf('DO ', identityStart);
   assert.ok(identityStart >= 0 && identityEnd > identityStart);
