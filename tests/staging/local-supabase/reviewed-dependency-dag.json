@@ -1052,12 +1052,13 @@
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
-        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Manual runtime runner is loopback-only and applies the test overlay, read-only catalog postconditions, then rollback-only CRUD/RPC tests for message creation/edit audit, chat-list and starred-message upserts, and cross-user isolation. The runtime has not been executed."
+      "note": "Manual runtime runner is loopback-only and applies the test overlay, read-only catalog postconditions, then rollback-only CRUD/RPC tests for message creation/edit audit, chat-list and starred-message upserts, and cross-user isolation. The runtime has not been executed. A separate loopback-only Storage API probe exercises chat-media uploader-folder spoof denial, private/shared conversation-document signed reads, owner-only delete, avatar upsert, and public avatar delivery; it requires local Auth and Storage services and has not been executed."
     }
   ],
   "explicitEdges": [
@@ -1818,7 +1819,8 @@
       "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
       "evidence": [
         "index.html",
-        "database/changes/20261107080000_chat_voice_messages.sql"
+        "database/changes/20261107080000_chat_voice_messages.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
       ],
       "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
     },
@@ -1860,7 +1862,8 @@
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "docs/RLS_LEAST_PRIVILEGE_HARDENING.md",
-        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
       ],
       "issue": "Read-only production catalog inspection found postgres-owned public-schema default ACLs granting all table/sequence privileges and function EXECUTE to anon/authenticated. Existing app tables consequently expose non-RLS privileges (including TRUNCATE, REFERENCES, TRIGGER and PostgreSQL 17+ MAINTAIN) and unnecessary direct DML. A loopback-only test overlay and read-only postconditions are prepared; neither has been executed. Production remains unchanged until local CRUD compatibility, RPC grants, and default-ACL behavior pass runtime tests."
     }
