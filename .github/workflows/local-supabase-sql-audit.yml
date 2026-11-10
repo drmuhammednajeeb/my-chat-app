@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: local-sql-audit-\${{ github.ref }}
+  group: local-sql-audit-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -34,7 +34,8 @@ jobs:
             tests/staging/local-supabase/bootstrap-guard.test.mjs \
             tests/staging/local-supabase/build-database-object-inventory.test.mjs \
             tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs \
-            tests/staging/local-supabase/reviewed-dependency-dag.test.mjs
+            tests/staging/local-supabase/reviewed-dependency-dag.test.mjs \
+            tests/workspace-load-race.test.mjs
       - name: Generate repository SQL object inventory
         run: |
           node tests/staging/local-supabase/build-database-object-inventory.mjs > "$RUNNER_TEMP/database-object-inventory.json"
