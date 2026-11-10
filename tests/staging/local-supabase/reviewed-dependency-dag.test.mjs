@@ -165,7 +165,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 16);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 18);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
@@ -277,4 +277,24 @@ test('local platform preflight and postflight are read-only, ordered, and fail c
   assert.ok(postNode.requires.includes(preNode.id));
   assert.equal(dag.executionAuthorized, false);
   assert.equal(dag.safety.sqlExecutionEnabled, false);
+});
+
+
+test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', async () => {
+  const overlay = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql'), 'utf8');
+  const assertion = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql'), 'utf8');
+  assert.match(overlay, /TEST-ONLY/i);
+  assert.match(overlay, /inet_server_addr\(\)/i);
+  assert.match(overlay, /127\.0\.0\.0\/8/);
+  assert.match(overlay, /REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM public, anon/i);
+  assert.match(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public/i);
+  assert.match(assertion, /relrowsecurity/);
+  assert.match(assertion, /is_active_member/);
+  assert.match(assertion, /pg_default_acl/);
+  const node = JSON.parse(await readFile(dagPath, 'utf8')).nodes.find(item => item.id === 'security.least-privilege-overlay');
+  assert.ok(node);
+  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED');
+  assert.ok(node.requires.includes('membership.final-format'));
+  assert.ok(node.blockedBy.includes('DAG-016'));
+  assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
 });
