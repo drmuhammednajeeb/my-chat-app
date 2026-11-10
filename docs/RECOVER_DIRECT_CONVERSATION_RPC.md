@@ -39,9 +39,9 @@ order by n.nspname, p.proname, pg_get_function_identity_arguments(p.oid);
 
 1. Confirm the public RPC argument name and return type match the browser call.
 2. Confirm the internal implementation signature matches the hardening migration.
-3. Review authorization, active-membership checks, target-user validation, transaction behavior, and duplicate-conversation handling.
-4. Restore the authoritative source into a new test-only SQL copy and record its source provenance and SHA-256.
-5. Add regression tests for concurrent creation, self-chat/invalid targets, inactive members, and existing conversation reuse.
+3. Review authorization, target-user validation, transaction behavior, and duplicate-conversation handling. The recovered function checks `auth.uid()` and target-profile existence, but does **not** contain an explicit active-membership predicate; review where membership eligibility is enforced before approving runtime behavior.
+4. Restore the authoritative source into a test-only SQL copy and record its source provenance and SHA-256.
+5. Add regression tests for concurrent creation, unauthenticated/null/self/missing-profile targets, exact function ACLs, and existing conversation reuse. Test active-membership gating separately after its intended enforcement point is established.
 6. Only then reconsider enabling the local PostgreSQL replay.
 
 **This is a source-recovery request only. It is not permission to modify the deployed database.**
