@@ -7,7 +7,7 @@
     "mappedSources": 50,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 14,
+    "testOnlySqlFixtures": 16,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
@@ -18,6 +18,8 @@
       "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
       "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
       "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
+      "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
+      "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
@@ -44,6 +46,15 @@
       ],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.local-platform-preflight",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_NOT_EXECUTED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Run only after the disposable local stack starts and before application SQL replay. It performs catalog reads and raises on missing prerequisites; it never installs extensions or mutates data."
     },
     {
       "nodeId": "core.base",
@@ -367,6 +378,15 @@
       ],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.local-platform-postflight",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_POSTFLIGHT_NOT_EXECUTED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Run only after the relevant disposable-local replay nodes. Confirms extension placement and job definition, not actual scheduler execution."
     },
     {
       "nodeId": "chat.team-admin-group-overrides",
