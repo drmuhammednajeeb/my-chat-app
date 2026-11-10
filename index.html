@@ -1652,7 +1652,8 @@ function handleMessageDeleteRealtime(payload,conversationId){
  state.replyMessages?.delete(deletedId);
  const row=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===deletedId);
  if(row)row.remove();
- reconcileMessageTimeline($('messages'));
+ const area=$('messages');reconcileMessageTimeline(area);
+ if(!state.messages.length)area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>';
  const conversation=state.conversations.find(item=>item.id===conversationId);
  if(conversation?.last_message?.id===deletedId)loadConversations().catch(error=>console.warn('Conversation preview refresh failed:',error));
  return true;
