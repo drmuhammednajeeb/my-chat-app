@@ -2,6 +2,7 @@
 // Disposable-local Supabase Storage API RLS integration probe.
 // Requires the fully replayed synthetic local Auth/profile fixtures and RLS overlay.
 import { randomBytes, randomUUID } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 
 function fail(message) {
   console.error('STORAGE_RLS_RUNTIME_BLOCKED=' + message);
@@ -106,9 +107,25 @@ async function login(user) {
   return result.access_token;
 }
 async function setPassword(user) {
-  assertOk(await call('/auth/v1/admin/users/' + user.id, {
-    method: 'PUT', key: serviceKey, token: serviceKey, body: { password }
-  }), 'set local synthetic password ' + user.email);
+  // Synthetic identities are seeded by SQL into auth.users. Set a random password
+  // in the same disposable database instead of depending on GoTrue to discover
+  // rows inserted after its startup. The replay runner has already enforced
+  // a loopback-only database URL before invoking this probe.
+  if (!/^[0-9a-f-]{36}$/i.test(user.id) || !/^[A-Za-z0-9!]+$/.test(password)) {
+    throw new Error('refusing unsafe synthetic Auth password setup input');
+  }
+  const sql = "UPDATE auth.users SET encrypted_password = crypt('" + password
+    + "', gen_salt('bf')), updated_at = now() WHERE id = '" + user.id
+    + "'::uuid RETURNING id";
+  const result = spawnSync('psql', [
+    '--no-psqlrc', '--set=ON_ERROR_STOP=1', '--tuples-only', '--no-align',
+    '--command', sql, required('LOCAL_SUPABASE_DB_URL')
+  ], { encoding: 'utf8', timeout: 15000, env: process.env });
+  if (result.error) throw result.error;
+  if (result.status !== 0 || !String(result.stdout || '').includes(user.id)) {
+    throw new Error('set disposable synthetic password failed for ' + user.email
+      + ': ' + String(result.stderr || result.stdout || 'Auth seed row not found').slice(0, 400));
+  }
 }
 async function rest(path, token, method = 'GET', body, prefer = null) {
   return call('/rest/v1/' + path, {
