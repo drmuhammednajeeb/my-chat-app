@@ -47,7 +47,7 @@ const db = localDatabaseUrl();
 // The preceding eligibility matrix is intentionally rollback-only. Promote only the
 // two reserved synthetic users in this disposable database so concurrency and later
 // CRUD/Storage probes have a stable eligible pair for their own transactions.
-await psql(db, `BEGIN;\nSET LOCAL statement_timeout = '20s';\nSET LOCAL lock_timeout = '10s';\nSET LOCAL ROLE authenticated;\nSELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);\nSELECT public.admin_set_member_official_number('22222222-2222-4222-8222-222222222201', '971001000002');\nSELECT public.admin_set_member_official_number('22222222-2222-4222-8222-222222222202', '971001000003');\nCOMMIT;`);
+await psql(db, `BEGIN;\nSET LOCAL statement_timeout = '20s';\nSET LOCAL lock_timeout = '10s';\nSET LOCAL ROLE authenticated;\nSELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);\nSELECT public.admin_set_member_official_number('${callerA}', '971001000002');\nSELECT public.admin_set_member_official_number('${callerB}', '971001000003');\nCOMMIT;`);
 
 const eligibleSql = `SELECT count(*)::text
 FROM public.profiles p
