@@ -65,6 +65,10 @@ test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL
   assert.match(sql.trimEnd(), /ROLLBACK;$/);
   assert.match(sql, /public\.admin_set_member_official_number/);
   assert.match(sql, /public\.admin_update_membership_status/);
+  assert.match(sql, /DO \$membership_format\$/);
+  assert.match(sql, /profiles_membership_number_official_format/);
+  assert.match(sql, /member_invitation_number_format/);
+  assert.match(sql, /Invalid official membership number was accepted/);
   assert.match(sql, /public\.get_or_create_direct_conversation/);
   assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
   for (const label of [
