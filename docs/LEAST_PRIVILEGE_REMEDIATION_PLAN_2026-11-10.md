@@ -28,7 +28,7 @@ Other tables have narrower, explicitly granted privileges; those must be retaine
 
 ### Default privileges — critical
 
-The current `public` schema default ACLs for **both** object creators `postgres` and `supabase_admin` include:
+The current `public` schema default ACLs for both object creators `postgres` and `supabase_admin` include:
 
 | Object type | Default privileges granted to `anon` and `authenticated` |
 |---|---|
@@ -36,7 +36,7 @@ The current `public` schema default ACLs for **both** object creators `postgres`
 | Sequences | `rwU` — SELECT, UPDATE and USAGE |
 | Functions | `X` — EXECUTE |
 
-The earlier local-only overlay revoked default privileges for `postgres` but did not cover `supabase_admin`. The security-test branch now adds both-owner coverage and a local preflight assertion that the `supabase_admin` role exists. This change is test-only until the updated CI run passes.
+The production role inventory confirms `postgres` is not a member of `supabase_admin`; `supabase_admin` is a separate superuser. All 24 public tables, 20 public functions, and 2 public sequences inspected are owned by `postgres`. Therefore the actionable application default-ACL target is `postgres`. The local-only overlay must not attempt to alter `supabase_admin` defaults or grant role membership to `postgres`; it instead asserts that public application objects remain owned by `postgres` and leaves platform-owned defaults untouched.
 
 ### Function execution ACLs
 
@@ -132,9 +132,9 @@ The existing local-only overlay and assertions already test:
 - Rollback-only CRUD/upsert compatibility for chat lists, stars, message edits, and cross-user isolation.
 
 The new security branch extends this coverage to:
-- `supabase_admin` default ACLs, in addition to `postgres`.
 - Trigger function EXECUTE ACLs across `public` and `app_private`.
-- Local platform preflight verification that `supabase_admin` exists.
+- Local platform preflight verification that `supabase_admin` exists, while explicitly leaving its platform-owned default ACL untouched.
+- A catalog assertion that public application tables, sequences, and functions are owned by the approved `postgres` migration role.
 
 **The updated branch has not yet passed CI.** Do not treat these added checks as verified until the workflow completes successfully.
 
