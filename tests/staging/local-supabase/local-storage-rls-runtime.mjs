@@ -16,7 +16,6 @@ function required(name) {
 
 const base = required('LOCAL_SUPABASE_URL').replace(/\/$/, '');
 const anonKey = required('LOCAL_SUPABASE_ANON_KEY');
-const serviceKey = required('LOCAL_SUPABASE_SERVICE_ROLE_KEY');
 let endpoint;
 try { endpoint = new URL(base); } catch { fail('invalid LOCAL_SUPABASE_URL'); }
 const host = endpoint.hostname.replace(/^\[|\]$/g, '').toLowerCase();
