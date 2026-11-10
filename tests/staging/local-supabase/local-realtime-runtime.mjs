@@ -74,11 +74,11 @@ async function createDirect(client, otherUserId) {
 async function subscribeToConversation(client, conversationId) {
   const channel = client.channel('clean-core-realtime:' + conversationId + ':' + randomUUID());
   channel.on('postgres_changes', {
-    event: '*', schema: 'public', table: 'chat_messages',
+    event: 'INSERT', schema: 'public', table: 'chat_messages',
     filter: 'conversation_id=eq.' + conversationId
   }, payload => record({ kind: 'message', conversationId, payload }));
   channel.on('postgres_changes', {
-    event: '*', schema: 'public', table: 'message_reactions',
+    event: 'INSERT', schema: 'public', table: 'message_reactions',
     filter: 'conversation_id=eq.' + conversationId
   }, payload => record({ kind: 'reaction', conversationId, payload }));
   await new Promise((resolve, reject) => {
@@ -114,6 +114,9 @@ try {
   channel = await subscribeToConversation(clientA, directConversationId);
   console.log('LOCAL_REALTIME_STEP=insert-and-await-message-event');
   const firstMessageId = await insertMessage(clientA, directConversationId, userA, 'local realtime delivery probe');
+  const { data: persistedMessage, error: persistedMessageError } = await clientA.from('chat_messages').select('id,conversation_id').eq('conversation_id', directConversationId).eq('id', firstMessageId).maybeSingle();
+  if (persistedMessageError || persistedMessage?.id !== firstMessageId) throw new Error('PostgREST could not read the just-inserted message: ' + (persistedMessageError?.message || 'row missing'));
+  console.log('PASS: authenticated PostgREST insert and read are consistent before Realtime delivery.');
   const delivered = await waitForEvent(
     event => event.kind === 'message' && event.conversationId === directConversationId
       && event.payload.eventType === 'INSERT' && event.payload.new?.id === firstMessageId,
