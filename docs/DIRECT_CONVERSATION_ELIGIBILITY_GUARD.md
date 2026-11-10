@@ -47,16 +47,25 @@ The Auth and profile fixtures deliberately straddle membership-trigger creation:
 
 In a disposable local Supabase database only:
 
-1. Complete the reviewed base, feature, membership, Auth, Storage, and Realtime
-   dependency replay.
-2. Apply `fixtures/direct-conversation-rpc.sql` to restore the authoritative
+1. Start only the isolated local Supabase stack after the bootstrap plan is
+   formally approved. Before any application SQL, run
+   `fixtures/local-platform-prerequisites.assert.sql`; it is read-only and
+   verifies managed schemas/roles, Auth/Storage/Realtime objects, pgcrypto's
+   `extensions` placement, and pg_cron availability.
+2. Complete the reviewed base, feature, membership, Auth, Storage, and Realtime
+   dependency replay in the DAG's topological order.
+3. After `chat.workspaces` and `chat.expiry-purge`, run
+   `fixtures/local-platform-postconditions.assert.sql` to verify pgcrypto
+   function resolution and the expected pg_cron job definition. This does not
+   prove scheduler execution; that remains a separate runtime check.
+4. Apply `fixtures/direct-conversation-rpc.sql` to restore the authoritative
    function source and inspected ACL.
-3. Apply `fixtures/direct-conversation-rpc-eligibility-guard.sql` only after
+5. Apply `fixtures/direct-conversation-rpc-eligibility-guard.sql` only after
    the final membership-format migration.
-4. Run `fixtures/direct-conversation-eligibility-runtime.test.sql`. It checks
+6. Run `fixtures/direct-conversation-eligibility-runtime.test.sql`. It checks
    eligible success, caller/target rejection cases, self/null/unauthenticated
    boundaries, reuse, and RPC ACL inside a transaction that ends in ROLLBACK.
-5. Run `node tests/staging/local-supabase/direct-conversation-concurrency.mjs`
+7. Run `node tests/staging/local-supabase/direct-conversation-concurrency.mjs`
    with `LOCAL_SUPABASE_DB_URL` set to the disposable local
    `postgres@127.0.0.1:54322/postgres` URL. It launches two independent psql
    sessions in reversed participant order, requires one shared conversation
