@@ -284,8 +284,10 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
   const overlay = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql'), 'utf8');
   const assertion = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql'), 'utf8');
   assert.match(overlay, /TEST-ONLY/i);
-  assert.match(overlay, /inet_server_addr\(\)/i);
-  assert.match(overlay, /127\.0\.0\.0\/8/);
+  assert.match(overlay, /app\.test_only_local_replay/i);
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs'), 'utf8');
+  assert.match(runner, /url\.port !== '54322'/);
+  assert.match(runner, /refusing non-local database target/i);
   assert.match(overlay, /REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM public, anon/i);
   assert.match(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public/i);
   assert.match(assertion, /relrowsecurity/);
