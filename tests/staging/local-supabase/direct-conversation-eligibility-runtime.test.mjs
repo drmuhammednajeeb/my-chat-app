@@ -85,7 +85,7 @@ test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL
   assert.match(sql, /:'direct_a_id'/);
   assert.doesNotMatch(sql, /22222222-2222-4222-8222-22222222220[1-6]/);
   assert.match(sql, /SET LOCAL statement_timeout = '30s'/);
-  assert.match(sql, /SET LOCAL lock_timeout = '30s'/);
+  assert.match(sql, /SET LOCAL lock_timeout = '10s'/);
   assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
   for (const label of [
     'suspended target', 'suspended caller', 'unverified target', 'unverified caller',
@@ -134,7 +134,7 @@ test('runtime fixture remains design-only and cannot authorize local/cloud execu
   assert.equal(manifest.execution.productionAllowed, false);
 });
 
-test('two-session concurrency runner is restricted to disposable loopback PostgreSQL', async () => {
+test('multi-session concurrency and message stress runner is restricted to disposable loopback PostgreSQL', async () => {
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8');
   assert.match(runner, /LOCAL_SUPABASE_DB_URL/);
   assert.match(runner, /const eligibleSql/);
@@ -147,7 +147,7 @@ test('two-session concurrency runner is restricted to disposable loopback Postgr
   assert.match(runner, /url\.port !== '54322'/);
   assert.match(runner, /url\.username !== 'postgres'/);
   assert.match(runner, /Promise\.allSettled/);
-  assert.match(runner, /pg_sleep\(1\.5\)/);
+  assert.match(runner, /pg_sleep\(0\.25\)/);
   assert.match(runner, /SELECT count\(\*\)::text FROM public\.conversations/);
   assert.match(runner, /callSql\(callerA, callerB\)/);
   assert.match(runner, /callSql\(callerB, callerA\)/);
