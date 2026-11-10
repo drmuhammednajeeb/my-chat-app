@@ -132,6 +132,8 @@ try {
     VALUES ('${directConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'clap');`), { expectFailure: true, expectedError: /violates check constraint/i, label: 'invalid reaction type must be rejected' });
   psql(asUser(b, `INSERT INTO public.user_message_stars(user_id, conversation_id, message_id)
     VALUES ('${a}'::uuid, '${directConversationId}'::uuid, '${directMessageId}'::uuid);`), { expectFailure: true, expectedError: /row-level security policy/i, label: 'star impersonation must be rejected' });
+  psql(`DELETE FROM public.message_reactions WHERE message_id='${directMessageId}'::uuid AND user_id='${a}'::uuid;
+    DELETE FROM public.user_message_stars WHERE message_id='${directMessageId}'::uuid AND user_id='${a}'::uuid;`);
   psql(`INSERT INTO public.message_reactions(conversation_id, message_id, user_id, reaction_type)
     VALUES ('${groupConversationId}'::uuid, '${directMessageId}'::uuid, '${a}'::uuid, 'like');`, { expectFailure: true, expectedError: /violates foreign key constraint/i, label: 'cross-conversation reaction reference must be rejected' });
   psql(`INSERT INTO public.user_message_stars(user_id, conversation_id, message_id)
