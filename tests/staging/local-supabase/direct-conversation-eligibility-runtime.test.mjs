@@ -15,18 +15,13 @@ test('synthetic Auth identities are seeded before membership triggers without by
     readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8')
   ]);
   const dag = JSON.parse(dagText);
-  assert.match(authSeed, /TEST ONLY/i);
-  assert.match(authSeed, /INSERT INTO auth\.users/i);
-  assert.match(authSeed, /id, instance_id, aud, role, email, encrypted_password/i);
-  assert.equal((authSeed.match(/'00000000-0000-0000-0000-000000000000'::uuid/g) || []).length, 6);
-  const identityStart = authSeed.indexOf('INSERT INTO auth.identities');
-  const identityEnd = authSeed.indexOf('DO ', identityStart);
-  assert.ok(identityStart >= 0 && identityEnd > identityStart);
-  const identitySeed = authSeed.slice(identityStart, identityEnd);
-  assert.match(identitySeed, /provider_id, user_id, identity_data, provider, created_at, updated_at/i);
-  assert.doesNotMatch(identitySeed, /provider_id, user_id, identity_data, provider, email, created_at/i);
-  assert.doesNotMatch(identitySeed, /email\s*=\s*excluded\.email/i);
-  assert.doesNotMatch(authSeed, /INSERT INTO public\.profiles/i);
+  assert.match(authSeed, /GoTrue Admin API creates these reserved/i);
+  assert.doesNotMatch(authSeed, /INSERT INTO auth\.users|INSERT INTO auth\.identities/i);
+  assert.match(authSeed, /JOIN auth\.identities i/i);
+  assert.match(authSeed, /i\.provider = 'email'/i);
+  assert.match(authSeed, /direct-unconfirmed@bizmindmakers\.test/);
+  assert.match(authSeed, /direct-missing-profile@bizmindmakers\.test/);
+  assert.match(authSeed, /count\(DISTINCT raw_app_meta_data/);
   assert.doesNotMatch(authSeed, /session_replication_role|DISABLE TRIGGER|DROP TRIGGER/i);
   assert.match(authSeed, /direct-unconfirmed@bizmindmakers\.test/);
   assert.match(authSeed, /direct-missing-profile@bizmindmakers\.test/);
