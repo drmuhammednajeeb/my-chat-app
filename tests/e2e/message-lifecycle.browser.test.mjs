@@ -36,6 +36,8 @@ function extractFunction(name) {
 
 const sendSource = extractFunction('sendMessage');
 const renderSource = extractFunction('renderMessage');
+const reactionSource = extractFunction('toggleMessageReaction');
+const starSource = extractFunction('toggleMessageStar');
 let browser;
 
 before(async () => { browser = await chromium.launch({ headless: true }); });
@@ -113,6 +115,91 @@ async function installSendHarness(page, { text = 'hello', attachment = false } =
   }, { source: sendSource, text, attachment });
   return page;
 }
+
+test('browser: reaction and star buttons persist and toggle without cross-conversation state leakage', async () => {
+  const page = await browser.newPage();
+  try {
+    await page.setContent('<!doctype html><html><body><div class="message" data-message-id="m1"></div><button id="reactionBtn">React</button><button id="starBtn">Star</button></body></html>');
+    await page.evaluate(({ reactionSource, starSource }) => {
+      const message = { id: 'm1', conversation_id: 'c1', deleted_at: null };
+      const state = window.__state = {
+        user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
+        messages: [message], reactions: new Map([['m1', []]]),
+        starredMessageIds: new Set(), pendingReactionKeys: new Set(), pendingStarMessageKeys: new Set()
+      };
+      const backend = window.__backend = { operations: [], notices: [] };
+      const supabaseClient = {
+        from(table) {
+          return {
+            upsert(row, options) {
+              backend.operations.push({ table, operation: 'upsert', row: { ...row }, options });
+              return Promise.resolve({ error: null });
+            },
+            delete() {
+              const filters = [];
+              const query = {
+                eq(key, value) {
+                  filters.push([key, value]);
+                  if ((table === 'message_reactions' && filters.length === 4)
+                    || (table === 'user_message_stars' && filters.length === 2)) {
+                    backend.operations.push({ table, operation: 'delete', filters: [...filters] });
+                    return Promise.resolve({ error: null });
+                  }
+                  return query;
+                }
+              };
+              return query;
+            }
+          };
+        }
+      };
+      const options = ['like','heart','wow','pray','fire','celebrate'].map(type => ({ type }));
+      const renderReactionBar = () => {};
+      const toast = message => backend.notices.push(message);
+      window.__runReaction = new Function(
+        'state','supabaseClient','MESSAGE_REACTION_OPTIONS','document','renderReactionBar','toast','console',
+        'return (' + reactionSource + ');'
+      )(state, supabaseClient, options, document, renderReactionBar, toast, console);
+      window.__runStar = new Function(
+        'state','supabaseClient','toast','console',
+        'return (' + starSource + ');'
+      )(state, supabaseClient, toast, console);
+      document.getElementById('reactionBtn').addEventListener('click', () => {
+        window.__reactionPromise = window.__runReaction(message, 'heart', document.getElementById('reactionBtn'));
+      });
+      document.getElementById('starBtn').addEventListener('click', () => {
+        window.__starPromise = window.__runStar('m1', !state.starredMessageIds.has('m1'));
+      });
+    }, { reactionSource, starSource });
+
+    await page.locator('#reactionBtn').click();
+    await page.waitForFunction(() => window.__reactionPromise);
+    await page.evaluate(() => window.__reactionPromise);
+    assert.equal(await page.evaluate(() => window.__state.reactions.get('m1')[0]?.reaction_type), 'heart');
+
+    await page.locator('#reactionBtn').click();
+    await page.evaluate(() => window.__reactionPromise);
+    assert.equal(await page.evaluate(() => window.__state.reactions.get('m1').length), 0);
+
+    await page.locator('#starBtn').click();
+    await page.evaluate(() => window.__starPromise);
+    assert.equal(await page.evaluate(() => window.__state.starredMessageIds.has('m1')), true);
+
+    await page.locator('#starBtn').click();
+    await page.evaluate(() => window.__starPromise);
+    const result = await page.evaluate(() => ({
+      starred: window.__state.starredMessageIds.has('m1'),
+      operations: window.__backend.operations.map(item => item.table + ':' + item.operation),
+      notices: window.__backend.notices.length
+    }));
+    assert.equal(result.starred, false);
+    assert.deepEqual(result.operations, [
+      'message_reactions:upsert','message_reactions:delete',
+      'user_message_stars:upsert','user_message_stars:delete'
+    ]);
+    assert.equal(result.notices, 0);
+  } finally { await page.close(); }
+});
 
 test('browser: a successful send persists once, renders, and clears only the sent draft', async () => {
   const page = await newPage();
