@@ -7,7 +7,7 @@
     "mappedSources": 50,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 16,
+    "testOnlySqlFixtures": 18,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
@@ -24,7 +24,9 @@
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql",
+      "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
+      "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
     ]
   },
   "execution": {
@@ -575,6 +577,18 @@
       "parityNote": null
     },
     {
+      "nodeId": "security.least-privilege-overlay",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": "Test-only privilege overlay, loopback-guarded and not executed. Must be the final SQL overlay after all application schema/policy sources."
+    },
+    {
       "nodeId": "test-fixture.direct-chat-runtime",
       "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
       "testSources": [
@@ -683,6 +697,11 @@
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
       ]
+    },
+    {
+      "id": "DAG-016",
+      "severity": "BLOCKER",
+      "issue": "Least-privilege overlay is prepared for disposable local replay only. Must prove API role table/sequence/function privileges, active-member policy coverage, and unchanged legitimate CRUD/RPC behavior before any production migration is designed."
     }
   ],
   "requiredSourceRecovery": [
