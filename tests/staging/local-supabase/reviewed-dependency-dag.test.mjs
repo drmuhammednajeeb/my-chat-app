@@ -320,9 +320,9 @@ test('least-privilege overlay is a test-only, locally validated, loopback-only S
   const node = JSON.parse(await readFile(dagPath, 'utf8')).nodes.find(item => item.id === 'security.least-privilege-overlay');
   assert.ok(node);
   assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATED_LOCAL');
-  assert.equal(node.runtimeEvidence?.runId, 42863700280);
+  assert.equal(node.runtimeEvidence?.runId, 42912189296);
   assert.ok(node.requires.includes('membership.final-format'));
-  assert.ok(node.blockedBy.includes('DAG-016'));
+  assert.equal(node.blockedBy?.includes('DAG-016') ?? false, false);
   assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
 });
 
