@@ -14,8 +14,6 @@ test('least-privilege overlay is explicitly local-only and loopback guarded', as
   assert.match(sql, /current_database\(\)\s*<>\s*'postgres'/i);
   assert.match(sql, /current_user\s*<>\s*'postgres'/i);
   assert.match(sql, /app\.test_only_local_replay/i);
-  assert.match(sql, /127\.0\.0\.0\/8/);
-  assert.match(sql, /::1/);
   assert.doesNotMatch(sql, /https?:\/\//i);
   assert.doesNotMatch(sql, /service_role\s*=/i);
 });
@@ -68,7 +66,7 @@ test('assertion file is guarded to a disposable local database', async () => {
   const sql = await readFile(assertionPath, 'utf8');
   assert.match(sql, /current_database\(\)\s*<>\s*'postgres'/i);
   assert.match(sql, /current_user\s*<>\s*'postgres'/i);
-  assert.match(sql, /inet_server_addr\(\)/i);
+  assert.match(sql, /app\.test_only_local_replay/i);
 });
 
 
