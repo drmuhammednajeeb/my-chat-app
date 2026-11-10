@@ -3,7 +3,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const indexSource = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const modulePaths = ["js/00-bootstrap.js","js/10-conversations.js","js/20-message-interactions.js","js/30-receipts-rendering.js","js/40-message-runtime.js","js/50-group-management.js","js/60-personal-chat-settings.js","js/70-workspace.js"];
+const moduleSources = await Promise.all(modulePaths.map(path => readFile(new URL('../' + path, import.meta.url), 'utf8')));
+const moduleSource = moduleSources.join('\n');
+const source = moduleSource + '\n' + indexSource;
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
@@ -74,13 +78,18 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
 });
 
-test('all inline JavaScript blocks parse without a bundler', () => {
-  const blocks = [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-    .filter(match => !/\bsrc\s*=/.test(match[1]) && match[2].trim());
-  assert.ok(blocks.length > 0, 'Expected inline application scripts');
-  blocks.forEach((match, index) => {
-    new vm.Script(match[2], { filename: 'inline-script-' + index + '.js' });
+test('all ordered classic JavaScript modules parse independently and as one shared global program', () => {
+  moduleSources.forEach((module, index) => {
+    new vm.Script(module, { filename: modulePaths[index] });
   });
+  new vm.Script(moduleSource, { filename: 'combined-classic-app.js' });
+  const inlineBlocks = [...indexSource.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
+    .filter(match => !/\\bsrc\\s*=/.test(match[1]) && match[2].trim());
+  inlineBlocks.forEach((match, index) => {
+    new vm.Script(match[2], { filename: 'inline-bootstrap-' + index + '.js' });
+  });
+  const externalPaths = [...indexSource.matchAll(/<script\\b[^>]*src=["']([^"']+\\.js)["']/gi)].map(match => match[1]);
+  assert.deepEqual(externalPaths.filter(path => path.startsWith('./js/')), modulePaths.map(path => './' + path));
 });
 
 test('chronological comparator orders timestamps then stable IDs', () => {
