@@ -37,7 +37,7 @@ test('Storage runtime probe checks uploader ownership, private/shared reads, ups
     'cross-user chat-media uploader-folder spoof',
     'other member signed read of private document',
     'shared conversation member signed read',
-    'non-owner conversation document delete',
+    'document remains after non-owner delete attempt',
     'cross-user avatar overwrite',
     'public avatar delivery',
     'owner delete ',
