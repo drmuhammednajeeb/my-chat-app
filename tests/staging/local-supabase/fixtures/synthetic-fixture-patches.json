@@ -87,6 +87,14 @@
     {
       "path": "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
       "runWhen": "After the final membership format, synthetic admin assertion, and eligibility overlay; disposable PostgreSQL transaction ending in ROLLBACK."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+      "runWhen": "Immediately after the disposable local Supabase stack starts and before any application SQL; read-only catalog assertions only."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
+      "runWhen": "After chat.workspaces and chat.expiry-purge; read-only checks for pgcrypto schema placement and the expected pg_cron job definition. Does not prove scheduler execution."
     }
   ],
   "execution": {
