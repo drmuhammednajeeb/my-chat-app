@@ -160,6 +160,31 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
   assert.doesNotMatch(update, /Deleted message refresh failed/);
 });
 
+test('duplicate soft-delete events do not repeatedly replace the tombstone row', () => {
+  const deletedAt = '2026-11-10T10:00:00.000Z';
+  const row = { dataset: { messageId: 'm1' }, querySelector: selector => selector === '.bubble.deleted' ? {} : null };
+  const state = {
+    active: { id: 'c1' },
+    messages: [{ id: 'm1', conversation_id: 'c1', deleted_at: deletedAt }],
+    messageIds: new Set(['m1'])
+  };
+  let renders = 0;
+  const handler = vm.runInNewContext('(' + extractFunction('handleMessageUpdateRealtime') + ')', {
+    state, document: { querySelectorAll: () => [row] },
+    renderMessage: () => { renders += 1; }, console
+  });
+  handler({ new: { id: 'm1', conversation_id: 'c1', deleted_at: deletedAt } }, 'c1');
+  assert.equal(renders, 0);
+  assert.equal(state.messageIds.has('m1'), true);
+});
+
+test('delete action uses the returned database row and avoids a competing full reload', () => {
+  const remove = extractFunction('deleteMessage');
+  assert.match(remove, /\.select\('\*'\)\.single\(\)/);
+  assert.match(remove, /handleMessageUpdateRealtime\(\{new:data\},data\.conversation_id\)/);
+  assert.doesNotMatch(remove, /loadMessages\(\)/);
+});
+
 test('initial message snapshot removes stale rows inside its authoritative window', () => {
   const load = extractFunction('loadMessages');
   assert.match(load, /fetchedIds=new Set\(fetchedRows\.map\(m=>m\.id\)\)/);
