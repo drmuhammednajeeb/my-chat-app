@@ -83,7 +83,6 @@ BEGIN
 END
 $fixtures$;
 
--- Verify the final membership-format migration replaced every allowlisted function.
 DO $membership_format$
 DECLARE
   v_signature text;
@@ -407,7 +406,11 @@ ROLLBACK;
     END IF;
   END LOOP;
 
-  IF position('^971[0-9]{9}
+  SELECT pg_get_constraintdef(oid) INTO v_definition
+  FROM pg_constraint
+  WHERE conname = 'profiles_membership_number_official_format'
+    AND conrelid = 'public.profiles'::regclass;
+  IF v_definition IS NULL OR position('^971[0-9]{9}
 
 -- Successful creation, idempotent reuse, and direct internal invocation under authenticated.
 DO $success$
@@ -558,9 +561,176 @@ $acl$;
 
 RESET ROLE;
 ROLLBACK;
- IN pg_get_constraintdef(
-       'public.profiles_membership_number_official_format'::regclass)) = 0 THEN
+ IN v_definition) = 0 THEN
     RAISE EXCEPTION 'Profiles membership format constraint is not current';
+  END IF;
+
+  SELECT pg_get_constraintdef(oid) INTO v_definition
+  FROM pg_constraint
+  WHERE conname = 'member_invitation_number_format'
+    AND conrelid = 'app_private.member_invitations'::regclass;
+  IF v_definition IS NULL OR position('^971[0-9]{9}
+
+-- Successful creation, idempotent reuse, and direct internal invocation under authenticated.
+DO $success$
+DECLARE
+  v_first uuid;
+  v_second uuid;
+  v_internal uuid;
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub',
+    '22222222-2222-4222-8222-222222222201', true);
+
+  v_first := public.get_or_create_direct_conversation(
+    '22222222-2222-4222-8222-222222222202');
+  v_second := public.get_or_create_direct_conversation(
+    '22222222-2222-4222-8222-222222222202');
+  v_internal := app_private.get_or_create_direct_conversation_impl(
+    '22222222-2222-4222-8222-222222222202');
+
+  IF v_first IS NULL OR v_first <> v_second OR v_first <> v_internal THEN
+    RAISE EXCEPTION 'Direct conversation creation/reuse mismatch';
+  END IF;
+
+  IF (SELECT count(*) FROM public.conversation_members
+      WHERE conversation_id = v_first) <> 2 THEN
+    RAISE EXCEPTION 'Direct conversation must contain exactly two members';
+  END IF;
+END
+$success$;
+
+-- Both caller-side and target-side eligibility must fail closed.
+DO $denials$
+DECLARE
+  v_case record;
+  v_rejected boolean;
+BEGIN
+  FOR v_case IN
+    SELECT * FROM (VALUES
+      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222203'::uuid, 'suspended target'),
+      ('22222222-2222-4222-8222-222222222203'::uuid, '22222222-2222-4222-8222-222222222201'::uuid, 'suspended caller'),
+      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222204'::uuid, 'unverified target'),
+      ('22222222-2222-4222-8222-222222222204'::uuid, '22222222-2222-4222-8222-222222222201'::uuid, 'unverified caller'),
+      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222205'::uuid, 'unconfirmed target'),
+      ('22222222-2222-4222-8222-222222222205'::uuid, '22222222-2222-4222-8222-222222222201'::uuid, 'unconfirmed caller'),
+      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222206'::uuid, 'missing profile'),
+      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222299'::uuid, 'missing auth user')
+    ) AS cases(caller_id, target_id, label)
+  LOOP
+    PERFORM set_config('request.jwt.claim.sub', v_case.caller_id::text, true);
+    v_rejected := false;
+    BEGIN
+      PERFORM public.get_or_create_direct_conversation(v_case.target_id);
+    EXCEPTION WHEN SQLSTATE '42501' THEN
+      v_rejected := true;
+    END;
+    IF NOT v_rejected THEN
+      RAISE EXCEPTION 'Expected eligibility denial was not raised: %', v_case.label;
+    END IF;
+  END LOOP;
+END
+$denials$;
+
+-- Authentication, self-target, and null-target boundary checks.
+DO $boundaries$
+DECLARE
+  v_rejected boolean;
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', '', true);
+  v_rejected := false;
+  BEGIN
+    PERFORM public.get_or_create_direct_conversation(
+      '22222222-2222-4222-8222-222222222202');
+  EXCEPTION WHEN SQLSTATE '28000' THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN RAISE EXCEPTION 'Unauthenticated caller was accepted'; END IF;
+
+  PERFORM set_config('request.jwt.claim.sub',
+    '22222222-2222-4222-8222-222222222201', true);
+
+  v_rejected := false;
+  BEGIN
+    PERFORM public.get_or_create_direct_conversation(
+      '22222222-2222-4222-8222-222222222201');
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN RAISE EXCEPTION 'Self-target was accepted'; END IF;
+
+  v_rejected := false;
+  BEGIN
+    PERFORM public.get_or_create_direct_conversation(NULL);
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN RAISE EXCEPTION 'Null target was accepted'; END IF;
+END
+$boundaries$;
+
+-- service_role may execute the recovered RPC but must not bypass caller authentication.
+RESET ROLE;
+SET LOCAL ROLE service_role;
+SELECT set_config('request.jwt.claim.sub', '', true);
+DO $service_role$
+DECLARE
+  v_rejected boolean := false;
+BEGIN
+  BEGIN
+    PERFORM public.get_or_create_direct_conversation(
+      '22222222-2222-4222-8222-222222222202');
+  EXCEPTION WHEN SQLSTATE '28000' THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'service_role invocation without an authenticated user was accepted';
+  END IF;
+END
+$service_role$;
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+
+-- Verify least-privilege EXECUTE grants and absence of PUBLIC/anon access.
+DO $acl$
+DECLARE
+  v_internal_oid oid := 'app_private.get_or_create_direct_conversation_impl(uuid)'::regprocedure;
+  v_public_oid oid := 'public.get_or_create_direct_conversation(uuid)'::regprocedure;
+BEGIN
+  IF NOT has_function_privilege('authenticated', v_internal_oid, 'EXECUTE')
+     OR NOT has_function_privilege('service_role', v_internal_oid, 'EXECUTE')
+     OR has_function_privilege('anon', v_internal_oid, 'EXECUTE')
+     OR NOT has_function_privilege('authenticated', v_public_oid, 'EXECUTE')
+     OR NOT has_function_privilege('service_role', v_public_oid, 'EXECUTE')
+     OR has_function_privilege('anon', v_public_oid, 'EXECUTE') THEN
+    RAISE EXCEPTION 'Direct-conversation RPC ACL does not match the reviewed allowlist';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_proc p
+    CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+    WHERE p.oid IN (v_internal_oid, v_public_oid)
+      AND a.grantee = 0
+      AND a.privilege_type = 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'PUBLIC has EXECUTE on a direct-conversation RPC';
+  END IF;
+END
+$acl$;
+
+RESET ROLE;
+ROLLBACK;
+ IN v_definition) = 0 THEN
+    RAISE EXCEPTION 'Invitation membership format constraint is not current';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_attribute
+    WHERE attrelid = 'public.profiles'::regclass
+      AND attname = 'membership_number_verified'
+      AND NOT attisdropped
+  ) THEN
+    RAISE EXCEPTION 'membership_number_verified column is missing';
   END IF;
 END
 $membership_format$;
