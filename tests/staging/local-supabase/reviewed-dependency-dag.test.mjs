@@ -75,13 +75,19 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'synthetic-admin-profile-after-membership.sql',
     'assert-synthetic-admin-active.sql',
     'chat-media-upload-path-hardening.sql',
-    'direct-conversation-rpc.sql'
+    'direct-conversation-rpc.sql',
+    'synthetic-direct-chat-auth-before-membership.sql',
+    'synthetic-direct-chat-profiles-after-membership.sql',
+    'direct-conversation-eligibility-runtime.test.sql'
   ];
   for (const name of requiredFixtures) await access(path.join(root, 'tests/staging/local-supabase/fixtures', name));
   for (const fixture of patchManifest.fixtures) await access(path.join(root, fixture.path));
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'team.admin').testSource.some(source => source.includes('team_management_dashboard.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-auth-seed').source.some(source => source.includes('synthetic-direct-chat-auth-before-membership.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-profiles').source.some(source => source.includes('synthetic-direct-chat-profiles-after-membership.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-runtime').source.some(source => source.includes('direct-conversation-eligibility-runtime.test.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.official').testSource.some(source => source.includes('20261107152550_official_forever_membership_numbers_manual_verification.sql')));
   const mediaPolicy = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql'), 'utf8');
   assert.match(mediaPolicy, /storage\.foldername\(name\)\)\[2\]\s*=\s*\(select auth\.uid\(\)\)/i);
