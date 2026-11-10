@@ -1610,10 +1610,12 @@ function subscribeProfileUpdates(conversation){
 function handleMessageUpdateRealtime(payload,conversationId){
  const incoming=payload?.new;if(!incoming?.id||incoming.conversation_id!==conversationId||state.active?.id!==conversationId)return;
  const index=state.messages.findIndex(message=>message.id===incoming.id);
+ const existingRow=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===incoming.id);
+ if(incoming.deleted_at&&index>=0&&state.messages[index].deleted_at===incoming.deleted_at&&existingRow?.querySelector('.bubble.deleted'))return;
  if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);
  if(incoming.deleted_at){
   state.reactions?.delete(incoming.id);state.pinnedMessages?.delete(incoming.id);
-  const deletedRow=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===incoming.id);
+  const deletedRow=existingRow;
   if(deletedRow)deletedRow.remove();
   state.messageIds.delete(incoming.id);
   reconcileMessageTimeline($('messages'));
@@ -1688,7 +1690,19 @@ function subscribeConversation(){
  state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=payload?.is_typing?(payload?.name||'عضو')+' يكتب الآن…':'';clearTimeout(state.typingTimer);if(payload?.is_typing)state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
 }
 async function editMessage(m){beginEditMessage(m)}
-async function deleteMessage(m){if(m.sender_id!==state.user?.id||m.deleted_at)return;if(!confirm('هل تريد حذف هذه الرسالة؟'))return;const {error}=await supabaseClient.from('chat_messages').update({deleted_at:new Date().toISOString(),content:'تم حذف الرسالة',attachment_path:null,attachment_type:null}).eq('id',m.id).eq('sender_id',state.user.id);if(error){toast('تعذر حذف الرسالة');return}if(state.replyTarget?.id===m.id)cancelComposerContext();await loadMessages()}
+async function deleteMessage(m){
+ if(m.sender_id!==state.user?.id||m.deleted_at)return;
+ if(!confirm('هل تريد حذف هذه الرسالة؟'))return;
+ try{
+  const {data,error}=await supabaseClient.from('chat_messages')
+   .update({deleted_at:new Date().toISOString(),content:'تم حذف الرسالة',attachment_path:null,attachment_type:null})
+   .eq('id',m.id).eq('sender_id',state.user.id).select('*').single();
+  if(error)throw error;
+  if(!data?.id)throw new Error('لم يتم تأكيد حذف الرسالة');
+  if(state.replyTarget?.id===m.id)cancelComposerContext();
+  handleMessageUpdateRealtime({new:data},data.conversation_id);
+ }catch(error){console.error('Message delete failed:',error);toast(error?.message||'تعذر حذف الرسالة')}
+}
 function formatVoiceDuration(seconds){
  const total=Math.max(0,Math.floor(seconds||0)),minutes=String(Math.floor(total/60)).padStart(2,'0'),secs=String(total%60).padStart(2,'0');
  return (minutes+':'+secs).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[Number(d)]);
