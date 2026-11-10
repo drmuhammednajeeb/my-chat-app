@@ -21,13 +21,19 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
     'SUPABASE_PROJECT_ID',
     "manifest.mode !== 'DESIGN_ONLY'",
     'manifest.execution?.enabled !== false',
+    'manifest.execution?.localStackStarted !== false',
+    'manifest.execution?.networkEgressAllowed !== false',
     'dag.executionAuthorized !== false',
+    'dag.safety?.sqlExecutionEnabled !== false',
+    'dag.safety?.supabaseStartupAuthorized !== false',
+    'dag.safety?.costBearingResourcesAllowed !== false',
     'candidate replay order is not the exact reviewed topological DAG order',
     'test-fixture.local-platform-preflight',
     'local-rls-least-privilege-runtime.mjs',
     'direct-conversation-concurrency.mjs',
     'local-pg-cron-runtime.mjs',
     'local-storage-rls-runtime.mjs',
+    'expectedSqlCount',
     'LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED'
   ]) assert.ok(source.includes(token), 'missing replay safety/coverage token: ' + token);
   assert.match(source, /refusing non-local database target/i);
