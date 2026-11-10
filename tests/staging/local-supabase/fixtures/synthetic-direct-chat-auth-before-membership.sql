@@ -25,11 +25,12 @@ BEGIN
       WHERE u.email IN (
         'direct-a@bizmindmakers.test',
         'direct-b@bizmindmakers.test',
+        'direct-c@bizmindmakers.test',
         'direct-suspended@bizmindmakers.test',
         'direct-unverified@bizmindmakers.test',
         'direct-unconfirmed@bizmindmakers.test',
         'direct-missing-profile@bizmindmakers.test'
-      ) AND i.provider = 'email') <> 6 THEN
+      ) AND i.provider = 'email') <> 7 THEN
     RAISE EXCEPTION 'GoTrue did not create all seven email identities';
   END IF;
 
@@ -61,11 +62,12 @@ BEGIN
       WHERE email IN (
         'direct-a@bizmindmakers.test',
         'direct-b@bizmindmakers.test',
+        'direct-c@bizmindmakers.test',
         'direct-suspended@bizmindmakers.test',
         'direct-unverified@bizmindmakers.test',
         'direct-unconfirmed@bizmindmakers.test',
         'direct-missing-profile@bizmindmakers.test'
-      )) <> 6 THEN
+      )) <> 7 THEN
     RAISE EXCEPTION 'Synthetic membership numbers must be unique';
   END IF;
 END
