@@ -28,7 +28,11 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
-    ]
+    ],
+    "mappedSourcesReplacedByFixtures": 4,
+    "executedMappedSources": 47,
+    "executedTestOnlySqlFixtures": 19,
+    "executedSqlFiles": 66
   },
   "execution": {
     "enabled": false,
