@@ -1,3 +1,4 @@
+'use strict';
 async function markConversationReceipt(conversationId,markRead=true,requestId=null){
  const userId=state.user?.id;
  if(!userId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
