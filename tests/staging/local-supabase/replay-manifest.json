@@ -7,7 +7,7 @@
     "mappedSources": 51,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 19,
+    "testOnlySqlFixtures": 20,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
@@ -27,12 +27,13 @@
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql",
+      "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
     "executedMappedSources": 47,
-    "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 66
+    "executedTestOnlySqlFixtures": 20,
+    "executedSqlFiles": 67
   },
   "execution": {
     "enabled": false,
@@ -621,7 +622,8 @@
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
-        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
+        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs",
+        "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql"
       ],
       "blockedBy": [
         "DAG-016"
