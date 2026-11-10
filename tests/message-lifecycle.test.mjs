@@ -42,6 +42,33 @@ function extractFunction(name) {
   throw new Error('Unbalanced function body: ' + name);
 }
 
+test('all six message reactions are rendered and the message menu is reachable without hover', () => {
+  const start = source.indexOf('const MESSAGE_REACTION_OPTIONS=');
+  const end = source.indexOf('function renderReactionBar(', start);
+  assert.ok(start >= 0 && end > start);
+  const options = source.slice(start, end);
+  assert.equal((options.match(/type:'/g) || []).length, 6);
+  assert.match(source, /renderReactionBar\(row,m\)/);
+  assert.match(overrides, /\.message-menu-trigger\{opacity:1;pointer-events:auto\}/);
+});
+
+test('stickers are sent through the existing message pipeline and rendered as validated sticker content', () => {
+  assert.match(source, /id="stickerBtn"/);
+  assert.match(source, /\$\('stickerBtn'\)\.onclick=openChatStickerPicker/);
+  assert.match(source, /function encodeChatSticker\(emoji\)/);
+  assert.match(source, /function decodeChatSticker\(content\)/);
+  assert.match(source, /CHAT_STICKERS\.includes\(emoji\)/);
+  assert.match(source, /const sticker=decodeChatSticker\(m\.content\)/);
+  assert.match(source, /\$\('messageInput'\)\.value=encodeChatSticker\(emoji\);sendMessage\(\)/);
+});
+
+test('voice send button dispatches stop-and-send while recording', () => {
+  assert.match(source, /\$\('sendBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):sendMessage\(\)/);
+  assert.match(source, /function sendVoiceRecording\(\)[\s\S]*?state\.voiceSendOnStop=true/);
+  assert.match(source, /if\(shouldSend\)\{setTimeout\(\(\)=>\{if\(state\.attachment===file\)sendMessage\(\)\},0\)\}/);
+  assert.match(source, /\$\('sendBtn'\)\.setAttribute\('aria-label','إرسال التسجيل الصوتي'\)/);
+});
+
 test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring', () => {
   assert.match(overrides, /#chat \.messages\{overflow-anchor:none\}/);
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
