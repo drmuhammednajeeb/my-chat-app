@@ -1733,11 +1733,29 @@ function stopVoiceRecording(){if(state.voiceRecorder&&state.voiceRecorder.state!
 function cancelVoiceRecording(){if(!state.voiceRecorder)return;state.cancelVoiceOnStop=true;state.voiceSendOnStop=false;state.voiceElapsedMs=0;state.voiceSegmentStartedAt=null;stopVoiceRecording()}
 $('voicePauseBtn').onclick=toggleVoicePause;
 $('voiceTrashBtn').onclick=()=>{if(state.voiceRecorder){cancelVoiceRecording();toast('تم حذف التسجيل وإعادة ضبط المؤقت')}};
+const CHAT_ATTACHMENT_MIME_BY_EXTENSION={
+ jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',
+ pdf:'application/pdf',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',
+ doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+ xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+ ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+ txt:'text/plain',csv:'text/csv',m4a:'audio/mp4',mp3:'audio/mpeg',ogg:'audio/ogg',wav:'audio/wav',aac:'audio/aac'
+};
+const CHAT_ATTACHMENT_ALLOWED_MIME_TYPES=new Set(Object.values(CHAT_ATTACHMENT_MIME_BY_EXTENSION));
+function resolveChatAttachmentMime(file){
+ const declared=String(file?.type||'').split(';')[0].trim().toLowerCase();
+ if(declared&&declared!=='application/octet-stream')return declared;
+ const extension=String(file?.name||'').split('.').pop().toLowerCase();
+ return CHAT_ATTACHMENT_MIME_BY_EXTENSION[extension]||declared;
+}
 async function uploadAttachment(file,conversationId=state.active?.id,userId=state.user?.id){
  if(!conversationId||!userId)throw new Error('اختر محادثة أولاً');
+ if(!file||!Number.isFinite(file.size)||file.size<=0)throw new Error('الملف فارغ أو غير صالح');
  if(file.size>12*1024*1024)throw new Error('الحد الأقصى لحجم الملف 12 ميجابايت');
+ const type=resolveChatAttachmentMime(file);
+ if(!CHAT_ATTACHMENT_ALLOWED_MIME_TYPES.has(type))throw new Error('نوع الملف غير مدعوم. استخدم صورة أو PDF أو مستند Office أو فيديو MP4/WebM/MOV أو ملف صوتي مسجل من التطبيق.');
  const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'),path=conversationId+'/'+userId+'/'+crypto.randomUUID()+'_'+safe;
- const {error}=await supabaseClient.storage.from('chat-media').upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;return {path,type:file.type};
+ const {error}=await supabaseClient.storage.from('chat-media').upload(path,file,{upsert:false,contentType:type});if(error)throw error;return {path,type};
 }
 async function sendMessage(){
  if(state.voiceRecorder){toast('أوقف التسجيل الصوتي أولاً قبل الإرسال');return}
