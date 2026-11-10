@@ -1,30 +1,38 @@
 -- TEST ONLY. Run after membership.base installs the profile guard and before membership.official.
--- Auth rows are pre-seeded before auth.users membership triggers; this fixture creates profiles only.
+-- Auth users are provisioned through GoTrue; this fixture creates profiles only.
 -- The missing-profile Auth identity is deliberately omitted.
 
-INSERT INTO public.profiles (id, username, display_name) VALUES
-  ('22222222-2222-4222-8222-222222222201'::uuid, 'direct_a', 'Direct Test A'),
-  ('22222222-2222-4222-8222-222222222202'::uuid, 'direct_b', 'Direct Test B'),
-  ('22222222-2222-4222-8222-222222222203'::uuid, 'direct_suspended', 'Direct Test Suspended'),
-  ('22222222-2222-4222-8222-222222222204'::uuid, 'direct_unverified', 'Direct Test Unverified'),
-  ('22222222-2222-4222-8222-222222222205'::uuid, 'direct_unconfirmed', 'Direct Test Unconfirmed')
+INSERT INTO public.profiles (id, username, display_name)
+SELECT u.id, expected.username, expected.display_name
+FROM (VALUES
+  ('direct-a@bizmindmakers.test', 'direct_a', 'Direct Test A'),
+  ('direct-b@bizmindmakers.test', 'direct_b', 'Direct Test B'),
+  ('direct-suspended@bizmindmakers.test', 'direct_suspended', 'Direct Test Suspended'),
+  ('direct-unverified@bizmindmakers.test', 'direct_unverified', 'Direct Test Unverified'),
+  ('direct-unconfirmed@bizmindmakers.test', 'direct_unconfirmed', 'Direct Test Unconfirmed')
+) AS expected(email, username, display_name)
+JOIN auth.users u ON u.email = expected.email
 ON CONFLICT (id) DO NOTHING;
 
 DO $assert$
 BEGIN
-  IF (SELECT count(*) FROM public.profiles
-      WHERE id IN (
-        '22222222-2222-4222-8222-222222222201'::uuid,
-        '22222222-2222-4222-8222-222222222202'::uuid,
-        '22222222-2222-4222-8222-222222222203'::uuid,
-        '22222222-2222-4222-8222-222222222204'::uuid,
-        '22222222-2222-4222-8222-222222222205'::uuid
+  IF (SELECT count(*)
+      FROM public.profiles p
+      JOIN auth.users u ON u.id = p.id
+      WHERE u.email IN (
+        'direct-a@bizmindmakers.test',
+        'direct-b@bizmindmakers.test',
+        'direct-suspended@bizmindmakers.test',
+        'direct-unverified@bizmindmakers.test',
+        'direct-unconfirmed@bizmindmakers.test'
       )) <> 5 THEN
     RAISE EXCEPTION 'Synthetic direct-chat profile seed is incomplete';
   END IF;
+
   IF EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = '22222222-2222-4222-8222-222222222206'::uuid
+    SELECT 1 FROM public.profiles p
+    JOIN auth.users u ON u.id = p.id
+    WHERE u.email = 'direct-missing-profile@bizmindmakers.test'
   ) THEN
     RAISE EXCEPTION 'Missing-profile test identity unexpectedly has a profile';
   END IF;
@@ -33,12 +41,12 @@ BEGIN
     SELECT 1
     FROM public.profiles p
     JOIN auth.users u ON u.id = p.id
-    WHERE p.id IN (
-      '22222222-2222-4222-8222-222222222201'::uuid,
-      '22222222-2222-4222-8222-222222222202'::uuid,
-      '22222222-2222-4222-8222-222222222203'::uuid,
-      '22222222-2222-4222-8222-222222222204'::uuid,
-      '22222222-2222-4222-8222-222222222205'::uuid
+    WHERE u.email IN (
+      'direct-a@bizmindmakers.test',
+      'direct-b@bizmindmakers.test',
+      'direct-suspended@bizmindmakers.test',
+      'direct-unverified@bizmindmakers.test',
+      'direct-unconfirmed@bizmindmakers.test'
     )
       AND (p.membership_number IS DISTINCT FROM u.raw_app_meta_data->>'membership_number'
         OR p.membership_status IS DISTINCT FROM 'active')
