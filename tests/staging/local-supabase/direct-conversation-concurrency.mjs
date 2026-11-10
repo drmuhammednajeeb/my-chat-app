@@ -70,14 +70,14 @@ WHERE c.type = 'direct'
 const existing = await psql(db, preflight);
 if (existing !== '0') throw new Error('Refusing to run: a direct conversation already exists for the synthetic pair.');
 function callSql(caller, target) {
-  return \`BEGIN;
+  return `BEGIN;
 SET LOCAL statement_timeout = '60s';
 SET LOCAL lock_timeout = '30s';
 SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub', '\${caller}', true);
+SELECT set_config('request.jwt.claim.sub', '${caller}', true);
 SELECT pg_sleep(0.25);
-SELECT public.get_or_create_direct_conversation('\${target}'::uuid);
-COMMIT;\`;
+SELECT public.get_or_create_direct_conversation('${target}'::uuid);
+COMMIT;`;
 }
 
 const conversationIds = new Set();
@@ -103,11 +103,11 @@ try {
   }
 
   const conversationId = conversationResultIds[0];
-  const count = await psql(db, \`SELECT count(*)::text FROM public.conversations c
+  const count = await psql(db, `SELECT count(*)::text FROM public.conversations c
     WHERE c.type='direct'
-      AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='\${callerA}'::uuid)
-      AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='\${callerB}'::uuid)
-      AND (SELECT count(*) FROM public.conversation_members m WHERE m.conversation_id=c.id)=2;\`);
+      AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerA}'::uuid)
+      AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerB}'::uuid)
+      AND (SELECT count(*) FROM public.conversation_members m WHERE m.conversation_id=c.id)=2;`);
   if (count !== '1') throw new Error('Expected exactly one two-member direct conversation; observed ' + count);
   process.stdout.write('PASS: 24 concurrent reversed requests converged on one direct conversation.\n');
 
@@ -115,15 +115,15 @@ try {
   const messageWrites = Array.from({ length: 40 }, (_, index) => {
     const sender = index % 2 === 0 ? callerA : callerB;
     const content = loadMarker + '-' + index;
-    return psql(db, \`BEGIN;
+    return psql(db, `BEGIN;
 SET LOCAL statement_timeout = '60s';
 SET LOCAL lock_timeout = '30s';
 SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub', '\${sender}', true);
+SELECT set_config('request.jwt.claim.sub', '${sender}', true);
 INSERT INTO public.chat_messages(conversation_id, sender_id, content)
-VALUES ('\${conversationId}'::uuid, '\${sender}'::uuid, '\${content}')
+VALUES ('${conversationId}'::uuid, '${sender}'::uuid, '${content}')
 RETURNING id;
-COMMIT;\`);
+COMMIT;`);
   });
   const writeResults = await Promise.allSettled(messageWrites);
   const writeFailure = writeResults.find(result => result.status === 'rejected');
@@ -135,25 +135,25 @@ COMMIT;\`);
   if (messageIds.length !== 40 || new Set(messageIds).size !== 40) {
     throw new Error('40 concurrent message writes did not persist 40 unique message IDs.');
   }
-  const persisted = await psql(db, \`SELECT count(*)::text FROM public.chat_messages
-    WHERE conversation_id='\${conversationId}'::uuid
-      AND content LIKE '\${loadMarker}-%';\`);
+  const persisted = await psql(db, `SELECT count(*)::text FROM public.chat_messages
+    WHERE conversation_id='${conversationId}'::uuid
+      AND content LIKE '${loadMarker}-%';`);
   if (persisted !== '40') throw new Error('Expected 40 persisted concurrent messages; observed ' + persisted);
   process.stdout.write('PASS: 40 concurrent authenticated message writes persisted uniquely.\n');
 } finally {
   for (const conversationId of conversationIds) {
-    await psql(db, \`BEGIN;
+    await psql(db, `BEGIN;
 DELETE FROM public.chat_messages
-WHERE conversation_id='\${conversationId}'::uuid
-  AND content LIKE '\${loadMarker}-%';
+WHERE conversation_id='${conversationId}'::uuid
+  AND content LIKE '${loadMarker}-%';
 DELETE FROM public.conversation_members
-WHERE conversation_id='\${conversationId}'::uuid
-  AND user_id IN ('\${callerA}'::uuid, '\${callerB}'::uuid);
+WHERE conversation_id='${conversationId}'::uuid
+  AND user_id IN ('${callerA}'::uuid, '${callerB}'::uuid);
 DELETE FROM public.conversations c
-WHERE c.id='\${conversationId}'::uuid AND c.type='direct'
-  AND c.created_by IN ('\${callerA}'::uuid, '\${callerB}'::uuid)
+WHERE c.id='${conversationId}'::uuid AND c.type='direct'
+  AND c.created_by IN ('${callerA}'::uuid, '${callerB}'::uuid)
   AND NOT EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id)
   AND NOT EXISTS (SELECT 1 FROM public.chat_messages m WHERE m.conversation_id=c.id);
-COMMIT;\`);
+COMMIT;`);
   }
 }
