@@ -366,30 +366,63 @@ test('late reaction failures cannot mutate the next conversation state', async (
   assert.equal(state.reactions.has('m2'), true);
 });
 
-test('message stars persist before updating local state and recover from backend failures', async () => {
+test('ambiguous reaction writes are verified against the authoritative row before rollback', async () => {
   const state = {
-    user: { id: 'u1' },
+    user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
+    reactions: new Map([['m1', []]]), messages: [{ id: 'm1', conversation_id: 'c1' }]
+  };
+  let finishWrite;
+  const verified = { message_id: 'm1', conversation_id: 'c1', user_id: 'u1', reaction_type: 'heart' };
+  const supabaseClient = {
+    from(table) {
+      assert.equal(table, 'message_reactions');
+      return {
+        upsert: () => new Promise(resolve => { finishWrite = resolve; }),
+        select() {
+          const query = { eq() { return query; }, async maybeSingle() { return { data: verified, error: null }; } };
+          return query;
+        }
+      };
+    }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
+    state, supabaseClient, document: { querySelectorAll: () => [] },
+    renderReactionBar() {}, toast() {}, console
+  });
+  const pending = toggle({ id: 'm1', conversation_id: 'c1' }, 'heart', null);
+  finishWrite({ error: { message: 'response lost after commit' } });
+  assert.equal(await pending, true);
+  assert.deepEqual(state.reactions.get('m1'), [verified]);
+});
+
+test('message stars persist, serialize, and verify ambiguous outcomes before changing local state', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' },
     messages: [{ id: 'm1', conversation_id: 'c1' }],
     starredMessageIds: new Set()
   };
   const calls = [];
-  let fail = false;
+  let fail = false, verifiedRow = null;
   const supabaseClient = {
     from(table) {
       assert.equal(table, 'user_message_stars');
       return {
         async upsert(row, options) {
           calls.push({ operation: 'upsert', row, options });
-          return { error: fail ? { message: 'denied' } : null };
+          return { error: fail ? { message: 'simulated network failure' } : null };
         },
         delete() {
           return { eq(key, value) {
             calls.push({ operation: 'delete-user', key, value });
             return { async eq(secondKey, secondValue) {
               calls.push({ operation: 'delete-message', key: secondKey, value: secondValue });
-              return { error: fail ? { message: 'denied' } : null };
+              return { error: fail ? { message: 'simulated network failure' } : null };
             } };
           } };
+        },
+        select() {
+          const query = { eq() { return query; }, async maybeSingle() { return { data: verifiedRow, error: null }; } };
+          return query;
         }
       };
     }
@@ -403,9 +436,15 @@ test('message stars persist before updating local state and recover from backend
   assert.equal(calls[0].options.onConflict, 'user_id,message_id');
   assert.equal(await toggle('m1', false), true);
   assert.equal(state.starredMessageIds.has('m1'), false);
+
   fail = true;
+  verifiedRow = { message_id: 'm1' };
+  assert.equal(await toggle('m1', true), true);
+  assert.equal(state.starredMessageIds.has('m1'), true);
+
+  verifiedRow = null;
   assert.equal(await toggle('m1', true), false);
-  assert.equal(state.starredMessageIds.has('m1'), false);
+  assert.equal(state.starredMessageIds.has('m1'), true);
   assert.ok(notices.length > 0);
 });
 
