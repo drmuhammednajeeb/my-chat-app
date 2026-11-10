@@ -110,6 +110,8 @@ test('bootstrap plan requires platform, direct-RPC, concurrency, and cron runtim
     'A successful read-only local platform preflight and postflight',
     'A successful rollback-only PostgreSQL direct-conversation eligibility',
     'A successful two-session reversed-pair concurrency test',
-    'A local pg_cron scheduler execution check'
+    'A local pg_cron scheduler execution check',
+    'A successful loopback-only least-privilege overlay'
   ]) assert.ok(plan.approval.requiredEvidence.some(item => item.includes(evidence)), 'missing bootstrap approval evidence: ' + evidence);
+  assert.ok(plan.knownBlockers.some(item => item.id === 'RLS_LEAST_PRIVILEGE_016' && item.severity === 'BLOCKER'));
 });
