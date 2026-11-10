@@ -2314,7 +2314,20 @@ async function toggleConversationInList(listId,add){
  if(result.error){toast('تعذر تحديث القائمة');console.error(result.error);return}
  const set=state.chatListItems.get(c.id)||new Set();if(add)set.add(listId);else set.delete(listId);state.chatListItems.set(c.id,set);renderConversations();toast(add?'أضيفت المحادثة إلى القائمة':'أزيلت المحادثة من القائمة');
 }
-async function loadStarredMessageIds(conversationId){if(!state.user||!conversationId)return;const {data,error}=await supabaseClient.from('user_message_stars').select('message_id').eq('user_id',state.user.id).eq('conversation_id',conversationId);if(state.active?.id!==conversationId)return;if(error){console.warn('Starred message state unavailable:',error.message);return}state.starredMessageIds=new Set((data||[]).map(x=>x.message_id))}
+async function loadStarredMessageIds(conversationId){
+ if(!state.user?.id||!conversationId)return false;
+ try{
+  const {data,error}=await supabaseClient.from('user_message_stars').select('message_id').eq('user_id',state.user.id).eq('conversation_id',conversationId);
+  if(state.active?.id!==conversationId)return false;
+  if(error)throw error;
+  state.starredMessageIds=new Set((data||[]).map(x=>x.message_id));
+  return true;
+ }catch(error){
+  if(state.active?.id===conversationId)state.starredMessageIds=new Set();
+  console.warn('Starred message state unavailable:',error?.message||error);
+  return false;
+ }
+}
 async function loadGroupSettings(conversationId){
  if(!conversationId||state.active?.id!==conversationId)return;
  const {data,error}=await supabaseClient.from('conversation_group_settings').select('*').eq('conversation_id',conversationId).maybeSingle();
