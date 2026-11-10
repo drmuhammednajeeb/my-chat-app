@@ -67,6 +67,26 @@
     {
       "path": "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql",
       "runWhen": "After core chat schema and before membership base dynamic policy rewrite; test-only stricter replacement of existing chat-media upload policy."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
+      "runWhen": "After core schema and before membership.base creates Auth signup/profile triggers."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
+      "runWhen": "After membership.base installs the profile guard and before membership.official adds verified-number enforcement."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+      "runWhen": "After core chat schema exists and before the eligibility overlay; restores the read-only recovered RPC source."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+      "runWhen": "After membership.final-format and the recovered RPC fixture; test-only eligibility overlay."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+      "runWhen": "After the final membership format, synthetic admin assertion, and eligibility overlay; disposable PostgreSQL transaction ending in ROLLBACK."
     }
   ],
   "execution": {
