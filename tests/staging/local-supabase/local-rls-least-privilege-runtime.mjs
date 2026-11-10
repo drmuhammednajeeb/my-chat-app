@@ -28,11 +28,13 @@ if (!['postgres:', 'postgresql:'].includes(url.protocol)
 
 const overlay = path.join(ROOT, 'tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql');
 const assertions = path.join(ROOT, 'tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql');
+const crudCompatibility = path.join(ROOT, 'tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql');
 const result = spawnSync('psql', [
   '--no-psqlrc',
   '--set=ON_ERROR_STOP=1',
   '--file', overlay,
   '--file', assertions,
+  '--file', crudCompatibility,
   raw
 ], {
   encoding: 'utf8',
