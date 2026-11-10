@@ -26,12 +26,27 @@ if (!['postgres:', 'postgresql:'].includes(url.protocol)
   fail('refusing non-local database target; expected postgres@loopback:54322/postgres without query or hash');
 }
 
+const rawIds = process.env.LOCAL_SYNTHETIC_AUTH_USERS_JSON;
+if (!rawIds) fail('LOCAL_SYNTHETIC_AUTH_USERS_JSON is required');
+let syntheticIds;
+try { syntheticIds = JSON.parse(rawIds); } catch { fail('invalid synthetic Auth identity map'); }
+const identityKeys = ['direct_a', 'direct_b'];
+const identityArgs = [];
+for (const key of identityKeys) {
+  const id = syntheticIds?.[key];
+  if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    fail('missing or invalid synthetic Auth identity: ' + key);
+  }
+  identityArgs.push('--set=' + key + '_id=' + id);
+}
+
 const overlay = path.join(ROOT, 'tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql');
 const assertions = path.join(ROOT, 'tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql');
 const crudCompatibility = path.join(ROOT, 'tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql');
 const result = spawnSync('psql', [
   '--no-psqlrc',
   '--set=ON_ERROR_STOP=1',
+  ...identityArgs,
   '--file', overlay,
   '--file', assertions,
   '--file', crudCompatibility,
