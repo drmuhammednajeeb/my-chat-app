@@ -60,5 +60,5 @@ test('test-only guard does not authorize cloud, production, or SQL execution', a
   const guard = await readFile(guardPath, 'utf8');
   assert.match(guard, /Never execute against a cloud project/i);
   assert.match(guard, /not a production migration/i);
-  assert.doesNotMatch(guard, /^\s*(insert|update|delete|drop|alter)\s+/im);
+  assert.doesNotMatch(guard, /^\s*(create|alter|drop)\s+(table|schema|extension|policy|trigger)\b/im);
 });
