@@ -1434,10 +1434,11 @@ async function loadMessages(){
   const newestFetched=fetchedRows[0]||null,oldestFetched=fetchedRows[fetchedRows.length-1]||null;
   const merged=new Map();
   (state.messages||[]).filter(m=>m.conversation_id===conversationId).forEach(m=>{
+   const afterPersonalClear=!state.activeChatPreference?.cleared_before||new Date(m.created_at)>new Date(state.activeChatPreference.cleared_before);
    const isNewerRealtime=newestFetched&&compareMessagesChronologically(m,newestFetched)>0;
    const isOlderHistory=fetchedRows.length===50&&oldestFetched&&compareMessagesChronologically(m,oldestFetched)<0;
    const arrivedDuringEmptyFetch=!newestFetched&&m.created_at>=syncStartedAt;
-   if(fetchedIds.has(m.id)||isNewerRealtime||isOlderHistory||arrivedDuringEmptyFetch)merged.set(m.id,m);
+   if(afterPersonalClear&&(fetchedIds.has(m.id)||isNewerRealtime||isOlderHistory||arrivedDuringEmptyFetch))merged.set(m.id,m);
   });
   fetchedRows.forEach(m=>merged.set(m.id,m));
   let messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
