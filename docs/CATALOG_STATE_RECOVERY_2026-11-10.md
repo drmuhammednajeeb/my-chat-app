@@ -21,7 +21,7 @@ The final live policy names are:
 - `Users create own conversation preferences`
 - `Users update own conversation preferences`
 
-The source file's original policy names and direct-conversation type restriction differ. The historical SQL that changed this scope is not present in the current repository. Preserve the current policy expressions from `pg_policies` in the approved catalog snapshot before any new canonical baseline is created.
+The source file's original policy names and direct-conversation type restriction differ. The historical SQL corresponding to this remote ledger entry is not present in the current repository. The final live policy may reflect this and/or later policy-hardening migrations; the exact delta cannot be attributed without the original body. Preserve the current policy expressions from `pg_policies` in the approved catalog snapshot before any new canonical baseline is created.
 
 ## 2. `channel_visibility_avatar_group_background` — version `20261107160647`
 
