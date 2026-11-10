@@ -93,6 +93,25 @@
       ]
     },
     {
+      "id": "chat.direct-conversation-rpc",
+      "source": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+      ],
+      "provides": [
+        "app_private.get_or_create_direct_conversation_impl(uuid)",
+        "public.get_or_create_direct_conversation(uuid)"
+      ],
+      "requires": [
+        "core.base"
+      ],
+      "status": "TEST_ONLY_RESTORED_PRODUCTION_SOURCE",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+      ],
+      "provenance": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
+      "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests."
+    },
+    {
       "id": "core.grants",
       "source": [
         "supabase/migrations/202611060002_tighten_api_grants.sql",
@@ -277,13 +296,13 @@
         "chat.pins",
         "chat.reactions",
         "team.admin",
-        "UNRESOLVED:get_or_create_direct_conversation_impl(uuid)"
+        "chat.direct-conversation-rpc"
       ],
       "testSource": [
         "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
       ],
       "blockedBy": [
-        "DAG-002"
+        "DAG-014"
       ]
     },
     {
@@ -1365,6 +1384,14 @@
     [
       "core.base",
       "chat.voice"
+    ],
+    [
+      "core.base",
+      "chat.direct-conversation-rpc"
+    ],
+    [
+      "chat.direct-conversation-rpc",
+      "chat.hardening"
     ]
   ],
   "blockers": [
@@ -1379,12 +1406,13 @@
     },
     {
       "id": "DAG-002",
-      "severity": "BLOCKER",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
       "evidence": [
-        "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-        "index.html"
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
+        "docs/RECOVER_DIRECT_CONVERSATION_RPC.md"
       ],
-      "issue": "app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation RPC are not defined in reviewed SQL sources.",
+      "issue": "Resolved for source recovery: both authoritative function definitions and their inspected ACLs were extracted read-only from the Supabase catalog, preserved in a test-only fixture, and recorded with SHA-256 provenance. No SQL was executed.",
       "recoveryInstructions": "docs/RECOVER_DIRECT_CONVERSATION_RPC.md"
     },
     {
@@ -1475,6 +1503,15 @@
         "database/changes/20261107080000_chat_voice_messages.sql"
       ],
       "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
+    },
+    {
+      "id": "DAG-014",
+      "severity": "BLOCKER",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json"
+      ],
+      "issue": "The direct-conversation RPC source is restored, but runtime validation is still required in a disposable local Supabase environment: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, concurrent creation without duplicates, exact ACL enforcement, and review of active-membership gating. Do not enable replay until these tests pass."
     }
   ],
   "duplicateProvenance": [
