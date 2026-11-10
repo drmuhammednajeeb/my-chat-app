@@ -16,10 +16,7 @@ SET LOCAL lock_timeout = '15s';
 -- and profiles; reset conversations and every FK-dependent conversation dataset.
 TRUNCATE TABLE public.conversations CASCADE;
 
--- Remove orphaned chat/document/channel media left behind after the conversation rows are reset.
--- Keep the public avatars bucket because it belongs to user profiles, not message history.
-DELETE FROM storage.objects
-WHERE bucket_id IN ('chat-media', 'conversation-documents', 'channel-avatars');
+-- Storage objects are removed through the local Storage API by clean-chat-core-runtime.mjs.
 
 ALTER TABLE public.conversations
   ADD COLUMN IF NOT EXISTS direct_user_low uuid,
@@ -210,11 +207,5 @@ BEGIN
     RAISE EXCEPTION 'Star composite conversation/message FK was not created';
   END IF;
 
-  IF EXISTS (
-    SELECT 1 FROM storage.objects
-    WHERE bucket_id IN ('chat-media', 'conversation-documents', 'channel-avatars')
-  ) THEN
-    RAISE EXCEPTION 'Chat/document/channel media objects were not cleared';
-  END IF;
 END
 $assert$;
