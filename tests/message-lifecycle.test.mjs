@@ -6,6 +6,7 @@ import vm from 'node:vm';
 const indexSource = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const modulePaths = ["js/00-bootstrap.js","js/10-conversations.js","js/20-message-interactions.js","js/30-receipts-rendering.js","js/40-message-runtime.js","js/50-group-management.js","js/60-personal-chat-settings.js","js/70-workspace.js"];
 const moduleSources = await Promise.all(modulePaths.map(path => readFile(new URL('../' + path, import.meta.url), 'utf8')));
+// Keep this order aligned with the classic script tags in index.html.
 const moduleSource = moduleSources.join('\n');
 const source = moduleSource + '\n' + indexSource;
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
