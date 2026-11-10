@@ -13,7 +13,8 @@ begin
 
   if not exists (select 1 from pg_roles where rolname = 'anon')
      or not exists (select 1 from pg_roles where rolname = 'authenticated')
-     or not exists (select 1 from pg_roles where rolname = 'service_role') then
+     or not exists (select 1 from pg_roles where rolname = 'service_role')
+     or not exists (select 1 from pg_roles where rolname = 'supabase_admin') then
     raise exception 'Supabase API roles are missing';
   end if;
 end;
@@ -26,6 +27,12 @@ alter default privileges for role postgres in schema public
 alter default privileges for role postgres in schema public
   revoke all on sequences from public, anon, authenticated;
 alter default privileges for role postgres in schema public
+  revoke all on functions from public, anon, authenticated;
+alter default privileges for role supabase_admin in schema public
+  revoke all on tables from public, anon, authenticated;
+alter default privileges for role supabase_admin in schema public
+  revoke all on sequences from public, anon, authenticated;
+alter default privileges for role supabase_admin in schema public
   revoke all on functions from public, anon, authenticated;
 
 -- Remove API access from anon at the table/sequence layer. RLS remains an independent
@@ -62,6 +69,28 @@ revoke delete on public.conversation_group_settings from authenticated;
 revoke execute on all functions in schema public from public, anon;
 revoke all on function public.guard_chat_message_content_update()
   from public, anon, authenticated, service_role;
+
+-- Trigger functions are implementation details, not PostgREST RPC endpoints.
+-- PostgreSQL checks EXECUTE when a trigger is created, not for each trigger firing;
+-- existing triggers continue to run after these API-role grants are removed.
+do $trigger_function_acl$
+declare
+  r record;
+begin
+  for r in
+    select n.nspname, p.proname, pg_get_function_identity_arguments(p.oid) as identity_arguments
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname in ('public', 'app_private')
+      and p.prorettype = 'trigger'::regtype
+  loop
+    execute format(
+      'revoke all on function %I.%I(%s) from public, anon, authenticated, service_role',
+      r.nspname, r.proname, r.identity_arguments
+    );
+  end loop;
+end;
+$trigger_function_acl$;
 
 
 -- Add a restrictive membership gate in addition to each table's feature-specific
