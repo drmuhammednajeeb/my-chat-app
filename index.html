@@ -1322,13 +1322,43 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
   const rendered=await pending;
   if(rendered||state.messageIds.has(m.id))return true;
   if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
-  const latest=(state.messages||[]).find(item=>item.id===m.id)||m;
+  const latest=(state.messages||[]).find(item=>item.id===m.id);
+  if(!latest)return false;
   return renderMessage(latest,conversationId,requestId);
  }
  const task=renderMessageInternal(m,conversationId,requestId);
  state.messageRenderPromises.set(m.id,task);
  try{return await task}
  finally{if(state.messageRenderPromises.get(m.id)===task)state.messageRenderPromises.delete(m.id)}
+}
+function reconcileMessageTimeline(area){
+ if(!area)return;
+ const rows=Array.from(area.querySelectorAll(':scope > .message'));
+ rows.sort((a,b)=>{
+  const at=Date.parse(a.dataset.createdAt||''),bt=Date.parse(b.dataset.createdAt||'');
+  const timeDiff=(Number.isFinite(at)?at:0)-(Number.isFinite(bt)?bt:0);
+  if(timeDiff)return timeDiff;
+  return String(a.dataset.messageId||'').localeCompare(String(b.dataset.messageId||''));
+ });
+ const existingDividers=new Map();
+ Array.from(area.children).filter(node=>node.classList.contains('day-divider')).forEach(node=>{
+  const day=node.dataset.day||node.textContent||'';
+  if(!existingDividers.has(day))existingDividers.set(day,node);
+ });
+ const fixed=Array.from(area.children).filter(node=>!node.classList.contains('message')&&!node.classList.contains('day-divider'));
+ const desired=[...fixed];let previousDay=null;
+ for(const row of rows){
+  const day=row.dataset.day||'';
+  if(day!==previousDay){
+   let divider=existingDividers.get(day);
+   if(!divider){divider=document.createElement('div');divider.className='day-divider';divider.dataset.day=day;divider.textContent=day}
+   desired.push(divider);previousDay=day;
+  }
+  desired.push(row);
+ }
+ const current=Array.from(area.children);
+ if(current.length===desired.length&&current.every((node,index)=>node===desired[index]))return;
+ area.replaceChildren(...desired);
 }
 async function renderMessageInternal(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)||state.messageIds.has(m.id)||state.renderingMessageIds.has(m.id))return false;
@@ -1339,7 +1369,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
   const d=new Date(m.created_at),day=d.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'});
   const activeConversation=state.active;
   const member=(activeConversation?.members||[]).find(x=>x.user_id===m.sender_id),sender=member?.profile?.display_name||'عضو';
-  const row=document.createElement('article');row.className='message'+(m.sender_id===state.user?.id?' mine':'');row.dataset.day=day;row.dataset.messageId=m.id;
+  const row=document.createElement('article');row.className='message'+(m.sender_id===state.user?.id?' mine':'');row.dataset.day=day;row.dataset.messageId=m.id;row.dataset.createdAt=m.created_at;
   const bubble=document.createElement('div');bubble.className='bubble'+(m.deleted_at?' deleted':'');
   if(m.sender_id!==state.user?.id&&(activeConversation?.type==='group'||activeConversation?.type==='channel')){const label=document.createElement('div');label.className='sender';label.textContent=sender;row.append(label)}
   if(state.active?.type==='direct'&&state.privateReplyContexts.has(m.id)&&!m.deleted_at){const ctx=state.privateReplyContexts.get(m.id),q=document.createElement('div');q.className='reply-quote private-reply-quote';const who=document.createElement('strong'),preview=document.createElement('span');who.textContent='رد خاص من مجموعة';preview.textContent=ctx.quoted_content;q.append(who,preview);bubble.append(q)}
@@ -1374,10 +1404,10 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
 };menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
   row.append(bubble);renderReactionBar(row,m);renderMessagePinMark(row,m);bindMessageGestures(row,m);
   if(!isCurrent())return false;
-  const latestMessage=(state.messages||[]).find(item=>item.id===m.id);if(latestMessage&&latestMessage!==m)return false;
+  const latestMessage=(state.messages||[]).find(item=>item.id===m.id);if(!latestMessage||latestMessage!==m)return false;
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
   const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
-  area.append(row);state.messageIds.add(m.id);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
+  area.append(row);state.messageIds.add(m.id);reconcileMessageTimeline(area);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
   if(!state.isLoadingMessages){if(m.sender_id===state.user?.id){clearNewMessages(false);scheduleMessagesBottom(area,'auto')}else if(near){scheduleMessagesBottom(area,'auto')}else{state.newMessageCount=(state.newMessageCount||0)+1;updateNewMessagesIndicator()}}
   updateDiagnostics();
   return true;
@@ -1566,10 +1596,18 @@ function subscribeProfileUpdates(conversation){
  state.profileChannel=channel.subscribe(status=>{if(status!=='SUBSCRIBED')console.warn('Profile realtime status:',status)});
 }
 function handleMessageUpdateRealtime(payload,conversationId){
- const incoming=payload?.new;if(!incoming?.id||state.active?.id!==conversationId)return;
+ const incoming=payload?.new;if(!incoming?.id||incoming.conversation_id!==conversationId||state.active?.id!==conversationId)return;
  const index=state.messages.findIndex(message=>message.id===incoming.id);
  if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);
- if(incoming.deleted_at){loadMessages().catch(error=>console.error('Deleted message refresh failed:',error));return}
+ if(incoming.deleted_at){
+  state.reactions?.delete(incoming.id);state.pinnedMessages?.delete(incoming.id);
+  const deletedRow=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===incoming.id);
+  if(deletedRow){deletedRow.remove();state.messageIds.delete(incoming.id);reconcileMessageTimeline($('messages'))}
+  renderMessage(incoming,conversationId,state.messageLoadVersion).catch(error=>console.error('Deleted message render failed:',error));
+  const conversation=state.conversations.find(item=>item.id===conversationId);
+  if(conversation?.last_message?.id===incoming.id)loadConversations().catch(error=>console.warn('Conversation preview refresh failed:',error));
+  return;
+ }
  const row=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===incoming.id);
  if(row){
   const bubble=row.querySelector('.bubble');let content=bubble?.querySelector('.message-content');
@@ -1586,6 +1624,23 @@ function handleMessageUpdateRealtime(payload,conversationId){
  const conversation=state.conversations.find(item=>item.id===conversationId);
  if(conversation?.last_message?.id===incoming.id){conversation.last_message=incoming;conversation.last_message_at=incoming.created_at;renderConversations()}
 }
+function handleMessageDeleteRealtime(payload,conversationId){
+ const deletedId=payload?.old?.id;
+ if(!deletedId||state.active?.id!==conversationId)return false;
+ const existing=(state.messages||[]).find(message=>message.id===deletedId);
+ if(existing&&existing.conversation_id!==conversationId)return false;
+ state.messages=(state.messages||[]).filter(message=>message.id!==deletedId);
+ state.messageIds?.delete(deletedId);
+ state.reactions?.delete(deletedId);
+ state.pinnedMessages?.delete(deletedId);
+ state.replyMessages?.delete(deletedId);
+ const row=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===deletedId);
+ if(row)row.remove();
+ reconcileMessageTimeline($('messages'));
+ const conversation=state.conversations.find(item=>item.id===conversationId);
+ if(conversation?.last_message?.id===deletedId)loadConversations().catch(error=>console.warn('Conversation preview refresh failed:',error));
+ return true;
+}
 function subscribeConversation(){
  if(state.channel)supabaseClient.removeChannel(state.channel);
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
@@ -1593,6 +1648,7 @@ function subscribeConversation(){
  state.channel=supabaseClient.channel('chat:'+id)
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id,state.messageLoadVersion).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom(),state.messageLoadVersion)})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>handleMessageUpdateRealtime(p,id))
+  .on('postgres_changes',{event:'DELETE',schema:'public',table:'chat_messages'},p=>handleMessageDeleteRealtime(p,id))
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions'},p=>handleReactionRealtime(p,id))
