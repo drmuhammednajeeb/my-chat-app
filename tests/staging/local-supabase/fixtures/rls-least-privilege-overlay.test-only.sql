@@ -45,12 +45,13 @@ end;
 $maintain_guard$;
 
 -- Remove direct write paths that are not part of the supported client contract.
+-- Preserve INSERT on message_edit_history: edit_message_secure is SECURITY INVOKER and its RLS policy
+-- permits the insert only while the function sets app.allow_message_edit = 'on'.
 -- Preserve UPDATE on upsert-backed tables: PostgREST ON CONFLICT requires UPDATE privilege.
 -- Trigger/RPC-owned writes continue through their reviewed SECURITY DEFINER/invoker paths.
 revoke insert, update, delete on public.conversation_member_events from authenticated;
 grant select on public.conversation_member_events to authenticated;
 
-revoke insert on public.message_edit_history from authenticated;
 grant select on public.message_edit_history to authenticated;
 
 revoke update, delete on public.private_reply_contexts from authenticated;
