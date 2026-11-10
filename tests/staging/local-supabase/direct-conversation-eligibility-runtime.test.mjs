@@ -108,6 +108,9 @@ test('runtime fixture remains design-only and cannot authorize local/cloud execu
 test('two-session concurrency runner is restricted to disposable loopback PostgreSQL', async () => {
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8');
   assert.match(runner, /LOCAL_SUPABASE_DB_URL/);
+  assert.match(runner, /const eligibleSql/);
+  assert.match(runner, /statement_timeout = '20s'/);
+  assert.match(runner, /lock_timeout = '10s'/);
   assert.match(runner, /127\.0\.0\.1/);
   assert.match(runner, /url\.port !== '54322'/);
   assert.match(runner, /url\.username !== 'postgres'/);
