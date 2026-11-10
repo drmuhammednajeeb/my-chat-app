@@ -75,6 +75,7 @@ test('clean chat core reset is destructive only inside the loopback disposable r
     '/storage/v1/object/',
     "'chat-media', 'conversation-documents', 'channel-avatars'",
     '__clean_core_reset_probe__',
+    "'Content-Type': 'image/png'",
     'PROBE_UPLOADED=true',
     'VERIFIED_EMPTY=true'
   ]) assert.ok(runner.includes(token), 'missing clean core runtime safety/coverage token: ' + token);
