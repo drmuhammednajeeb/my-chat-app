@@ -31,7 +31,10 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
     'REVOKE DELETE ON public.user_settings',
     'REVOKE DELETE ON public.conversation_group_settings',
     'as restrictive for all to authenticated',
-    'Require active membership for all Storage operations'
+    'Require active membership for all Storage operations',
+    'Do not query storage.buckets from this policy',
+    'using ((select app_private.is_active_member()))',
+    'with check ((select app_private.is_active_member()))'
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing hardening clause: ' + token);
   assert.match(sql, /revoke maintain on all tables in schema public from authenticated/i);
 });
