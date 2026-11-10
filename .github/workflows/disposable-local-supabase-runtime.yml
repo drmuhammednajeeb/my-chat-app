@@ -6,6 +6,7 @@ on:
       - "engineering/stability-css-extraction-20261109"
       - "fix/message-render-scope-20261110"
       - "security/default-acl-owner-coverage-20261110"
+      - "rebuild/clean-chat-core-storage-api-final-verified-20261111"
   pull_request:
     branches:
       - main
