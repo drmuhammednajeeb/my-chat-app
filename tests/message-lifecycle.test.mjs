@@ -106,6 +106,8 @@ test('rendered message controls are wired to the persisted reaction and star act
   const messageRenderer = extractFunction('renderMessageInternal');
   const reactionBar = extractFunction('renderReactionBar');
   assert.match(messageRenderer, /toggleMessageStar/);
+  assert.match(messageRenderer, /starOption\.querySelector\('span'\)/);
+  assert.match(messageRenderer, /starOption\.dataset\.starred/);
   assert.match(messageRenderer, /إضافة تفاعل/);
   assert.match(reactionBar, /toggleMessageReaction/);
   assert.match(reactionBar, /button\.onclick/);
