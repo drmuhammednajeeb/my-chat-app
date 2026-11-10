@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { Script } from 'node:vm';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -60,7 +60,8 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
 test('clean chat core reset is destructive only inside the loopback disposable runner', async () => {
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/clean-chat-core-runtime.mjs'), 'utf8');
   const fixture = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/clean-chat-core-rebuild.test-only.sql'), 'utf8');
-  new Script(runner, { filename: 'clean-chat-core-runtime.mjs' });
+  const syntax = spawnSync(process.execPath, ['--check', path.join(root, 'tests/staging/local-supabase/clean-chat-core-runtime.mjs')], { encoding: 'utf8' });
+  assert.equal(syntax.status, 0, syntax.stderr || 'clean core runner syntax check failed');
   for (const token of [
     "url.port !== '54322'",
     "url.username !== 'postgres'",
