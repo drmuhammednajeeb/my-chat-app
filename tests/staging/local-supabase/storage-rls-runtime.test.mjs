@@ -11,6 +11,12 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
   for (const token of [
     'LOCAL_SUPABASE_URL',
     'LOCAL_SUPABASE_ANON_KEY',
+    'LOCAL_SUPABASE_DB_URL',
+    'localDatabaseProbe',
+    'STORAGE_POLICY_PROBE',
+    'STORAGE_POLICY_SET',
+    'verify direct conversation membership',
+    'app_private.is_conversation_member',
     'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
     "endpoint.protocol !== 'http:'",
     "endpoint.port !== '54321'",
