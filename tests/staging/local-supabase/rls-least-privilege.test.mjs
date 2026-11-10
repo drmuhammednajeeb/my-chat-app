@@ -81,8 +81,30 @@ test('manual RLS runtime runner refuses cloud targets and runs only loopback Pos
     "'::1'",
     'app.test_only_local_replay=enabled',
     'rls-least-privilege-overlay.test-only.sql',
-    'rls-least-privilege.assert.sql'
+    'rls-least-privilege.assert.sql',
+    'rls-crud-compatibility.runtime.test.sql'
   ]) assert.ok(runner.includes(fragment), 'missing local runner safeguard: ' + fragment);
   assert.match(runner, /refusing non-local database target/i);
   assert.doesNotMatch(runner, /supabase\.co|SUPABASE_SERVICE_ROLE_KEY|service_role key/i);
+});
+
+
+test('CRUD runtime fixture verifies upsert, secure edit, and cross-user isolation', async () => {
+  const sql = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql'), 'utf8');
+  for (const token of [
+    'get_or_create_direct_conversation',
+    'chat_messages',
+    'chat_lists',
+    'chat_list_items',
+    'ON CONFLICT(user_id,list_id,conversation_id)',
+    'user_message_stars',
+    'ON CONFLICT(user_id,message_id)',
+    'edit_message_secure',
+    'message_edit_history',
+    'Cross-user chat list read was not isolated',
+    'Cross-user chat list INSERT was accepted',
+    'ROLLBACK'
+  ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing CRUD runtime check: ' + token);
+  assert.match(sql, /SET LOCAL ROLE authenticated/i);
+  assert.match(sql, /request.jwt.claim.sub/i);
 });
