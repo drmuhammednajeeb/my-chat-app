@@ -36,7 +36,7 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
     'test-fixture.direct-chat-auth-seed',
     'LOCAL_SYNTHETIC_AUTH_PASSWORD'
   ]) assert.ok(replay.includes(token), 'missing GoTrue fixture provisioning safeguard: ' + token);
-  assert.doesNotMatch(replay, /method: 'PUT'[\\s\\S]{0,100}admin\/users/i);
+  assert.doesNotMatch(replay, /method: 'PUT'/);
 });
 
 test('Storage runtime probe checks uploader ownership, private/shared reads, upsert, and cleanup', async () => {
