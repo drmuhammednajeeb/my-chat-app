@@ -56,6 +56,33 @@ INSERT INTO auth.users (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- GoTrue password sign-in requires the matching email identity as well as auth.users.
+INSERT INTO auth.identities (
+  provider_id, user_id, identity_data, provider, email, created_at, updated_at
+)
+SELECT
+  u.id::text,
+  u.id,
+  jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', u.email_confirmed_at IS NOT NULL),
+  'email',
+  u.email,
+  now(),
+  now()
+FROM auth.users u
+WHERE u.id IN (
+  '22222222-2222-4222-8222-222222222201'::uuid,
+  '22222222-2222-4222-8222-222222222202'::uuid,
+  '22222222-2222-4222-8222-222222222203'::uuid,
+  '22222222-2222-4222-8222-222222222204'::uuid,
+  '22222222-2222-4222-8222-222222222205'::uuid,
+  '22222222-2222-4222-8222-222222222206'::uuid
+)
+ON CONFLICT (provider_id, provider) DO UPDATE
+SET user_id = excluded.user_id,
+    identity_data = excluded.identity_data,
+    email = excluded.email,
+    updated_at = now();
+
 DO $assert$
 BEGIN
   IF (SELECT count(*) FROM auth.users
