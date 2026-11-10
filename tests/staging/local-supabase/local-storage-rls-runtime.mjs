@@ -187,7 +187,7 @@ SELECT coalesce(array_to_string(storage.foldername('${diagnosticPath}'), '|'), '
 ROLLBACK;`);
   console.log('STORAGE_POLICY_PROBE=' + diagnostic);
   const probeParts = diagnostic.split('|');
-  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || !['t', 'true'].includes(probeParts[3]) || !['t', 'true'].includes(probeParts[4])) {
+  if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== userA.id || !['t', 'true'].includes(probeParts[4]) || !['t', 'true'].includes(probeParts[5])) {
     throw new Error('Storage policy preconditions failed: folder ownership, active membership, or conversation membership is false');
   }
 
