@@ -38,8 +38,12 @@ let conversationId = null;
 let tokenA = null;
 let tokenB = null;
 
+async function fetchWithTimeout(url, options = {}) {
+  return fetch(url, { ...options, signal: AbortSignal.timeout(20000) });
+}
 async function call(path, { method = 'GET', key = anonKey, token = null, body, headers = {} } = {}) {
-  const response = await fetch(base + path, {
+  console.log('STORAGE_PROBE_STEP=' + method + ' ' + path);
+  const response = await fetchWithTimeout(base + path, {
     method,
     headers: {
       apikey: key,
@@ -67,7 +71,8 @@ function objectPath(bucket, name) {
   return '/storage/v1/object/' + encodeURIComponent(bucket) + '/' + name.split('/').map(encodeURIComponent).join('/');
 }
 async function upload(bucket, name, bytes, token, upsert = false, contentType = 'application/octet-stream') {
-  const response = await fetch(base + objectPath(bucket, name), {
+  console.log('STORAGE_PROBE_STEP=upload ' + bucket + '/' + name);
+  const response = await fetchWithTimeout(base + objectPath(bucket, name), {
     method: 'POST',
     headers: {
       apikey: anonKey,
@@ -143,11 +148,14 @@ async function cleanup() {
 }
 
 try {
+  console.log('STORAGE_PROBE_STEP=initialize synthetic users');
   await setPassword(userA);
   await setPassword(userB);
+  console.log('STORAGE_PROBE_STEP=authenticate synthetic users');
   tokenA = await login(userA);
   tokenB = await login(userB);
 
+  console.log('STORAGE_PROBE_STEP=create direct conversation');
   const rpc = assertOk(await rest('rpc/get_or_create_direct_conversation', tokenA, 'POST', { p_other_user_id: userB.id }), 'direct conversation RPC');
   conversationId = typeof rpc === 'string' ? rpc : rpc?.id;
   if (!conversationId || !/^[0-9a-f-]{36}$/i.test(conversationId)) throw new Error('direct conversation RPC returned an invalid UUID');
@@ -158,7 +166,7 @@ try {
   await upload('chat-media', chatPath, pdf, tokenA, false, 'application/pdf');
   assertSigned(await sign('chat-media', chatPath, tokenB), 'conversation member signed read of chat media');
   const spoofPath = conversationId + '/' + userA.id + '/spoof-' + nonce + '.bin';
-  const spoof = await fetch(base + objectPath('chat-media', spoofPath), {
+  const spoof = await fetchWithTimeout(base + objectPath('chat-media', spoofPath), {
     method: 'POST',
     headers: { apikey: anonKey, Authorization: 'Bearer ' + tokenB, 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' },
     body: Buffer.from('spoof')
@@ -199,14 +207,14 @@ try {
   const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r4sAAAAASUVORK5CYII=', 'base64');
   await upload('avatars', avatarPath, pixel, tokenA, true, 'image/png');
   await upload('avatars', avatarPath, pixel, tokenA, true, 'image/png');
-  const avatarSpoof = await fetch(base + objectPath('avatars', avatarPath), {
+  const avatarSpoof = await fetchWithTimeout(base + objectPath('avatars', avatarPath), {
     method: 'POST',
     headers: { apikey: anonKey, Authorization: 'Bearer ' + tokenB, 'Content-Type': 'image/png', 'x-upsert': 'true' },
     body: Buffer.from('avatar-spoof')
   }).then(async response => ({ response, text: await response.text() }));
   assertDenied(avatarSpoof, 'cross-user avatar overwrite');
   const publicAvatarUrl = base + '/storage/v1/object/public/avatars/' + avatarPath.split('/').map(encodeURIComponent).join('/');
-  const publicAvatar = await fetch(publicAvatarUrl);
+  const publicAvatar = await fetchWithTimeout(publicAvatarUrl);
   if (!publicAvatar.ok || !publicAvatar.headers.get('content-type')?.includes('image/png')) throw new Error('public avatar delivery failed after owner upsert');
 
   // Owner delete paths must continue to work for each private/public bucket.
