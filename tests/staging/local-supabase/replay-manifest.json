@@ -635,10 +635,8 @@
         "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs",
         "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql"
       ],
-      "blockedBy": [
-        "DAG-016"
-      ],
-      "parityNote": "Passed in disposable local Supabase: read-only privilege postconditions, postgres-owner default ACLs, trigger-function ACLs, active-member policy coverage, rollback-only CRUD/upsert and membership-trigger compatibility, plus Storage API RLS. No production grants or policies were changed.",
+      "blockedBy": [],
+      "parityNote": "Disposable-local least-privilege, CRUD, Storage, and DAG-006 channel-avatar RLS runtime passed; no production grants or policies changed.",
       "runtimeEvidence": {
         "runId": 42863700280,
         "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
