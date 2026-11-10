@@ -1,154 +1,68 @@
--- TEST ONLY. Run after core schema and before membership.base creates auth.users triggers.
--- Reserved .test identities and unique synthetic membership numbers; never use production data.
+-- TEST ONLY. GoTrue Admin API creates these reserved .test users before membership.base.
+-- This fixture validates Auth-owned rows; it never inserts into auth.users or auth.identities.
 -- The missing-profile account is intentional and must remain without a public.profiles row.
 
-INSERT INTO auth.users (
-  id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
-  raw_app_meta_data, raw_user_meta_data
-) VALUES
-(
-  '22222222-2222-4222-8222-222222222201'::uuid,
-  '00000000-0000-0000-0000-000000000000'::uuid,
-  'authenticated', 'authenticated', 'direct-a@bizmindmakers.test', '',
-  now(),
-  jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
-    'membership_number','971001000002','membership_number_verified',true),
-  jsonb_build_object('username','direct_a','display_name','Direct Test A')
-),
-(
-  '22222222-2222-4222-8222-222222222202'::uuid,
-  '00000000-0000-0000-0000-000000000000'::uuid,
-  'authenticated', 'authenticated', 'direct-b@bizmindmakers.test', '',
-  now(),
-  jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
-    'membership_number','971001000003','membership_number_verified',true),
-  jsonb_build_object('username','direct_b','display_name','Direct Test B')
-),
-(
-  '22222222-2222-4222-8222-222222222203'::uuid,
-  '00000000-0000-0000-0000-000000000000'::uuid,
-  'authenticated', 'authenticated', 'direct-suspended@bizmindmakers.test', '',
-  now(),
-  jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
-    'membership_number','971001000004','membership_number_verified',true),
-  jsonb_build_object('username','direct_suspended','display_name','Direct Test Suspended')
-),
-(
-  '22222222-2222-4222-8222-222222222204'::uuid,
-  '00000000-0000-0000-0000-000000000000'::uuid,
-  'authenticated', 'authenticated', 'direct-unverified@bizmindmakers.test', '',
-  now(),
-  jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
-    'membership_number','971001000005','membership_number_verified',false),
-  jsonb_build_object('username','direct_unverified','display_name','Direct Test Unverified')
-),
-(
-  '22222222-2222-4222-8222-222222222205'::uuid,
-  '00000000-0000-0000-0000-000000000000'::uuid,
-  'authenticated', 'authenticated', 'direct-unconfirmed@bizmindmakers.test', '',
-  NULL,
-  jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
-    'membership_number','971001000006','membership_number_verified',true),
-  jsonb_build_object('username','direct_unconfirmed','display_name','Direct Test Unconfirmed')
-),
-(
-  '22222222-2222-4222-8222-222222222206'::uuid,
-  '00000000-0000-0000-0000-000000000000'::uuid,
-  'authenticated', 'authenticated', 'direct-missing-profile@bizmindmakers.test', '',
-  now(),
-  jsonb_build_object('provider','email','providers',jsonb_build_array('email'),
-    'membership_number','971001000007','membership_number_verified',true),
-  jsonb_build_object('username','direct_missing_profile','display_name','Direct Test Missing Profile')
-)
-ON CONFLICT (id) DO NOTHING;
-
--- GoTrue password sign-in requires the matching email identity as well as auth.users.
-INSERT INTO auth.identities (
-  provider_id, user_id, identity_data, provider, created_at, updated_at
-)
-SELECT
-  u.id::text,
-  u.id,
-  jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', u.email_confirmed_at IS NOT NULL),
-  'email',
-  now(),
-  now()
-FROM auth.users u
-WHERE u.id IN (
-  '22222222-2222-4222-8222-222222222201'::uuid,
-  '22222222-2222-4222-8222-222222222202'::uuid,
-  '22222222-2222-4222-8222-222222222203'::uuid,
-  '22222222-2222-4222-8222-222222222204'::uuid,
-  '22222222-2222-4222-8222-222222222205'::uuid,
-  '22222222-2222-4222-8222-222222222206'::uuid
-)
-ON CONFLICT (provider_id, provider) DO UPDATE
-SET user_id = excluded.user_id,
-    identity_data = excluded.identity_data,
-    updated_at = now();
-
 DO $assert$
+DECLARE
+  expected record;
 BEGIN
-  IF (SELECT count(*) FROM auth.identities
-      WHERE user_id IN (
-        '22222222-2222-4222-8222-222222222201'::uuid,
-        '22222222-2222-4222-8222-222222222202'::uuid,
-        '22222222-2222-4222-8222-222222222203'::uuid,
-        '22222222-2222-4222-8222-222222222204'::uuid,
-        '22222222-2222-4222-8222-222222222205'::uuid,
-        '22222222-2222-4222-8222-222222222206'::uuid
-      ) AND provider = 'email') <> 6 THEN
-    RAISE EXCEPTION 'Synthetic email identities are incomplete';
-  END IF;
   IF (SELECT count(*) FROM auth.users
-      WHERE id IN (
-        '22222222-2222-4222-8222-222222222201'::uuid,
-        '22222222-2222-4222-8222-222222222202'::uuid,
-        '22222222-2222-4222-8222-222222222203'::uuid,
-        '22222222-2222-4222-8222-222222222204'::uuid,
-        '22222222-2222-4222-8222-222222222205'::uuid,
-        '22222222-2222-4222-8222-222222222206'::uuid
+      WHERE email IN (
+        'direct-a@bizmindmakers.test',
+        'direct-b@bizmindmakers.test',
+        'direct-suspended@bizmindmakers.test',
+        'direct-unverified@bizmindmakers.test',
+        'direct-unconfirmed@bizmindmakers.test',
+        'direct-missing-profile@bizmindmakers.test'
       )) <> 6 THEN
     RAISE EXCEPTION 'Synthetic direct-chat Auth seed is incomplete';
   END IF;
-  IF EXISTS (
-    SELECT 1 FROM auth.users
-    WHERE email = 'direct-unconfirmed@bizmindmakers.test'
-      AND email_confirmed_at IS NOT NULL
-  ) THEN
-    RAISE EXCEPTION 'The unconfirmed-email fixture must remain unconfirmed';
+
+  IF (SELECT count(*)
+      FROM auth.identities i
+      JOIN auth.users u ON u.id = i.user_id
+      WHERE u.email IN (
+        'direct-a@bizmindmakers.test',
+        'direct-b@bizmindmakers.test',
+        'direct-suspended@bizmindmakers.test',
+        'direct-unverified@bizmindmakers.test',
+        'direct-unconfirmed@bizmindmakers.test',
+        'direct-missing-profile@bizmindmakers.test'
+      ) AND i.provider = 'email') <> 6 THEN
+    RAISE EXCEPTION 'GoTrue did not create all six email identities';
   END IF;
 
-  IF EXISTS (
-    SELECT 1
-    FROM (VALUES
-      ('22222222-2222-4222-8222-222222222201'::uuid, 'direct-a@bizmindmakers.test', '971001000002', true, true),
-      ('22222222-2222-4222-8222-222222222202'::uuid, 'direct-b@bizmindmakers.test', '971001000003', true, true),
-      ('22222222-2222-4222-8222-222222222203'::uuid, 'direct-suspended@bizmindmakers.test', '971001000004', true, true),
-      ('22222222-2222-4222-8222-222222222204'::uuid, 'direct-unverified@bizmindmakers.test', '971001000005', false, true),
-      ('22222222-2222-4222-8222-222222222205'::uuid, 'direct-unconfirmed@bizmindmakers.test', '971001000006', true, false),
-      ('22222222-2222-4222-8222-222222222206'::uuid, 'direct-missing-profile@bizmindmakers.test', '971001000007', true, true)
-    ) AS expected(id, email, membership_number, verified, confirmed)
-    LEFT JOIN auth.users u ON u.id = expected.id
-    WHERE u.id IS NULL
-       OR u.email IS DISTINCT FROM expected.email
-       OR u.raw_app_meta_data->>'membership_number' IS DISTINCT FROM expected.membership_number
-       OR coalesce((u.raw_app_meta_data->>'membership_number_verified')::boolean, false)
-            IS DISTINCT FROM expected.verified
-       OR (u.email_confirmed_at IS NOT NULL) IS DISTINCT FROM expected.confirmed
-  ) THEN
-    RAISE EXCEPTION 'Synthetic Auth identities do not match the reviewed eligibility matrix';
-  END IF;
+  FOR expected IN
+    SELECT * FROM (VALUES
+      ('direct-a@bizmindmakers.test', '971001000002', true, true),
+      ('direct-b@bizmindmakers.test', '971001000003', true, true),
+      ('direct-suspended@bizmindmakers.test', '971001000004', true, true),
+      ('direct-unverified@bizmindmakers.test', '971001000005', false, true),
+      ('direct-unconfirmed@bizmindmakers.test', '971001000006', true, false),
+      ('direct-missing-profile@bizmindmakers.test', '971001000007', true, true)
+    ) AS rows(email, membership_number, verified, confirmed)
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.email = expected.email
+        AND u.raw_app_meta_data->>'membership_number' = expected.membership_number
+        AND coalesce((u.raw_app_meta_data->>'membership_number_verified')::boolean, false)
+              IS NOT DISTINCT FROM expected.verified
+        AND (u.email_confirmed_at IS NOT NULL) IS NOT DISTINCT FROM expected.confirmed
+    ) THEN
+      RAISE EXCEPTION 'Synthetic Auth identity does not match the reviewed eligibility matrix: %', expected.email;
+    END IF;
+  END LOOP;
 
   IF (SELECT count(DISTINCT raw_app_meta_data->>'membership_number')
       FROM auth.users
-      WHERE id IN (
-        '22222222-2222-4222-8222-222222222201'::uuid,
-        '22222222-2222-4222-8222-222222222202'::uuid,
-        '22222222-2222-4222-8222-222222222203'::uuid,
-        '22222222-2222-4222-8222-222222222204'::uuid,
-        '22222222-2222-4222-8222-222222222205'::uuid,
-        '22222222-2222-4222-8222-222222222206'::uuid
+      WHERE email IN (
+        'direct-a@bizmindmakers.test',
+        'direct-b@bizmindmakers.test',
+        'direct-suspended@bizmindmakers.test',
+        'direct-unverified@bizmindmakers.test',
+        'direct-unconfirmed@bizmindmakers.test',
+        'direct-missing-profile@bizmindmakers.test'
       )) <> 6 THEN
     RAISE EXCEPTION 'Synthetic membership numbers must be unique';
   END IF;
