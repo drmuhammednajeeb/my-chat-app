@@ -1129,14 +1129,12 @@
         "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs",
         "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql"
       ],
-      "blockedBy": [
-        "DAG-016"
-      ],
-      "note": "Passed in disposable local Supabase: read-only privilege postconditions, postgres-owner default ACLs, trigger-function ACLs, active-member policy coverage, rollback-only CRUD/upsert and membership-trigger compatibility, plus Storage API RLS. No production grants or policies were changed. Added a dedicated DAG-006 runtime matrix for the indirect channel-avatar authorization helper; pending CI execution.",
+      "blockedBy": [],
+      "note": "Passed in disposable local Supabase: read-only privilege postconditions, postgres-owner default ACLs, trigger-function ACLs, active-member policy coverage, rollback-only CRUD/upsert and membership-trigger compatibility, Storage API RLS, and the DAG-006 indirect channel-avatar authorization matrix. No production grants or policies were changed.",
       "runtimeEvidence": {
-        "runId": 42863700280,
-        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
-        "scope": "disposable local Supabase/PostgreSQL 17 only"
+        "runId": 42912189296,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42912189296",
+        "scope": "disposable local Supabase/PostgreSQL 17 only; channel-avatar RLS matrix, least-privilege/CRUD/Storage runtime, and temporary cleanup passed"
       }
     },
     {
