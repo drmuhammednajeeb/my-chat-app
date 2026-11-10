@@ -283,6 +283,15 @@ begin
   ) then
     raise exception 'storage.objects is missing its restrictive active-member guard';
   end if;
+  if exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'storage'
+      and p.tablename = 'objects'
+      and p.policyname = 'Require active membership for all Storage operations'
+      and (coalesce(p.qual,'') || ' ' || coalesce(p.with_check,'')) ilike '%storage.buckets%'
+  ) then
+    raise exception 'restrictive Storage guard must not query storage.buckets under bucket RLS';
+  end if;
 
 end;
 $assert$;
