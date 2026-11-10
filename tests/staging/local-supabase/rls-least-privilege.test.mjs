@@ -27,7 +27,6 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
     'REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM public, anon',
     'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public',
     'REVOKE INSERT, UPDATE, DELETE ON public.conversation_member_events',
-    'REVOKE INSERT ON public.message_edit_history',
     'REVOKE UPDATE, DELETE ON public.private_reply_contexts',
     'REVOKE DELETE ON public.user_settings',
     'REVOKE DELETE ON public.conversation_group_settings',
@@ -56,7 +55,8 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     'bucket_id',
     'RESTRICTIVE',
     'Require active membership for all API operations',
-    'Preserve UPDATE on upsert-backed tables'
+    'Preserve UPDATE on upsert-backed tables',
+    'Preserve INSERT on message_edit_history'
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing assertion: ' + token);
   assert.doesNotMatch(sql, /\b(insert\s+into|update\s+\w|delete\s+from|create\s+table|alter\s+table)\b/i);
 });
