@@ -66,8 +66,10 @@ begin
      or has_table_privilege('authenticated','public.conversation_member_events','DELETE') then
     raise exception 'conversation_member_events must be read-only for API clients';
   end if;
-  if has_table_privilege('authenticated','public.message_edit_history','INSERT') then
-    raise exception 'message_edit_history writes must remain behind edit_message_secure';
+  if not has_table_privilege('authenticated','public.message_edit_history','INSERT')
+     or has_table_privilege('authenticated','public.message_edit_history','UPDATE')
+     or has_table_privilege('authenticated','public.message_edit_history','DELETE') then
+    raise exception 'message_edit_history must allow policy-gated INSERT only; UPDATE/DELETE must remain denied';
   end if;
   if has_table_privilege('authenticated','public.private_reply_contexts','UPDATE')
      or has_table_privilege('authenticated','public.private_reply_contexts','DELETE') then
