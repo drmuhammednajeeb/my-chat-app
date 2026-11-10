@@ -80,6 +80,15 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
 });
 
+test('rendered message controls are wired to the persisted reaction and star actions', () => {
+  const messageRenderer = extractFunction('renderMessage');
+  const reactionBar = extractFunction('renderReactionBar');
+  assert.match(messageRenderer, /toggleMessageStar/);
+  assert.match(messageRenderer, /إضافة تفاعل/);
+  assert.match(reactionBar, /toggleMessageReaction/);
+  assert.match(reactionBar, /button\.onclick/);
+});
+
 test('all ordered classic JavaScript modules parse independently and as one shared global program', () => {
   moduleSources.forEach((module, index) => {
     new vm.Script(module, { filename: modulePaths[index] });
