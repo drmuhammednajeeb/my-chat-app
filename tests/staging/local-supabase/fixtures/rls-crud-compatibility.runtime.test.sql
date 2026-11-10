@@ -2,15 +2,17 @@
 -- Requires the synthetic active direct-chat identities and the completed RLS overlay.
 -- All inserted rows and the direct conversation are rolled back.
 BEGIN;
+SELECT set_config('app.test.direct_a_id', :'direct_a_id', true);
+SELECT set_config('app.test.direct_b_id', :'direct_b_id', true);
 SET LOCAL statement_timeout = '30s';
 SET LOCAL lock_timeout = '10s';
 SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222201',true);
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
 
 DO $crud_compatibility$
 DECLARE
-  v_user_a uuid := '22222222-2222-4222-8222-222222222201';
-  v_user_b uuid := '22222222-2222-4222-8222-222222222202';
+  v_user_a uuid := current_setting('app.test.direct_a_id')::uuid;
+  v_user_b uuid := current_setting('app.test.direct_b_id')::uuid;
   v_conversation uuid;
   v_message uuid;
   v_list uuid;
