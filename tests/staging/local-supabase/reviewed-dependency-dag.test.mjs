@@ -111,7 +111,7 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'team.admin').testSource.some(source => source.includes('team_management_dashboard.sql')));
-  assert.ok(dag.nodes.find(node => node.id === 'chat.channel-avatar-catalog-reconstruction')?.status === 'TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION');
+  assert.ok(dag.nodes.find(node => node.id === 'chat.channel-avatar-catalog-reconstruction')?.status === 'TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION_RUNTIME_VERIFIED_LOCAL');
   assert.ok(dag.nodes.find(node => node.id === 'security.least-privilege-overlay')?.testSource.includes('tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-auth-seed').source.some(source => source.includes('synthetic-direct-chat-auth-before-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-profiles').source.some(source => source.includes('synthetic-direct-chat-profiles-after-membership.sql')));
