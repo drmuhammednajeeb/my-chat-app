@@ -1,3 +1,4 @@
+'use strict';
 async function loadWorkspaceData(){
  if(!state.user)return;const ids=state.conversations.map(c=>c.id);
  try{const [cl,lb,rl]=await Promise.all([supabaseClient.from('user_conversation_classifications').select('conversation_id,category,source').eq('user_id',state.user.id),supabaseClient.from('user_conversation_labels').select('id,name,color').eq('user_id',state.user.id),supabaseClient.from('user_classification_rules').select('id,name,conditions,action,priority').eq('user_id',state.user.id).eq('enabled',true).order('priority')]);
