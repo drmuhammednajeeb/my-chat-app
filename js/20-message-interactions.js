@@ -1,3 +1,4 @@
+'use strict';
 async function loadMessageReactions(conversationId,messages,requestId=null){
  const ids=(messages||[]).filter(m=>!m.deleted_at).map(m=>m.id);if(!ids.length)return true;
  try{
