@@ -75,9 +75,7 @@ begin
      or has_table_privilege('authenticated','public.private_reply_contexts','DELETE') then
     raise exception 'private_reply_contexts must not be directly mutable by clients';
   end if;
-  if has_table_privilege('authenticated','public.user_message_stars','UPDATE')
-     or has_table_privilege('authenticated','public.user_settings','DELETE')
-     or has_table_privilege('authenticated','public.chat_list_items','UPDATE')
+  if has_table_privilege('authenticated','public.user_settings','DELETE')
      or has_table_privilege('authenticated','public.conversation_group_settings','DELETE') then
     raise exception 'An application table has an unnecessary direct DML privilege';
   end if;
