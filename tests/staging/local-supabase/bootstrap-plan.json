@@ -20,7 +20,11 @@
       "Resolution of all cross-directory duplicate and ordering conflicts",
       "A successful PostgreSQL parse and execution rehearsal against a disposable local-only database",
       "A verified local-only Supabase endpoint guard and outbound network deny policy",
-      "A cleanup test proving the ephemeral stack and fixtures are destroyed after the job"
+      "A cleanup test proving the ephemeral stack and fixtures are destroyed after the job",
+      "A successful read-only local platform preflight and postflight, including pgcrypto schema/function resolution and pg_cron job definition.",
+      "A successful rollback-only PostgreSQL direct-conversation eligibility, negative-case, reuse, and ACL test.",
+      "A successful two-session reversed-pair concurrency test proving exactly one direct conversation is created.",
+      "A local pg_cron scheduler execution check proving the expected purge job runs and can be safely removed in the disposable environment."
     ]
   },
   "sources": {
@@ -41,19 +45,21 @@
     {
       "id": "managed-platform-prerequisites",
       "purpose": "Supabase-managed auth, storage, realtime publication, roles, extensions, and platform schemas",
-      "status": "UNVERIFIED",
+      "status": "READ_ONLY_ASSERTIONS_PREPARED_NOT_EXECUTED",
       "dependencies": [],
       "blockingChecks": [
-        "Confirm local CLI config and pinned CLI version",
-        "Confirm local-only roles, auth schema, storage schema, and supabase_realtime publication exist",
-        "Confirm required extensions and their installation schemas"
+        "Run local-platform-prerequisites.assert.sql after the disposable local stack starts and before any application SQL; verify Auth, Storage, Realtime, roles, pgcrypto placement, and pg_cron availability.",
+        "Run local-platform-postconditions.assert.sql after chat.workspaces and chat.expiry-purge; verify pgcrypto function resolution and the expected cron.job definition.",
+        "Verify actual pg_cron scheduler execution separately; catalog presence and job definition alone are insufficient."
       ]
     },
     {
       "id": "core-chat-schema",
       "purpose": "profiles, conversations, conversation_members, chat_messages, app_private helpers, core RLS and storage",
       "status": "BLOCKED",
-      "dependencies": ["managed-platform-prerequisites"],
+      "dependencies": [
+        "managed-platform-prerequisites"
+      ],
       "blockingChecks": [
         "Resolve public.messages assumptions in migrations 001 and 006",
         "Prove table and FK order, including auth.users and profile references",
@@ -64,7 +70,9 @@
       "id": "chat-feature-foundation",
       "purpose": "direct-chat preferences, reactions, pins, delivery receipts, group capacity and team-admin helpers",
       "status": "BLOCKED",
-      "dependencies": ["core-chat-schema"],
+      "dependencies": [
+        "core-chat-schema"
+      ],
       "blockingChecks": [
         "Migrations 007 references message_pins, message_reactions, app_private.is_team_admin, app_private.enforce_group_member_limit, and app_private.get_or_create_direct_conversation_impl",
         "Those objects are not established by the preceding CLI migration set",
@@ -75,7 +83,9 @@
       "id": "channels-groups-and-workspaces",
       "purpose": "channels, group settings, member events, custom lists, workspaces, documents and private reply contexts",
       "status": "BLOCKED",
-      "dependencies": ["chat-feature-foundation"],
+      "dependencies": [
+        "chat-feature-foundation"
+      ],
       "blockingChecks": [
         "Resolve conversations.type constraint evolution before channel functions and policies",
         "Resolve dependencies on team-admin and group-management helpers",
@@ -86,7 +96,10 @@
       "id": "notifications-and-realtime",
       "purpose": "notification tables, triggers, indexes, publication membership and replica identity",
       "status": "BLOCKED",
-      "dependencies": ["core-chat-schema", "chat-feature-foundation"],
+      "dependencies": [
+        "core-chat-schema",
+        "chat-feature-foundation"
+      ],
       "blockingChecks": [
         "Ensure profiles, conversations, chat_messages and conversation_members exist before notification triggers",
         "Deduplicate notification SQL only in a reviewed test manifest, never by silently choosing a file",
@@ -97,7 +110,9 @@
       "id": "private-membership-and-auth-lifecycle",
       "purpose": "team admins, membership invitations, signup triggers, official membership numbers and membership-state RPCs",
       "status": "BLOCKED",
-      "dependencies": ["core-chat-schema"],
+      "dependencies": [
+        "core-chat-schema"
+      ],
       "blockingChecks": [
         "Create team-admin authority before functions that call app_private.is_team_admin",
         "Verify auth.users BEFORE/AFTER triggers and invitation acceptance transaction semantics",
@@ -164,11 +179,27 @@
       "severity": "BLOCKER",
       "source": "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
       "detail": "This migration expects app_private membership functions, member_invitations and constraints that are introduced in historical SQL, not in the preceding CLI migration stream."
+    },
+    {
+      "id": "DIRECT_CONVERSATION_RUNTIME",
+      "severity": "BLOCKER",
+      "source": "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+      "detail": "Rollback-only runtime assertions and a two-session concurrency runner are prepared but have not been executed against the approved disposable local Supabase stack."
+    },
+    {
+      "id": "PLATFORM_PREFLIGHT_NOT_EXECUTED",
+      "severity": "BLOCKER",
+      "source": "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+      "detail": "Read-only catalog assertions are prepared for Auth, Storage, Realtime, roles, pgcrypto and pg_cron, but the local stack has not been started and the assertions have not been run."
     }
   ],
   "networkPolicy": {
     "requiredMode": "LOOPBACK_ONLY",
-    "allowedHosts": ["127.0.0.1", "localhost", "::1"],
+    "allowedHosts": [
+      "127.0.0.1",
+      "localhost",
+      "::1"
+    ],
     "denyCloudSupabaseDomains": true,
     "denyProductionProject": true,
     "denyAllNonLoopbackDatabaseTargets": true,
@@ -177,7 +208,11 @@
   "cleanup": {
     "required": true,
     "scope": "Ephemeral GitHub Actions job resources only",
-    "mustRunOn": ["success", "failure", "cancelled"],
+    "mustRunOn": [
+      "success",
+      "failure",
+      "cancelled"
+    ],
     "productionResourcesMayBeTouched": false
   }
 }
