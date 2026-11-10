@@ -24,7 +24,8 @@
       "A successful read-only local platform preflight and postflight, including pgcrypto schema/function resolution and pg_cron job definition.",
       "A successful rollback-only PostgreSQL direct-conversation eligibility, negative-case, reuse, and ACL test.",
       "A successful two-session reversed-pair concurrency test proving exactly one direct conversation is created.",
-      "A local pg_cron scheduler execution check proving the expected purge job runs and can be safely removed in the disposable environment."
+      "A local pg_cron scheduler execution check proving the expected purge job runs and can be safely removed in the disposable environment.",
+      "A successful loopback-only least-privilege overlay and read-only postcondition test proving default ACL revocation, no anon table/sequence/function access, no non-RLS API privileges, restrictive active-member policies across all public application tables and storage.objects, and unchanged legitimate CRUD/RPC behavior."
     ]
   },
   "sources": {
@@ -133,7 +134,8 @@
       "blockingChecks": [
         "Apply final grants only after every referenced table, column and function exists",
         "Verify SECURITY DEFINER search_path, function ownership and EXECUTE grants",
-        "Run negative RLS tests with at least two ordinary users and one unauthorized user"
+        "Run negative RLS tests with at least two ordinary users and one unauthorized user",
+        "Apply the test-only RLS least-privilege overlay last in disposable local replay; prove PUBLIC/anon/authenticated default ACLs fail closed, API roles lack non-RLS table/sequence privileges, and restrictive active-member policies cover every application table and storage.objects."
       ]
     }
   ],
@@ -191,6 +193,12 @@
       "severity": "BLOCKER",
       "source": "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
       "detail": "Read-only catalog assertions are prepared for Auth, Storage, Realtime, roles, pgcrypto and pg_cron, but the local stack has not been started and the assertions have not been run."
+    },
+    {
+      "id": "RLS_LEAST_PRIVILEGE_016",
+      "severity": "BLOCKER",
+      "source": "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
+      "detail": "Read-only production catalog checks found broad postgres-owned public-schema default ACLs and non-RLS privileges on app tables. The loopback-only ACL/restrictive-policy overlay and assertions are prepared but have not been executed; legitimate CRUD/RPC compatibility must pass before any production migration is designed."
     }
   ],
   "networkPolicy": {
