@@ -248,3 +248,9 @@ html.dark .new-messages-jump{background:#153c36;color:#b8f3d6;border-color:#276b
 #chat[data-group-theme="amber"]{--accent:#c58a25}
 #chat[data-group-theme="rose"]{--accent:#d65e80}
 @media(max-width:760px){.group-management-dialog{max-height:94dvh}.group-management-body{padding:10px}.group-management-row>*{min-width:100%}}
+
+/* Chat timeline: keep message cards at intrinsic height and let the scroll container own movement. */
+#chat .messages{overflow-anchor:none}
+#chat .messages>.message,
+#chat .messages>.day-divider,
+#chat .messages>.messages-history-loader{flex:0 0 auto}
