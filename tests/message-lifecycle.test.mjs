@@ -154,6 +154,8 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
   const update = extractFunction('handleMessageUpdateRealtime');
   assert.match(subscribe, /event:'DELETE',schema:'public',table:'chat_messages'/);
   assert.match(subscribe, /handleMessageDeleteRealtime\(p,id\)/);
+  assert.match(subscribe, /channelHasSubscribed&&s==='SUBSCRIBED'/);
+  assert.match(subscribe, /reconnected&&state\.active\?\.id===id\)loadMessages\(\)/);
   assert.match(update, /renderMessage\(incoming,conversationId,state\.messageLoadVersion\)/);
   assert.doesNotMatch(update, /Deleted message refresh failed/);
 });
