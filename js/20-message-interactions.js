@@ -108,7 +108,7 @@ async function toggleMessageReaction(message,reactionType,button){
   if(write.error){
    if(state.active?.id!==conversationId||state.messageLoadVersion!==requestVersion)throw write.error;
    const {data:verified,error:verifyError}=await supabaseClient.from('message_reactions').select('message_id,user_id,reaction_type').eq('conversation_id',conversationId).eq('message_id',message.id).eq('user_id',userId).maybeSingle();
-   if(verifyError)throw write.error;
+   if(verifyError){state.reactionVerificationNeeded ||= new Set();state.reactionVerificationNeeded.add(message.id);toast('تعذر التحقق من حفظ التفاعل بسبب انقطاع الاتصال؛ ستتم مزامنته عند تحديث المحادثة');return false}
    const committed=removing?!verified:verified?.reaction_type===reactionType;
    if(!committed){
     const reconciled=current.filter(row=>row.user_id!==userId);if(verified)reconciled.push(verified);
