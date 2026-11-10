@@ -19,9 +19,6 @@ test('synthetic Auth identities are seeded before membership triggers without by
   assert.doesNotMatch(authSeed, /INSERT INTO auth\.users|INSERT INTO auth\.identities/i);
   assert.match(authSeed, /JOIN auth\.identities i/i);
   assert.match(authSeed, /i\.provider = 'email'/i);
-  assert.match(authSeed, /direct-unconfirmed@bizmindmakers\.test/);
-  assert.match(authSeed, /direct-missing-profile@bizmindmakers\.test/);
-  assert.match(authSeed, /count\(DISTINCT raw_app_meta_data/);
   assert.doesNotMatch(authSeed, /session_replication_role|DISABLE TRIGGER|DROP TRIGGER/i);
   assert.match(authSeed, /direct-unconfirmed@bizmindmakers\.test/);
   assert.match(authSeed, /direct-missing-profile@bizmindmakers\.test/);
@@ -84,6 +81,9 @@ test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL
   assert.match(sql, /SET LOCAL ROLE authenticated;\s*DO \$invalid_membership\$/);
   assert.match(sql, /\$invalid_membership\$;\s*RESET ROLE;/);
   assert.match(sql, /public\.get_or_create_direct_conversation/);
+  assert.match(sql, /current_setting\('app\.test\.direct_a_id'\)::uuid/);
+  assert.match(sql, /:'direct_a_id'/);
+  assert.doesNotMatch(sql, /22222222-2222-4222-8222-22222222220[1-6]/);
   assert.match(sql, /SET LOCAL statement_timeout = '30s'/);
   assert.match(sql, /SET LOCAL lock_timeout = '10s'/);
   assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
