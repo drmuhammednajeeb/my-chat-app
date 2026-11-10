@@ -299,6 +299,19 @@ test('render and initial-load paths retain stale-result guards', () => {
   assert.match(load, /allMessagesRendered/);
 });
 
+test('loadMessages declares render completion before both empty and non-empty branches', () => {
+  const load = extractFunction('loadMessages');
+  const declaration = load.indexOf('let allMessagesRendered=true;');
+  const emptyBranch = load.indexOf('if(!messages.length)');
+  const receiptGuard = load.indexOf('if(allMessagesRendered&&');
+  assert.ok(declaration >= 0, 'Expected one render-completion declaration');
+  assert.ok(emptyBranch > declaration, 'Declaration must precede the empty/non-empty branch');
+  assert.ok(receiptGuard > emptyBranch, 'Receipt guard must run after the branch');
+  assert.equal((load.match(/let allMessagesRendered=true;/g) || []).length, 1);
+  assert.doesNotMatch(load, /else\\{\\s*let allMessagesRendered=true;/,
+    'The declaration must not be scoped to the non-empty branch');
+});
+
 test('fallback synchronization is cursor-based and reconciles edits and deletions', () => {
   const poll = extractFunction('pollMessagesFallback');
   assert.match(poll, /messagePollCursor/);
