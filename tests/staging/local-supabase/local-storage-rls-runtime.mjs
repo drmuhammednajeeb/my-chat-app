@@ -80,12 +80,17 @@ async function upload(bucket, name, bytes, token, upsert = false, contentType = 
   let data = null; try { data = text ? JSON.parse(text) : null; } catch { data = text; }
   const result = { response, data, text };
   assertOk(result, 'upload ' + bucket + '/' + name);
-  uploaded.push({ bucket, name, token });
+  if (!uploaded.some(item => item.bucket === bucket && item.name === name)) uploaded.push({ bucket, name, token });
   return data;
 }
 async function sign(bucket, name, token) {
   const path = '/storage/v1/object/sign/' + encodeURIComponent(bucket) + '/' + name.split('/').map(encodeURIComponent).join('/');
   return call(path, { method: 'POST', token, body: { expiresIn: 60 } });
+}
+function assertSigned(result, label) {
+  const data = assertOk(result, label);
+  if (!data?.signedURL && !data?.signedUrl) throw new Error(label + ' returned no signed URL');
+  return data;
 }
 async function remove(bucket, name, token) {
   return call('/storage/v1/object/' + encodeURIComponent(bucket), {
@@ -134,7 +139,7 @@ try {
   const pdf = Buffer.from('%PDF-1.4\\n% local RLS runtime probe\\n');
   const chatPath = conversationId + '/' + userA.id + '/runtime-' + nonce + '.pdf';
   await upload('chat-media', chatPath, pdf, tokenA, false, 'application/pdf');
-  assertOk(await sign('chat-media', chatPath, tokenB), 'conversation member signed read of chat media');
+  assertSigned(await sign('chat-media', chatPath, tokenB), 'conversation member signed read of chat media');
   const spoofPath = conversationId + '/' + userA.id + '/spoof-' + nonce + '.bin';
   const spoof = await fetch(base + objectPath('chat-media', spoofPath), {
     method: 'POST',
@@ -159,18 +164,18 @@ try {
   }, 'return=representation'), 'insert private conversation document metadata');
   documentId = Array.isArray(metadata) ? metadata[0]?.id : metadata?.id;
   if (!documentId) throw new Error('conversation_documents insert returned no row ID');
-  assertOk(await sign('conversation-documents', pdfPath, tokenA), 'owner signed read of private document');
+  assertSigned(await sign('conversation-documents', pdfPath, tokenA), 'owner signed read of private document');
   assertDenied(await sign('conversation-documents', pdfPath, tokenB), 'other member signed read of private document');
 
   assertOk(await rest('conversation_documents?id=eq.' + encodeURIComponent(documentId), tokenA, 'PATCH', {
     visibility: 'shared',
     shared_at: new Date().toISOString()
   }), 'share conversation document');
-  assertOk(await sign('conversation-documents', pdfPath, tokenB), 'shared conversation member signed read');
+  assertSigned(await sign('conversation-documents', pdfPath, tokenB), 'shared conversation member signed read');
 
   const foreignDelete = await remove('conversation-documents', pdfPath, tokenB);
   assertDenied(foreignDelete, 'non-owner conversation document delete');
-  assertOk(await sign('conversation-documents', pdfPath, tokenA), 'document remains after denied foreign delete');
+  assertSigned(await sign('conversation-documents', pdfPath, tokenA), 'document remains after denied foreign delete');
 
   // Avatar: own upsert succeeds; another user cannot overwrite it; public bucket URL is readable.
   const avatarPath = userA.id + '/runtime-' + nonce + '.png';
@@ -187,12 +192,18 @@ try {
   const publicAvatar = await fetch(publicAvatarUrl);
   if (!publicAvatar.ok || !publicAvatar.headers.get('content-type')?.includes('image/png')) throw new Error('public avatar delivery failed after owner upsert');
 
-  // Owner cleanup is also part of the CRUD contract.
+  // Owner delete paths must continue to work for each private/public bucket.
   for (const item of [...uploaded].reverse()) {
-    if (item.bucket === 'chat-media' || item.bucket === 'avatars') {
+    if (item.bucket === 'chat-media' || item.bucket === 'avatars' || item.bucket === 'conversation-documents') {
       const removed = await remove(item.bucket, item.name, tokenA);
       assertOk(removed, 'owner delete ' + item.bucket + '/' + item.name);
+      const index = uploaded.findIndex(entry => entry.bucket === item.bucket && entry.name === item.name);
+      if (index >= 0) uploaded.splice(index, 1);
     }
+  }
+  if (documentId) {
+    assertOk(await rest('conversation_documents?id=eq.' + encodeURIComponent(documentId), tokenA, 'DELETE'), 'owner delete document metadata');
+    documentId = null;
   }
   console.log('STORAGE_RLS_RUNTIME=PASSED');
 } catch (error) {
