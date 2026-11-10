@@ -2,7 +2,7 @@
 
 ## Scope and safety
 
-This work is a disposable-local test overlay, not a production migration. It must never be applied to a hosted Supabase project. The overlay requires database `postgres`, role `postgres`, and a loopback server address. It has not been executed.
+This work is a disposable-local test overlay, not a production migration. It must never be applied to a hosted Supabase project. The overlay requires database `postgres`, role `postgres`, and a transaction GUC that is set only by `local-rls-least-privilege-runtime.mjs`. That runner validates the client connection URL is loopback-only on port 54322 before invoking psql. The SQL itself does not inspect the server-side container IP because Docker may expose a private bridge address even when the client connects to loopback. The runner has not been executed.
 
 Production was inspected read-only. The observed application tables had RLS enabled, but the effective ACLs and default ACLs showed broader privileges than the application needs. In particular, the `postgres` default ACL for the `public` schema granted all table privileges to `anon` and `authenticated`; current application tables inherited table privileges including `TRUNCATE`, `REFERENCES`, `TRIGGER`, and (on the inspected PostgreSQL version) `MAINTAIN`. A focused effective-privilege count confirmed that `anon` held `TRUNCATE`, `REFERENCES`, and `TRIGGER` on 13 of 24 application tables, while `authenticated` held them on 14 of 24. These privileges are not constrained by row policies.
 
@@ -45,5 +45,6 @@ After the dependency DAG is approved and a disposable local Supabase stack is av
 6. Verify direct sequence calls, direct trigger-function RPC calls, direct message-edit-history inserts, and direct writes to event/history/private-context tables fail.
 7. Verify future test-created public tables/functions/sequences receive no API grants until explicitly granted.
 8. Run Storage upload, replacement/upsert, download, and signed-URL tests for every bucket, including cross-user path substitution.
+9. Execute `node tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs` only with `LOCAL_SUPABASE_DB_URL` set to the disposable local endpoint; this runner has not been executed.
 
 No production DDL, ACL change, RLS change, or deployment is authorized by this test overlay. A separate production migration must be generated using the Supabase CLI after the local runtime evidence passes and every client RPC/table permission is reviewed.
