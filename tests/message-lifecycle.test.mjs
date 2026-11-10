@@ -170,9 +170,10 @@ test('group-only-admin restrictions survive composer, polling and voice entry po
 
 test('document storage filename sanitizer removes path separators and unsafe characters', () => {
   const sanitize = vm.runInNewContext('(' + extractFunction('sanitizeStorageFileName') + ')');
-  assert.equal(sanitize('../Report Q4.pdf'), '_.._Report_Q4.pdf');
-  assert.equal(sanitize('   '), '___');
+  assert.equal(sanitize('../Report Q4.pdf'), '_Report_Q4.pdf');
+  assert.equal(sanitize('   '), '_');
   assert.equal(sanitize('...'), 'attachment');
   assert.equal(sanitize('a'.repeat(140)).length, 120);
   assert.equal(sanitize('folder\\\\name.pdf').includes('/'), false);
+  assert.equal(sanitize('folder\\\\name.pdf').includes('\\\\'), false);
 });
