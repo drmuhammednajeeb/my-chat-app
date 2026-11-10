@@ -42,7 +42,7 @@ A local-only catalog gate is now prepared:
 - Synthetic direct-chat Auth identities are created before membership triggers; Profiles are created after the membership profile guard. The runtime SQL fixture promotes eligible synthetic identities through the real local admin RPCs and ends in `ROLLBACK`.
 - `tests/staging/local-supabase/direct-conversation-concurrency.mjs` is a separate two-session reversed-pair test. It accepts only a disposable loopback PostgreSQL endpoint on port 54322 and refuses cloud targets.
 
-**Execution remains disabled.** Neither catalog assertion, runtime SQL fixture, concurrency runner, nor Supabase local stack has been executed. These files are test preparation, not runtime evidence.
+**Execution remains disabled.** Neither catalog assertion, runtime SQL fixture, concurrency runner, pg_cron probe, nor Supabase local stack has been executed. These files are test preparation, not runtime evidence.
 
 ## Test classification
 
