@@ -72,7 +72,8 @@ and non-postgres database users. It is not part of CI and has not been run.
 - unverified membership number on either side: rejected;
 - malformed or missing membership number on either side: rejected;
 - unconfirmed email on either side: rejected;
-- target with no profile or no matching Auth user: rejected;\n- unauthenticated caller, null target, and self-target: rejected;
+- target with no profile or no matching Auth user: rejected;
+- unauthenticated caller, null target, and self-target: rejected;
 - existing direct conversation is reused;
 - concurrent reversed-pair calls create exactly one direct conversation;
 - authenticated can invoke the public wrapper and the internal function according to the recovered ACL; the internal function still enforces caller and target eligibility;
