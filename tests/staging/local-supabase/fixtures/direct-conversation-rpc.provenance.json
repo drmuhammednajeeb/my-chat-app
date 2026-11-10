@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "mode": "TEST_COPY_ONLY",
+  "source": {
+    "product": "Supabase PostgreSQL catalog",
+    "projectRef": "lvkeohpuucuklagvwpnq",
+    "extraction": "Read-only SELECT from pg_proc using pg_get_functiondef; no DDL or DML executed.",
+    "extractedDefinitionsAreVerbatim": true,
+    "canonicalization": "SHA-256 over the exact UTF-8 pg_get_functiondef output for each function; combined digest is internal definition + one LF + public wrapper definition."
+  },
+  "functions": [
+    {
+      "schema": "app_private",
+      "name": "get_or_create_direct_conversation_impl",
+      "identityArguments": "p_other_user_id uuid",
+      "returnType": "uuid",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definitionSha256": "698075960e88545f153e009671a12ea7f554181dcd19720c696172fdcbad9424"
+    },
+    {
+      "schema": "public",
+      "name": "get_or_create_direct_conversation",
+      "identityArguments": "p_other_user_id uuid",
+      "returnType": "uuid",
+      "securityDefiner": false,
+      "settings": [
+        "search_path=pg_catalog, public, app_private"
+      ],
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definitionSha256": "d77e4fe1ff9676cb1e250960156a49d87280f1f6785eea3b18d58ad74bb2a63e"
+    }
+  ],
+  "combinedDefinitionSha256": "bbdd84ff9adfaf5229bd168174af441351fcd13cca7251d3a80a207086afe92b",
+  "fixturePath": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+  "fixtureSha256": "14164d82eae82dba70c8d5b4d6922eec8357dada2bbba509544524b76721072f",
+  "reviewNotes": [
+    "The internal function validates auth.uid(), rejects null/self targets, and requires the target profile to exist.",
+    "The function serializes each user pair with pg_advisory_xact_lock and reuses an existing direct conversation with exactly two members.",
+    "The recovered function body does not itself contain an explicit active-membership predicate; intended membership gating must be reviewed separately before runtime approval."
+  ],
+  "execution": {
+    "enabled": false,
+    "sqlExecuted": false,
+    "localStackStarted": false,
+    "cloudAllowed": false,
+    "productionAllowed": false
+  }
+}
