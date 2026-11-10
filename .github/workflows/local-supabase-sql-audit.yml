@@ -39,12 +39,14 @@ jobs:
             tests/staging/local-supabase/direct-conversation-rpc.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
-            tests/staging/local-supabase/rls-least-privilege.test.mjs
+            tests/staging/local-supabase/rls-least-privilege.test.mjs \
+            tests/staging/local-supabase/storage-rls-runtime.test.mjs
       - name: Syntax-check manual local-only runners
         run: |
           node --check tests/staging/local-supabase/direct-conversation-concurrency.mjs
           node --check tests/staging/local-supabase/local-pg-cron-runtime.mjs
           node --check tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs
+          node --check tests/staging/local-supabase/local-storage-rls-runtime.mjs
       - name: Generate repository SQL object inventory
         run: |
           node tests/staging/local-supabase/build-database-object-inventory.mjs > "$RUNNER_TEMP/database-object-inventory.json"
