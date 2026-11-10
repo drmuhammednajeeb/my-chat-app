@@ -73,6 +73,9 @@ test('clean chat core reset is destructive only inside the loopback disposable r
   ]) assert.ok(runner.includes(token), 'missing clean core runtime safety/coverage token: ' + token);
   assert.ok(fixture.includes("current_setting('app.test_only_local_replay', true) IS DISTINCT FROM 'enabled'"));
   assert.ok(fixture.includes('TRUNCATE TABLE public.conversations CASCADE'));
+  assert.ok(fixture.includes('DELETE FROM storage.objects'));
+  assert.ok(fixture.includes("'chat-media', 'conversation-documents', 'channel-avatars'"));
+  assert.ok(fixture.includes('Keep the public avatars bucket'));
   assert.ok(fixture.includes('direct_user_low'));
   assert.ok(fixture.includes('direct_user_high'));
   assert.ok(fixture.includes('conversations_direct_pair_unique_idx'));
