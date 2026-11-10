@@ -95,16 +95,13 @@ end;
 $public_restrictive_guard$;
 
 -- Apply the same non-bypassable active-member boundary to Storage API operations.
+-- Do not query storage.buckets from this policy: private bucket rows may be hidden by
+-- storage.buckets RLS, which would make the restrictive policy deny valid object writes.
+-- storage.objects.bucket_id already has a foreign key to storage.buckets(id).
 drop policy if exists "Require active membership for all Storage operations" on storage.objects;
 create policy "Require active membership for all Storage operations"
 on storage.objects as restrictive for all to authenticated
-using (
-  bucket_id in (select b.id from storage.buckets b)
-  and (select app_private.is_active_member())
-)
-with check (
-  bucket_id in (select b.id from storage.buckets b)
-  and (select app_private.is_active_member())
-);
+using ((select app_private.is_active_member()))
+with check ((select app_private.is_active_member()));
 
 commit;
