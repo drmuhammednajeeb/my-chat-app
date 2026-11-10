@@ -159,6 +159,12 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   assert.equal(manifest.execution.cloudAllowed, false);
   assert.equal(manifest.execution.productionAllowed, false);
   assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, manifest.sourceCoverage.testOnlySqlFixturePaths.length);
+  assert.equal(new Set(manifest.sourceCoverage.testOnlySqlFixturePaths).size, manifest.sourceCoverage.testOnlySqlFixturePaths.length);
+  for (const fixture of manifest.sourceCoverage.testOnlySqlFixturePaths) {
+    assert.ok(fixture.startsWith('tests/staging/local-supabase/fixtures/'));
+    assert.ok(fixture.endsWith('.sql'));
+    await access(path.join(root, fixture));
+  }
   assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 16);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql',
