@@ -193,6 +193,36 @@ ROLLBACK;`);
   FROM pg_policies
   WHERE schemaname = 'storage' AND tablename = 'objects';`);
   console.log('STORAGE_POLICY_SET=' + policySet.replaceAll('\\n', ' || '));
+  const directInsertProbe = localDatabaseProbe(`BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '${userA.id}', true);
+DO $probe$
+DECLARE
+  v_state text;
+  v_message text;
+BEGIN
+  BEGIN
+    INSERT INTO storage.objects(bucket_id, name, owner_id, metadata)
+    VALUES (
+      'chat-media',
+      '${diagnosticPath}',
+      auth.uid()::text,
+      jsonb_build_object('mimetype', 'application/pdf', 'size', 24)
+    );
+    PERFORM set_config('app.test.storage_insert_probe', 'passed', true);
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_message = MESSAGE_TEXT;
+    PERFORM set_config('app.test.storage_insert_probe', 'failed:' || v_state || ':' || v_message, true);
+  END;
+END
+$probe$;
+SELECT current_setting('app.test.storage_insert_probe', true);
+ROLLBACK;`);
+  const directInsertResult = directInsertProbe.split('\\n').at(-1);
+  console.log('STORAGE_DIRECT_INSERT_PROBE=' + directInsertResult);
+  if (directInsertResult !== 'passed') {
+    throw new Error('Direct authenticated SQL insert into storage.objects failed: ' + directInsertResult);
+  }
   const probeParts = diagnostic.split('|');
   if (probeParts[1] !== userA.id || probeParts[2] !== userA.id || probeParts[3] !== userA.id || !['t', 'true'].includes(probeParts[4]) || !['t', 'true'].includes(probeParts[5])) {
     throw new Error('Storage policy preconditions failed: folder ownership, active membership, or conversation membership is false');
