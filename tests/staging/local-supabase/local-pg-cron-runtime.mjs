@@ -4,7 +4,7 @@ function localDatabaseUrl() {
   const raw = process.env.LOCAL_SUPABASE_DB_URL;
   if (!raw) throw new Error('Set LOCAL_SUPABASE_DB_URL to the disposable local Supabase PostgreSQL URL.');
   const url = new URL(raw);
-  const host = url.hostname.replace(/^\\[|\\]$/g, '');
+  const host = url.hostname.replace(/^\[|\]$/g, '');
   if (!['127.0.0.1', 'localhost', '::1'].includes(host) ||
       url.port !== '54322' || url.username !== 'postgres' || url.pathname !== '/postgres' ||
       !['postgres:', 'postgresql:'].includes(url.protocol) ||
