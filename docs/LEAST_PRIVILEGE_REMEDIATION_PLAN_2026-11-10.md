@@ -69,7 +69,11 @@ The live Storage bucket inventory is:
 
 The current `Conversation members upload chat media` INSERT policy checks bucket and conversation membership but does not bind path segment 2 to `auth.uid()`. The test-only candidate adds that condition. Do not apply it to production until Storage API tests prove legitimate upload/upsert/read/delete behavior and reject cross-user path spoofing.
 
-## 2. Proposed least-privilege target
+## 2. Browser client access contract
+
+The static source inventory found 23 direct public table targets, 3 Storage buckets, and 10 client-facing RPC names. The per-table operation matrix and caveats are recorded in [`CLIENT_POSTGREST_ACCESS_INVENTORY_2026-11-10.md`](CLIENT_POSTGREST_ACCESS_INVENTORY_2026-11-10.md). Use it as the starting allowlist, not as proof that every dynamic runtime path has been found.
+
+## 3. Proposed least-privilege target
 
 ### A. Default ACL policy
 
