@@ -45,6 +45,7 @@ end;
 $maintain_guard$;
 
 -- Remove direct write paths that are not part of the supported client contract.
+-- Preserve UPDATE on upsert-backed tables: PostgREST ON CONFLICT requires UPDATE privilege.
 -- Trigger/RPC-owned writes continue through their reviewed SECURITY DEFINER/invoker paths.
 revoke insert, update, delete on public.conversation_member_events from authenticated;
 grant select on public.conversation_member_events to authenticated;
@@ -53,9 +54,7 @@ revoke insert on public.message_edit_history from authenticated;
 grant select on public.message_edit_history to authenticated;
 
 revoke update, delete on public.private_reply_contexts from authenticated;
-revoke update on public.user_message_stars from authenticated;
 revoke delete on public.user_settings from authenticated;
-revoke update on public.chat_list_items from authenticated;
 revoke delete on public.conversation_group_settings from authenticated;
 
 -- Public-schema RPCs are opt-in. Trigger functions are never client-callable.
