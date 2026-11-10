@@ -60,6 +60,7 @@ SET LOCAL statement_timeout = '20s';
 SET LOCAL lock_timeout = '10s';
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '${caller}', true);
+SELECT pg_sleep(0.5);
 SELECT public.get_or_create_direct_conversation('${target}'::uuid);
 COMMIT;`;
 }
@@ -85,7 +86,7 @@ try {
   }
   const conversationId = idA;
   const count = await psql(db, `SELECT count(*)::text FROM public.conversations c
-    WHERE c.id='${conversationId}'::uuid AND c.type='direct'
+    WHERE c.type='direct'
       AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerA}'::uuid)
       AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerB}'::uuid)
       AND (SELECT count(*) FROM public.conversation_members m WHERE m.conversation_id=c.id)=2;`);
