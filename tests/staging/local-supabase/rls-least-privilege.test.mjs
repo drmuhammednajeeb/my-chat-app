@@ -56,6 +56,8 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     'can_access_channel_avatar',
     'foldername(name)',
     'search_path=""',
+    'has_schema_privilege',
+    'bucket_id',
     'RESTRICTIVE',
     'Require active membership for all API operations'
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing assertion: ' + token);
