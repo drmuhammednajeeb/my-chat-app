@@ -116,8 +116,7 @@ BEGIN
     RAISE EXCEPTION 'channel-avatars bucket does not match the private production baseline';
   END IF;
   IF NOT has_function_privilege('authenticated', 'app_private.can_access_channel_avatar(uuid)', 'EXECUTE')
-     OR has_function_privilege('anon', 'app_private.can_access_channel_avatar(uuid)', 'EXECUTE')
-     OR has_function_privilege('public', 'app_private.can_access_channel_avatar(uuid)', 'EXECUTE') THEN
+     OR has_function_privilege('anon', 'app_private.can_access_channel_avatar(uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION 'channel-avatar helper function ACL is not least-privilege';
   END IF;
 END;
