@@ -144,7 +144,14 @@ try {
   process.stdout.write('PASS: interleaved direct/group timelines remain isolated by conversation ID.\n');
 } finally {
   const idsToDelete = [directConversationId, groupConversationId].filter(Boolean).map(id => `'${id}'::uuid`).join(',');
-  if (idsToDelete) psql(`DELETE FROM public.conversations WHERE id IN (${idsToDelete});`, { label: 'clean clean-core fixtures' });
+  if (idsToDelete) psql(`
+    -- Membership audit triggers write event rows on member deletion. Remove members first,
+    -- then their audit rows, before deleting the conversation parent rows.
+    DELETE FROM public.conversation_members WHERE conversation_id IN (${idsToDelete});
+    DELETE FROM public.conversation_member_events WHERE conversation_id IN (${idsToDelete});
+    DELETE FROM public.user_notifications WHERE conversation_id IN (${idsToDelete});
+    DELETE FROM public.conversations WHERE id IN (${idsToDelete});
+  `, { label: 'clean clean-core fixtures' });
 }
 
 console.log('CLEAN_CHAT_CORE_LOCAL_RUNTIME=PASSED');
