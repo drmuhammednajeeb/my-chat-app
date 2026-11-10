@@ -4,6 +4,12 @@
 -- Two-session reversed-pair concurrency is a separate required test and remains a release blocker.
 
 BEGIN;
+SELECT set_config('app.test.direct_a_id', :'direct_a_id', true);
+SELECT set_config('app.test.direct_b_id', :'direct_b_id', true);
+SELECT set_config('app.test.direct_suspended_id', :'direct_suspended_id', true);
+SELECT set_config('app.test.direct_unverified_id', :'direct_unverified_id', true);
+SELECT set_config('app.test.direct_unconfirmed_id', :'direct_unconfirmed_id', true);
+SELECT set_config('app.test.direct_missing_profile_id', :'direct_missing_profile_id', true);
 SET LOCAL statement_timeout = '30s';
 SET LOCAL lock_timeout = '10s';
 
@@ -12,15 +18,15 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
 
 SELECT public.admin_set_member_official_number(
-  '22222222-2222-4222-8222-222222222201', '971001000002');
+  current_setting('app.test.direct_a_id')::uuid, '971001000002');
 SELECT public.admin_set_member_official_number(
-  '22222222-2222-4222-8222-222222222202', '971001000003');
+  current_setting('app.test.direct_b_id')::uuid, '971001000003');
 SELECT public.admin_set_member_official_number(
-  '22222222-2222-4222-8222-222222222203', '971001000004');
+  current_setting('app.test.direct_suspended_id')::uuid, '971001000004');
 SELECT public.admin_set_member_official_number(
-  '22222222-2222-4222-8222-222222222205', '971001000006');
+  current_setting('app.test.direct_unconfirmed_id')::uuid, '971001000006');
 SELECT public.admin_update_membership_status(
-  '22222222-2222-4222-8222-222222222203', 'suspended');
+  current_setting('app.test.direct_suspended_id')::uuid, 'suspended');
 
 -- Verify fixture rows as the privileged local test connection; auth.users is not client-readable.
 RESET ROLE;
@@ -28,13 +34,13 @@ DO $fixtures$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles p JOIN auth.users u ON u.id = p.id
-    WHERE p.id = '22222222-2222-4222-8222-222222222201'
+    WHERE p.id = current_setting('app.test.direct_a_id')::uuid
       AND p.membership_status = 'active'
       AND p.membership_number_verified IS TRUE
       AND u.email_confirmed_at IS NOT NULL
   ) OR NOT EXISTS (
     SELECT 1 FROM public.profiles p JOIN auth.users u ON u.id = p.id
-    WHERE p.id = '22222222-2222-4222-8222-222222222202'
+    WHERE p.id = current_setting('app.test.direct_b_id')::uuid
       AND p.membership_status = 'active'
       AND p.membership_number_verified IS TRUE
       AND u.email_confirmed_at IS NOT NULL
@@ -44,7 +50,7 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = '22222222-2222-4222-8222-222222222203'
+    WHERE id = current_setting('app.test.direct_suspended_id')::uuid
       AND membership_status = 'suspended'
       AND membership_number_verified IS TRUE
   ) THEN
@@ -53,7 +59,7 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = '22222222-2222-4222-8222-222222222204'
+    WHERE id = current_setting('app.test.direct_unverified_id')::uuid
       AND membership_number_verified IS FALSE
   ) THEN
     RAISE EXCEPTION 'Unverified-membership fixture state was not established';
@@ -61,7 +67,7 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles p JOIN auth.users u ON u.id = p.id
-    WHERE p.id = '22222222-2222-4222-8222-222222222205'
+    WHERE p.id = current_setting('app.test.direct_unconfirmed_id')::uuid
       AND p.membership_status = 'active'
       AND p.membership_number_verified IS TRUE
       AND u.email_confirmed_at IS NULL
@@ -71,7 +77,7 @@ BEGIN
 
   IF EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = '22222222-2222-4222-8222-222222222206'
+    WHERE id = current_setting('app.test.direct_missing_profile_id')::uuid
   ) THEN
     RAISE EXCEPTION 'Missing-profile fixture unexpectedly has a profile';
   END IF;
@@ -143,7 +149,7 @@ DECLARE
 BEGIN
   BEGIN
     PERFORM public.admin_set_member_official_number(
-      '22222222-2222-4222-8222-222222222201', '972001000002');
+      current_setting('app.test.direct_a_id')::uuid, '972001000002');
   EXCEPTION WHEN SQLSTATE 'P0001' THEN
     v_rejected := true;
   END;
@@ -164,14 +170,14 @@ DECLARE
   v_internal uuid;
 BEGIN
   PERFORM set_config('request.jwt.claim.sub',
-    '22222222-2222-4222-8222-222222222201', true);
+    current_setting('app.test.direct_a_id'), true);
 
   v_first := public.get_or_create_direct_conversation(
-    '22222222-2222-4222-8222-222222222202');
+    current_setting('app.test.direct_b_id')::uuid);
   v_second := public.get_or_create_direct_conversation(
-    '22222222-2222-4222-8222-222222222202');
+    current_setting('app.test.direct_b_id')::uuid);
   v_internal := app_private.get_or_create_direct_conversation_impl(
-    '22222222-2222-4222-8222-222222222202');
+    current_setting('app.test.direct_b_id')::uuid);
 
   IF v_first IS NULL OR v_first <> v_second OR v_first <> v_internal THEN
     RAISE EXCEPTION 'Direct conversation creation/reuse mismatch';
@@ -192,16 +198,16 @@ DECLARE
 BEGIN
   FOR v_case IN
     SELECT * FROM (VALUES
-      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222203'::uuid, 'suspended target'),
-      ('22222222-2222-4222-8222-222222222203'::uuid, '22222222-2222-4222-8222-222222222201'::uuid, 'suspended caller'),
-      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222204'::uuid, 'unverified target'),
-      ('22222222-2222-4222-8222-222222222204'::uuid, '22222222-2222-4222-8222-222222222201'::uuid, 'unverified caller'),
-      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222205'::uuid, 'unconfirmed target'),
-      ('22222222-2222-4222-8222-222222222205'::uuid, '22222222-2222-4222-8222-222222222201'::uuid, 'unconfirmed caller'),
-      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222206'::uuid, 'missing profile target'),
-      ('22222222-2222-4222-8222-222222222201'::uuid, '22222222-2222-4222-8222-222222222299'::uuid, 'missing auth user target'),
-      ('22222222-2222-4222-8222-222222222206'::uuid, '22222222-2222-4222-8222-222222222202'::uuid, 'missing profile caller'),
-      ('22222222-2222-4222-8222-222222222299'::uuid, '22222222-2222-4222-8222-222222222202'::uuid, 'missing auth user caller')
+      (current_setting('app.test.direct_a_id')::uuid, current_setting('app.test.direct_suspended_id')::uuid, 'suspended target'),
+      (current_setting('app.test.direct_suspended_id')::uuid, current_setting('app.test.direct_a_id')::uuid, 'suspended caller'),
+      (current_setting('app.test.direct_a_id')::uuid, current_setting('app.test.direct_unverified_id')::uuid, 'unverified target'),
+      (current_setting('app.test.direct_unverified_id')::uuid, current_setting('app.test.direct_a_id')::uuid, 'unverified caller'),
+      (current_setting('app.test.direct_a_id')::uuid, current_setting('app.test.direct_unconfirmed_id')::uuid, 'unconfirmed target'),
+      (current_setting('app.test.direct_unconfirmed_id')::uuid, current_setting('app.test.direct_a_id')::uuid, 'unconfirmed caller'),
+      (current_setting('app.test.direct_a_id')::uuid, current_setting('app.test.direct_missing_profile_id')::uuid, 'missing profile target'),
+      (current_setting('app.test.direct_a_id')::uuid, '22222222-2222-4222-8222-222222222299'::uuid, 'missing auth user target'),
+      (current_setting('app.test.direct_missing_profile_id')::uuid, current_setting('app.test.direct_b_id')::uuid, 'missing profile caller'),
+      ('22222222-2222-4222-8222-222222222299'::uuid, current_setting('app.test.direct_b_id')::uuid, 'missing auth user caller')
     ) AS cases(caller_id, target_id, label)
   LOOP
     PERFORM set_config('request.jwt.claim.sub', v_case.caller_id::text, true);
@@ -227,19 +233,19 @@ BEGIN
   v_rejected := false;
   BEGIN
     PERFORM public.get_or_create_direct_conversation(
-      '22222222-2222-4222-8222-222222222202');
+      current_setting('app.test.direct_b_id')::uuid);
   EXCEPTION WHEN SQLSTATE '28000' THEN
     v_rejected := true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'Unauthenticated caller was accepted'; END IF;
 
   PERFORM set_config('request.jwt.claim.sub',
-    '22222222-2222-4222-8222-222222222201', true);
+    current_setting('app.test.direct_a_id'), true);
 
   v_rejected := false;
   BEGIN
     PERFORM public.get_or_create_direct_conversation(
-      '22222222-2222-4222-8222-222222222201');
+      current_setting('app.test.direct_a_id')::uuid);
   EXCEPTION WHEN SQLSTATE '22023' THEN
     v_rejected := true;
   END;
@@ -265,7 +271,7 @@ DECLARE
 BEGIN
   BEGIN
     PERFORM public.get_or_create_direct_conversation(
-      '22222222-2222-4222-8222-222222222202');
+      current_setting('app.test.direct_b_id')::uuid);
   EXCEPTION WHEN SQLSTATE '28000' OR insufficient_privilege THEN
     -- The local/production ACL may reject service_role at app_private schema resolution
     -- before the wrapper reaches auth.uid(); either SQLSTATE is a secure fail-closed denial.
