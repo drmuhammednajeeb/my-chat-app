@@ -53,6 +53,10 @@
   ],
   "fixtures": [
     {
+      "path": "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+      "runWhen": "Immediately after the disposable local Supabase stack starts and before any application SQL; read-only catalog assertions only."
+    },
+    {
       "path": "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "runWhen": "After core schema and before team_management_dashboard.sql; before membership auth triggers."
     },
@@ -87,10 +91,6 @@
     {
       "path": "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
       "runWhen": "After the final membership format, synthetic admin assertion, and eligibility overlay; disposable PostgreSQL transaction ending in ROLLBACK."
-    },
-    {
-      "path": "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
-      "runWhen": "Immediately after the disposable local Supabase stack starts and before any application SQL; read-only catalog assertions only."
     },
     {
       "path": "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
