@@ -164,7 +164,8 @@ test('initial message snapshot removes stale rows inside its authoritative windo
   const load = extractFunction('loadMessages');
   assert.match(load, /fetchedIds=new Set\(fetchedRows\.map\(m=>m\.id\)\)/);
   assert.match(load, /isOlderHistory=fetchedRows\.length===50/);
-  assert.match(load, /if\(fetchedIds\.has\(m\.id\)\|\|isNewerRealtime\|\|isOlderHistory\|\|arrivedDuringEmptyFetch\)/);
+  assert.match(load, /afterPersonalClear=!state\.activeChatPreference\?\.cleared_before/);
+  assert.match(load, /if\(afterPersonalClear&&\(fetchedIds\.has\(m\.id\)\|\|isNewerRealtime\|\|isOlderHistory\|\|arrivedDuringEmptyFetch\)\)/);
 });
 
 test('renderer rejects an obsolete request token before starting work', async () => {
