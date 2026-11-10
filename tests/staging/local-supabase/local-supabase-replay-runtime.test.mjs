@@ -11,8 +11,8 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
   const source = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
   for (const token of [
     'ALLOW_DISPOSABLE_LOCAL_REPLAY',
-    "url.port !== '54322'",
-    "url.username !== 'postgres'",
+    "dbUrl.port !== '54322'",
+    "dbUrl.username !== 'postgres'",
     "url.pathname !== '/postgres'",
     "'127.0.0.1'",
     "'localhost'",
