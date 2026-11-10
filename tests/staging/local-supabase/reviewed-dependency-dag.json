@@ -1051,12 +1051,13 @@
       "testSource": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
-        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs"
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Manual runtime runner accepts only postgres@loopback:54322/postgres and sets a required transaction GUC. Applies the test-only ACL and restrictive-policy overlay, then runs read-only postconditions. It has not been executed; never run against hosted or production databases."
+      "note": "Manual runtime runner is loopback-only and applies the test overlay, read-only catalog postconditions, then rollback-only CRUD/RPC tests for message creation/edit audit, chat-list and starred-message upserts, and cross-user isolation. The runtime has not been executed."
     }
   ],
   "explicitEdges": [
