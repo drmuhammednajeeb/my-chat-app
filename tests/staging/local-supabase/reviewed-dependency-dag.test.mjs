@@ -219,14 +219,14 @@ test('local platform preflight and postflight are read-only, ordered, and fail c
   ]);
   for (const sql of [preflight, postflight]) {
     assert.match(sql, /TEST ONLY/i);
-    assert.doesNotMatch(sql, /^\\s*(insert|update|delete|create|alter|drop|truncate|grant|revoke)\\b/im);
+    assert.doesNotMatch(sql, /^\s*(insert|update|delete|create|alter|drop|truncate|grant|revoke)\b/im);
   }
-  assert.match(preflight, /auth\\.users/);
-  assert.match(preflight, /storage\\.objects/);
+  assert.match(preflight, /auth\.users/);
+  assert.match(preflight, /storage\.objects/);
   assert.match(preflight, /supabase_realtime/);
-  assert.match(preflight, /extensions\\.digest/);
+  assert.match(preflight, /extensions\.digest/);
   assert.match(preflight, /pg_available_extensions WHERE name = 'pg_cron'/);
-  assert.match(postflight, /cron\\.job/);
+  assert.match(postflight, /cron\.job/);
   assert.match(postflight, /purge-expired-chat-messages/);
   assert.match(postflight, /scheduler execution still requires a separate runtime check/i);
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
