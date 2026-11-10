@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Disposable-local Supabase Storage API RLS integration probe.
 // Requires the fully replayed synthetic local Auth/profile fixtures and RLS overlay.
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
 function fail(message) {
   console.error('STORAGE_RLS_RUNTIME_BLOCKED=' + message);
@@ -30,7 +30,8 @@ if (endpoint.protocol !== 'http:'
 
 const userA = { id: '22222222-2222-4222-8222-222222222201', email: 'direct-a@bizmindmakers.test' };
 const userB = { id: '22222222-2222-4222-8222-222222222202', email: 'direct-b@bizmindmakers.test' };
-const password = 'RlsRuntime-' + randomBytes(24).toString('hex') + '!aA9';
+const password = required('LOCAL_SYNTHETIC_AUTH_PASSWORD');
+if (password.length < 32 || !/^[A-Za-z0-9!-]+$/.test(password)) fail('LOCAL_SYNTHETIC_AUTH_PASSWORD is invalid');
 const nonce = randomUUID();
 const uploaded = [];
 let documentId = null;
@@ -110,17 +111,6 @@ async function login(user) {
   if (!result.access_token) throw new Error('Auth login returned no access token for ' + user.email);
   return result.access_token;
 }
-async function setPassword(user) {
-  // The fixture creates auth.users and its email identity before GoTrue sign-in.
-  // Use GoTrue's own password hashing path for these disposable local identities.
-  // The local service key is used only for this setup step, never for RLS probes.
-  if (!/^[0-9a-f-]{36}$/i.test(user.id) || !/^[A-Za-z0-9!-]+$/.test(password)) {
-    throw new Error('refusing unsafe synthetic Auth password setup input');
-  }
-  assertOk(await call('/auth/v1/admin/users/' + user.id, {
-    method: 'PUT', key: serviceKey, token: serviceKey, body: { password }
-  }), 'set local synthetic password ' + user.email);
-}
 async function rest(path, token, method = 'GET', body, prefer = null) {
   return call('/rest/v1/' + path, {
     method, token, body,
@@ -138,10 +128,7 @@ async function cleanup() {
 }
 
 try {
-  console.log('STORAGE_PROBE_STEP=initialize synthetic users');
-  await setPassword(userA);
-  await setPassword(userB);
-  console.log('STORAGE_PROBE_STEP=authenticate synthetic users');
+  console.log('STORAGE_PROBE_STEP=authenticate pre-provisioned synthetic users');
   tokenA = await login(userA);
   tokenB = await login(userB);
 
