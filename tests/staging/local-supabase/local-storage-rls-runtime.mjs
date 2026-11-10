@@ -174,8 +174,9 @@ try {
   assertSigned(await sign('conversation-documents', pdfPath, tokenB), 'shared conversation member signed read');
 
   const foreignDelete = await remove('conversation-documents', pdfPath, tokenB);
-  assertDenied(foreignDelete, 'non-owner conversation document delete');
-  assertSigned(await sign('conversation-documents', pdfPath, tokenA), 'document remains after denied foreign delete');
+  if (foreignDelete.response.status >= 500) throw new Error('non-owner document delete returned a server error');
+  // Storage may return an empty success for an RLS-filtered DELETE; verify the object still exists.
+  assertSigned(await sign('conversation-documents', pdfPath, tokenA), 'document remains after non-owner delete attempt');
 
   // Avatar: own upsert succeeds; another user cannot overwrite it; public bucket URL is readable.
   const avatarPath = userA.id + '/runtime-' + nonce + '.png';
