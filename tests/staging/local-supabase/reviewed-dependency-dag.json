@@ -1079,6 +1079,28 @@
       }
     },
     {
+      "id": "chat.channel-avatar-catalog-reconstruction",
+      "source": [
+        "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql"
+      ],
+      "provides": [
+        "test-only channel-avatars bucket",
+        "test-only app_private.can_access_channel_avatar(uuid)",
+        "test-only channel avatar Storage policies"
+      ],
+      "requires": [
+        "membership.final-format",
+        "chat.channels-public",
+        "platform.storage"
+      ],
+      "status": "TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql"
+      ],
+      "provenance": "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.provenance.json",
+      "note": "Reconstructs only the deployed channel-avatar bucket/helper/policies for disposable local RLS testing. It is not the missing historical migration and does not reproduce channel-visibility or group-background behavior."
+    },
+    {
       "id": "security.least-privilege-overlay",
       "source": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
@@ -1088,7 +1110,8 @@
         "membership.final-format",
         "test-fixture.direct-chat-runtime",
         "test-fixture.direct-chat-concurrency",
-        "chat.media-upload-path-hardening"
+        "chat.media-upload-path-hardening",
+        "chat.channel-avatar-catalog-reconstruction"
       ],
       "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATED_LOCAL",
       "testSource": [
@@ -1795,6 +1818,22 @@
     [
       "chat.workspaces",
       "chat.media-and-reactions"
+    ],
+    [
+      "membership.final-format",
+      "chat.channel-avatar-catalog-reconstruction"
+    ],
+    [
+      "chat.channels-public",
+      "chat.channel-avatar-catalog-reconstruction"
+    ],
+    [
+      "platform.storage",
+      "chat.channel-avatar-catalog-reconstruction"
+    ],
+    [
+      "chat.channel-avatar-catalog-reconstruction",
+      "security.least-privilege-overlay"
     ]
   ],
   "blockers": [
@@ -1857,9 +1896,11 @@
       "evidence": [
         "database/changes/20261107144109_private_membership_system_20261107.sql",
         "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql",
-        "tests/staging/local-supabase/local-supabase-replay-runtime.mjs"
+        "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
+        "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql",
+        "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.provenance.json"
       ],
-      "issue": "The post-membership channel-avatar Storage SELECT policy delegates to app_private.can_access_channel_avatar(uuid), which must enforce active membership indirectly. A rollback-only PostgreSQL runtime matrix has been added for active public-channel readers, private-channel members/non-members, and suspended users. Existing least-privilege assertions cover the direct active-member predicates on the remaining authenticated policies. Keep this blocker open until the new disposable-local runtime job passes."
+      "issue": "The post-membership channel-avatar Storage SELECT policy delegates to app_private.can_access_channel_avatar(uuid), which enforces active membership indirectly. A partial catalog-derived test fixture and rollback-only PostgreSQL matrix now cover active public-channel readers, private-channel members/non-members, and suspended users. Existing least-privilege assertions cover direct active-member predicates on other authenticated policies. Keep open until the disposable-local runtime run passes; the partial fixture is not historical source recovery."
     },
     {
       "id": "DAG-007",
@@ -2007,7 +2048,7 @@
     {
       "id": "DAG-017",
       "severity": "BLOCKER",
-      "issue": "The original SQL bodies for three remote ledger records are absent from the repository: 20261107032150 tighten_direct_chat_preference_scope, 20261107160647 channel_visibility_avatar_group_background, and 20261107160733 harden_channel_rpc_wrappers. Two additional direct-conversation RPC records (20261106102326 and 20261106102443) are represented only by current catalog-recovered test fixtures, not their original historical migration bodies. Catalog state snapshots preserve the deployed state but do not prove historical intent or exact migration deltas. Do not approve a canonical production baseline until the original sources are recovered or the catalog-only reconstruction is explicitly reviewed and accepted.",
+      "issue": "The original SQL bodies for three remote ledger records are absent from the repository: 20261107032150 tighten_direct_chat_preference_scope, 20261107160647 channel_visibility_avatar_group_background, and 20261107160733 harden_channel_rpc_wrappers. Two additional direct-conversation RPC records (20261106102326 and 20261106102443) are represented only by current catalog-recovered test fixtures, not their original historical migration bodies. Catalog state snapshots preserve the deployed state but do not prove historical intent or exact migration deltas. Do not approve a canonical production baseline until the original sources are recovered or the catalog-only reconstruction is explicitly reviewed and accepted. A separate test-only partial catalog reconstruction now covers only the channel-avatar bucket/helper/policies for local runtime verification; it does not recover the missing historical migration or group-background behavior.",
       "evidence": [
         "docs/MIGRATION_LEDGER_RECONCILIATION_2026-11-10.md",
         "docs/CATALOG_STATE_RECOVERY_2026-11-10.md",
