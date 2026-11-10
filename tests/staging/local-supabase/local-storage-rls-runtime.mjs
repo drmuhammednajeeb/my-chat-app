@@ -189,7 +189,7 @@ SELECT coalesce(array_to_string(storage.foldername('${diagnosticPath}'), '|'), '
   || '|' || coalesce(auth.uid()::text, 'NULL')
   || '|' || app_private.is_active_member()::text
   || '|' || app_private.is_conversation_member('${conversationId}'::uuid)::text
-  || '|' || EXISTS (SELECT 1 FROM storage.buckets b WHERE b.id = 'chat-media')::text;
+  || '|' || (EXISTS (SELECT 1 FROM storage.buckets b WHERE b.id = 'chat-media'))::text;
 ROLLBACK;`);
   console.log('STORAGE_POLICY_PROBE=' + diagnostic);
   const policySet = localDatabaseProbe(`SELECT coalesce(string_agg(
