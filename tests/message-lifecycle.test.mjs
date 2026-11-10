@@ -351,7 +351,7 @@ test('late reaction failures cannot mutate the next conversation state', async (
     }
   };
   const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
-    state, supabaseClient, pendingReactionKeys: new Set(),
+    state, supabaseClient, MESSAGE_REACTION_OPTIONS,
     document: { querySelectorAll: () => [] }, renderReactionBar() {},
     toast() {}, console
   });
@@ -386,7 +386,7 @@ test('ambiguous reaction writes are verified against the authoritative row befor
     }
   };
   const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
-    state, supabaseClient, document: { querySelectorAll: () => [] },
+    state, supabaseClient, MESSAGE_REACTION_OPTIONS, document: { querySelectorAll: () => [] },
     renderReactionBar() {}, toast() {}, console
   });
   const pending = toggle({ id: 'm1', conversation_id: 'c1' }, 'heart', null);
