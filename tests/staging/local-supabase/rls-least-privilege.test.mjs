@@ -34,7 +34,6 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
     'REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM public, anon',
     'REVOKE ALL ON FUNCTION %I.%I(%s) FROM PUBLIC, ANON, AUTHENTICATED, SERVICE_ROLE',
     'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public',
-    'ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public',
     'REVOKE INSERT, UPDATE, DELETE ON public.conversation_member_events',
     'REVOKE UPDATE, DELETE ON public.private_reply_contexts',
     'REVOKE DELETE ON public.user_settings',
@@ -48,7 +47,18 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
   assert.match(sql, /revoke maintain on all tables in schema public from authenticated/i);
 });
 
-test('read-only assertions cover RLS, active membership, table, sequence, function, trigger and both migration-owner default ACLs', async () => {
+
+test('platform supabase_admin defaults are not mutated by the postgres migration role', async () => {
+  const overlay = await readFile(overlayPath, 'utf8');
+  const assertion = await readFile(assertionPath, 'utf8');
+  assert.match(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public/i);
+  assert.doesNotMatch(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin/i);
+  assert.match(assertion, /c\.relowner <> 'postgres'::regrole/i);
+  assert.match(assertion, /p\.proowner <> 'postgres'::regrole/i);
+  assert.match(assertion, /approved postgres migration role/i);
+});
+
+test('read-only assertions cover RLS, active membership, table, sequence, function, trigger and postgres-owner default ACLs', async () => {
   const sql = await readFile(assertionPath, 'utf8');
   for (const token of [
     'relrowsecurity',
@@ -58,7 +68,9 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     'has_sequence_privilege',
     'has_function_privilege',
     'pg_default_acl',
-    "d.defaclrole in ('postgres'::regrole, 'supabase_admin'::regrole)",
+    "c.relowner <> 'postgres'::regrole",
+    "p.proowner <> 'postgres'::regrole",
+    "d.defaclrole = 'postgres'::regrole",
     "p.prorettype = 'trigger'::regtype",
     'aclexplode',
     'storage.objects',
