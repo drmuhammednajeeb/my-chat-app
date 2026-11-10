@@ -223,7 +223,30 @@ run(process.execPath, [
   LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
 }, 'storage-api-rls-runtime');
 
-const expectedSqlCount = manifest.sourceCoverage.mappedSources + manifest.sourceCoverage.testOnlySqlFixtures;
+const patchManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
+if (patchManifest.mode !== 'TEST_COPY_ONLY' || !Array.isArray(patchManifest.patches)) {
+  fail('synthetic fixture patch manifest is invalid');
+}
+const replacedSourcePaths = new Set(patchManifest.patches.map(item => item.sourcePath));
+if (replacedSourcePaths.size !== patchManifest.patches.length
+  || replacedSourcePaths.size !== manifest.sourceCoverage.mappedSourcesReplacedByFixtures) {
+  fail('mapped-source replacement count does not match the reviewed fixture patch manifest');
+}
+for (const patch of patchManifest.patches) {
+  const sourcePath = path.resolve(ROOT, patch.sourcePath);
+  const fixturePath = path.resolve(ROOT, patch.testCopyPath);
+  if (!sourcePath.startsWith(ROOT + path.sep) || !fixturePath.startsWith(ROOT + path.sep)
+    || !fs.existsSync(sourcePath) || !fs.existsSync(fixturePath)
+    || !manifest.sourceCoverage.testOnlySqlFixturePaths.includes(patch.testCopyPath)) {
+    fail('mapped-source test replacement is missing or not registered: ' + patch.sourcePath);
+  }
+}
+const expectedSqlCount = manifest.sourceCoverage.executedSqlFiles;
+if (expectedSqlCount !== manifest.sourceCoverage.executedMappedSources + manifest.sourceCoverage.executedTestOnlySqlFixtures
+  || expectedSqlCount !== manifest.sourceCoverage.mappedSources - replacedSourcePaths.size + manifest.sourceCoverage.testOnlySqlFixtures) {
+  fail('declared executed SQL coverage does not reconcile with mapped-source replacements');
+}
 if (seenSql.size !== expectedSqlCount) fail('executed SQL coverage mismatch: expected ' + expectedSqlCount + ', found ' + seenSql.size);
 console.log('LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED');
+console.log('LOCAL_SUPABASE_SQL_SOURCE_REPLACEMENTS=' + replacedSourcePaths.size);
 console.log('LOCAL_SUPABASE_SQL_FILES_EXECUTED=' + seenSql.size);
