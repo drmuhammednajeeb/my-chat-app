@@ -83,7 +83,8 @@ test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL
   assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
   for (const label of [
     'suspended target', 'suspended caller', 'unverified target', 'unverified caller',
-    'unconfirmed target', 'unconfirmed caller', 'missing profile', 'missing auth user'
+    'unconfirmed target', 'unconfirmed caller', 'missing profile target', 'missing auth user target',
+    'missing profile caller', 'missing auth user caller'
   ]) assert.ok(sql.includes(label), 'missing runtime denial case: ' + label);
   assert.match(sql, /Unauthenticated caller was accepted/);
   assert.match(sql, /Self-target was accepted/);
