@@ -16,9 +16,15 @@ test('synthetic Auth identities are seeded before membership triggers without by
   ]);
   const dag = JSON.parse(dagText);
   assert.match(authSeed, /TEST ONLY/i);
-  assert.match(authSeed, /INSERT INTO auth\\.users/i);
+  assert.match(authSeed, /INSERT INTO auth\.users/i);
   const identityStart = authSeed.indexOf('INSERT INTO auth.identities');
-  const identityEnd = authSeed.indexOf('DO $assert
+  const identityEnd = authSeed.indexOf('DO ', identityStart);
+  assert.ok(identityStart >= 0 && identityEnd > identityStart);
+  const identitySeed = authSeed.slice(identityStart, identityEnd);
+  assert.match(identitySeed, /provider_id, user_id, identity_data, provider, created_at, updated_at/i);
+  assert.doesNotMatch(identitySeed, /provider_id, user_id, identity_data, provider, email, created_at/i);
+  assert.doesNotMatch(identitySeed, /email\s*=\s*excluded\.email/i);
+  assert.doesNotMatch(authSeed, /INSERT INTO public\.profiles/i);
   assert.doesNotMatch(authSeed, /session_replication_role|DISABLE TRIGGER|DROP TRIGGER/i);
   assert.match(authSeed, /direct-unconfirmed@bizmindmakers\.test/);
   assert.match(authSeed, /direct-missing-profile@bizmindmakers\.test/);
