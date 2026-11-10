@@ -36,7 +36,7 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
     'REVOKE UPDATE ON public.chat_list_items',
     'REVOKE DELETE ON public.conversation_group_settings'
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing hardening clause: ' + token);
-  assert.match(sql, /REVOKEs+MAINTAIN[sS]*?authenticated/i);
+  assert.match(sql, /revoke maintain on all tables in schema public from authenticated/i);
 });
 
 test('read-only assertions cover RLS, active membership, table, sequence, function and default ACLs', async () => {
