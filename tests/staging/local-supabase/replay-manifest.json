@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 53,
-    "mappedSources": 50,
+    "sqlFiles": 54,
+    "mappedSources": 51,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true
   },
@@ -129,6 +129,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.direct-conversation-rpc",
+      "status": "TEST_ONLY_RESTORED_PRODUCTION_SOURCE",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests."
+    },
+    {
       "nodeId": "chat.channels-public",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -217,7 +226,7 @@
         "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
       ],
       "blockedBy": [
-        "DAG-002"
+        "DAG-014"
       ],
       "parityNote": null
     },
