@@ -166,3 +166,13 @@ test('group-only-admin restrictions survive composer, polling and voice entry po
   assert.match(extractFunction('pollMessagesFallback'), /groupReadOnly/);
   assert.match(extractFunction('startVoiceRecording'), /only_admins_can_send/);
 });
+
+
+test('document storage filename sanitizer removes path separators and unsafe characters', () => {
+  const sanitize = vm.runInNewContext('(' + extractFunction('sanitizeStorageFileName') + ')');
+  assert.equal(sanitize('../Report Q4.pdf'), '_.._Report_Q4.pdf');
+  assert.equal(sanitize('   '), '___');
+  assert.equal(sanitize('...'), 'attachment');
+  assert.equal(sanitize('a'.repeat(140)).length, 120);
+  assert.equal(sanitize('folder\\\\name.pdf').includes('/'), false);
+});
