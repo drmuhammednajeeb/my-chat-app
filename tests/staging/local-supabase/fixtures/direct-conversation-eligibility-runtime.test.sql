@@ -57,9 +57,27 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (
-    SELECT 1 FROM public.auth_users_placeholder
+    SELECT 1 FROM public.profiles p JOIN auth.users u ON u.id = p.id
+    WHERE p.id = '22222222-2222-4222-8222-222222222205'
+      AND p.membership_status = 'active'
+      AND p.membership_number_verified IS TRUE
+      AND u.email_confirmed_at IS NULL
   ) THEN
-    NULL;
+    RAISE EXCEPTION 'Unconfirmed-email fixture state was not established';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = '22222222-2222-4222-8222-222222222206'
+  ) THEN
+    RAISE EXCEPTION 'Missing-profile fixture unexpectedly has a profile';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE id = '22222222-2222-4222-8222-222222222299'
+  ) THEN
+    RAISE EXCEPTION 'Missing-auth fixture UUID unexpectedly exists';
   END IF;
 END
 $fixtures$;
