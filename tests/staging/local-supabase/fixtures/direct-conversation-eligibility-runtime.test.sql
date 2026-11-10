@@ -182,6 +182,28 @@ BEGIN
 END
 $boundaries$;
 
+-- service_role may execute the recovered RPC but must not bypass caller authentication.
+RESET ROLE;
+SET LOCAL ROLE service_role;
+SELECT set_config('request.jwt.claim.sub', '', true);
+DO $service_role$
+DECLARE
+  v_rejected boolean := false;
+BEGIN
+  BEGIN
+    PERFORM public.get_or_create_direct_conversation(
+      '22222222-2222-4222-8222-222222222202');
+  EXCEPTION WHEN SQLSTATE '28000' THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'service_role invocation without an authenticated user was accepted';
+  END IF;
+END
+$service_role$;
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+
 -- Verify least-privilege EXECUTE grants and absence of PUBLIC/anon access.
 DO $acl$
 DECLARE
