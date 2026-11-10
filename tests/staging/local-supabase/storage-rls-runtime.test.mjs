@@ -18,9 +18,6 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
     "'::1'",
     'direct-a@bizmindmakers.test',
     'direct-b@bizmindmakers.test',
-    'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
-    '/auth/v1/admin/users/',
-    "method: 'PUT'",
     '/auth/v1/token?grant_type=password',
     '/storage/v1/object/sign/',
     'conversation-documents',
@@ -29,7 +26,17 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
     'STORAGE_RLS_RUNTIME=PASSED'
   ]) assert.ok(source.includes(token), 'missing Storage runtime safeguard/check: ' + token);
   assert.match(source, /refusing non-local API target/i);
-  assert.doesNotMatch(source, /supabase\.co|SUPABASE_URL\s*=/i);
+  assert.doesNotMatch(source, /LOCAL_SUPABASE_SERVICE_ROLE_KEY|supabase\.co|SUPABASE_URL\s*=/i);
+
+  const replay = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
+  for (const token of [
+    'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
+    '/auth/v1/admin/users/',
+    "method: 'POST'",
+    'test-fixture.direct-chat-auth-seed',
+    'LOCAL_SYNTHETIC_AUTH_PASSWORD'
+  ]) assert.ok(replay.includes(token), 'missing GoTrue fixture provisioning safeguard: ' + token);
+  assert.doesNotMatch(replay, /method: 'PUT'[\\s\\S]{0,100}admin\/users/i);
 });
 
 test('Storage runtime probe checks uploader ownership, private/shared reads, upsert, and cleanup', async () => {
