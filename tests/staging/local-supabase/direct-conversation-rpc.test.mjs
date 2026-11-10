@@ -54,3 +54,14 @@ test('public RPC is invoker-rights and function ACL excludes PUBLIC and anon', a
   assert.ok(sql.includes('FROM PUBLIC, anon, authenticated, service_role'));
   assert.ok(sql.includes('TO authenticated, service_role'));
 });
+
+test('source review keeps the missing caller and target active-membership guards visible', async () => {
+  const sql = await readFile(fixturePath, 'utf8');
+  const start = sql.indexOf('CREATE OR REPLACE FUNCTION app_private.get_or_create_direct_conversation_impl');
+  const end = sql.indexOf('CREATE OR REPLACE FUNCTION public.get_or_create_direct_conversation');
+  const internal = sql.slice(start, end);
+  assert.ok(!internal.includes('app_private.is_active_member()'), 'caller active-membership guard is absent');
+  assert.ok(!internal.includes('p.membership_status'));
+  assert.ok(!internal.includes('p.membership_number_verified'));
+  assert.ok(!internal.includes('auth.users'));
+});
