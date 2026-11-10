@@ -55,8 +55,9 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     'bucket_id',
     'RESTRICTIVE',
     'Require active membership for all API operations',
-    'Preserve UPDATE on upsert-backed tables',
-    'Preserve INSERT on message_edit_history'
+    "not has_table_privilege('authenticated','public.user_message_stars','UPDATE')",
+    "not has_table_privilege('authenticated','public.chat_list_items','UPDATE')",
+    "not has_table_privilege('authenticated','public.message_edit_history','INSERT')"
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing assertion: ' + token);
   assert.doesNotMatch(sql, /\b(insert\s+into|update\s+\w|delete\s+from|create\s+table|alter\s+table)\b/i);
 });
