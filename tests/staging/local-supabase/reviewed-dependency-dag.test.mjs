@@ -76,6 +76,7 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'assert-synthetic-admin-active.sql',
     'chat-media-upload-path-hardening.sql',
     'direct-conversation-rpc.sql',
+    'direct-conversation-rpc-eligibility-guard.sql',
     'synthetic-direct-chat-auth-before-membership.sql',
     'synthetic-direct-chat-profiles-after-membership.sql',
     'direct-conversation-eligibility-runtime.test.sql'
@@ -88,6 +89,7 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-auth-seed').source.some(source => source.includes('synthetic-direct-chat-auth-before-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-profiles').source.some(source => source.includes('synthetic-direct-chat-profiles-after-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-runtime').source.some(source => source.includes('direct-conversation-eligibility-runtime.test.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-concurrency').source.some(source => source.includes('direct-conversation-concurrency.mjs')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.official').testSource.some(source => source.includes('20261107152550_official_forever_membership_numbers_manual_verification.sql')));
   const mediaPolicy = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql'), 'utf8');
   assert.match(mediaPolicy, /storage\.foldername\(name\)\)\[2\]\s*=\s*\(select auth\.uid\(\)\)/i);
