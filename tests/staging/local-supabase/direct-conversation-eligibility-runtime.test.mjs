@@ -68,6 +68,14 @@ test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL
   assert.match(sql, /DO \$membership_format\$/);
   assert.match(sql, /profiles_membership_number_official_format/);
   assert.match(sql, /member_invitation_number_format/);
+  for (const signature of [
+    'admin_create_official_member_invites_impl',
+    'admin_set_member_official_number_impl',
+    'create_profile_for_invited_user',
+    'enforce_invited_auth_signup',
+    'guard_profile_membership_fields',
+    'is_active_member'
+  ]) assert.ok(sql.includes(signature), 'missing membership format assertion for ' + signature);
   assert.match(sql, /Invalid official membership number was accepted/);
   assert.match(sql, /public\.get_or_create_direct_conversation/);
   assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
