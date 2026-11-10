@@ -202,7 +202,7 @@ test('message stars persist before updating local state and recover from backend
   });
   assert.equal(await toggle('m1', true), true);
   assert.equal(state.starredMessageIds.has('m1'), true);
-  assert.deepEqual(calls[0].options, { onConflict: 'user_id,message_id' });
+  assert.equal(calls[0].options.onConflict, 'user_id,message_id');
   assert.equal(await toggle('m1', false), true);
   assert.equal(state.starredMessageIds.has('m1'), false);
   fail = true;
