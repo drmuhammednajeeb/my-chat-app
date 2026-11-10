@@ -69,13 +69,16 @@ test('clean chat core reset is destructive only inside the loopback disposable r
     'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
     'public.get_or_create_direct_conversation',
     'message_reactions',
-    'user_message_stars'
+    'user_message_stars',
+    'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
+    '/storage/v1/object/list/',
+    '/storage/v1/object/',
+    "'chat-media', 'conversation-documents', 'channel-avatars'"
   ]) assert.ok(runner.includes(token), 'missing clean core runtime safety/coverage token: ' + token);
   assert.ok(fixture.includes("current_setting('app.test_only_local_replay', true) IS DISTINCT FROM 'enabled'"));
   assert.ok(fixture.includes('TRUNCATE TABLE public.conversations CASCADE'));
-  assert.ok(fixture.includes('DELETE FROM storage.objects'));
-  assert.ok(fixture.includes("'chat-media', 'conversation-documents', 'channel-avatars'"));
-  assert.ok(fixture.includes('Keep the public avatars bucket'));
+  assert.ok(!fixture.includes('DELETE FROM storage.objects'), 'Storage metadata must be changed through the Storage API');
+  assert.ok(fixture.includes('Storage objects are removed through the local Storage API'));
   assert.ok(fixture.includes('direct_user_low'));
   assert.ok(fixture.includes('direct_user_high'));
   assert.ok(fixture.includes('conversations_direct_pair_unique_idx'));
