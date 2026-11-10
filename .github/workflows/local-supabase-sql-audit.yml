@@ -37,7 +37,8 @@ jobs:
             tests/staging/local-supabase/reviewed-dependency-dag.test.mjs \
             tests/workspace-load-race.test.mjs \
             tests/staging/local-supabase/direct-conversation-rpc.test.mjs \
-            tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \\\n            tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs
+            tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
+            tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs
       - name: Generate repository SQL object inventory
         run: |
           node tests/staging/local-supabase/build-database-object-inventory.mjs > "$RUNNER_TEMP/database-object-inventory.json"
