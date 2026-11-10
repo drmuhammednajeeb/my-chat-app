@@ -18,6 +18,13 @@ test('least-privilege overlay is explicitly local-only and loopback guarded', as
   assert.doesNotMatch(sql, /service_role\s*=/i);
 });
 
+
+test('local platform preflight requires both migration owners for default ACL verification', async () => {
+  const sql = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql'), 'utf8');
+  assert.match(sql, /\('supabase_admin'\)/i);
+  assert.match(sql, /\('anon'\), \('authenticated'\), \('service_role'\), \('supabase_admin'\)/i);
+});
+
 test('least-privilege overlay revokes dangerous and unnecessary API privileges', async () => {
   const sql = await readFile(overlayPath, 'utf8');
   for (const token of [
