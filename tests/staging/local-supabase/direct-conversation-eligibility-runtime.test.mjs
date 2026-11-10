@@ -85,7 +85,7 @@ test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL
   assert.match(sql, /:'direct_a_id'/);
   assert.doesNotMatch(sql, /22222222-2222-4222-8222-22222222220[1-6]/);
   assert.match(sql, /SET LOCAL statement_timeout = '30s'/);
-  assert.match(sql, /SET LOCAL lock_timeout = '10s'/);
+  assert.match(sql, /SET LOCAL lock_timeout = '30s'/);
   assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
   for (const label of [
     'suspended target', 'suspended caller', 'unverified target', 'unverified caller',
@@ -138,8 +138,8 @@ test('two-session concurrency runner is restricted to disposable loopback Postgr
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8');
   assert.match(runner, /LOCAL_SUPABASE_DB_URL/);
   assert.match(runner, /const eligibleSql/);
-  assert.match(runner, /statement_timeout = '20s'/);
-  assert.match(runner, /lock_timeout = '10s'/);
+  assert.match(runner, /statement_timeout = '60s'/);
+  assert.match(runner, /lock_timeout = '30s'/);
   assert.match(runner, /PGCONNECT_TIMEOUT: '5'/);
   assert.match(runner, /PATH: process\.env\.PATH/);
   assert.doesNotMatch(runner, /\.\.\.process\.env/);
