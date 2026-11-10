@@ -300,3 +300,25 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
   assert.ok(node.blockedBy.includes('DAG-016'));
   assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
 });
+
+
+test('chat composer media types and reaction persistence constraints stay aligned', async () => {
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  const migration = await readFile(path.join(root, 'database/changes/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
+  for (const mime of [
+    'video/mp4',
+    'video/webm',
+    'video/quicktime',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  ]) {
+    assert.ok(html.includes(mime), 'chat file picker is missing ' + mime);
+    assert.ok(migration.includes(mime), 'Storage allow-list is missing ' + mime);
+  }
+  for (const reaction of ['like', 'heart', 'wow', 'pray', 'fire', 'celebrate']) {
+    assert.match(html, new RegExp("type: ['\\\"]" + reaction + "['\\\"]"));
+    assert.ok(migration.includes("'" + reaction + "'"), 'database constraint is missing ' + reaction);
+  }
+  assert.match(html, /attachment_type\?\.startsWith\('video\/'\)/);
+});
