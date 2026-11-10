@@ -11,6 +11,7 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
   for (const token of [
     'LOCAL_SUPABASE_URL',
     'LOCAL_SUPABASE_ANON_KEY',
+    'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
     "endpoint.protocol !== 'http:'",
     "endpoint.port !== '54321'",
     "'127.0.0.1'",
@@ -31,7 +32,7 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
   const replay = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
   for (const token of [
     'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
-    '/auth/v1/admin/users/',
+    '/auth/v1/admin/users',
     "method: 'POST'",
     'test-fixture.direct-chat-auth-seed',
     'LOCAL_SYNTHETIC_AUTH_PASSWORD'
