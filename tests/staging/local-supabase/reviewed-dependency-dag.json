@@ -1680,9 +1680,12 @@
       "severity": "BLOCKER",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
-        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json"
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
       ],
-      "issue": "The direct-conversation RPC source is restored, but runtime validation is still required in a disposable local Supabase environment: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, concurrent creation without duplicates, exact ACL enforcement, and review of active-membership gating. Do not enable replay until these tests pass."
+      "issue": "The direct-conversation RPC source is restored and rollback-only PostgreSQL assertions plus a two-session reversed-pair runner are prepared. Runtime execution is still required in a disposable local Supabase environment to prove unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exactly-one concurrent creation, exact ACL enforcement, and active-membership gating. Do not enable replay until those runtime tests pass."
     },
     {
       "id": "DAG-015",
@@ -1691,9 +1694,13 @@
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
         "database/changes/20261107144109_private_membership_system_20261107.sql",
-        "index.html"
+        "index.html",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
       ],
-      "issue": "The recovered production RPC lacks caller and target eligibility checks. A separately reviewed test-only overlay now checks both participants against active membership, verified membership number, valid number format, and confirmed Auth email while locking the authoritative rows. Runtime PostgreSQL validation, including negative cases, concurrency, and exact ACL behavior, remains blocked; no production migration is authorized.",
+      "issue": "The recovered production RPC lacked caller and target eligibility checks. A separate test-only overlay now checks both participants against active membership, verified membership number, final number format, and confirmed Auth email while locking authoritative rows. The overlay and negative-case PostgreSQL assertions are prepared, but runtime validation, concurrency, and exact ACL behavior remain blocked; no production migration is authorized.",
       "mitigation": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs"
