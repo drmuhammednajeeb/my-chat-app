@@ -22,7 +22,7 @@ function psql(databaseUrl, sql) {
     const child = spawn('psql', [
       '--no-psqlrc', '--quiet', '--tuples-only', '--no-align',
       '--set=ON_ERROR_STOP=1', '--command', sql, databaseUrl
-    ], { stdio: ['ignore', 'pipe', 'pipe'], env: { PATH: process.env.PATH, PGCONNECT_TIMEOUT: '5' } });
+    ], { stdio: ['ignore', 'pipe', 'pipe'], env: { PATH: process.env.PATH, PGCONNECT_TIMEOUT: '5', PGOPTIONS: '-c statement_timeout=20s -c lock_timeout=10s' } });
     let stdout = '';
     let stderr = '';
     child.stdout.setEncoding('utf8').on('data', chunk => { stdout += chunk; });
@@ -36,6 +36,12 @@ function psql(databaseUrl, sql) {
 }
 
 const db = localDatabaseUrl();
+
+// The preceding eligibility matrix is intentionally rollback-only. Promote only the
+// two reserved synthetic users in this disposable database so concurrency and later
+// CRUD/Storage probes have a stable eligible pair for their own transactions.
+await psql(db, `BEGIN;\nSET LOCAL statement_timeout = '20s';\nSET LOCAL lock_timeout = '10s';\nSET LOCAL ROLE authenticated;\nSELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);\nSELECT public.admin_set_member_official_number('22222222-2222-4222-8222-222222222201', '971001000002');\nSELECT public.admin_set_member_official_number('22222222-2222-4222-8222-222222222202', '971001000003');\nCOMMIT;`);
+
 const eligibleSql = `SELECT count(*)::text
 FROM public.profiles p
 JOIN auth.users u ON u.id = p.id
