@@ -62,3 +62,17 @@ test('test-only guard does not authorize cloud, production, or SQL execution', a
   assert.match(guard, /not a production migration/i);
   assert.doesNotMatch(guard, /^\s*(create|alter|drop)\s+(table|schema|extension|policy|trigger)\b/im);
 });
+
+test('dependency graph keeps the guard test-only and runtime-gated', async () => {
+  const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'chat.direct-conversation-rpc-eligibility-guard');
+  assert.ok(node, 'eligibility guard node is missing from the dependency graph');
+  assert.equal(node.status, 'TEST_ONLY_GUARD_IMPLEMENTED_RUNTIME_VALIDATION_BLOCKED');
+  assert.ok(node.blockedBy.includes('DAG-014'));
+  assert.ok(node.blockedBy.includes('DAG-015'));
+  assert.equal(dag.status, 'BLOCKED');
+  assert.equal(dag.executionAuthorized, false);
+  assert.equal(dag.safety.sqlExecutionEnabled, false);
+  assert.equal(dag.safety.cloudConnectionsAllowed, false);
+  assert.equal(dag.safety.productionDataAllowed, false);
+});
