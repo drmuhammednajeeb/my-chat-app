@@ -102,7 +102,7 @@ test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL
   assert.match(sql, /service_role invocation without an authenticated user was accepted/);
   assert.match(sql, /SQLSTATE '28000' OR insufficient_privilege/);
   assert.match(sql, /either SQLSTATE is a secure fail-closed denial/i);
-  assert.match(sql, /two-session reversed-pair concurrency is a separate required test/i);
+  assert.match(sql, /24-session reversed-pair and concurrent-message stress is a separate required test/i);
   assert.doesNotMatch(sql, /auth_users_placeholder|session_replication_role|DISABLE TRIGGER/i);
 });
 
