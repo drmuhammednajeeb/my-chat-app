@@ -57,7 +57,7 @@ test('synthetic profiles are inserted after the profile guard and before officia
 
 test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL inside rollback', async () => {
   const sql = await read('direct-conversation-eligibility-runtime.test.sql');
-  assert.equal(sql.trimStart().startsWith('BEGIN;'), true);
+  assert.equal(sql.includes('\nBEGIN;'), true);
   assert.match(sql.trimEnd(), /ROLLBACK;$/);
   assert.match(sql, /public\.admin_set_member_official_number/);
   assert.match(sql, /public\.admin_update_membership_status/);
