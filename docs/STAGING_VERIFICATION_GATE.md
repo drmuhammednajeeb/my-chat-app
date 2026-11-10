@@ -32,17 +32,30 @@ Run **Staging E2E readiness gate** manually from GitHub Actions.
 - Production host, insecure URL, URL with embedded credentials/path/query/fragment, or duplicate test identity: fail closed.
 - Complete isolated configuration: `CONFIGURED_NOT_EXECUTED`. This is intentionally not a green E2E result; a full-app staging runner still needs to be implemented and reviewed before any backend request is permitted.
 
+## Disposable local Supabase rehearsal (separate from hosted staging)
+
+A local-only catalog gate is now prepared:
+
+- `tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql` must run immediately after the disposable local stack starts and before application SQL. It is read-only and verifies Auth/Storage/Realtime schemas and objects, required roles, the Realtime publication, pgcrypto's required `extensions` placement, and pg_cron availability.
+- `tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql` must run after the workspace and expiry-purge nodes. It verifies pgcrypto function resolution and the expected `cron.job` definition. It does not prove that the scheduler actually executed the job.
+- Synthetic direct-chat Auth identities are created before membership triggers; Profiles are created after the membership profile guard. The runtime SQL fixture promotes eligible synthetic identities through the real local admin RPCs and ends in `ROLLBACK`.
+- `tests/staging/local-supabase/direct-conversation-concurrency.mjs` is a separate two-session reversed-pair test. It accepts only a disposable loopback PostgreSQL endpoint on port 54322 and refuses cloud targets.
+
+**Execution remains disabled.** Neither catalog assertion, runtime SQL fixture, concurrency runner, nor Supabase local stack has been executed. These files are test preparation, not runtime evidence.
+
 ## Test classification
 
 | Test | Classification | Current meaning |
 |---|---|---|
-| Existing 10 source-contract checks | Passed in prior recorded CI run | Static source contracts only |
-| Existing 7 Chromium function-level checks | Passed in prior recorded CI run | Actual extracted functions with DOM/fake Supabase |
-| Staging preflight | Prepared; CI execution pending | Configuration guard only |
-| Fake concurrency scenarios | Simulation only; CI execution pending | In-memory deterministic model, not backend load |
-| Authenticated two-account E2E | Blocked / not run | Requires free isolated project and reviewed runner |
-| Realtime, Storage, RLS verification | Not run | Requires isolated backend |
-| Real concurrent-user / load test | Not run | Requires isolated backend and explicit resource budget |
+| Repository source/DAG/fixture audits | Executed by GitHub Actions | Static validation; no PostgreSQL was contacted |
+| Browser/message lifecycle regression | Executed by GitHub Actions | Browser and fake-Supabase regression; not hosted E2E |
+| Hosted staging preflight | Configuration-only | No HTTP/Auth/database/Realtime/Storage requests |
+| Local platform preflight/postflight SQL | Prepared; not executed | Read-only catalog assertions for local Supabase only |
+| Direct-conversation PostgreSQL runtime SQL | Prepared; not executed | Rollback-only behavior, eligibility, reuse and ACL assertions |
+| Two-session reversed-pair concurrency | Prepared; not executed | Real PostgreSQL test runner; loopback-only guard |
+| pg_cron scheduler execution | Not verified | Job catalog definition alone is insufficient |
+| Hosted Auth, Realtime, Storage, RLS E2E | Blocked / not run | Requires a separate isolated backend and reviewed runner |
+| Real load test | Not run | Requires isolated backend and explicit resource budget |
 
 ## Acceptance sequence
 
