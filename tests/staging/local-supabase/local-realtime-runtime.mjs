@@ -29,7 +29,8 @@ for (const key of ['direct_a', 'direct_b', 'direct_c']) {
 
 const makeClient = () => createClient(api.origin, anonKey, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  realtime: { params: { eventsPerSecond: 20 } }
+  realtime: { params: { eventsPerSecond: 20 } },
+  global: { fetch: (input, init = {}) => fetch(input, { ...init, signal: init.signal || AbortSignal.timeout(20000) }) }
 });
 const clientA = makeClient();
 const clientC = makeClient();
@@ -100,12 +101,16 @@ async function insertMessage(client, conversationId, senderId, content) {
 let channel = null;
 let secondConversationId = null;
 try {
+  console.log('LOCAL_REALTIME_STEP=authenticate-synthetic-users');
   const userA = await signIn(clientA, 'direct-a@bizmindmakers.test');
   await signIn(clientC, 'direct-c@bizmindmakers.test');
+  console.log('LOCAL_REALTIME_STEP=create-two-direct-conversations');
   const directConversationId = await createDirect(clientA, users.direct_b);
   secondConversationId = await createDirect(clientA, users.direct_c);
 
+  console.log('LOCAL_REALTIME_STEP=subscribe-authenticated-channel');
   channel = await subscribeToConversation(clientA, directConversationId);
+  console.log('LOCAL_REALTIME_STEP=insert-and-await-message-event');
   const firstMessageId = await insertMessage(clientA, directConversationId, userA, 'local realtime delivery probe');
   const delivered = await waitForEvent(
     event => event.kind === 'message' && event.conversationId === directConversationId
@@ -115,6 +120,7 @@ try {
   if (delivered.payload.new.conversation_id !== directConversationId) throw new Error('Realtime delivered a message with the wrong conversation ID');
   console.log('PASS: authenticated local Realtime delivered a new message over WebSocket.');
 
+  console.log('LOCAL_REALTIME_STEP=verify-cross-conversation-isolation');
   const secondMessageId = await insertMessage(clientA, secondConversationId, userA, 'cross-conversation isolation probe');
   await new Promise(resolve => setTimeout(resolve, 900));
   if (events.some(event => event.kind === 'message' && event.payload.new?.id === secondMessageId)) {
@@ -122,12 +128,14 @@ try {
   }
   console.log('PASS: conversation-filtered Realtime did not deliver an unrelated conversation message.');
 
+  console.log('LOCAL_REALTIME_STEP=verify-non-member-read-denial');
   const { data: unauthorizedRows, error: unauthorizedError } = await clientC
     .from('chat_messages').select('id').eq('conversation_id', directConversationId);
   if (unauthorizedError) throw new Error('Non-member read probe failed unexpectedly: ' + unauthorizedError.message);
   if ((unauthorizedRows || []).length !== 0) throw new Error('Non-member user read messages from a conversation they do not belong to');
   console.log('PASS: authenticated non-member cannot read the subscribed conversation through PostgREST.');
 
+  console.log('LOCAL_REALTIME_STEP=insert-and-await-reaction-event');
   const { error: reactionError } = await clientA.from('message_reactions').insert({
     conversation_id: directConversationId,
     message_id: firstMessageId,
@@ -143,6 +151,7 @@ try {
   if (reactionEvent.payload.new.conversation_id !== directConversationId) throw new Error('Reaction event conversation mismatch');
   console.log('PASS: authenticated local Realtime delivered a message reaction event.');
 
+  console.log('LOCAL_REALTIME_STEP=reconnect-and-reconcile-gap');
   await channel.unsubscribe();
   channel = null;
   const missedMessageId = await insertMessage(clientA, directConversationId, userA, 'reconnect reconciliation probe');
