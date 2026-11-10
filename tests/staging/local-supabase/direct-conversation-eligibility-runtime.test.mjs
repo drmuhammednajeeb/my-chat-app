@@ -21,6 +21,9 @@ test('synthetic Auth identities are seeded before membership triggers without by
   assert.doesNotMatch(authSeed, /session_replication_role|DISABLE TRIGGER|DROP TRIGGER/i);
   assert.match(authSeed, /direct-unconfirmed@bizmindmakers\.test/);
   assert.match(authSeed, /direct-missing-profile@bizmindmakers\.test/);
+  assert.match(authSeed, /971001000002/);
+  assert.match(authSeed, /971001000007/);
+  assert.match(authSeed, /count\(DISTINCT raw_app_meta_data/);
   assert.match(authSeed, /email_confirmed_at[\s\S]*?NULL/);
   assert.match(membershipBase, /CREATE TRIGGER auth_users_require_membership_invite/i);
   assert.match(membershipBase, /CREATE TRIGGER auth_users_create_member_profile/i);
@@ -44,6 +47,7 @@ test('synthetic profiles are inserted after the profile guard and before officia
   assert.match(profiles, /direct_unverified/);
   assert.match(profiles, /direct_unconfirmed/);
   assert.match(profiles, /deliberately omitted/i);
+  assert.match(profiles, /membership_number IS DISTINCT FROM u\.raw_app_meta_data/);
   assert.match(official, /membership_number_verified boolean not null default false/i);
   assert.match(official, /membership_number_verified = \(membership_number = '971001000001'\)/);
   const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-profiles');
