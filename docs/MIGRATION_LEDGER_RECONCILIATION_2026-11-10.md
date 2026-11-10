@@ -24,9 +24,11 @@ The mapping is not one-to-one: some historical SQL files contain multiple logica
 
 ## Source gaps that remain unresolved
 
-- `20261107032150 tighten_direct_chat_preference_scope`: Base user_specific_direct_chat_preferences.sql exists, but does not include the later active-membership guard reflected by the live policy. The separate tightening migration source is absent.
-- `20261107160647 channel_visibility_avatar_group_background`: No matching SQL source exists in the current repository tree; recover catalog definitions and search Git history before reconstruction.
-- `20261107160733 harden_channel_rpc_wrappers`: No matching SQL source exists in the current repository tree; recover current RPC definitions and ACLs read-only before reconstruction.
+Three original migration files are absent from the current repository. Their current deployed catalog state has now been captured read-only in `docs/CATALOG_STATE_RECOVERY_2026-11-10.md`, but that does not recreate the original migration bodies:
+
+- `20261107032150 tighten_direct_chat_preference_scope`: The base `user_specific_direct_chat_preferences.sql` exists, but the separate change that produced the final active-member policy is absent.
+- `20261107160647 channel_visibility_avatar_group_background`: Original DDL is absent; current `conversations`/`conversation_group_settings` columns and policy state are captured in the catalog recovery document.
+- `20261107160733 harden_channel_rpc_wrappers`: Original wrapper-hardening migration is absent; current function definitions, signatures, ACLs and behavior are captured in the catalog recovery document.
 
 ## Catalog-only recovery
 
@@ -113,7 +115,7 @@ The mapping is not one-to-one: some historical SQL files contain multiple logica
 
 ## Next actions
 
-1. Recover missing original sources from Git history, release artifacts, or verified deployment records. If unavailable, mark them explicitly as `CATALOG_RECOVERED` or `UNRECOVERED`; do not invent historical SQL.
+1. Recover missing original sources from Git history, release artifacts, or verified deployment records. Current catalog snapshots are preserved in `docs/CATALOG_STATE_RECOVERY_2026-11-10.md`; if original files remain unavailable, retain the explicit `CATALOG_RECOVERED` / `UNRECOVERED` distinction and do not invent historical SQL.
 2. Compare live catalog definitions for every unmatched record: tables, indexes, constraints, policies, functions, triggers, publication membership, extensions, and scheduled jobs.
 3. Establish one canonical migration directory and immutable checksums for all new migrations. Do not rewrite the remote ledger or rename already-applied versions.
 4. Replay the canonical stream from an empty disposable Supabase stack and compare catalog snapshots with the approved live snapshot.
