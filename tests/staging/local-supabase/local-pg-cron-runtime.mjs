@@ -55,7 +55,7 @@ let passed = false;
 try {
   const scheduled = await psql(db, `SELECT cron.schedule('${jobName}', '* * * * *', 'SELECT 1;');`);
   if (!/^[0-9]+$/.test(scheduled)) throw new Error('pg_cron did not return a valid job ID.');
-  jobId = Number(scheduled);
+  jobId = scheduled;
 
   const deadline = Date.now() + 90000;
   while (Date.now() < deadline) {
@@ -76,8 +76,13 @@ try {
   }
   if (!passed) throw new Error('Timed out waiting for the local pg_cron probe to execute within 90 seconds.');
 } finally {
-  if (jobId !== null) {
-    await psql(db, `SELECT cron.unschedule(${jobId});
-DELETE FROM cron.job_run_details WHERE jobid=${jobId};`);
+  let cleanupJobId = jobId;
+  if (cleanupJobId === null) {
+    const recovered = await psql(db, `SELECT jobid::text FROM cron.job WHERE jobname='${jobName}';`);
+    if (/^[0-9]+$/.test(recovered)) cleanupJobId = recovered;
+  }
+  if (cleanupJobId !== null) {
+    await psql(db, `SELECT cron.unschedule(${cleanupJobId});
+DELETE FROM cron.job_run_details WHERE jobid=${cleanupJobId};`);
   }
 }
