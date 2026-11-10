@@ -73,13 +73,15 @@ The current `Conversation members upload chat media` INSERT policy checks bucket
 
 ### A. Default ACL policy
 
-For every application object-creation role in `public` (currently verified: `postgres` and `supabase_admin`):
+For the application migration owner `postgres` (the owner of all 24 public tables, 20 public functions, and 2 public sequences observed):
 
 - Default table privileges: revoke from `PUBLIC`, `anon`, and `authenticated`.
 - Default sequence privileges: revoke from `PUBLIC`, `anon`, and `authenticated`.
 - Default function EXECUTE: revoke from `PUBLIC`, `anon`, and `authenticated`.
 - Add explicit per-object grants in each new migration only after the application contract has been verified.
 - Preserve service-role and owner privileges; do not apply blanket changes to platform-managed roles.
+
+The `supabase_admin` default ACL is separately observed as broad, but it is a platform superuser role, `postgres` is not a member of it, and no current application object in `public` is owned by it. Do not grant role membership or try to alter its defaults as part of this application migration. Revisit only if the platform's supported role-management path or future ownership inventory shows application objects being created by `supabase_admin`.
 
 ### B. Existing table privileges
 
