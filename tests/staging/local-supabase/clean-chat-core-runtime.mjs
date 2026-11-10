@@ -107,11 +107,11 @@ async function clearLocalChatStorage() {
     const uploadHeaders = {
       apikey: serviceKey,
       Authorization: 'Bearer ' + serviceKey,
-      'Content-Type': 'text/plain',
+      'Content-Type': 'image/png',
       'x-upsert': 'true'
     };
     const upload = await fetch(new URL('/storage/v1/object/' + encodeURIComponent(bucket) + '/' + probePath.split('/').map(encodeURIComponent).join('/'), api), {
-      method: 'POST', headers: uploadHeaders, body: 'clean-core-storage-reset-probe',
+      method: 'POST', headers: uploadHeaders, body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/WxoAAAAASUVORK5CYII=', 'base64'),
       signal: AbortSignal.timeout(15000)
     });
     if (!upload.ok) throw new Error('Storage probe upload failed for ' + bucket + ' (HTTP ' + upload.status + ')');
