@@ -1859,7 +1859,8 @@
       "evidence": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
-        "docs/RLS_LEAST_PRIVILEGE_HARDENING.md"
+        "docs/RLS_LEAST_PRIVILEGE_HARDENING.md",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
       ],
       "issue": "Read-only production catalog inspection found postgres-owned public-schema default ACLs granting all table/sequence privileges and function EXECUTE to anon/authenticated. Existing app tables consequently expose non-RLS privileges (including TRUNCATE, REFERENCES, TRIGGER and PostgreSQL 17+ MAINTAIN) and unnecessary direct DML. A loopback-only test overlay and read-only postconditions are prepared; neither has been executed. Production remains unchanged until local CRUD compatibility, RPC grants, and default-ACL behavior pass runtime tests."
     }
