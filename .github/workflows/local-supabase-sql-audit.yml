@@ -41,6 +41,7 @@ jobs:
             tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs
       - name: Syntax-check the manual local concurrency runner
         run: node --check tests/staging/local-supabase/direct-conversation-concurrency.mjs
+          node --check tests/staging/local-supabase/local-pg-cron-runtime.mjs
       - name: Generate repository SQL object inventory
         run: |
           node tests/staging/local-supabase/build-database-object-inventory.mjs > "$RUNNER_TEMP/database-object-inventory.json"
