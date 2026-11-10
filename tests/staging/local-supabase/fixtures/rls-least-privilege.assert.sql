@@ -113,7 +113,7 @@ begin
     from pg_default_acl d
     join pg_namespace n on n.oid = d.defaclnamespace
     cross join lateral aclexplode(d.defaclacl) a
-    where d.defaclrole = 'postgres'::regrole
+    where d.defaclrole in ('postgres'::regrole, 'supabase_admin'::regrole)
       and n.nspname = 'public'
       and d.defaclobjtype in ('r','S','f')
       and a.grantee in (
@@ -123,6 +123,26 @@ begin
       )
   ) then
     raise exception 'Unsafe default privileges remain for public objects';
+  end if;
+
+
+  if exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname in ('public', 'app_private')
+      and p.prorettype = 'trigger'::regtype
+      and (
+        has_function_privilege('anon', p.oid, 'EXECUTE')
+        or has_function_privilege('authenticated', p.oid, 'EXECUTE')
+        or exists (
+          select 1
+          from aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+          where a.grantee = 0 and a.privilege_type = 'EXECUTE'
+        )
+      )
+  ) then
+    raise exception 'A trigger implementation function remains executable by PUBLIC or API roles';
   end if;
 
   -- Private application schema: helper functions may be callable by authenticated,
