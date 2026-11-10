@@ -67,6 +67,9 @@
       "testSource": [
         "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
         "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+      ],
+      "requires": [
+        "test-fixture.local-platform-preflight"
       ]
     },
     {
@@ -1705,6 +1708,10 @@
     [
       "chat.media-upload-path-hardening",
       "security.least-privilege-overlay"
+    ],
+    [
+      "test-fixture.local-platform-preflight",
+      "legacy.messages"
     ]
   ],
   "blockers": [
