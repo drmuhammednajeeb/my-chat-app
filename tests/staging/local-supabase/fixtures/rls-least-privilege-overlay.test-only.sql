@@ -98,7 +98,13 @@ $public_restrictive_guard$;
 drop policy if exists "Require active membership for all Storage operations" on storage.objects;
 create policy "Require active membership for all Storage operations"
 on storage.objects as restrictive for all to authenticated
-using ((select app_private.is_active_member()))
-with check ((select app_private.is_active_member()));
+using (
+  bucket_id in (select b.id from storage.buckets b)
+  and (select app_private.is_active_member())
+)
+with check (
+  bucket_id in (select b.id from storage.buckets b)
+  and (select app_private.is_active_member())
+);
 
 commit;
