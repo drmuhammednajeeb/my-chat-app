@@ -39,7 +39,7 @@ order by n.nspname, p.proname, pg_get_function_identity_arguments(p.oid);
 
 1. Confirm the public RPC argument name and return type match the browser call.
 2. Confirm the internal implementation signature matches the hardening migration.
-3. Review authorization, target-user validation, transaction behavior, and duplicate-conversation handling. The recovered function checks `auth.uid()` and target-profile existence, but does **not** contain an explicit active-membership predicate; review where membership eligibility is enforced before approving runtime behavior.
+3. Treat the recovered implementation as a security-review blocker. It is `SECURITY DEFINER` but checks only that `auth.uid()` is non-null; it does not call `app_private.is_active_member()` for the caller. Its target check requires only a `profiles` row and does not check the target's active status, verified membership number, or confirmed email. The deployed `profiles` SELECT policy checks the caller's active status, but the `SECURITY DEFINER` RPC bypasses RLS. A suspended account with a still-valid JWT may therefore invoke the RPC, and an active caller may target an inactive profile. Decide the intended policy and review a separate test-only guard before runtime approval.
 4. Restore the authoritative source into a test-only SQL copy and record its source provenance and SHA-256.
 5. Add regression tests for concurrent creation, unauthenticated/null/self/missing-profile targets, exact function ACLs, and existing conversation reuse. Test active-membership gating separately after its intended enforcement point is established.
 6. Only then reconsider enabling the local PostgreSQL replay.
