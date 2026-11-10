@@ -149,6 +149,20 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   assert.equal(manifest.execution.sqlExecuted, false);
   assert.equal(manifest.execution.cloudAllowed, false);
   assert.equal(manifest.execution.productionAllowed, false);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, manifest.sourceCoverage.testOnlySqlFixturePaths.length);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 14);
+  for (const fixture of [
+    'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql',
+    'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
+    'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
+    'tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql',
+    'tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql'
+  ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(fixture), 'SQL fixture missing from replay coverage: ' + fixture);
+  assert.equal(manifest.blockers.find(item => item.id === 'DAG-002')?.severity, 'RESOLVED_FOR_LOCAL_REPLAY');
+  for (const id of ['DAG-014', 'DAG-015']) {
+    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
+    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
+  }
   const allNodes = [...dag.platformNodes, ...dag.nodes];
   const ids = allNodes.map(node => node.id);
   const indegree = new Map(ids.map(id => [id, 0]));
