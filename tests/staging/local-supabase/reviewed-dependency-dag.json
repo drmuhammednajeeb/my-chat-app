@@ -1050,12 +1050,13 @@
       "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
       "testSource": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
-        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Applies only after the complete disposable-local replay. It tightens postgres-owned public-schema default ACLs and current app table grants; never run on hosted or production databases."
+      "note": "Manual runtime runner accepts only postgres@loopback:54322/postgres and sets a required transaction GUC. Applies the test-only ACL and restrictive-policy overlay, then runs read-only postconditions. It has not been executed; never run against hosted or production databases."
     }
   ],
   "explicitEdges": [
