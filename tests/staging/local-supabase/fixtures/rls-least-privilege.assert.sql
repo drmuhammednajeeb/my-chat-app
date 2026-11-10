@@ -120,5 +120,86 @@ begin
   ) then
     raise exception 'Unsafe default privileges remain for public objects';
   end if;
+
+  -- Private application schema: helper functions may be callable by authenticated,
+  -- but its tables must never be directly exposed to API roles.
+  if has_schema_privilege('anon','app_private','USAGE') then
+    raise exception 'anon must not have app_private schema usage';
+  end if;
+  if exists (
+    select 1 from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'app_private'
+      and c.relkind in ('r','p')
+      and (has_table_privilege('anon',c.oid,'SELECT')
+        or has_table_privilege('authenticated',c.oid,'SELECT')
+        or has_table_privilege('anon',c.oid,'INSERT')
+        or has_table_privilege('authenticated',c.oid,'INSERT')
+        or has_table_privilege('anon',c.oid,'UPDATE')
+        or has_table_privilege('authenticated',c.oid,'UPDATE')
+        or has_table_privilege('anon',c.oid,'DELETE')
+        or has_table_privilege('authenticated',c.oid,'DELETE'))
+  ) then
+    raise exception 'API roles retain direct access to app_private tables';
+  end if;
+
+  -- Every SECURITY DEFINER helper must use an empty search_path and remain
+  -- unavailable to PUBLIC/anon. This is separate from its body-level auth checks.
+  if exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'app_private'
+      and p.prosecdef
+      and (
+        not coalesce(p.proconfig, array[]::text[]) @> array['search_path=""']
+        or has_function_privilege('anon',p.oid,'EXECUTE')
+        or exists (
+          select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+          where a.grantee = 0 and a.privilege_type = 'EXECUTE'
+        )
+      )
+  ) then
+    raise exception 'An app_private SECURITY DEFINER function has unsafe search_path or execute ACL';
+  end if;
+
+  -- Storage has its own RLS boundary and bucket-level visibility settings.
+  if not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'storage' and c.relname = 'objects' and c.relrowsecurity
+  ) then
+    raise exception 'RLS must remain enabled on storage.objects';
+  end if;
+  if exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'storage' and p.tablename = 'objects'
+      and ('anon' = any(p.roles) or 'public' = any(p.roles))
+  ) then
+    raise exception 'Storage object policies must not grant anon or PUBLIC access';
+  end if;
+  if not exists (
+    select 1 from pg_policies p
+    where p.schemaname = 'storage' and p.tablename = 'objects'
+      and p.policyname = 'Conversation members upload chat media'
+      and p.cmd = 'INSERT'
+      and lower(coalesce(p.with_check,'')) like '%storage.foldername(name)%'
+      and lower(coalesce(p.with_check,'')) like '%auth.uid()%'
+      and lower(coalesce(p.with_check,'')) like '%[2]%'
+  ) then
+    raise exception 'chat-media upload policy must bind uploader folder segment 2 to auth.uid()';
+  end if;
+  if exists (
+    select 1 from storage.buckets
+    where id in ('chat-media','conversation-documents','channel-avatars')
+      and public is distinct from false
+  ) then
+    raise exception 'Private application Storage buckets must remain private';
+  end if;
+  if not exists (select 1 from storage.buckets where id='avatars' and public is true) then
+    raise exception 'The explicitly public avatars bucket configuration changed; review before proceeding';
+  end if;
+  if position('is_active_member' in pg_get_functiondef('app_private.can_access_channel_avatar(uuid)'::regprocedure)) = 0 then
+    raise exception 'Channel avatar read helper must enforce active membership';
+  end if;
+
 end;
 $assert$;
