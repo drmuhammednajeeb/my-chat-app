@@ -1,0 +1,32 @@
+name: Message lifecycle regression
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run source-contract regression checks
+        run: node --test tests/message-lifecycle.test.mjs
+      - name: Install isolated browser test dependency
+        run: npm install --no-save --no-package-lock playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser integration regression checks
+        run: node --test tests/e2e/message-lifecycle.browser.test.mjs

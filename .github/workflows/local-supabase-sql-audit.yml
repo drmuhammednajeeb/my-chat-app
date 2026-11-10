@@ -1,0 +1,149 @@
+name: Local Supabase SQL manifest audit
+
+on:
+  push:
+    branches:
+      - "engineering/stability-css-extraction-20261109"
+  pull_request:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-sql-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  read-only-sql-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run isolated read-only audit tests
+        run: |
+          node --test \
+            tests/staging/local-supabase/audit-sql-manifest.test.mjs \
+            tests/staging/local-supabase/bootstrap-guard.test.mjs \
+            tests/staging/local-supabase/build-database-object-inventory.test.mjs \
+            tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs \
+            tests/staging/local-supabase/reviewed-dependency-dag.test.mjs \
+            tests/workspace-load-race.test.mjs \
+            tests/staging/local-supabase/direct-conversation-rpc.test.mjs \
+            tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
+            tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
+            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \
+            tests/staging/local-supabase/rls-least-privilege.test.mjs \
+            tests/staging/local-supabase/storage-rls-runtime.test.mjs \
+            tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs
+      - name: Syntax-check manual local-only runners
+        run: |
+          node --check tests/staging/local-supabase/direct-conversation-concurrency.mjs
+          node --check tests/staging/local-supabase/local-pg-cron-runtime.mjs
+          node --check tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs
+          node --check tests/staging/local-supabase/local-storage-rls-runtime.mjs
+          node --check tests/staging/local-supabase/local-supabase-replay-runtime.mjs
+      - name: Generate repository SQL object inventory
+        run: |
+          node tests/staging/local-supabase/build-database-object-inventory.mjs > "$RUNNER_TEMP/database-object-inventory.json"
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const report = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/database-object-inventory.json', 'utf8'));
+            console.log('INVENTORY_MODE=' + report.auditMode);
+            console.log('SQL_FILES=' + report.sourceCounts.totalSqlFiles);
+            console.log('CREATED_TABLES=' + report.inventoryTotals.createdTables);
+            console.log('COLUMNS=' + report.inventoryTotals.columns);
+            console.log('FOREIGN_KEYS=' + report.inventoryTotals.foreignKeys);
+            console.log('GRANT_STATEMENTS=' + report.inventoryTotals.grantStatements);
+            console.log('FUNCTION_DEFINITIONS=' + report.inventoryTotals.functionDefinitions);
+            console.log('INDEXES=' + report.inventoryTotals.indexes);
+            console.log('TRIGGERS=' + report.inventoryTotals.triggers);
+            console.log('POLICIES=' + report.inventoryTotals.policies);
+            console.log('POLICIES_AFTER_MEMBERSHIP_BASE=' + report.policyCoverage.policiesAfterMembershipBase.length);
+            console.log('POLICY_SOURCE_COUNTS=' + report.files.filter(file => file.policyDetails.length).map(file => file.path + ':' + file.policyDetails.length).join(';'));
+            console.log('LATER_POLICIES_MISSING_ACTIVE_MEMBER_GUARD=' + JSON.stringify(report.policyCoverage.laterPoliciesMissingActiveMemberGuard));
+            console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
+            for (const group of report.duplicateGroups) console.log('DUPLICATE_SHA256=' + group.sha256 + ' PATHS=' + group.paths.join('|'));
+            console.log('UNRESOLVED_INTERNAL_FUNCTIONS=' + report.unresolvedInternalFunctions.join(','));
+            console.log('MISSING_CLIENT_RPCS=' + report.missingClientRpcs.join(','));
+            console.log('MEMBERSHIP_FORMAT_STATUS=' + report.membershipFormatReview.status);
+            console.log('HARDCODED_EMAIL_FILES=' + report.hardcodedIdentityReview.emailLiteralFiles.join(','));
+            console.log('HARDCODED_UUID_FILES=' + report.hardcodedIdentityReview.uuidLiteralFiles.join(','));
+            console.log('HARDCODED_MEMBERSHIP_NUMBER_FILES=' + report.hardcodedIdentityReview.membershipNumberLiteralFiles.join(','));
+            console.log('CLIENT_STORAGE_BUCKETS=' + report.storageCoverage.clientBuckets.join(','));
+            console.log('MISSING_STORAGE_BUCKETS=' + report.storageCoverage.missingBucketDeclarations.join(','));
+            console.log('CLIENT_BUCKETS_WITHOUT_STORAGE_POLICIES=' + report.storageCoverage.clientBucketsWithoutStoragePolicies.join(','));
+            console.log('CHAT_MEDIA_UPLOAD_PATH_OWNER_GUARD=' + report.storageCoverage.chatMediaUploadPathOwnershipGuard);
+            console.log('PLATFORM_DEPENDENCIES=' + JSON.stringify(report.platformDependencies));
+            console.log('EXTENSION_CREATES=' + JSON.stringify(report.files.flatMap(file => file.extensionCreates)));
+            console.log('SUPABASE_CONFIG_PRESENT=' + report.sourceCounts.supabaseConfigPresent);
+            console.log('SQL_EXECUTION_AUTHORIZED=false');
+            if (report.auditMode !== 'READ_ONLY_SOURCE_INVENTORY') process.exit(1);
+          "
+      - name: Publish full source inventory in job summary
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/database-object-inventory.json', 'utf8'));
+          const lines = [
+            '# Database object inventory',
+            '',
+            'Read-only source inventory only. This is not a live PostgreSQL catalog and no SQL was executed.',
+            '',
+            'Files: ' + report.sourceCounts.totalSqlFiles +
+              ' | Tables: ' + report.inventoryTotals.createdTables +
+              ' | Columns: ' + report.inventoryTotals.columns +
+              ' | Foreign keys: ' + report.inventoryTotals.foreignKeys +
+              ' | Functions: ' + report.inventoryTotals.functionDefinitions +
+              ' | Indexes: ' + report.inventoryTotals.indexes +
+              ' | Triggers: ' + report.inventoryTotals.triggers +
+              ' | Policies: ' + report.inventoryTotals.policies +
+              ' | Grants/revokes: ' + report.inventoryTotals.grantStatements,
+            ''
+          ];
+          lines.push('## Byte-identical duplicate groups');
+          for (const group of report.duplicateGroups) lines.push('- SHA256 ' + group.sha256 + ': ' + group.paths.join(' = '));
+          lines.push('');
+          for (const file of report.files) {
+            lines.push('## ' + file.path);
+            lines.push('- SHA256: ' + file.sha256);
+            lines.push('- Tables created: ' + (file.createdTables.join(', ') || 'none'));
+            lines.push('- Table columns: ' + (file.tableDetails.map(t => t.name + ': ' + t.columns.map(c => c.name).join(', ')).join('; ') || 'none'));
+            lines.push('- Foreign keys: ' + (file.foreignKeys.map(fk => fk.source + '(' + fk.columns.join(',') + ') -> ' + fk.target + '(' + fk.targetColumns.join(',') + ')').join('; ') || 'none'));
+            lines.push('- Altered tables: ' + (file.alteredTables.join(', ') || 'none'));
+            lines.push('- Functions: ' + (file.functions.map(fn => fn.name + '(' + fn.signature + ')').join('; ') || 'none'));
+            lines.push('- Sequences: ' + (file.sequences.join(', ') || 'none'));
+            lines.push('- Indexes: ' + (file.indexes.map(index => index.name + ' ON ' + index.table).join('; ') || 'none'));
+            lines.push('- Triggers: ' + (file.triggers.map(trigger => trigger.name + ' ON ' + trigger.table).join('; ') || 'none'));
+            lines.push('- Policies: ' + (file.policyDetails.map(policy => policy.name + ' ON ' + policy.table + ' [' + policy.guardClass + ']').join('; ') || 'none'));
+            lines.push('- Constraints: ' + (file.constraints.join(', ') || 'none'));
+            lines.push('- GRANT/REVOKE: ' + (file.grants.map(grant => grant.action + ' ' + grant.privileges + ' ON ' + grant.object + ' ' + grant.direction + ' ' + grant.roles).join('; ') || 'none'));
+            lines.push('- Referenced relations: ' + (file.relationsReferenced.join(', ') || 'none'));
+            lines.push('');
+          }
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          NODE
+      - name: Run original SQL manifest audit
+        run: |
+          node tests/staging/local-supabase/audit-sql-manifest.mjs > "$RUNNER_TEMP/sql-audit-report.json"
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const report = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/sql-audit-report.json', 'utf8'));
+            const blockers = report.findings.filter(item => item.severity === 'blocking');
+            console.log('SQL_AUDIT_MODE=' + report.auditMode);
+            console.log('MIGRATION_FILES=' + report.sourceDirectories[0].fileCount);
+            console.log('HISTORICAL_SQL_FILES=' + report.sourceDirectories[1].fileCount);
+            console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
+            console.log('LEGACY_BLOCKERS=' + report.legacyBlockers.length);
+            console.log('SYNTAX_HAZARDS=' + report.syntaxHazards.length);
+            console.log('BOOTSTRAP_STATUS=' + report.bootstrap.status);
+            for (const item of blockers) console.log('BLOCKER=' + item.code + ': ' + item.message);
+            if (report.auditMode !== 'READ_ONLY' || report.bootstrap.executable !== false) process.exit(1);
+          "

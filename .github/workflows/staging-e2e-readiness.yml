@@ -1,0 +1,37 @@
+name: Staging E2E readiness gate
+
+on:
+  push:
+    branches:
+      - "engineering/stability-css-extraction-20261109"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-readiness-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  safe-preflight-and-simulation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      STAGING_TEST_USER_EMAIL: ${{ secrets.STAGING_TEST_USER_EMAIL }}
+      STAGING_TEST_USER_PASSWORD: ${{ secrets.STAGING_TEST_USER_PASSWORD }}
+      STAGING_TEST_PEER_EMAIL: ${{ secrets.STAGING_TEST_PEER_EMAIL }}
+      STAGING_TEST_PEER_PASSWORD: ${{ secrets.STAGING_TEST_PEER_PASSWORD }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate staging configuration (no network calls)
+        run: node tests/staging/preflight.mjs
+      - name: Run isolated concurrency simulations only
+        run: node --test tests/staging/*.test.mjs

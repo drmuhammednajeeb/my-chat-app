@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "mode": "TEST_COPY_ONLY",
+  "patches": [
+    {
+      "sourcePath": "database/changes/team_management_dashboard.sql",
+      "sourceGitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df",
+      "sourceSha256": "1595d37426ee03633b72ab874245d2c477052f911420cc53fcff95fe7d3c24dd",
+      "testCopyPath": "tests/staging/local-supabase/fixtures/team_management_dashboard.sql",
+      "testCopySha256": "27abcf3581704dd1ea02f1188d27dca15547ab9a431268f9fde893c2e0532b55",
+      "replacement": {
+        "from": "drmuhammed.najeeb2020@gmail.com",
+        "to": "admin@bizmindmakers.test",
+        "expectedOccurrences": 1
+      }
+    },
+    {
+      "sourcePath": "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "sourceGitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f",
+      "sourceSha256": "76728646a95048f13262fb1ecccb7eaad260b050d7b0493e3610e97d9e33d635",
+      "testCopyPath": "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "testCopySha256": "9fc9aceadd2e451cd44dc1083c5dc9fb5ee4a63d7a332b5806fb2bddfe3fdc53",
+      "replacement": {
+        "from": "971001726361",
+        "to": "971001000001",
+        "expectedOccurrences": 1
+      }
+    },
+    {
+      "sourcePath": "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "sourceGitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc",
+      "sourceSha256": "2261bfe0d2cdb234db08e619065fd92091f097cb1de9da1af9505c8f5920c97a",
+      "testCopyPath": "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "testCopySha256": "05874625006bc54159cd0a204adb50fb2f9f99449da0fb9cb073a7abfce97890",
+      "replacement": {
+        "from": "971001726361",
+        "to": "971001000001",
+        "expectedOccurrences": 1
+      }
+    },
+    {
+      "sourcePath": "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "sourceGitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
+      "sourceSha256": "371e3b426ce5e2b47ba2cde669c2e32934baffae781ed684303a8e5cd5695088",
+      "testCopyPath": "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "testCopySha256": "fadf57b686cb4cfe1e6bb57c94a96a6859545cba4d1f650fe8dfc7a9c92d6b82",
+      "replacement": {
+        "from": "$function$\n\nrevoke all on function app_private.admin_create_official_member_invites_impl(jsonb)",
+        "to": "$function$;\n\nrevoke all on function app_private.admin_create_official_member_invites_impl(jsonb)",
+        "expectedOccurrences": 1
+      }
+    }
+  ],
+  "fixtures": [
+    {
+      "path": "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+      "runWhen": "Immediately after the disposable local Supabase stack starts and before any application SQL; read-only catalog assertions only."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
+      "runWhen": "After core schema and before team_management_dashboard.sql; before membership auth triggers."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
+      "runWhen": "After membership base SQL and before official membership verification SQL."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql",
+      "runWhen": "After the final membership format migration; read-only assertion."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql",
+      "runWhen": "After core chat schema and before membership base dynamic policy rewrite; test-only stricter replacement of existing chat-media upload policy."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
+      "runWhen": "After core schema and before membership.base creates Auth signup/profile triggers."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
+      "runWhen": "After membership.base installs the profile guard and before membership.official adds verified-number enforcement."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+      "runWhen": "After core chat schema exists and before the eligibility overlay; restores the read-only recovered RPC source."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+      "runWhen": "After membership.final-format and the recovered RPC fixture; test-only eligibility overlay."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+      "runWhen": "After the final membership format, synthetic admin assertion, and eligibility overlay; disposable PostgreSQL transaction ending in ROLLBACK."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
+      "runWhen": "After chat.workspaces and chat.expiry-purge; read-only checks for pgcrypto schema placement and the expected pg_cron job definition. Does not prove scheduler execution."
+    }
+  ],
+  "execution": {
+    "enabled": false,
+    "sqlExecuted": false,
+    "cloudAllowed": false,
+    "productionAllowed": false
+  }
+}
