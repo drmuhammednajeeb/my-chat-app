@@ -4,16 +4,19 @@ import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8');
+const modulePaths = ["js/00-bootstrap.js","js/10-conversations.js","js/20-message-interactions.js","js/30-receipts-rendering.js","js/40-message-runtime.js","js/50-group-management.js","js/60-personal-chat-settings.js","js/70-workspace.js"];
+const moduleSources = await Promise.all(modulePaths.map(path => readFile(new URL('../../' + path, import.meta.url), 'utf8')));
+const appSource = moduleSources.join('\n') + '\n' + html;
 
 function extractFunction(name) {
   const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
-  const match = pattern.exec(html);
+  const match = pattern.exec(appSource);
   assert.ok(match, 'Missing application function: ' + name);
   const start = match.index;
-  const open = html.indexOf('{', start);
+  const open = appSource.indexOf('{', start);
   let depth = 0, quote = null, escaped = false, lineComment = false, blockComment = false;
-  for (let i = open; i < html.length; i += 1) {
-    const char = html[i], next = html[i + 1];
+  for (let i = open; i < appSource.length; i += 1) {
+    const char = appSource[i], next = appSource[i + 1];
     if (lineComment) { if (char === '\n') lineComment = false; continue; }
     if (blockComment) { if (char === '*' && next === '/') { blockComment = false; i += 1; } continue; }
     if (quote) {
@@ -26,7 +29,7 @@ function extractFunction(name) {
     if (char === '/' && next === '*') { blockComment = true; i += 1; continue; }
     if (char === "'" || char === '"' || char === '\x60') { quote = char; continue; }
     if (char === '{') depth += 1;
-    if (char === '}') { depth -= 1; if (depth === 0) return html.slice(start, i + 1); }
+    if (char === '}') { depth -= 1; if (depth === 0) return appSource.slice(start, i + 1); }
   }
   throw new Error('Unbalanced function body: ' + name);
 }
