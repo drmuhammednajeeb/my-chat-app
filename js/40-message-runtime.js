@@ -1,3 +1,4 @@
+'use strict';
 async function loadMessages(){
  const conversationId=state.active?.id;if(!conversationId)return false;
  const messageLoadStarted=performance.now(),syncStartedAt=new Date(Date.now()-60000).toISOString();const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
