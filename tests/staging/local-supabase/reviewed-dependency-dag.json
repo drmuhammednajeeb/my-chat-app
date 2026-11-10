@@ -970,13 +970,14 @@
         "chat.direct-conversation-rpc-eligibility-guard"
       ],
       "testSource": [
-        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.test.mjs"
       ],
       "blockedBy": [
         "DAG-014",
         "DAG-015"
       ],
-      "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production."
+      "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production. The runner promotes only the two reserved synthetic participants through the real admin RPC after the preceding rollback-only eligibility matrix, then performs the reversed-pair concurrency race. The promotion persists only in the disposable database so subsequent CRUD/Storage probes also have eligible test identities."
     },
     {
       "id": "test-fixture.local-platform-preflight",
