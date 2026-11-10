@@ -60,24 +60,25 @@ try {
   ]);
   const outputs = results.filter(result => result.status === 'fulfilled').map(result => result.value);
   for (const output of outputs) {
-    const id = output.split(/\\s+/).filter(value => uuidPattern.test(value)).at(-1);
+    const id = output.split(/\s+/).filter(value => uuidPattern.test(value)).at(-1);
     if (id) conversationIds.add(id);
   }
   const failure = results.find(result => result.status === 'rejected');
   if (failure) throw failure.reason;
   const [a, b] = outputs;
-  const idA = a?.split(/\\s+/).filter(value => uuidPattern.test(value)).at(-1);
-  const idB = b?.split(/\\s+/).filter(value => uuidPattern.test(value)).at(-1);
+  const idA = a?.split(/\s+/).filter(value => uuidPattern.test(value)).at(-1);
+  const idB = b?.split(/\s+/).filter(value => uuidPattern.test(value)).at(-1);
   if (!idA || !idB || idA !== idB) {
     throw new Error('Reversed concurrent calls did not converge on one conversation ID.');
   }
+  const conversationId = idA;
   const count = await psql(db, `SELECT count(*)::text FROM public.conversations c
     WHERE c.id='${conversationId}'::uuid AND c.type='direct'
       AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerA}'::uuid)
       AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerB}'::uuid)
       AND (SELECT count(*) FROM public.conversation_members m WHERE m.conversation_id=c.id)=2;`);
   if (count !== '1') throw new Error('Expected exactly one two-member direct conversation; observed ' + count);
-  process.stdout.write('PASS: reversed concurrent calls converged on one direct conversation.\\n');
+  process.stdout.write('PASS: reversed concurrent calls converged on one direct conversation.\n');
 } finally {
   for (const conversationId of conversationIds) {
     await psql(db, `BEGIN;
