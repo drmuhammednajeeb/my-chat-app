@@ -113,6 +113,10 @@ Three original migration files are absent from the current repository. Their cur
 4. The two direct-conversation RPC records have no original SQL files in the repository. A test-only fixture preserves current definitions extracted read-only from the live catalog with provenance; it does not reconstruct the original historical migration body.
 5. The existing replay manifest remains `DESIGN_ONLY` / `BLOCKED` and denies cloud/production execution. CI success proves only the isolated local replay defined by the guarded runner.
 
+## Production release blocker
+
+The reviewed DAG and replay manifest now include **DAG-017**: original historical source recovery is incomplete. Three remote migration bodies are absent from the repository, and two direct-conversation RPC entries have catalog-recovered test fixtures but no original historical migration files. The current catalog snapshot is not a substitute for original provenance. The DAG and manifest remain `BLOCKED`, with cloud and production execution disabled.
+
 ## Next actions
 
 1. Recover missing original sources from Git history, release artifacts, or verified deployment records. Current catalog snapshots are preserved in `docs/CATALOG_STATE_RECOVERY_2026-11-10.md`; if original files remain unavailable, retain the explicit `CATALOG_RECOVERED` / `UNRECOVERED` distinction and do not invent historical SQL.
