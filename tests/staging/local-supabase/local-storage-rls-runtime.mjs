@@ -218,7 +218,7 @@ END
 $probe$;
 SELECT current_setting('app.test.storage_insert_probe', true);
 ROLLBACK;`);
-  const directInsertResult = directInsertProbe.split('\\n').at(-1);
+  const directInsertResult = directInsertProbe.split('\n').at(-1);
   console.log('STORAGE_DIRECT_INSERT_PROBE=' + directInsertResult);
   if (directInsertResult !== 'passed') {
     throw new Error('Direct authenticated SQL insert into storage.objects failed: ' + directInsertResult);
