@@ -48,3 +48,22 @@ After the dependency DAG is approved and a disposable local Supabase stack is av
 9. Execute `node tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs` only with `LOCAL_SUPABASE_DB_URL` set to the disposable local endpoint; this runner has not been executed.
 
 No production DDL, ACL change, RLS change, or deployment is authorized by this test overlay. A separate production migration must be generated using the Supabase CLI after the local runtime evidence passes and every client RPC/table permission is reviewed.
+
+
+## Manual runtime invocation (disposable local stack only)
+
+After the approved synthetic replay has completed and the local Auth/Storage services are healthy, obtain the local-only values from the Supabase CLI status output and export them in the same shell. Never copy hosted project keys into these variables.
+
+```bash
+export LOCAL_SUPABASE_DB_URL='postgresql://postgres:<local-db-password>@127.0.0.1:54322/postgres'
+export LOCAL_SUPABASE_URL='http://127.0.0.1:54321'
+export LOCAL_SUPABASE_ANON_KEY='<local-anon-key>'
+export LOCAL_SUPABASE_SERVICE_ROLE_KEY='<local-service-role-key>'
+
+node tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs
+node tests/staging/local-supabase/local-storage-rls-runtime.mjs
+```
+
+The SQL runner applies the test-only overlay, checks catalog postconditions, and runs the rollback-only CRUD/RPC fixture. The Storage runner uses the local Auth admin API to set random passwords on the two reserved synthetic `.test` users, signs in through the local Auth API, and exercises actual Storage HTTP endpoints. It removes only the uniquely named test objects and document row it creates. The direct conversation remains synthetic local data and is removed with the disposable database.
+
+Both runners refuse non-loopback targets. The Storage runner requires the local API port 54321; the SQL runner requires the local PostgreSQL port 54322. These commands have **not** been executed in this environment.
