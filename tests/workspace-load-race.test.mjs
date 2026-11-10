@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const source = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const modulePaths = ['js/00-bootstrap.js','js/10-conversations.js','js/20-message-interactions.js','js/30-receipts-rendering.js','js/40-message-runtime.js','js/50-group-management.js','js/60-personal-chat-settings.js','js/70-workspace.js'];
+const source = modulePaths.map(path => readFileSync(new URL('../' + path, import.meta.url), 'utf8')).join('\n');
 
 function extractFunction(name, nextName) {
   const start = source.indexOf(`function ${name}`);
