@@ -34,7 +34,11 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
     'local-pg-cron-runtime.mjs',
     'local-storage-rls-runtime.mjs',
     'expectedSqlCount',
-    'LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED'
+    'LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED',
+    '/auth/v1/admin/users',
+    'syntheticAuthIds[user.key] = data.id',
+    'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
+    'identityArgs'
   ]) assert.ok(source.includes(token), 'missing replay safety/coverage token: ' + token);
   assert.match(source, /refusing non-local database target/i);
   assert.doesNotMatch(source, /supabase\.co|--remote|--linked/i);
