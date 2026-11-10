@@ -81,7 +81,7 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
 });
 
 test('rendered message controls are wired to the persisted reaction and star actions', () => {
-  const messageRenderer = extractFunction('renderMessage');
+  const messageRenderer = extractFunction('renderMessageInternal');
   const reactionBar = extractFunction('renderReactionBar');
   assert.match(messageRenderer, /toggleMessageStar/);
   assert.match(messageRenderer, /إضافة تفاعل/);
