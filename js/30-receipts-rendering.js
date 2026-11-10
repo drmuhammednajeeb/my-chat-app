@@ -128,3 +128,4 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
   return false;
  }finally{state.renderingMessageIds.delete(m.id);recordPerf('message_render_item',performance.now()-messageRenderStarted)}
 }
+
