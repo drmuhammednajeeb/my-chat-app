@@ -135,6 +135,8 @@ BEGIN
 END
 $membership_format$;
 
+SET LOCAL ROLE authenticated;
+
 DO $invalid_membership$
 DECLARE
   v_rejected boolean := false;
@@ -151,6 +153,7 @@ BEGIN
 END
 $invalid_membership$;
 
+RESET ROLE;
 SET LOCAL ROLE authenticated;
 
 -- Successful creation, idempotent reuse, and direct internal invocation under authenticated.
