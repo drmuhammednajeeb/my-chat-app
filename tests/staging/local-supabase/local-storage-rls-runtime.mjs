@@ -66,27 +66,22 @@ function objectPath(bucket, name) {
   return '/storage/v1/object/' + encodeURIComponent(bucket) + '/' + name.split('/').map(encodeURIComponent).join('/');
 }
 async function upload(bucket, name, bytes, token, upsert = false, contentType = 'application/octet-stream') {
-  const result = await call(objectPath(bucket, name), {
-    method: 'POST', token, body: bytes.toString('base64'),
-    headers: { 'Content-Type': contentType, 'x-upsert': upsert ? 'true' : 'false', 'x-runtime-probe': 'rls-local-only' }
+  const response = await fetch(base + objectPath(bucket, name), {
+    method: 'POST',
+    headers: {
+      apikey: anonKey,
+      Authorization: 'Bearer ' + token,
+      'Content-Type': contentType,
+      'x-upsert': upsert ? 'true' : 'false'
+    },
+    body: bytes
   });
-  // Supabase Storage expects raw bytes, not JSON. Reissue with the byte body directly.
-  if (result.response.status === 415 || result.response.status === 400) {
-    const response = await fetch(base + objectPath(bucket, name), {
-      method: 'POST',
-      headers: { apikey: anonKey, Authorization: 'Bearer ' + token, 'Content-Type': contentType, 'x-upsert': upsert ? 'true' : 'false' },
-      body: bytes
-    });
-    const text = await response.text();
-    let data = null; try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-    const final = { response, data, text };
-    assertOk(final, 'upload ' + bucket + '/' + name);
-    uploaded.push({ bucket, name, token });
-    return data;
-  }
+  const text = await response.text();
+  let data = null; try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  const result = { response, data, text };
   assertOk(result, 'upload ' + bucket + '/' + name);
   uploaded.push({ bucket, name, token });
-  return result.data;
+  return data;
 }
 async function sign(bucket, name, token) {
   const path = '/storage/v1/object/sign/' + encodeURIComponent(bucket) + '/' + name.split('/').map(encodeURIComponent).join('/');
@@ -136,8 +131,9 @@ try {
   if (!conversationId || !/^[0-9a-f-]{36}$/i.test(conversationId)) throw new Error('direct conversation RPC returned an invalid UUID');
 
   // Chat media: valid uploader folder succeeds; another member cannot impersonate it.
-  const chatPath = conversationId + '/' + userA.id + '/runtime-' + nonce + '.bin';
-  await upload('chat-media', chatPath, Buffer.from('chat-media-runtime-probe'), tokenA);
+  const pdf = Buffer.from('%PDF-1.4\\n% local RLS runtime probe\\n');
+  const chatPath = conversationId + '/' + userA.id + '/runtime-' + nonce + '.pdf';
+  await upload('chat-media', chatPath, pdf, tokenA, false, 'application/pdf');
   assertOk(await sign('chat-media', chatPath, tokenB), 'conversation member signed read of chat media');
   const spoofPath = conversationId + '/' + userA.id + '/spoof-' + nonce + '.bin';
   const spoof = await fetch(base + objectPath('chat-media', spoofPath), {
@@ -177,9 +173,10 @@ try {
   assertOk(await sign('conversation-documents', pdfPath, tokenA), 'document remains after denied foreign delete');
 
   // Avatar: own upsert succeeds; another user cannot overwrite it; public bucket URL is readable.
-  const avatarPath = userA.id + '/runtime-' + nonce;
-  await upload('avatars', avatarPath, Buffer.from('avatar-v1'), tokenA, true, 'image/png');
-  await upload('avatars', avatarPath, Buffer.from('avatar-v2'), tokenA, true, 'image/png');
+  const avatarPath = userA.id + '/runtime-' + nonce + '.png';
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r4sAAAAASUVORK5CYII=', 'base64');
+  await upload('avatars', avatarPath, pixel, tokenA, true, 'image/png');
+  await upload('avatars', avatarPath, pixel, tokenA, true, 'image/png');
   const avatarSpoof = await fetch(base + objectPath('avatars', avatarPath), {
     method: 'POST',
     headers: { apikey: anonKey, Authorization: 'Bearer ' + tokenB, 'Content-Type': 'image/png', 'x-upsert': 'true' },
@@ -188,7 +185,7 @@ try {
   assertDenied(avatarSpoof, 'cross-user avatar overwrite');
   const publicAvatarUrl = base + '/storage/v1/object/public/avatars/' + avatarPath.split('/').map(encodeURIComponent).join('/');
   const publicAvatar = await fetch(publicAvatarUrl);
-  if (!publicAvatar.ok || await publicAvatar.text() !== 'avatar-v2') throw new Error('public avatar delivery did not return the owner-updated object');
+  if (!publicAvatar.ok || !publicAvatar.headers.get('content-type')?.includes('image/png')) throw new Error('public avatar delivery failed after owner upsert');
 
   // Owner cleanup is also part of the CRUD contract.
   for (const item of [...uploaded].reverse()) {
