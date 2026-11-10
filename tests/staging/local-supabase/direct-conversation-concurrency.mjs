@@ -9,7 +9,7 @@ function localDatabaseUrl() {
   if (!raw) throw new Error('Set LOCAL_SUPABASE_DB_URL to the disposable local Supabase PostgreSQL URL.');
   const url = new URL(raw);
   if (!['127.0.0.1', 'localhost', '::1'].includes(url.hostname) ||
-      url.port !== '54322' || url.username !== 'postgres' ||
+      url.port !== '54322' || url.username !== 'postgres' || url.pathname !== '/postgres' ||
       !['postgres:', 'postgresql:'].includes(url.protocol)) {
     throw new Error('Refusing non-local database target: expected postgres@loopback:54322 only.');
   }
@@ -52,18 +52,25 @@ SELECT public.get_or_create_direct_conversation('${target}'::uuid);
 COMMIT;`;
 }
 
-let conversationId = null;
+const conversationIds = new Set();
 try {
-  const [a, b] = await Promise.all([
+  const results = await Promise.allSettled([
     psql(db, callSql(callerA, callerB)),
     psql(db, callSql(callerB, callerA))
   ]);
-  const idA = a.split(/\\s+/).filter(value => uuidPattern.test(value)).at(-1);
-  const idB = b.split(/\\s+/).filter(value => uuidPattern.test(value)).at(-1);
+  const outputs = results.filter(result => result.status === 'fulfilled').map(result => result.value);
+  for (const output of outputs) {
+    const id = output.split(/\\s+/).filter(value => uuidPattern.test(value)).at(-1);
+    if (id) conversationIds.add(id);
+  }
+  const failure = results.find(result => result.status === 'rejected');
+  if (failure) throw failure.reason;
+  const [a, b] = outputs;
+  const idA = a?.split(/\\s+/).filter(value => uuidPattern.test(value)).at(-1);
+  const idB = b?.split(/\\s+/).filter(value => uuidPattern.test(value)).at(-1);
   if (!idA || !idB || idA !== idB) {
     throw new Error('Reversed concurrent calls did not converge on one conversation ID.');
   }
-  conversationId = idA;
   const count = await psql(db, `SELECT count(*)::text FROM public.conversations c
     WHERE c.id='${conversationId}'::uuid AND c.type='direct'
       AND EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id AND m.user_id='${callerA}'::uuid)
@@ -72,7 +79,7 @@ try {
   if (count !== '1') throw new Error('Expected exactly one two-member direct conversation; observed ' + count);
   process.stdout.write('PASS: reversed concurrent calls converged on one direct conversation.\\n');
 } finally {
-  if (conversationId) {
+  for (const conversationId of conversationIds) {
     await psql(db, `BEGIN;
 DELETE FROM public.conversation_members
 WHERE conversation_id='${conversationId}'::uuid
@@ -80,6 +87,7 @@ WHERE conversation_id='${conversationId}'::uuid
 DELETE FROM public.conversations c
 WHERE c.id='${conversationId}'::uuid AND c.type='direct'
   AND c.created_by IN ('${callerA}'::uuid, '${callerB}'::uuid)
+  AND NOT EXISTS (SELECT 1 FROM public.conversation_members m WHERE m.conversation_id=c.id)
   AND NOT EXISTS (SELECT 1 FROM public.chat_messages m WHERE m.conversation_id=c.id);
 COMMIT;`);
   }
