@@ -168,6 +168,22 @@ test('group-only-admin restrictions survive composer, polling and voice entry po
 });
 
 
+test('chat attachment MIME resolution handles browsers that omit file.type', () => {
+  const resolve = vm.runInNewContext('(' + extractFunction('resolveChatAttachmentMime') + ')');
+  assert.equal(resolve({ name: 'report.docx', type: '' }), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  assert.equal(resolve({ name: 'clip.mov', type: 'application/octet-stream' }), 'video/quicktime');
+  assert.equal(resolve({ name: 'voice.webm', type: 'audio/webm;codecs=opus' }), 'audio/webm');
+  assert.equal(resolve({ name: 'notes.txt', type: 'text/plain' }), 'text/plain');
+});
+
+test('chat attachment upload enforces non-empty bounded files and sends normalized MIME', () => {
+  const upload = extractFunction('uploadAttachment');
+  assert.match(upload, /file\.size<=0/);
+  assert.match(upload, /12\*1024\*1024/);
+  assert.match(upload, /CHAT_ATTACHMENT_ALLOWED_MIME_TYPES\.has\(type\)/);
+  assert.match(upload, /contentType:type/);
+});
+
 test('document storage filename sanitizer removes path separators and unsafe characters', () => {
   const sanitize = vm.runInNewContext('(' + extractFunction('sanitizeStorageFileName') + ')');
   assert.equal(sanitize('../Report Q4.pdf'), '_Report_Q4.pdf');
