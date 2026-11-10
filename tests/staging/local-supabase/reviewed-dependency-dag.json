@@ -1098,12 +1098,13 @@
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
-        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
+        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs",
+        "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Passed in disposable local Supabase: read-only privilege postconditions, postgres-owner default ACLs, trigger-function ACLs, active-member policy coverage, rollback-only CRUD/upsert and membership-trigger compatibility, plus Storage API RLS. No production grants or policies were changed.",
+      "note": "Passed in disposable local Supabase: read-only privilege postconditions, postgres-owner default ACLs, trigger-function ACLs, active-member policy coverage, rollback-only CRUD/upsert and membership-trigger compatibility, plus Storage API RLS. No production grants or policies were changed. Added a dedicated DAG-006 runtime matrix for the indirect channel-avatar authorization helper; pending CI execution.",
       "runtimeEvidence": {
         "runId": 42863700280,
         "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
@@ -1854,9 +1855,11 @@
       "id": "DAG-006",
       "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
       "evidence": [
-        "database/changes/20261107144109_private_membership_system_20261107.sql"
+        "database/changes/20261107144109_private_membership_system_20261107.sql",
+        "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql",
+        "tests/staging/local-supabase/local-supabase-replay-runtime.mjs"
       ],
-      "issue": "Static source review found three policy definitions timestamped after the membership rewrite; all three use a direct or indirect active-membership guard, with zero later unguarded policies detected. The DAG sequences all earlier feature policy sources before the rewrite. Runtime PostgreSQL RLS tests are still required."
+      "issue": "The post-membership channel-avatar Storage SELECT policy delegates to app_private.can_access_channel_avatar(uuid), which must enforce active membership indirectly. A rollback-only PostgreSQL runtime matrix has been added for active public-channel readers, private-channel members/non-members, and suspended users. Existing least-privilege assertions cover the direct active-member predicates on the remaining authenticated policies. Keep this blocker open until the new disposable-local runtime job passes."
     },
     {
       "id": "DAG-007",
