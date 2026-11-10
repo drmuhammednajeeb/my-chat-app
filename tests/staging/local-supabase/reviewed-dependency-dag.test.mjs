@@ -223,6 +223,32 @@ test('direct conversation RPC recovery instructions are read-only', async () => 
   assert.doesNotMatch(doc, /^\s*(insert|update|delete|create|alter|drop)\s+/im);
 });
 
+test('local pg_cron runtime probe is loopback-only and cleans up its unique job', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-pg-cron-runtime.mjs'), 'utf8');
+  for (const fragment of [
+    'LOCAL_SUPABASE_DB_URL',
+    "url.port !== '54322'",
+    "url.username !== 'postgres'",
+    "cron.schedule('",
+    'cron.job_run_details',
+    "status.startsWith('succeeded|')",
+    'cron.unschedule(',
+    'DELETE FROM cron.job_run_details',
+    'Date.now() + 90000',
+    'PGCONNECT_TIMEOUT',
+    'PGOPTIONS'
+  ]) assert.ok(runner.includes(fragment), 'missing local pg_cron probe safeguard: ' + fragment);
+  assert.match(runner, /Refusing non-local database target/);
+  assert.doesNotMatch(runner, /supabase\\.co|SUPABASE_SERVICE_ROLE_KEY|service_role key/i);
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'test-fixture.local-pg-cron-runtime');
+  assert.ok(node);
+  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED');
+  assert.ok(node.blockedBy.includes('DAG-008'));
+  assert.ok(node.requires.includes('test-fixture.local-platform-postflight'));
+  assert.ok(dag.blockers.find(item => item.id === 'DAG-008').evidence.includes('tests/staging/local-supabase/local-pg-cron-runtime.mjs'));
+  assert.equal(dag.executionAuthorized, false);
+});
 test('local platform preflight and postflight are read-only, ordered, and fail closed', async () => {
   const [preflight, postflight] = await Promise.all([
     readFile(path.join(root, 'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql'), 'utf8'),
