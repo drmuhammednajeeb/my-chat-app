@@ -28,12 +28,6 @@ alter default privileges for role postgres in schema public
   revoke all on sequences from public, anon, authenticated;
 alter default privileges for role postgres in schema public
   revoke all on functions from public, anon, authenticated;
-alter default privileges for role supabase_admin in schema public
-  revoke all on tables from public, anon, authenticated;
-alter default privileges for role supabase_admin in schema public
-  revoke all on sequences from public, anon, authenticated;
-alter default privileges for role supabase_admin in schema public
-  revoke all on functions from public, anon, authenticated;
 
 -- Remove API access from anon at the table/sequence layer. RLS remains an independent
 -- mandatory boundary; this also prevents non-RLS privileges such as TRUNCATE.
