@@ -90,6 +90,8 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   ];
   for (const name of requiredFixtures) await access(path.join(root, 'tests/staging/local-supabase/fixtures', name));
   for (const fixture of patchManifest.fixtures) await access(path.join(root, fixture.path));
+  assert.equal(patchManifest.fixtures[0].path, 'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql');
+  assert.ok(patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql') > patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'team.admin').testSource.some(source => source.includes('team_management_dashboard.sql')));
