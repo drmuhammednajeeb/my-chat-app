@@ -1014,6 +1014,26 @@
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
       "note": "Run only after the relevant disposable-local replay nodes. Confirms extension placement and job definition, not actual scheduler execution."
+    },
+    {
+      "id": "test-fixture.local-pg-cron-runtime",
+      "source": [
+        "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
+      ],
+      "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED",
+      "provides": [
+        "real local pg_cron scheduler execution evidence with a temporary probe job and scoped cleanup"
+      ],
+      "requires": [
+        "test-fixture.local-platform-postflight"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
+      ],
+      "blockedBy": [
+        "DAG-008"
+      ],
+      "note": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@loopback:54322/postgres. Schedules a unique SELECT 1 probe, waits up to 90 seconds for succeeded status, then unschedules and removes only its own job-run details. Never run against cloud or production."
     }
   ],
   "explicitEdges": [
@@ -1640,6 +1660,10 @@
     [
       "chat.expiry-purge",
       "test-fixture.local-platform-postflight"
+    ],
+    [
+      "test-fixture.local-platform-postflight",
+      "test-fixture.local-pg-cron-runtime"
     ]
   ],
   "blockers": [
@@ -1716,9 +1740,10 @@
       "evidence": [
         "database/changes/20261107130851_schedule_expired_group_message_purge.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
-        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
+        "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
       ],
-      "issue": "Verify local pg_cron availability and job behavior before inclusion."
+      "issue": "pg_cron availability and the expected purge-job definition now have read-only local pre/postflight assertions. A separate loopback-only probe runner is prepared to prove actual scheduler execution using a temporary SELECT 1 job with scoped cleanup. Neither the probe nor the scheduler has been run; this blocker remains until disposable-local runtime evidence exists."
     },
     {
       "id": "DAG-009",
