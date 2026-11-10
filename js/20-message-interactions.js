@@ -87,31 +87,48 @@ function bindMessageGestures(row,message){
 }
 const pendingReactionKeys=new Set();
 async function toggleMessageReaction(message,reactionType,button){
- const conversationId=message.conversation_id||state.active?.id,userId=state.user?.id,requestVersion=state.messageLoadVersion;
- if(!conversationId||!userId||state.active?.id!==conversationId||message.deleted_at)return;
- const pendingKey=message.id+':'+userId;if(pendingReactionKeys.has(pendingKey))return;
- pendingReactionKeys.add(pendingKey);
+ const conversationId=message?.conversation_id||state.active?.id,userId=state.user?.id,requestVersion=state.messageLoadVersion;
+ if(!conversationId||!userId||state.active?.id!==conversationId||message.deleted_at)return false;
+ if(!MESSAGE_REACTION_OPTIONS.some(option=>option.type===reactionType))return false;
+ state.pendingReactionKeys ||= new Set();
+ const pendingKey=conversationId+':'+message.id+':'+userId;
+ if(state.pendingReactionKeys.has(pendingKey))return false;
+ state.pendingReactionKeys.add(pendingKey);
  const current=[...(state.reactions.get(message.id)||[])],mine=current.find(r=>r.user_id===userId);
- const next=current.filter(r=>r.user_id!==userId),removing=mine?.reaction_type===reactionType;
- if(!removing)next.push({message_id:message.id,conversation_id:conversationId,user_id:userId,reaction_type:reactionType});
- state.reactions.set(message.id,next);
- const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);
- if(row)renderReactionBar(row,message);
+ const removing=mine?.reaction_type===reactionType;
+ const optimistic=current.filter(r=>r.user_id!==userId);
+ if(!removing)optimistic.push({message_id:message.id,conversation_id:conversationId,user_id:userId,reaction_type:reactionType});
+ state.reactions.set(message.id,optimistic);
+ const renderCurrent=()=>{if(state.active?.id!==conversationId||state.messageLoadVersion!==requestVersion)return;const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);if(row)renderReactionBar(row,message)};
+ renderCurrent();
  try{
-  let result;
-  if(removing)result=await supabaseClient.from('message_reactions').delete().eq('conversation_id',conversationId).eq('message_id',message.id).eq('user_id',userId);
-  else result=await supabaseClient.from('message_reactions').upsert({conversation_id:conversationId,message_id:message.id,user_id:userId,reaction_type:reactionType},{onConflict:'message_id,user_id'});
-  if(result.error)throw result.error;
+  const write=removing
+   ?await supabaseClient.from('message_reactions').delete().eq('conversation_id',conversationId).eq('message_id',message.id).eq('user_id',userId).eq('reaction_type',reactionType)
+   :await supabaseClient.from('message_reactions').upsert({conversation_id:conversationId,message_id:message.id,user_id:userId,reaction_type:reactionType},{onConflict:'message_id,user_id'});
+  if(write.error){
+   if(state.active?.id!==conversationId||state.messageLoadVersion!==requestVersion)throw write.error;
+   const {data:verified,error:verifyError}=await supabaseClient.from('message_reactions').select('message_id,user_id,reaction_type').eq('conversation_id',conversationId).eq('message_id',message.id).eq('user_id',userId).maybeSingle();
+   if(verifyError)throw write.error;
+   const committed=removing?!verified:verified?.reaction_type===reactionType;
+   if(!committed){
+    const reconciled=current.filter(row=>row.user_id!==userId);if(verified)reconciled.push(verified);
+    state.reactions.set(message.id,reconciled);renderCurrent();
+    throw write.error;
+   }
+   const reconciled=current.filter(row=>row.user_id!==userId);if(verified)reconciled.push(verified);
+   state.reactions.set(message.id,reconciled);renderCurrent();
+  }
+  return true;
  }catch(error){
   if(state.active?.id===conversationId&&state.messageLoadVersion===requestVersion){
-   state.reactions.set(message.id,current);
-   const activeRow=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);
-   if(activeRow)renderReactionBar(activeRow,message);
-   toast('تعذر حفظ التفاعل. أُعيدت الحالة السابقة؛ حاول مجدداً');
+   state.reactions.set(message.id,current);renderCurrent();
+   toast('تعذر تأكيد حفظ التفاعل. أُعيدت الحالة السابقة؛ حاول مجدداً');
   }
   console.error('Message reaction failed:',error);
- }finally{pendingReactionKeys.delete(pendingKey);if(button?.isConnected)button.disabled=false}
+  return false;
+ }finally{state.pendingReactionKeys.delete(pendingKey);if(button?.isConnected)button.disabled=false}
 }
+
 function handleReactionRealtime(payload,conversationId){
  if(state.active?.id!==conversationId)return;
  const incoming=payload.new,old=payload.old,event=payload.eventType;
