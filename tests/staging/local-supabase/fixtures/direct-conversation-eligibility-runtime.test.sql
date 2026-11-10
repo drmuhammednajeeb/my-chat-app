@@ -4,6 +4,8 @@
 -- Two-session reversed-pair concurrency is a separate required test and remains a release blocker.
 
 BEGIN;
+SET LOCAL statement_timeout = '30s';
+SET LOCAL lock_timeout = '10s';
 
 -- Establish the test admin context and promote only synthetic accounts through the real admin RPCs.
 SET LOCAL ROLE authenticated;
