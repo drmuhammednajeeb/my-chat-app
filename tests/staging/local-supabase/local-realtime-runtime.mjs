@@ -128,7 +128,6 @@ try {
   if ((unauthorizedRows || []).length !== 0) throw new Error('Non-member user read messages from a conversation they do not belong to');
   console.log('PASS: authenticated non-member cannot read the subscribed conversation through PostgREST.');
 
-  const reactionId = randomUUID();
   const { error: reactionError } = await clientA.from('message_reactions').insert({
     conversation_id: directConversationId,
     message_id: firstMessageId,
@@ -160,7 +159,14 @@ try {
   console.error(error?.stack || error);
   process.exitCode = 1;
 } finally {
-  if (channel) await channel.unsubscribe().catch(() => {});
-  await Promise.all([clientA.removeAllChannels(), clientC.removeAllChannels()]);
-  await Promise.all([clientA.auth.signOut(), clientC.auth.signOut()]);
+  const cleanup = Promise.allSettled([
+    channel ? channel.unsubscribe() : Promise.resolve(),
+    clientA.removeAllChannels(),
+    clientC.removeAllChannels(),
+    clientA.auth.signOut(),
+    clientC.auth.signOut()
+  ]);
+  await Promise.race([cleanup, new Promise(resolve => setTimeout(resolve, 3000))]);
+  clientA.realtime.disconnect();
+  clientC.realtime.disconnect();
 }
