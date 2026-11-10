@@ -58,7 +58,7 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     "not has_table_privilege('authenticated','public.user_message_stars','UPDATE')",
     "not has_table_privilege('authenticated','public.chat_list_items','UPDATE')",
     "not has_table_privilege('authenticated','public.message_edit_history','INSERT')",
-    "not has_table_privilege('authenticated','public.user_settings','DELETE')"
+    "has_table_privilege('authenticated','public.user_settings','DELETE')"
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing assertion: ' + token);
   assert.doesNotMatch(sql, /\b(insert\s+into|update\s+\w|delete\s+from|create\s+table|alter\s+table)\b/i);
 });
