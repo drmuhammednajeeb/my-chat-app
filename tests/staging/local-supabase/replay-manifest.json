@@ -593,13 +593,14 @@
       "nodeId": "test-fixture.direct-chat-concurrency",
       "status": "TEST_ONLY_LOCAL_TWO_SESSION_CONCURRENCY_HARNESS_NOT_EXECUTED",
       "testSources": [
-        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.test.mjs"
       ],
       "blockedBy": [
         "DAG-014",
         "DAG-015"
       ],
-      "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production."
+      "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production. A static regression test verifies the concurrency runner establishes the two reserved synthetic users as eligible after the rollback-only matrix; those changes are confined to the disposable database."
     },
     {
       "nodeId": "security.least-privilege-overlay",
