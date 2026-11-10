@@ -1,6 +1,6 @@
 # Clean Chat Core Rebuild — Engineering Baseline
 
-**Status:** design and source extraction in progress.  
+**Status:** modular client and disposable-local destructive rebuild candidate implemented; final local runtime and Chromium regression gates in progress.  
 **Database execution:** disposable local only. No cloud or production DDL is authorized by this document.  
 **Data policy:** legacy message rows are disposable. The rebuild does not attempt to restore or migrate old message content.
 
@@ -165,7 +165,7 @@ The current rebuild branch now contains an explicitly test-only destructive fixt
 - `tests/staging/local-supabase/fixtures/clean-chat-core-rebuild.test-only.sql`
 - `tests/staging/local-supabase/clean-chat-core-runtime.mjs`
 
-The fixture is not a canonical migration and is not part of the historical replay manifest. It is invoked only by the runtime runner after the runner validates a loopback PostgreSQL URL and the test-only GUC. It truncates `public.conversations CASCADE` (thereby clearing conversation-dependent data) while preserving `auth.users` and `public.profiles`.
+The fixture is not a canonical migration and is not part of the historical replay manifest. It is invoked only by the runtime runner after the runner validates a loopback PostgreSQL URL and the test-only GUC. It truncates `public.conversations CASCADE` (thereby clearing conversation-dependent data) while preserving `auth.users` and `public.profiles`. It also removes orphaned objects from `chat-media`, `conversation-documents`, and `channel-avatars`, while preserving the public `avatars` bucket used by profile images.
 
 It then adds:
 - canonical `direct_user_low/direct_user_high` columns, a pair check, and a unique partial index;
