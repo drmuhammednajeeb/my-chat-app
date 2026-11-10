@@ -28,5 +28,22 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Missing-profile test identity unexpectedly has a profile';
   END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    JOIN auth.users u ON u.id = p.id
+    WHERE p.id IN (
+      '22222222-2222-4222-8222-222222222201'::uuid,
+      '22222222-2222-4222-8222-222222222202'::uuid,
+      '22222222-2222-4222-8222-222222222203'::uuid,
+      '22222222-2222-4222-8222-222222222204'::uuid,
+      '22222222-2222-4222-8222-222222222205'::uuid
+    )
+      AND (p.membership_number IS DISTINCT FROM u.raw_app_meta_data->>'membership_number'
+        OR p.membership_status IS DISTINCT FROM 'active')
+  ) THEN
+    RAISE EXCEPTION 'Membership profile guard did not derive the expected synthetic profile state';
+  END IF;
 END
 $assert$;
