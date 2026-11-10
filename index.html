@@ -1193,7 +1193,7 @@ async function openMessageEditHistory(message){
   showMessageDetailModal('سجل تعديلات الرسالة',list);
  }catch(error){console.error('Message edit history load failed:',error);toast('تعذر تحميل سجل التعديلات أو لا تملك صلاحية الاطلاع عليه')}
 }
-function messagePreview(m){if(!m)return 'رسالة غير متاحة';if(m.deleted_at)return 'تم حذف هذه الرسالة';return String(m.content||(m.attachment_path?'مرفق':'رسالة')).slice(0,180)}
+function messagePreview(m){if(!m)return 'رسالة غير متاحة';if(m.deleted_at)return 'تم حذف هذه الرسالة';const sticker=decodeChatSticker(m.content);if(sticker)return 'ملصق '+sticker;return String(m.content||(m.attachment_path?'مرفق':'رسالة')).slice(0,180)}
 function renderComposerContext(){const privateReply=state.privateReplyPending,target=state.editTarget||state.replyTarget||privateReply,box=$('composerContext');if(!box)return;if(!target){box.classList.add('hidden');$('composerContextText').textContent='';$('attachBtn').disabled=false;$('sendBtn').title='إرسال';$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';return}box.classList.remove('hidden');$('composerContextLabel').textContent=state.editTarget?'تعديل الرسالة':privateReply?'رد خاص من المجموعة':'الرد على الرسالة';$('composerContextText').textContent=privateReply?privateReply.quotedContent:messagePreview(target);$('sendBtn').title=state.editTarget?'حفظ التعديل':'إرسال الرد';$('sendBtn').innerHTML=state.editTarget?'<i class="ph ph-check"></i>':'<i class="ph ph-paper-plane-tilt"></i>'}
 function beginReply(m){if(!m||m.deleted_at)return;if(state.editTarget)$('messageInput').value='';state.editTarget=null;$('attachBtn').disabled=false;state.replyTarget=m;renderComposerContext();resizeComposer();$('messageInput').focus()}
 function canEditMessage(m){
