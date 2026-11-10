@@ -33,6 +33,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "test-fixture.direct-chat-auth-seed",
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Must run before membership.base installs auth.users invitation/profile triggers; all identities use reserved .test emails and synthetic IDs."
+    },
+    {
       "nodeId": "core.base",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -428,6 +437,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "test-fixture.direct-chat-profiles",
+      "status": "SYNTHETIC_TEST_DATA_ONLY",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Runs after membership.base profile guard and before membership.official adds verified-number column; deliberately omits the missing-profile identity."
+    },
+    {
       "nodeId": "membership.official",
       "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
       "testSources": [
@@ -498,6 +516,31 @@
       ],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "chat.direct-conversation-rpc-eligibility-guard",
+      "status": "TEST_ONLY_GUARD_IMPLEMENTED_RUNTIME_VALIDATION_BLOCKED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.direct-chat-runtime",
+      "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "parityNote": "Disposable-local runtime script only. Requires the full approved replay; no CI or production SQL execution. Two-session reversed-pair concurrency remains separately blocked."
     }
   ],
   "duplicateSelection": [
