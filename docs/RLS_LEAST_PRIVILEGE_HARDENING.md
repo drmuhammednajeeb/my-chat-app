@@ -12,6 +12,7 @@ Production was inspected read-only. The observed application tables had RLS enab
 
 - Removes default table, sequence, and function grants to `PUBLIC`, `anon`, and `authenticated` for future objects created by the `postgres` application migration owner in `public`.
 - Removes all direct public-table and sequence privileges from `anon`.
+- Adds a `RESTRICTIVE FOR ALL TO authenticated` active-membership guard to every postgres-owned application table in `public` and to `storage.objects`. Feature-specific permissive policies remain in place; the restrictive guard is ANDed with them, so a future permissive policy cannot independently bypass active membership.
 - Removes `TRUNCATE`, `REFERENCES`, `TRIGGER`, and PostgreSQL 17+ `MAINTAIN` from `authenticated`.
 - Removes direct DML that is not part of the application contract: membership event writes, edit-history inserts, private reply-context updates/deletes, star updates, account-settings deletes, chat-list-item updates, and group-settings deletes.
 - Revokes public/anon execution of public-schema functions and explicitly removes client execution from the message trigger function.
@@ -24,7 +25,8 @@ The overlay is followed by `rls-least-privilege.assert.sql`, which is read-only 
 - RLS was enabled on every application table inspected in `public` and `app_private`, and on `storage.objects`.
 - Storage object policies were restricted to `authenticated`. The private `chat-media`, `conversation-documents`, and `channel-avatars` buckets were private. The `avatars` bucket was explicitly public by design; public delivery bypasses object SELECT policies, so only content intended for public viewing belongs there.
 - The production `chat-media` INSERT policy did not bind path segment 2 to `auth.uid()`. A separate test-only replacement policy adds this uploader-folder check; it still requires disposable-local upload and cross-user path tests.
-- Every authenticated `public` policy in the inspected catalog included the active-member predicate, except the legacy `public.messages` deny policy which targets `anon`.
+- All 50 inspected `public` policies were permissive, and all authenticated public policies included the active-member predicate (zero missing guards). All 15 Storage object policies were bucket-scoped; the test overlay adds a restrictive active-member guard across the Storage object table as defense in depth.
+- The profile-directory policy allows every active member to read all `profiles` columns. The client intentionally requests `membership_number` and `membership_number_verified` for directory results. This is a visibility decision that should be confirmed as a product requirement; narrowing it requires a separate profile-directory/self-profile design and client changes, not a blanket RLS edit.
 - The application `public` table default ACL for role `postgres` granted all table privileges to `anon` and `authenticated`. The same broad default existed for sequences and function EXECUTE. Effective ACL checks counted 13/24 tables with the three non-RLS privileges for `anon` and 14/24 for `authenticated`.
 - Several authenticated roles had non-RLS table privileges and direct DML permissions beyond their intended contract.
 - The Security Advisor separately reported leaked-password protection disabled.
