@@ -130,7 +130,7 @@ async function clearLocalChatStorage() {
 }
 await clearLocalChatStorage();
 const remainingChatObjects = psql(`SELECT count(*) FROM storage.objects
-  WHERE bucket_id IN ('chat-media', 'conversation-documents', 'channel-avatars');`).split(/\\s+/).at(-1);
+  WHERE bucket_id IN ('chat-media', 'conversation-documents', 'channel-avatars');`).split(/\s+/).at(-1);
 if (remainingChatObjects !== '0') throw new Error('Chat Storage buckets still contain ' + remainingChatObjects + ' objects after API cleanup');
 const directConversationId = lastUuid(psql(asUser(a, `SELECT public.get_or_create_direct_conversation('${b}'::uuid);`), { label: 'create clean direct conversation' }));
 if (!directConversationId) throw new Error('Direct conversation RPC returned no UUID');
