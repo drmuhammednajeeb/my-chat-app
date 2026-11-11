@@ -133,6 +133,16 @@ async function signIn(page, email) {
   const actual = await page.evaluate(() => state.user.id);
   const expected = email.startsWith('direct-a@') ? synthetic.direct_a : synthetic.direct_b;
   assert.equal(actual, expected, 'the application session must belong to the expected synthetic Auth identity');
+  // The app deliberately finishes authentication by resetting to Home. Do not race
+  // openDirectConversation against the tail of that startup sequence.
+  await page.waitForFunction(() => {
+    const welcome = document.querySelector('#messages .welcome')?.innerText || '';
+    return !!state.user?.id
+      && !!state.profile?.id
+      && state.conversationsLoading === false
+      && state.active === null
+      && welcome.includes('مرحباً بك في BizmindMakers Chat Pro');
+  }, null, { timeout: 20000 });
 }
 
 async function openDirect(page, otherId) {
