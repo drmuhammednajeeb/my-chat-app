@@ -56,6 +56,7 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
     'version: 3.0.0',
     'supabase init',
     'supabase start --exclude',
+    'postgres-meta,inbucket',
     'major_version = 17',
     'LOCAL_SUPABASE_DB_URL',
     'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
