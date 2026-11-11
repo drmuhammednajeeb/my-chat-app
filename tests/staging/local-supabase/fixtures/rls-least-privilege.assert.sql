@@ -123,15 +123,17 @@ begin
     join pg_namespace n on n.oid = d.defaclnamespace
     cross join lateral aclexplode(d.defaclacl) a
     where d.defaclrole = 'postgres'::regrole
-      and n.nspname = 'public'
-      and d.defaclobjtype in ('r','S','f')
+      and (
+        (n.nspname = 'public' and d.defaclobjtype in ('r','S','f'))
+        or (n.nspname = 'app_private' and d.defaclobjtype = 'f')
+      )
       and a.grantee in (
         0,
         (select oid from pg_roles where rolname = 'anon'),
         (select oid from pg_roles where rolname = 'authenticated')
       )
   ) then
-    raise exception 'Unsafe default privileges remain for public objects';
+    raise exception 'Unsafe default privileges remain for public or app_private objects';
   end if;
 
   -- Private application schema: helper functions may be callable by authenticated,
