@@ -250,14 +250,20 @@ test('renderer rejects an obsolete request token before starting work', async ()
   assert.equal(calls, 0);
 });
 
-test('poll cadence preserves connected, disconnected and background intervals', () => {
+test('poll cadence prioritizes realtime and keeps a fast bounded fallback', () => {
   const state = { realtimeStatus: 'SUBSCRIBED' }, document = { visibilityState: 'visible' };
   const delay = vm.runInNewContext('(' + extractFunction('messagePollingDelay') + ')', { state, document });
-  assert.equal(delay(), 30000);
+  assert.equal(delay(), 15000);
   state.realtimeStatus = 'CHANNEL_ERROR';
-  assert.equal(delay(), 8000);
+  assert.equal(delay(), 1200);
   document.visibilityState = 'hidden';
   assert.equal(delay(), 60000);
+});
+
+test('realtime subscription state immediately reconciles messages on connect and failure', () => {
+  const subscribe = extractFunction('subscribeConversation');
+  assert.match(subscribe, /requestImmediateMessageReconciliation\(s==='SUBSCRIBED'\?'realtime-subscribed':'realtime-unavailable'\)/);
+  assert.match(subscribe, /s==='CHANNEL_ERROR'\|\|s==='TIMED_OUT'/);
 });
 
 test('receipt writes are serialized per conversation in one client session', async () => {
