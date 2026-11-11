@@ -22,8 +22,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run source-contract regression checks
-        run: node --test tests/message-lifecycle.test.mjs
+      - name: Check JavaScript syntax and extracted script contracts
+        run: node --test tests/message-lifecycle.test.mjs tests/script-extraction.test.mjs
       - name: Install isolated browser test dependency
         run: npm install --no-save --no-package-lock playwright
       - name: Install Chromium
