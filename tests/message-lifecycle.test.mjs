@@ -94,7 +94,7 @@ test('sticker parser accepts the displayed legacy token and the canonical token 
   assert.ok(start >= 0 && end > start);
   const sandbox = {
     document: {
-      createElement: () => ({ dataset: {}, setAttribute() {} }),
+      createElement: () => ({ dataset: {}, attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } }),
       createTextNode: value => ({ textContent: value })
     }
   };
@@ -107,7 +107,8 @@ test('sticker parser accepts the displayed legacy token and the canonical token 
   const node = sandbox.renderSticker('😍');
   assert.equal(node.className, 'message-sticker');
   assert.equal(node.textContent, '😍');
-  assert.equal(node.getAttribute, undefined);
+  assert.equal(node.dataset.sticker, '😍');
+  assert.equal(node.attributes['aria-label'], 'ملصق 😍');
 });
 
 test('voice recording control always finalizes and sends captured audio', () => {
