@@ -122,7 +122,11 @@ async function subscribeUnfilteredMessages(client) {
   channel.on('postgres_changes', {
     event: 'INSERT', schema: 'public', table: 'chat_messages'
   }, payload => record({ kind: 'message_unfiltered', payload }));
-  console.log('LOCAL_REALTIME_BINDINGS=' + JSON.stringify(channel.bindings.map(binding => ({ type: binding.type, filter: binding.filter || null }))));
+  const bindingState = channel.bindings;
+  const bindingShape = Array.isArray(bindingState)
+    ? bindingState.map(binding => ({ type: binding?.type || null, filter: binding?.filter || null }))
+    : { kind: Object.prototype.toString.call(bindingState), keys: bindingState && typeof bindingState === 'object' ? Object.keys(bindingState) : [] };
+  console.log('LOCAL_REALTIME_BINDINGS=' + JSON.stringify(bindingShape));
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Unfiltered Realtime subscription timed out')), 12000);
     channel.subscribe((status, error) => {
