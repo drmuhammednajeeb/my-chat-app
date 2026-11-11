@@ -672,7 +672,7 @@ test('starting and stopping the polling timer does not erase the loaded history 
   });
   stop();
   assert.equal(state.hasMoreMessages, true);
-  assert.equal(state.isLoadingMessages, true);
+  assert.equal(state.isLoadingMessages, false);
   assert.equal(state.loadingOlderMessages, false);
   assert.equal(state.messagePollTimer, null);
   assert.equal(state.messagePollGeneration, 5);
