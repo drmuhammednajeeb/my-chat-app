@@ -168,6 +168,16 @@ try {
   logStep('authenticate-synthetic-users');
   const userA = await signIn(clientA, 'direct-a@bizmindmakers.test');
   const userB = await signIn(clientB, 'direct-b@bizmindmakers.test');
+  const { data: selfChatA, error: selfChatAError } = await clientA.rpc('ensure_self_chat');
+  const { data: selfChatARepeat, error: selfChatARepeatError } = await clientA.rpc('ensure_self_chat');
+  const { data: selfChatB, error: selfChatBError } = await clientB.rpc('ensure_self_chat');
+  if (selfChatAError || selfChatARepeatError || selfChatBError || !UUID_RE.test(selfChatA || '')
+    || selfChatA !== selfChatARepeat || selfChatA === selfChatB) {
+    throw new Error('Secure self-chat RPC failed idempotency/isolation checks: ' + JSON.stringify({
+      first: selfChatAError?.message, repeat: selfChatARepeatError?.message, second: selfChatBError?.message
+    }));
+  }
+  console.log('PASS: authenticated self-chat RPC is idempotent and isolated per user.');
 
   logStep('create-or-resolve-direct-conversation');
   const { data: conversationId, error: directError } = await clientA.rpc('get_or_create_direct_conversation', { p_other_user_id: userB });
@@ -188,12 +198,16 @@ try {
     loginPage(pageA, 'direct-a@bizmindmakers.test'),
     loginPage(pageB, 'direct-b@bizmindmakers.test')
   ]);
+  const selfChatErrors = pageConsole.filter(message => message.includes('Self chat initialization failed'));
+  if (selfChatErrors.length) throw new Error('App login could not initialize the user's private self-chat: ' + selfChatErrors.join(' | '));
 
   logStep('open-same-direct-conversation-on-both-clients');
   await Promise.all([
     openDirectChat(pageA, 'Direct Test B'),
     openDirectChat(pageB, 'Direct Test A')
   ]);
+  const messageLoadErrors = pageConsole.filter(message => message.includes('Message loading failed') || message.includes('allMessagesRendered is not defined'));
+  if (messageLoadErrors.length) throw new Error('Message timeline load emitted runtime errors: ' + messageLoadErrors.join(' | '));
 
   logStep('authenticated-message-delivery');
   const firstMessage = 'E2E realtime delivery ' + Date.now();
