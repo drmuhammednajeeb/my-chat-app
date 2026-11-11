@@ -282,7 +282,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],hasMoreMessages:false,loadingOlderMessages:false,reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
@@ -991,32 +991,38 @@ $('directClearBtn').onclick=clearDirectChatForMe;
 async function openConversation(c){
  if(!c?.id)return;
  const openToken=state.conversationOpenVersion=(state.conversationOpenVersion||0)+1;
- closeConversationWorkspace();
- state.messageLoadVersion++;
- stopMessagePolling();
+ closeConversationWorkspace();state.messageLoadVersion++;stopMessagePolling();
  const conversationOpenStarted=performance.now();
  if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};applyDirectChatTheme();state.messages=[];state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.newMessageCount=0;updateNewMessagesIndicator();$('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();state.messageIds.clear();state.renderingMessageIds.clear();diagLog('conversation-open',{id:c.id,openToken});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);
- if(c.type==='group'){
-  await loadGroupSettings(c.id);
-  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
-  await loadUserConversationSettings(c.id);
- }else{
-  state.groupSettings=null;
-  await loadUserConversationSettings(c.id);
- }
- if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
- const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;const canPost=(c.type!=='channel'||myRole==='owner'||myRole==='admin')&&!(c.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(myRole));$('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));$('chatSub').textContent=isSelfConversation(c)?'مساحة شخصية · مراسلة نفسك':c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين': 'محادثة خاصة';// renderChatAvatar already renders the other participant's saved photo or initials.$('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
+ state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
+ applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;
+ state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.newMessageCount=0;updateNewMessagesIndicator();
+ $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
+ state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.privateReplyContexts=new Map();
+ state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();
+ state.messageIds.clear();state.renderingMessageIds.clear();
+ diagLog('conversation-open',{id:c.id,openToken});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);
  $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
- // Keep the composer available while messages and attachments load.
- subscribeConversation();subscribeProfileUpdates(c);await loadStarredMessageIds(c.id);
+ // Start the live channel and latest-message fetch before optional settings complete.
+ subscribeConversation();subscribeProfileUpdates(c);
+ const messageLoadPromise=loadMessages();
+ const starredLoadPromise=loadStarredMessageIds(c.id);
+ const settingsLoadPromise=(async()=>{
+  if(c.type==='group')await loadGroupSettings(c.id);else state.groupSettings=null;
+  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
+  await loadUserConversationSettings(c.id);
+ })();
+ await Promise.all([messageLoadPromise,starredLoadPromise,settingsLoadPromise]);
  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
- await loadMessages();
- if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
- recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:true});
+ const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;
+ const canPost=(c.type!=='channel'||myRole==='owner'||myRole==='admin')&&!(c.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(myRole));
+ $('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));
+ $('chatSub').textContent=isSelfConversation(c)?'مساحة شخصية · مراسلة نفسك':c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين':'محادثة خاصة';
+ $('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
  startMessagePolling(c.id);
+ recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:true,latestOnly:true});
 }
 
 async function loadMessageReactions(conversationId,messages,requestId=null){
@@ -1439,62 +1445,84 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
 }
 async function loadMessages(){
  const conversationId=state.active?.id;if(!conversationId)return false;
- const messageLoadStarted=performance.now(),syncStartedAt=new Date(Date.now()-60000).toISOString();const requestId=++state.messageLoadVersion,area=$('messages');state.isLoadingMessages=true;state.hasMoreMessages=false;state.newMessageCount=0;updateNewMessagesIndicator();diagLog('fetch-start',{conversationId,requestId});
- area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل الرسائل…</p></div>';
+ const messageLoadStarted=performance.now(),syncStartedAt=new Date(Date.now()-60000).toISOString();
+ const requestId=++state.messageLoadVersion,area=$('messages');
+ const hadRenderedTimeline=state.messageIds.size>0,wasNearBottom=hadRenderedTimeline&&isMessagesNearBottom(area,120);
+ state.isLoadingMessages=true;state.newMessageCount=0;updateNewMessagesIndicator();
+ diagLog('fetch-start',{conversationId,requestId,mode:hadRenderedTimeline?'reconcile':'latest-only'});
+ if(!hadRenderedTimeline)area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل أحدث رسالة…</p></div>';
  try{
-  const messageFetchStarted=performance.now();let messageQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);if(state.activeChatPreference?.cleared_before)messageQuery=messageQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await messageQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(50);
-  recordPerf('message_fetch',performance.now()-messageFetchStarted,{success:!error,rows:data?.length||0});if(error)throw error;
+  const messageFetchStarted=performance.now();
+  let messageQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);
+  if(state.activeChatPreference?.cleared_before)messageQuery=messageQuery.gt('created_at',state.activeChatPreference.cleared_before);
+  const {data,error}=await messageQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(2);
+  recordPerf('message_fetch',performance.now()-messageFetchStarted,{success:!error,rows:data?.length||0});
+  if(error)throw error;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  state.hasMoreMessages=(data||[]).length===50;
-  state.messagePollLastCheckedAt=syncStartedAt;state.messagePollCursor=(data||[])[0]?{conversationId,created_at:data[0].created_at,id:data[0].id}:null;
-  state.diagnostics.lastFetchAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastFetchCount=(data||[]).length;state.diagnostics.lastFetchError=null;diagLog('fetch-success',{count:(data||[]).length,requestId});
-  // Treat the database result as authoritative inside the fetched window.
-  // Preserve only newer Realtime inserts and older rows loaded by history pagination.
-  const fetchedRows=data||[],fetchedIds=new Set(fetchedRows.map(m=>m.id));
-  const newestFetched=fetchedRows[0]||null,oldestFetched=fetchedRows[fetchedRows.length-1]||null;
-  const merged=new Map();
+  state.hasMoreMessages=(data||[]).length>1;
+  const fetchedRows=(data||[]).slice(0,1),fetchedIds=new Set(fetchedRows.map(m=>m.id));
+  state.messagePollLastCheckedAt=syncStartedAt;
+  state.messagePollCursor=(data||[])[0]?{conversationId,created_at:data[0].created_at,id:data[0].id}:null;
+  state.diagnostics.lastFetchAt=new Date().toLocaleTimeString('en-GB');
+  state.diagnostics.lastFetchCount=fetchedRows.length;state.diagnostics.lastFetchError=null;
+  diagLog('fetch-success',{count:fetchedRows.length,hasMore:state.hasMoreMessages,requestId});
+  const newestFetched=fetchedRows[0]||null,merged=new Map();
   (state.messages||[]).filter(m=>m.conversation_id===conversationId).forEach(m=>{
    const afterPersonalClear=!state.activeChatPreference?.cleared_before||new Date(m.created_at)>new Date(state.activeChatPreference.cleared_before);
    const isNewerRealtime=newestFetched&&compareMessagesChronologically(m,newestFetched)>0;
-   const isOlderHistory=fetchedRows.length===50&&oldestFetched&&compareMessagesChronologically(m,oldestFetched)<0;
+   const isOlderHistory=newestFetched&&compareMessagesChronologically(m,newestFetched)<0;
    const arrivedDuringEmptyFetch=!newestFetched&&m.created_at>=syncStartedAt;
    if(afterPersonalClear&&(fetchedIds.has(m.id)||isNewerRealtime||isOlderHistory||arrivedDuringEmptyFetch))merged.set(m.id,m);
   });
   fetchedRows.forEach(m=>merged.set(m.id,m));
-  let messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
+  let messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   state.messages=messages;
-  const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];const nextReplyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;if(!replyError)(parents||[]).forEach(x=>nextReplyMessages.set(x.id,x))}
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;state.replyMessages=nextReplyMessages;
-  await loadMessageReactions(conversationId,messages,requestId);
+  const replyIds=[...new Set(fetchedRows.map(m=>m.reply_to).filter(Boolean))];
+  const replyTask=replyIds.length?supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds):Promise.resolve({data:[],error:null});
+  const metadataTasks=await Promise.all([
+   replyTask,
+   loadMessageReactions(conversationId,fetchedRows,requestId),
+   loadMessagePins(conversationId,requestId),
+   loadPrivateReplyContexts(conversationId,fetchedRows,requestId)
+  ]);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadMessagePins(conversationId,requestId);
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadPrivateReplyContexts(conversationId,messages,requestId);
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  // Reconcile again after auxiliary queries: Realtime INSERTs may arrive while those queries are in flight.
+  const [replyResult]=metadataTasks;
+  if(replyResult?.error)console.warn('Reply parent metadata unavailable:',replyResult.error.message);
+  else (replyResult?.data||[]).forEach(parent=>state.replyMessages.set(parent.id,parent));
   const latest=new Map(messages.map(m=>[m.id,m]));
   (state.messages||[]).filter(m=>m.conversation_id===conversationId).forEach(m=>latest.set(m.id,m));
-  messages=Array.from(latest.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
+  messages=Array.from(latest.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   state.messages=messages;
-  area.replaceChildren();state.messageIds.clear();
   let allMessagesRendered=true;
-  if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
-  else{
-   const messageRenderBatchStarted=performance.now();for(const message of messages){
+  if(!messages.length){
+   if(!hadRenderedTimeline)area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>';
+  }else{
+   if(!hadRenderedTimeline){area.replaceChildren();state.messageIds.clear()}
+   const messageRenderBatchStarted=performance.now();
+   for(const message of messages){
     if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-    const rendered=await renderMessage(message,conversationId,requestId);if(!rendered&&!state.messageIds.has(message.id))allMessagesRendered=false;
+    if(state.messageIds.has(message.id))continue;
+    const rendered=await renderMessage(message,conversationId,requestId);
+    if(!rendered&&!state.messageIds.has(message.id))allMessagesRendered=false;
    }
    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-   area.scrollTop=area.scrollHeight;
-   recordPerf('message_render_batch',performance.now()-messageRenderBatchStarted,{rows:messages.length});
+   if(!hadRenderedTimeline||wasNearBottom)area.scrollTop=area.scrollHeight;
+   recordPerf('message_render_batch',performance.now()-messageRenderBatchStarted,{rows:messages.length,rendered:state.messageIds.size});
   }
   state.isLoadingMessages=false;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  if(allMessagesRendered&&requestId===state.messageLoadVersion&&state.active?.id===conversationId)await markConversationReceipt(conversationId,document.visibilityState==='visible',requestId);
-  recordPerf('message_load_total',performance.now()-messageLoadStarted,{success:true,rows:messages.length});return true;
+  if(allMessagesRendered)markConversationReceipt(conversationId,document.visibilityState==='visible',requestId).catch(error=>console.warn('Receipt update failed:',error));
+  recordPerf('message_load_total',performance.now()-messageLoadStarted,{success:true,rows:messages.length});
+  return true;
  }catch(error){
-  recordPerf('message_load_total',performance.now()-messageLoadStarted,{success:false});console.error('Message loading failed:',error);
-  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){state.diagnostics.lastFetchError=String(error?.message||error);diagLog('fetch-error',{error:state.diagnostics.lastFetchError});state.isLoadingMessages=false;area.innerHTML='<div class="welcome"><h2>تعذر تحميل الرسائل</h2><p>تم إبقاء المحادثة مفتوحة. اضغط تحديث لإعادة المحاولة.</p></div>';toast('تعذر استرجاع الرسائل من قاعدة البيانات')}
+  recordPerf('message_load_total',performance.now()-messageLoadStarted,{success:false});
+  console.error('Message loading failed:',error);
+  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
+   state.diagnostics.lastFetchError=String(error?.message||error);diagLog('fetch-error',{error:state.diagnostics.lastFetchError});
+   state.isLoadingMessages=false;
+   if(!state.messageIds.size)area.innerHTML='<div class="welcome"><h2>تعذر تحميل الرسائل</h2><p>تم إبقاء المحادثة مفتوحة. اضغط تحديث لإعادة المحاولة.</p></div>';
+   toast('تعذر استرجاع الرسائل من قاعدة البيانات');
+  }
   return false;
  }
 }
@@ -1506,35 +1534,59 @@ async function loadOlderMessages(){
  state.loadingOlderMessages=true;
  const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
  const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
- const oldHeight=area.scrollHeight,oldTop=area.scrollTop,requestId=state.messageLoadVersion;
+ const oldTop=area.scrollTop,requestId=state.messageLoadVersion;
  const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
+ const originalFirstChild=loader.nextSibling,initialChildCount=area.childNodes.length;
  try{
-  const cursorFilter='created_at.lt.'+oldest.created_at+',and(created_at.eq.'+oldest.created_at+',id.lt.'+oldest.id+')';let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(cursorFilter);if(state.activeChatPreference?.cleared_before)olderQuery=olderQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await olderQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(50);
+  const cursorFilter='created_at.lt.'+oldest.created_at+',and(created_at.eq.'+oldest.created_at+',id.lt.'+oldest.id+')';
+  let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(cursorFilter);
+  if(state.activeChatPreference?.cleared_before)olderQuery=olderQuery.gt('created_at',state.activeChatPreference.cleared_before);
+  const {data,error}=await olderQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(50);
   if(error)throw error;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   const older=(data||[]).slice().reverse();
   state.hasMoreMessages=older.length===50;
   if(!older.length){state.hasMoreMessages=false;return false}
+  const replyIds=[...new Set(older.map(m=>m.reply_to).filter(id=>id&&!state.messages.some(x=>x.id===id)))];
+  const replyTask=replyIds.length?supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds):Promise.resolve({data:[],error:null});
+  const [, , , replyResult]=await Promise.all([
+   loadMessageReactions(conversationId,older,requestId),
+   loadMessagePins(conversationId,requestId),
+   loadPrivateReplyContexts(conversationId,older,requestId),
+   replyTask
+  ]);
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  if(replyResult?.error)console.warn('Older reply metadata unavailable:',replyResult.error.message);
+  else (replyResult?.data||[]).forEach(parent=>state.replyMessages.set(parent.id,parent));
   const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
+  const previousMessages=state.messages;
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-  const replyIds=[...new Set(state.messages.map(m=>m.reply_to).filter(id=>id&&!merged.has(id)))];
-  if(replyIds.length){const {data:parents,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;if(parentError)throw parentError;(parents||[]).forEach(parent=>state.replyMessages.set(parent.id,parent))}
-  await loadMessageReactions(conversationId,older,requestId);
+  state.isLoadingMessages=true;area.style.overflowAnchor='none';
+  for(const message of older){
+   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+   if(state.messageIds.has(message.id))continue;
+   const rendered=await renderMessage(message,conversationId,requestId);
+   if(!rendered&&!state.messageIds.has(message.id))throw new Error('Older message rendering did not complete');
+  }
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadMessagePins(conversationId,requestId);
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  state.isLoadingMessages=true;area.style.overflowAnchor='none';area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
-  for(const message of state.messages){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;await renderMessage(message,conversationId,requestId)}
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  const addedNodes=Array.from(area.childNodes).slice(initialChildCount);
+  const fragment=document.createDocumentFragment();addedNodes.forEach(node=>fragment.append(node));
+  if(fragment.childNodes.length)area.insertBefore(fragment,originalFirstChild);
+  loader.remove();
   const restoredAnchor=anchorId?Array.from(area.querySelectorAll('.message')).find(node=>node.dataset.messageId===anchorId):null;
   if(restoredAnchor)area.scrollTop=oldTop+(restoredAnchor.getBoundingClientRect().top-anchorTop);
-  else area.scrollTop=oldTop+(area.scrollHeight-oldHeight);
-  state.isLoadingMessages=false;area.style.overflowAnchor='';return true;
+  else area.scrollTop=oldTop;
+  state.isLoadingMessages=false;area.style.overflowAnchor='';
+  return true;
  }catch(error){
   console.error('Older message loading failed:',error);
-  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){toast('تعذر تحميل الرسائل الأقدم');state.isLoadingMessages=false;area.style.overflowAnchor=''}
+  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
+   toast('تعذر تحميل الرسائل الأقدم');state.isLoadingMessages=false;area.style.overflowAnchor='';
+  }
   return false;
- }finally{state.loadingOlderMessages=false;area.querySelector('.messages-history-loader')?.remove()}
+ }finally{
+  state.loadingOlderMessages=false;loader.remove();
+ }
 }
 function messagePollingDelay(){
  if(document.visibilityState!=='visible')return 60000;
@@ -1553,6 +1605,7 @@ function scheduleMessagePolling(conversationId,generation,delay=messagePollingDe
 function requestImmediateMessageReconciliation(reason='lifecycle'){
  const conversationId=state.active?.id,generation=state.messagePollGeneration;
  if(!conversationId||!state.user)return false;
+ if(state.isLoadingMessages)return true;
  if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}
  diagLog('sync-reconcile-requested',{reason});
  scheduleMessagePolling(conversationId,generation,0);
@@ -1724,7 +1777,7 @@ function subscribeConversation(){
    if(state.active?.id===id&&(s==='SUBSCRIBED'||s==='CHANNEL_ERROR'||s==='TIMED_OUT')){
     requestImmediateMessageReconciliation(s==='SUBSCRIBED'?'realtime-subscribed':'realtime-unavailable');
    }else if(state.messagePollTimer)scheduleMessagePolling(id,state.messagePollGeneration);
-   if(reconnected&&state.active?.id===id)loadMessages().catch(error=>console.warn('Reconnect message reconciliation failed:',error));
+   // The immediate reconciliation above is sufficient; avoid a competing full timeline reload.
    $('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';
   });
  state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=payload?.is_typing?(payload?.name||'عضو')+' يكتب الآن…':'';clearTimeout(state.typingTimer);if(payload?.is_typing)state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
