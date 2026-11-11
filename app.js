@@ -5,11 +5,11 @@ const __localSupabaseTestConfig=window.__BIZMIND_LOCAL_SUPABASE_TEST_CONFIG__||n
 let SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
 let SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
 if(__localSupabaseTestConfig){
- const host=location.hostname.replace(/^\\[|\\]$/g,'').toLowerCase();
+ const host=location.hostname.replace(/^\[|\]$/g,'').toLowerCase();
  if(location.protocol!=='http:'||!['127.0.0.1','localhost','::1'].includes(host))throw new Error('Local Supabase test configuration is allowed only on a loopback-hosted app.');
  let endpoint;
  try{endpoint=new URL(__localSupabaseTestConfig.url)}catch(_e){throw new Error('Invalid local Supabase test endpoint.')}
- const endpointHost=endpoint.hostname.replace(/^\\[|\\]$/g,'').toLowerCase();
+ const endpointHost=endpoint.hostname.replace(/^\[|\]$/g,'').toLowerCase();
  if(endpoint.protocol!=='http:'||!['127.0.0.1','localhost','::1'].includes(endpointHost)||endpoint.port!=='54321'||endpoint.pathname!=='/'||endpoint.username||endpoint.password||endpoint.search||endpoint.hash)throw new Error('Refusing non-local Supabase test endpoint.');
  if(typeof __localSupabaseTestConfig.anonKey!=='string'||__localSupabaseTestConfig.anonKey.length<20)throw new Error('Invalid local Supabase test anon key.');
  SUPABASE_URL=endpoint.origin;
