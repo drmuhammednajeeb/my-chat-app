@@ -524,8 +524,22 @@ async function enterApp(user){
 async function enterAppInternal(user,lifecycleVersion){
  if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
  const membershipStarted=performance.now();
- const {data:membershipState,error:membershipStateError}=await supabaseClient.rpc('get_my_membership_state');
+ let membershipResult;
+ try{
+  membershipResult=await withAuthTimeout(
+   supabaseClient.rpc('get_my_membership_state'),
+   'استغرق التحقق من حالة العضوية أكثر من 15 ثانية. تحقق من الاتصال ثم حاول مجدداً.',
+   15000
+  );
+ }catch(error){
+  recordPerf('startup_membership_check',performance.now()-membershipStarted,{success:false,timeout:true});
+  console.error('Membership state check timed out or failed:',error);
+  authError(error.message||'تعذر التحقق من حالة العضوية. تحقق من الاتصال وحاول مجدداً.');
+  return false;
+ }
+ const {data:membershipState,error:membershipStateError}=membershipResult;
  recordPerf('startup_membership_check',performance.now()-membershipStarted,{success:!membershipStateError});
+ if(lifecycleVersion!==authLifecycleVersion)return false;
  if(membershipStateError){console.error('Membership state check failed:',membershipStateError);authError('تعذر التحقق من حالة العضوية. تحقق من الاتصال وحاول مجدداً.');return false;}
  if(membershipState?.membership_status!=='active'||membershipState?.membership_number_verified!==true||!/^971[0-9]{9}$/.test(membershipState?.membership_number||'')){await supabaseClient.auth.signOut({scope:'local'});authError('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');return false;}
  state.user=user;state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.activeListId=null;state.starredMessageIds.clear();state.groupSettings=null;state.selectedMessageIds.clear();state.selectionMode=false;subscribePersonalChatData();
@@ -1458,11 +1472,15 @@ async function loadMessages(){
   state.messages=messages;
   const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];const nextReplyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;if(!replyError)(parents||[]).forEach(x=>nextReplyMessages.set(x.id,x))}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;state.replyMessages=nextReplyMessages;
-  await loadMessageReactions(conversationId,messages,requestId);
+  // Auxiliary metadata must never discard the authoritative chat_messages result.
+  try{await loadMessageReactions(conversationId,messages,requestId)}
+  catch(error){console.warn('Optional message reactions failed:',error?.message||error)}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadMessagePins(conversationId,requestId);
+  try{await loadMessagePins(conversationId,requestId)}
+  catch(error){console.warn('Optional pinned-message metadata failed:',error?.message||error)}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadPrivateReplyContexts(conversationId,messages,requestId);
+  try{await loadPrivateReplyContexts(conversationId,messages,requestId)}
+  catch(error){console.warn('Optional private-reply metadata failed:',error?.message||error)}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   // Reconcile again after auxiliary queries: Realtime INSERTs may arrive while those queries are in flight.
   const latest=new Map(messages.map(m=>[m.id,m]));
@@ -1470,9 +1488,9 @@ async function loadMessages(){
   messages=Array.from(latest.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   state.messages=messages;
   area.replaceChildren();state.messageIds.clear();
+  let allMessagesRendered=true;
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{
-   let allMessagesRendered=true;
    const messageRenderBatchStarted=performance.now();for(const message of messages){
     if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
     const rendered=await renderMessage(message,conversationId,requestId);if(!rendered&&!state.messageIds.has(message.id))allMessagesRendered=false;
@@ -2247,8 +2265,19 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRES
  },8000);
  try{
   const sessionStarted=performance.now();
-  const {data,error}=await supabaseClient.auth.getSession();
-  recordPerf('startup_get_session',performance.now()-sessionStarted,{success:!error});
+  let sessionResult;
+  try{
+   sessionResult=await withAuthTimeout(
+    supabaseClient.auth.getSession(),
+    'استغرق التحقق من جلسة الدخول أكثر من 12 ثانية. تحقق من الاتصال ثم أعد تحميل التطبيق.',
+    12000
+   );
+  }catch(error){
+   recordPerf('startup_get_session',performance.now()-sessionStarted,{success:false,timeout:true});
+   throw error;
+  }
+  const {data,error}=sessionResult;
+  recordPerf('startup_get_session',performance.now()-sessionStarted,{success:!error,timeout:false});
   if(window.__BIZMIND_BOOT_TIMINGS__){window.__BIZMIND_BOOT_TIMINGS__.getSessionMs=Math.round(performance.now()-sessionStarted);window.__BIZMIND_BOOT_TIMINGS__.authResolved=performance.now()}
   if(error)throw error;
   const session=data?.session;
@@ -2263,7 +2292,7 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRES
   console.error('Initial auth session check failed:',error);
   $('app').classList.add('hidden');
   $('auth').classList.remove('hidden');
-  authError('تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد تحميل التطبيق.');
+  authError(error.message||'تعذر التحقق من جلسة الدخول. تحقق من الاتصال ثم أعد تحميل التطبيق.');
  }finally{
   window.clearTimeout(bootDelayNotice);
   document.documentElement.classList.remove('auth-booting');

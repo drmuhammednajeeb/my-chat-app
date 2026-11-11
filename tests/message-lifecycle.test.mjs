@@ -469,3 +469,22 @@ test('document storage filename sanitizer removes path separators and unsafe cha
   assert.equal(sanitize('folder\\\\name.pdf').includes('/'), false);
   assert.equal(sanitize('folder\\\\name.pdf').includes('\\\\'), false);
 });
+
+
+test('loadMessages keeps the render-completion flag in the shared function scope', () => {
+  const load = extractFunction('loadMessages');
+  const declaration = load.indexOf('let allMessagesRendered=true;');
+  const emptyBranch = load.indexOf('if(!messages.length)');
+  assert.ok(declaration >= 0, 'Expected one render-completion flag declaration');
+  assert.ok(emptyBranch > declaration, 'The flag must be declared before the empty/non-empty rendering branch');
+  assert.equal((load.match(/let allMessagesRendered=true;/g) || []).length, 1);
+  assert.match(load, /if\(allMessagesRendered&&requestId===state\.messageLoadVersion&&state\.active\?\.id===conversationId\)/);
+});
+
+test('optional message metadata failures cannot abort the authoritative message timeline', () => {
+  const load = extractFunction('loadMessages');
+  assert.match(load, /try\{await loadMessageReactions\([\s\S]*?\)\}[\s\S]*?catch\(error\)/);
+  assert.match(load, /try\{await loadMessagePins\([\s\S]*?\)\}[\s\S]*?catch\(error\)/);
+  assert.match(load, /try\{await loadPrivateReplyContexts\([\s\S]*?\)\}[\s\S]*?catch\(error\)/);
+  assert.match(load, /const \{data,error\}=await messageQuery[\s\S]*?if\(error\)throw error/);
+});
