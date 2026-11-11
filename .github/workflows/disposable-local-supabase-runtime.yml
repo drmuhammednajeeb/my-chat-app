@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: disposable-local-supabase-runtime-${{ github.ref }}-${{ github.sha }}
+  group: disposable-local-supabase-runtime-repository-wide
   cancel-in-progress: false
 
 jobs:
@@ -56,7 +56,7 @@ jobs:
 
       - name: Create an isolated temporary Supabase project
         env:
-          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
+          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime-${{ github.run_id }}
         run: |
           mkdir -p "$RUNTIME_PROJECT_DIR"
           cd "$RUNTIME_PROJECT_DIR"
@@ -77,7 +77,7 @@ jobs:
 
       - name: Start disposable Supabase and execute the reviewed replay
         env:
-          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
+          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime-${{ github.run_id }}
           ALLOW_DISPOSABLE_LOCAL_REPLAY: "1"
         run: |
           cd "$RUNTIME_PROJECT_DIR"
@@ -107,7 +107,7 @@ jobs:
       - name: Stop and destroy the disposable Supabase stack
         if: always()
         env:
-          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
+          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime-${{ github.run_id }}
         run: |
           if [ -d "$RUNTIME_PROJECT_DIR" ]; then
             cd "$RUNTIME_PROJECT_DIR"
