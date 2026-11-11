@@ -996,7 +996,7 @@ async function openConversation(c){
  if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
  state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
- applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
+ applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
  state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.newMessageCount=0;updateNewMessagesIndicator();
  $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
  state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.privateReplyContexts=new Map();
@@ -1558,7 +1558,6 @@ async function loadOlderMessages(){
   if(replyResult?.error)console.warn('Older reply metadata unavailable:',replyResult.error.message);
   else (replyResult?.data||[]).forEach(parent=>state.replyMessages.set(parent.id,parent));
   const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
-  const previousMessages=state.messages;
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   state.isLoadingMessages=true;state.batchRenderingMessages=true;state.batchRenderingConversationId=conversationId;area.style.overflowAnchor='none';
   const beforeRenderNodes=new Set(Array.from(area.childNodes)),olderIds=new Set(older.map(message=>message.id));
@@ -1625,7 +1624,8 @@ window.addEventListener('focus',()=>requestImmediateMessageReconciliation('focus
 function stopMessagePolling(){
  state.messagePollGeneration++;
  if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}
- state.messagePollBusy=false;
+ state.messagePollBusy=false;state.isLoadingMessages=false;state.loadingOlderMessages=false;
+ state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
  // Stopping the timer must not reset the loaded timeline or its history cursor.
  diagLog('poll-stopped',{generation:state.messagePollGeneration});
 }
