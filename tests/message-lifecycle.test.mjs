@@ -420,6 +420,42 @@ test('chat attachment upload enforces non-empty bounded files and sends normaliz
   assert.match(upload, /contentType:type/);
 });
 
+test('recorded audio/webm is accepted by the upload MIME allowlist', async () => {
+  const allowed = vm.runInNewContext('CHAT_ATTACHMENT_ALLOWED_MIME_TYPES', {
+    CHAT_ATTACHMENT_MIME_BY_EXTENSION: {
+      jpg: 'image/jpeg', webm: 'video/webm', m4a: 'audio/mp4',
+      mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav', aac: 'audio/aac'
+    }
+  });
+  assert.equal(allowed.has('audio/webm'), true);
+
+  const uploaded = [];
+  const uploadAttachment = vm.runInNewContext('(' + extractFunction('uploadAttachment') + ')', {
+    state: { active: { id: 'conversation-1' }, user: { id: 'user-1' } },
+    CHAT_ATTACHMENT_ALLOWED_MIME_TYPES: allowed,
+    resolveChatAttachmentMime: file => String(file.type || '').split(';')[0].toLowerCase(),
+    crypto: { randomUUID: () => 'voice-test-id' },
+    supabaseClient: {
+      storage: {
+        from(bucket) {
+          assert.equal(bucket, 'chat-media');
+          return { async upload(path, file, options) {
+            uploaded.push({ path, type: options.contentType, size: file.size });
+            return { error: null };
+          } };
+        }
+      }
+    }
+  });
+  const result = await uploadAttachment({
+    name: 'voice-test.webm', type: 'audio/webm;codecs=opus', size: 2048
+  }, 'conversation-1', 'user-1');
+  assert.equal(result.type, 'audio/webm');
+  assert.equal(uploaded.length, 1);
+  assert.equal(uploaded[0].type, 'audio/webm');
+  assert.match(uploaded[0].path, /^conversation-1\\/user-1\\/voice-test-id_voice-test\\.webm$/);
+});
+
 test('document storage filename sanitizer removes path separators and unsafe characters', () => {
   const sanitize = vm.runInNewContext('(' + extractFunction('sanitizeStorageFileName') + ')');
   assert.equal(sanitize('../Report Q4.pdf'), '_Report_Q4.pdf');
