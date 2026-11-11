@@ -234,6 +234,16 @@ try {
 } catch (error) {
   console.error('LOCAL_CHAT_E2E_BROWSER=FAILED');
   console.error(error?.stack || error);
+  if (pageErrors.length) console.error('LOCAL_CHAT_E2E_PAGE_ERRORS=' + JSON.stringify(pageErrors));
+  if (pageConsole.length) console.error('LOCAL_CHAT_E2E_PAGE_CONSOLE=' + JSON.stringify(pageConsole.slice(-80)));
+  const diagnostics = await Promise.all([pageA, pageB].filter(Boolean).map(async (page, index) => page.evaluate(() => ({
+    realtimeStatus: state.realtimeStatus,
+    activeConversation: state.active?.id || null,
+    events: (state.diagnostics?.events || []).slice(-20),
+    channelState: state.channel?.state || null,
+    bindingKeys: state.channel?.bindings ? Object.keys(state.channel.bindings) : []
+  })).catch(error => ({ page: index, diagnosticError: error.message }))));
+  if (diagnostics.length) console.error('LOCAL_CHAT_E2E_REALTIME_DIAGNOSTICS=' + JSON.stringify(diagnostics));
   process.exitCode = 1;
 } finally {
   await Promise.allSettled([clientA.auth.signOut(), clientB.auth.signOut()]);
