@@ -83,6 +83,21 @@ async function provisionSyntheticDirectChatAuthUsers() {
     syntheticAuthIds[user.key] = data.id;
     console.log('LOCAL_AUTH_FIXTURE_PROVISIONED=' + user.email);
   }
+
+  const fixtureFile = process.env.LOCAL_SYNTHETIC_AUTH_USERS_FILE;
+  const runnerTemp = process.env.RUNNER_TEMP;
+  if (!fixtureFile || !runnerTemp) fail('a runner-temporary synthetic Auth fixture output file is required');
+  const resolvedTemp = path.resolve(runnerTemp);
+  const resolvedFixture = path.resolve(fixtureFile);
+  if (!resolvedFixture.startsWith(resolvedTemp + path.sep)) {
+    fail('synthetic Auth fixture output must remain inside RUNNER_TEMP');
+  }
+  fs.writeFileSync(resolvedFixture, JSON.stringify(syntheticAuthIds), {
+    encoding: 'utf8',
+    flag: 'wx',
+    mode: 0o600
+  });
+  console.log('LOCAL_AUTH_FIXTURE_IDS_EXPORTED=6');
 }
 
 function run(command, args, env, label) {
