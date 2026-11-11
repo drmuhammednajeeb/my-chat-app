@@ -1500,7 +1500,7 @@ function handleMessageDeleteRealtime(payload,conversationId){
 function subscribeConversation(){
  if(state.channel)supabaseClient.removeChannel(state.channel);
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
- const id=state.active.id;diagLog('realtime-subscribe',{conversationId:id});
+ const id=state.active.id;state.realtimeStatus='CONNECTING';$('connectionState').textContent='إعادة الاتصال…';diagLog('realtime-subscribe',{conversationId:id});
  let channelHasSubscribed=false;
  state.channel=supabaseClient.channel('chat:'+id)
   // Supabase CDC UUID filters can silently omit rows for this application channel; subscribe to RLS-visible INSERTs and enforce conversation isolation before touching state or diagnostics.
