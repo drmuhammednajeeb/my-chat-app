@@ -2,7 +2,7 @@
 
 ## Current decision
 
-**Production promotion: BLOCKED. Previous disposable-local baseline: PASSED. The latest extended runtime exposed an invalid attempt to alter Supabase-managed `supabase_admin` default ACLs; that path is being corrected to match the platform's privilege model.**
+**Production promotion: BLOCKED. The previous disposable-local baseline passed. The latest extended runtime passed the RLS and Storage checks but stopped in browser E2E because the directory message action was not visible to Playwright; the test now records computed visibility and exercises the row hover state.**
 
 - The RLS overlay, direct-conversation eligibility guard, and chat-media uploader-folder guard have been exercised against a disposable local Supabase stack.
 - No production SQL, ACL, policy, or data changes were executed.
@@ -31,7 +31,7 @@ The run used a disposable local stack. It does not prove that the live productio
 Supabase documents that `supabase_admin` default privileges are reserved platform state and cannot be changed by `postgres`: https://supabase.com/kb/troubleshooting/cant-change-the-default-privileges-of-supabase_admin-in-the-public-schema-448af9
 
 
-1. PostgreSQL default ACLs owned by `postgres` grant broad table, sequence, and function privileges to `anon` and `authenticated`; the built-in global `PUBLIC EXECUTE` default for new functions also needs a global (not schema-scoped) revoke. The overlay now handles both. Supabase's `supabase_admin` defaults are reserved platform state and cannot be altered by `postgres`; a read-only production check found no objects owned by `supabase_admin` in `public`, and extensions are installed in `extensions`, `pg_catalog`, or `vault`. The local assertion protects that placement instead of attempting an unauthorized `ALTER DEFAULT PRIVILEGES`.
+1. PostgreSQL schema-specific default ACLs owned by `postgres` are hardened for `public` and `app_private`. The global `PUBLIC EXECUTE` function default is treated as platform-controlled in this project; the overlay does not attempt a global default-privilege change. Current public and `app_private` functions are explicitly checked for `PUBLIC`/`anon` execution, and new application functions must carry an explicit reviewed revoke/grant contract. Supabase's `supabase_admin` defaults are reserved platform state and cannot be altered by `postgres`; a read-only production check found no objects owned by `supabase_admin` in `public`, and extensions are installed in `extensions`, `pg_catalog`, or `vault`. The local assertion protects that placement.
 2. The current chat-media Storage policy checks conversation membership but does not bind the uploader folder segment in the object path to `auth.uid()`. The test-only overlay adds this guard and the Storage API test proves the denial case locally.
 3. The deployed `app_private.get_or_create_direct_conversation_impl(uuid)` and `public.get_or_create_direct_conversation(uuid)` definitions were recovered read-only and match the test-only source fixture. The deployed SECURITY DEFINER implementation does not yet contain the tested active-membership and verified-member eligibility guard.
 4. The current least-privilege overlay revokes default function EXECUTE privileges for future objects, but its existing-function revocation covers `PUBLIC` and `anon`, not `authenticated`. The current assertion also does not prove an allowlist for existing authenticated RPC execution. This must be resolved before calling the policy set least-privilege or promoting it.

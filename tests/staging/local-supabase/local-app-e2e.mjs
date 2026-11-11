@@ -149,7 +149,26 @@ try {
   await pageA.locator('#browseUsersBtn').click();
   const targetRow = pageA.locator('#directoryList .directory-user').filter({ hasText: 'Direct Test B' }).first();
   await targetRow.waitFor({ state: 'visible', timeout: 30000 });
-  await targetRow.locator('.directory-message-btn').click();
+  await targetRow.scrollIntoViewIfNeeded();
+  await targetRow.hover();
+  const messageAction = targetRow.locator('.directory-message-btn');
+  try {
+    await messageAction.waitFor({ state: 'visible', timeout: 10000 });
+  } catch {
+    const visibility = await messageAction.evaluate(el => {
+      const style = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      const ancestors = [];
+      for (let node = el; node && ancestors.length < 6; node = node.parentElement) {
+        const css = getComputedStyle(node);
+        const box = node.getBoundingClientRect();
+        ancestors.push({tag: node.tagName, id: node.id, className: node.className, display: css.display, visibility: css.visibility, opacity: css.opacity, width: box.width, height: box.height});
+      }
+      return {outerHTML: el.outerHTML, display: style.display, visibility: style.visibility, opacity: style.opacity, pointerEvents: style.pointerEvents, width: rect.width, height: rect.height, x: rect.x, y: rect.y, ancestors};
+    }).catch(error => ({diagnosticError: error.message}));
+    throw new Error('Directory message action remained hidden after row hover: ' + JSON.stringify(visibility));
+  }
+  await messageAction.click();
 
   await pageA.waitForFunction(() =>
     (document.querySelector('#chatTitle')?.textContent || '').includes('Direct Test B')
