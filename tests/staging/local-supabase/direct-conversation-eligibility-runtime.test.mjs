@@ -159,7 +159,7 @@ test('multi-session concurrency and message stress runner is restricted to dispo
   const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-concurrency');
   assert.ok(node);
   assert.equal(node.status, 'TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_PASSED');
-  assert.ok(node.blockedBy.includes('DAG-014'));
   assert.ok(node.blockedBy.includes('DAG-015'));
+  assert.equal(node.blockedBy.includes('DAG-014'), false);
   assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.direct-chat-runtime' && to === node.id));
 });
