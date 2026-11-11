@@ -230,7 +230,9 @@ try {
     await accountA.page.locator('#messages .message').filter({ hasText: message }).waitFor({ state: 'visible', timeout: 20000 });
 
     console.log('BROWSER_E2E_STEP=verify account B receives the message in its browser session');
-    await accountB.page.locator('#messages .message').filter({ hasText: message }).waitFor({ state: 'visible', timeout: 45000 });
+    const receivedMessage = accountB.page.locator('#messages .message').filter({ hasText: message });
+    await receivedMessage.waitFor({ state: 'visible', timeout: 45000 });
+    assert.equal(await receivedMessage.count(), 1, 'Account B must render the incoming message exactly once.');
     const realtime = await accountB.page.evaluate(() => ({
       status: eval('state.realtimeStatus'),
       lastEvent: eval('state.diagnostics.lastRealtimeEvent'),
@@ -284,7 +286,9 @@ try {
     await accountB.page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
     await accountB.page.locator('#app:not(.hidden)').waitFor({ state: 'visible', timeout: 45000 });
     await openDirectChat(accountB.page, 'Direct Test A');
-    await accountB.page.locator('#messages .message').filter({ hasText: message }).waitFor({ state: 'visible', timeout: 20000 });
+    const reloadedMessage = accountB.page.locator('#messages .message').filter({ hasText: message });
+    await reloadedMessage.waitFor({ state: 'visible', timeout: 20000 });
+    assert.equal(await reloadedMessage.count(), 1, 'Reloaded history must contain the persisted message exactly once.');
 
     assert.deepEqual(productionRequests, [], 'The browser attempted to contact the production Supabase project.');
     assert.deepEqual(pageErrors, [], 'The browser raised an uncaught JavaScript exception.');
