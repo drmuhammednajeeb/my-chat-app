@@ -1,0 +1,29 @@
+name: Forever membership number format
+
+on:
+  push:
+    branches:
+      - "engineering/stability-css-extraction-20261109"
+      - "fix/legacy-forever-membership-format-20261111"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  membership-number-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify official membership number normalization
+        run: node --test tests/membership-number-format.test.mjs
+      - name: Syntax-check membership administration module
+        run: node --check membership.js
