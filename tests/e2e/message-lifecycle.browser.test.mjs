@@ -321,7 +321,7 @@ test('voice recording finalizes the last MediaRecorder chunk before dispatching 
     ].map(id => [id, document.getElementById(id)]));
     window.__voiceSent = [];
     window.__voiceRecorderEvents = [];
-    window.isSecureContext = true;
+    Object.defineProperty(window, 'isSecureContext', { configurable: true, value: true });
     Object.defineProperty(navigator, 'mediaDevices', {
       configurable: true,
       value: { getUserMedia: async () => ({ getTracks: () => [{ stop() {} }] }) }
