@@ -341,7 +341,7 @@ test('voice recording finalizes the last MediaRecorder chunk before dispatching 
         this.onstop?.();
       }
     }
-    window.MediaRecorder = FakeMediaRecorder;
+    Object.defineProperty(window, 'MediaRecorder', { configurable: true, writable: true, value: FakeMediaRecorder });
     window.MediaRecorder.isTypeSupported = FakeMediaRecorder.isTypeSupported;
     window.MediaRecorderClass = FakeMediaRecorder;
     const $ = id => nodes[id];
@@ -387,7 +387,7 @@ test('voice recording finalizes the last MediaRecorder chunk before dispatching 
     preview: window.__voicePreview,
     toast: window.__voiceToast
   }));
-  assert.deepEqual(result.events, ['start','requestData','stop']);
+  assert.deepEqual(result.events, ['start','requestData','stop'], 'Voice harness did not reach recorder start/stop: ' + JSON.stringify(result));
   assert.equal(result.sent.length, 1);
   assert.equal(result.sent[0].recorderCleared, true);
   assert.equal(result.sent[0].type, 'audio/webm');
