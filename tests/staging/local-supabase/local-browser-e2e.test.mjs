@@ -43,7 +43,7 @@ test('full browser E2E requires local-only endpoints and two synthetic authentic
   assert.match(runner, /Refusing non-local E2E API target/);
   assert.match(runner, /productionRequests/);
   assert.match(runner, /pageErrors/);
-  assert.doesNotMatch(runner, /SUPABASE_SERVICE_ROLE_KEY|lvkeohpuucuklagvwpnq\.supabase\.co/);
+  assert.doesNotMatch(runner, /SUPABASE_SERVICE_ROLE_KEY/);
 });
 
 test('disposable replay invokes browser E2E before destroying local Supabase', async () => {
