@@ -31,12 +31,13 @@ jobs:
         with:
           node-version: 22
 
-      - name: Run direct-conversation static regression tests
+      - name: Run direct-conversation and E2E harness contract tests
         run: |
           node --test \
             tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
-            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \\\n            tests/staging/local-supabase/local-chat-e2e.browser.guard.test.mjs
+            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \
+            tests/staging/local-supabase/local-chat-e2e.browser.guard.test.mjs
 
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@v1
