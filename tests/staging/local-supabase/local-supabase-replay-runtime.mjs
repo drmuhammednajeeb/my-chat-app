@@ -32,7 +32,8 @@ async function provisionSyntheticDirectChatAuthUsers() {
     fail('refusing non-local Auth provisioning target; expected http://loopback:54321');
   }
 
-  syntheticAuthPassword = 'RlsRuntime-' + randomBytes(24).toString('hex') + '!aA9';
+  syntheticAuthPassword = process.env.LOCAL_SYNTHETIC_AUTH_PASSWORD || ('RlsRuntime-' + randomBytes(24).toString('hex') + '!aA9');
+  if (syntheticAuthPassword.length < 32) fail('LOCAL_SYNTHETIC_AUTH_PASSWORD must contain at least 32 characters');
   syntheticAuthIds = {};
   const users = [
     { key: 'direct_a', email: 'direct-a@bizmindmakers.test', number: '971001000002', verified: true, confirmed: true, username: 'direct_a', displayName: 'Direct Test A' },
