@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "engineering/stability-css-extraction-20261109"
+      - "rebuild/clean-core-20261111"
   pull_request:
     branches:
       - "engineering/stability-css-extraction-20261109"
@@ -40,6 +41,11 @@ jobs:
         uses: supabase/setup-cli@v1
         with:
           version: 3.0.0
+
+      - name: Install pinned browser E2E dependencies
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1 @supabase/supabase-js@2.49.1
+          npx playwright install --with-deps chromium
 
       - name: Install PostgreSQL client
         run: |
@@ -91,8 +97,10 @@ jobs:
           export LOCAL_SUPABASE_DB_URL="$DB_URL"
           export LOCAL_SUPABASE_ANON_KEY="$ANON_KEY"
           export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          export LOCAL_SYNTHETIC_AUTH_PASSWORD="$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex') + '!aA9')")"
           cd "$GITHUB_WORKSPACE"
           node tests/staging/local-supabase/local-supabase-replay-runtime.mjs
+          node tests/staging/local-supabase/local-chat-e2e.browser.mjs
 
       - name: Stop and destroy the disposable Supabase stack
         if: always()
