@@ -779,7 +779,7 @@ async function ensureSelfConversation(){
 }
 function otherMember(conv){return (conv.members||[]).find(m=>m.user_id!==state.user.id)?.profile}
 function convName(c){if(isSelfConversation(c))return (state.profile?.display_name||state.profile?.username||'أنا')+' (أنا)';if(c.type==='group')return c.title||'مجموعة جديدة';if(c.type==='channel')return c.title||'قناة بدون اسم';const p=otherMember(c);return p?.display_name||p?.username||'محادثة خاصة'}
-function convPreview(c){const cleared=state.chatPrefs.get(c.id)?.cleared_before;if(c.type==='direct'&&cleared&&c.last_message?.created_at&&new Date(c.last_message.created_at)<=new Date(cleared))return 'تم مسح السجل من طرفك';return c.last_message?.content||'ابدأ المحادثة الآن'}
+function convPreview(c){const cleared=state.chatPrefs.get(c.id)?.cleared_before;if(c.type==='direct'&&cleared&&c.last_message?.created_at&&new Date(c.last_message.created_at)<=new Date(cleared))return 'تم مسح السجل من طرفك';return c.last_message?messagePreview(c.last_message):'ابدأ المحادثة الآن'}
 function renderConversations(section=state.sidebarView==='groups'?'groups':'direct'){
  const q=$('search').value.trim().toLowerCase(),list=$('conversationList');
  if(state.conversationsLoading&&!state.conversations.length){showListSkeleton(list,6);return}
@@ -1223,7 +1223,7 @@ async function searchActiveConversation(term){
   if(error)throw error;if(request!==state.chatSearchRequest||state.active?.id!==conversationId)return;
   panel.replaceChildren();
   if(!data?.length){const p=document.createElement('p');p.textContent='لا توجد رسائل مطابقة في هذه المحادثة.';panel.append(p);return}
-  data.forEach(message=>{const button=document.createElement('button');button.type='button';button.className='chat-search-result';const member=(state.active?.members||[]).find(m=>m.user_id===message.sender_id);const name=document.createElement('strong');name.textContent=member?.profile?.display_name||(message.sender_id===state.user?.id?'أنت':'عضو');const body=document.createElement('span');body.textContent=message.deleted_at?'تم حذف هذه الرسالة':message.content||'مرفق';const date=document.createElement('small');date.textContent=new Date(message.created_at).toLocaleString('ar-SA');button.append(name,body,date);button.onclick=()=>{$('chatSearchPanel').classList.add('hidden');jumpToMessage(message.id)};panel.append(button)});
+  data.forEach(message=>{const button=document.createElement('button');button.type='button';button.className='chat-search-result';const member=(state.active?.members||[]).find(m=>m.user_id===message.sender_id);const name=document.createElement('strong');name.textContent=member?.profile?.display_name||(message.sender_id===state.user?.id?'أنت':'عضو');const body=document.createElement('span');body.textContent=messagePreview(message);const date=document.createElement('small');date.textContent=new Date(message.created_at).toLocaleString('ar-SA');button.append(name,body,date);button.onclick=()=>{$('chatSearchPanel').classList.add('hidden');jumpToMessage(message.id)};panel.append(button)});
  }catch(error){console.error('Conversation search failed:',error);panel.replaceChildren();const p=document.createElement('p');p.textContent='تعذر البحث. حاول مرة أخرى.';panel.append(p)}
 }
 async function jumpToMessage(id){
@@ -2572,7 +2572,7 @@ function updateMessageSelectionToolbar(){const count=state.selectedMessageIds.si
 async function starSelectedMessages(){const ids=[...state.selectedMessageIds];let succeeded=0;for(const id of ids){if(await toggleMessageStar(id,true))succeeded++}toast('تم تمييز '+succeeded+' من '+ids.length+' رسالة');setMessageSelectionMode(false)}
 function exportSelectedMessages(){const ids=state.selectedMessageIds,items=state.messages.filter(m=>ids.has(m.id));downloadMessages(items,'messages-selected.txt');setMessageSelectionMode(false)}
 function downloadMessages(messages,filename){
- const content=(messages||[]).map(m=>{const member=(state.active?.members||[]).find(x=>x.user_id===m.sender_id);return '['+new Date(m.created_at).toLocaleString('ar-SA')+'] '+(member?.profile?.display_name||(m.sender_id===state.user.id?'أنت':'عضو'))+': '+(m.deleted_at?'[رسالة محذوفة]':m.content||'[مرفق]')}).join('\n');
+ const content=(messages||[]).map(m=>{const member=(state.active?.members||[]).find(x=>x.user_id===m.sender_id);return '['+new Date(m.created_at).toLocaleString('ar-SA')+'] '+(member?.profile?.display_name||(m.sender_id===state.user.id?'أنت':'عضو'))+': '+(m.deleted_at?'[رسالة محذوفة]':messagePreview(m))}).join('\n');
  const blob=new Blob(['\ufeff'+content],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 async function exportActiveConversation(){
