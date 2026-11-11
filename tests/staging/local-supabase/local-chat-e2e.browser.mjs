@@ -176,10 +176,12 @@ try {
   browser = await chromium.launch({ headless: true });
   const contextA = await browser.newContext({ serviceWorkers: 'block', locale: 'ar-SA' });
   const contextB = await browser.newContext({ serviceWorkers: 'block', locale: 'ar-SA' });
-  const pageA = await contextA.newPage();
-  const pageB = await contextB.newPage();
+  pageA = await contextA.newPage();
+  pageB = await contextB.newPage();
   pageA.on('pageerror', error => pageErrors.push('A: ' + error.message));
   pageB.on('pageerror', error => pageErrors.push('B: ' + error.message));
+  pageA.on('console', message => { if (message.type() === 'warning' || message.type() === 'error') pageConsole.push('A: ' + message.type() + ': ' + message.text()); });
+  pageB.on('console', message => { if (message.type() === 'warning' || message.type() === 'error') pageConsole.push('B: ' + message.type() + ': ' + message.text()); });
 
   logStep('login-two-independent-browser-contexts');
   await Promise.all([
