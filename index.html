@@ -509,6 +509,7 @@ async function ensureProfile(user){
  if(retry)return retry;
  throw createError||retryError||new Error('تعذر إنشاء الملف الشخصي');
 }
+function normalizeForeverMembershipNumber(value){const raw=String(value||'').trim();if(/^971-[0-9]{3}-[0-9]{3}-[0-9]{3}$/.test(raw))return raw.replace(/-/g,'');if(/^971[0-9]{9}$/.test(raw))return raw;return null;}
 let authLifecycleVersion=0,appEntryPromise=null,appEntryUserId=null;
 async function enterApp(user){
  if(!user?.id)return false;
@@ -523,7 +524,6 @@ async function enterApp(user){
 }
 async function enterAppInternal(user,lifecycleVersion){
  if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
- function normalizeForeverMembershipNumber(value){const raw=String(value||'').trim();if(/^971-[0-9]{3}-[0-9]{3}-[0-9]{3}$/.test(raw))return raw.replace(/-/g,'');if(/^971[0-9]{9}$/.test(raw))return raw;return null;}
  const membershipStarted=performance.now();
  const {data:membershipState,error:membershipStateError}=await supabaseClient.rpc('get_my_membership_state');
  recordPerf('startup_membership_check',performance.now()-membershipStarted,{success:!membershipStateError});
