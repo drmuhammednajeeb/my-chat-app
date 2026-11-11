@@ -31,10 +31,13 @@ jobs:
 
       - name: Run direct-conversation static regression tests
         run: |
+          node --check tests/staging/local-supabase/local-browser-e2e.mjs
+          node --check tests/staging/local-supabase/local-message-load.mjs
           node --test \
             tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
-            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs
+            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \
+            tests/staging/local-supabase/local-browser-e2e.test.mjs
 
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@v1
@@ -45,6 +48,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
+
+      - name: Install pinned Playwright browser test dependency
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+
+      - name: Install Chromium for full application E2E
+        run: npx playwright install --with-deps chromium
 
       - name: Create an isolated temporary Supabase project
         env:

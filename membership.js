@@ -44,6 +44,7 @@
 
   function renderGeneratedInvites(rows) {
     const target = byId("membershipInviteResults");
+    if (!target) return;
     target.replaceChildren();
     if (!rows.length) {
       setPanelMessage(target, "لم يتم إنشاء دعوات في هذه العملية.", false);
@@ -81,7 +82,8 @@
       row.append(info, codeWrap);
       target.append(row);
     });
-    byId("downloadMembershipInvitesBtn").disabled = false;
+    const downloadButton = byId("downloadMembershipInvitesBtn");
+    if (downloadButton) downloadButton.disabled = false;
   }
 
   function renderPendingInvites(rows) {
@@ -95,7 +97,7 @@
       const row = make("article", "membership-list-row");
       const info = make("div", "membership-list-info");
       info.append(make("strong", "", item.email));
-      info.append(make("small", "", formatForeverMembershipNumber(item.membership_number) + " · تنتهي  + dateLabel(item.expires_at)));
+      info.append(make("small", "", formatForeverMembershipNumber(item.membership_number) + " · تنتهي: " + dateLabel(item.expires_at)));
       const revoke = make("button", "membership-danger-btn", "إلغاء الدعوة");
       revoke.type = "button";
       revoke.addEventListener("click", async () => {
@@ -117,8 +119,10 @@
 
   function renderMembers(rows) {
     const target = byId("membershipMembersList");
+    if (!target) return;
     target.replaceChildren();
-    byId("membershipMemberCount").textContent = rows.length.toLocaleString("en-US") + " عضو";
+    const count = byId("membershipMemberCount");
+    if (count) count.textContent = rows.length.toLocaleString("en-US") + " عضو";
     if (!rows.length) {
       setPanelMessage(target, "لا توجد عضويات مسجلة.", false);
       return;
@@ -218,6 +222,7 @@
   async function createInvites() {
     const input = byId("memberInviteEmails");
     const button = byId("createMembershipInvitesBtn");
+    if (!input || !button) return;
     const lines = input.value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
     const members = [];
     for (const line of lines) {
@@ -291,22 +296,19 @@
     URL.revokeObjectURL(url);
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  function initializeMembershipAdmin() {
     byId("createMembershipInvitesBtn")?.addEventListener("click", createInvites);
     byId("downloadMembershipInvitesBtn")?.addEventListener("click", downloadInvites);
     byId("refreshMembershipAdminBtn")?.addEventListener("click", loadMembershipAdmin);
-    byId("teamTab")?.addEventListener("click", () => loadMembershipAdmin());
-    byId("teamRefreshBtn")?.addEventListener("click", () => loadMembershipAdmin());
-    if (state?.isTeamAdmin) loadMembershipAdmin();
-  });
+    byId("teamTab")?.addEventListener("click", loadMembershipAdmin);
+    byId("teamRefreshBtn")?.addEventListener("click", loadMembershipAdmin);
+    if (state?.isTeamAdmin) void loadMembershipAdmin();
+  }
 
-  // This script is loaded after the page markup and the app's main controller.
-  if (document.readyState !== "loading") {
-    byId("createMembershipInvitesBtn")?.addEventListener("click", createInvites);
-    byId("downloadMembershipInvitesBtn")?.addEventListener("click", downloadInvites);
-    byId("refreshMembershipAdminBtn")?.addEventListener("click", loadMembershipAdmin);
-    byId("teamTab")?.addEventListener("click", () => loadMembershipAdmin());
-    byId("teamRefreshBtn")?.addEventListener("click", () => loadMembershipAdmin());
-    if (state?.isTeamAdmin) loadMembershipAdmin();
+  // Initialize once whether this file is parsed before or after DOMContentLoaded.
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeMembershipAdmin, { once: true });
+  } else {
+    initializeMembershipAdmin();
   }
 })();

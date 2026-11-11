@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const app = await readFile(new URL('../app.js', import.meta.url), 'utf8');
+const workspace = await readFile(new URL('../workspace.js', import.meta.url), 'utf8');
+const membership = await readFile(new URL('../membership.js', import.meta.url), 'utf8');
+const serviceWorker = await readFile(new URL('../service-worker.js', import.meta.url), 'utf8');
+const source = html + '\n' + app + '\n' + workspace + '\n' + membership;
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
@@ -74,15 +79,15 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
 });
 
-test('all inline JavaScript blocks parse without a bundler', () => {
-  const blocks = [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-    .filter(match => !/\bsrc\s*=/.test(match[1]) && match[2].trim());
-  assert.ok(blocks.length > 0, 'Expected inline application scripts');
-  blocks.forEach((match, index) => {
-    new vm.Script(match[2], { filename: 'inline-script-' + index + '.js' });
-  });
+test('inline bootstrap and extracted JavaScript files parse without a bundler', () => {
+  const bootstrapStart = html.indexOf('<script>') + '<script>'.length;
+  const bootstrapEnd = html.indexOf('</script>', bootstrapStart);
+  assert.ok(bootstrapStart >= '<script>'.length && bootstrapEnd > bootstrapStart);
+  new vm.Script(html.slice(bootstrapStart, bootstrapEnd), { filename: 'inline-theme-bootstrap.js' });
+  for (const [name, code] of [['app.js', app], ['workspace.js', workspace], ['membership.js', membership], ['service-worker.js', serviceWorker]]) {
+    new vm.Script(code, { filename: name });
+  }
 });
-
 test('chronological comparator orders timestamps then stable IDs', () => {
   const compare = vm.runInNewContext('(' + extractFunction('compareMessagesChronologically') + ')');
   assert.ok(compare({ created_at: '2026-11-09T10:00:00Z', id: 'a' }, { created_at: '2026-11-09T10:00:00Z', id: 'b' }) < 0);
@@ -186,8 +191,11 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
   const subscribe = extractFunction('subscribeConversation');
   const update = extractFunction('handleMessageUpdateRealtime');
   assert.match(subscribe, /event:'DELETE',schema:'public',table:'chat_messages'/);
+  assert.match(subscribe, /event:'INSERT',schema:'public',table:'chat_messages'\},p=>\{if\(p\.new\?\.conversation_id!==id\|\|state\.active\?\.id!==id\)return/);
+  assert.match(subscribe, /event:'UPDATE',schema:'public',table:'chat_messages'\},p=>handleMessageUpdateRealtime\(p,id\)/);
   assert.match(subscribe, /handleMessageDeleteRealtime\(p,id\)/);
   assert.match(subscribe, /channelHasSubscribed&&s==='SUBSCRIBED'/);
+  assert.match(subscribe, /state\.realtimeStatus='CONNECTING';\$\('connectionState'\)\.textContent='إعادة الاتصال…'/);
   assert.match(subscribe, /reconnected&&state\.active\?\.id===id\)loadMessages\(\)/);
   assert.match(update, /renderMessage\(incoming,conversationId,state\.messageLoadVersion\)/);
   assert.doesNotMatch(update, /Deleted message refresh failed/);

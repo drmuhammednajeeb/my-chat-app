@@ -37,6 +37,7 @@ async function provisionSyntheticDirectChatAuthUsers() {
   const users = [
     { key: 'direct_a', email: 'direct-a@bizmindmakers.test', number: '971001000002', verified: true, confirmed: true, username: 'direct_a', displayName: 'Direct Test A' },
     { key: 'direct_b', email: 'direct-b@bizmindmakers.test', number: '971001000003', verified: true, confirmed: true, username: 'direct_b', displayName: 'Direct Test B' },
+    { key: 'direct_c', email: 'direct-c@bizmindmakers.test', number: '971001000008', verified: true, confirmed: true, username: 'direct_c', displayName: 'Direct Test C' },
     { key: 'direct_suspended', email: 'direct-suspended@bizmindmakers.test', number: '971001000004', verified: true, confirmed: true, username: 'direct_suspended', displayName: 'Direct Test Suspended' },
     { key: 'direct_unverified', email: 'direct-unverified@bizmindmakers.test', number: '971001000005', verified: false, confirmed: true, username: 'direct_unverified', displayName: 'Direct Test Unverified' },
     { key: 'direct_unconfirmed', email: 'direct-unconfirmed@bizmindmakers.test', number: '971001000006', verified: true, confirmed: false, username: 'direct_unconfirmed', displayName: 'Direct Test Unconfirmed' },
@@ -95,6 +96,22 @@ function run(command, args, env, label) {
   });
   if (result.error) fail(label + ' could not start: ' + result.error.message);
   if (result.status !== 0) fail(label + ' failed with exit code ' + result.status);
+}
+function runAllowFailure(command, args, env, label, timeout = 4 * 60 * 1000) {
+  console.log('LOCAL_RUNTIME_STEP=' + label);
+  const result = spawnSync(command, args, {
+    cwd: ROOT,
+    encoding: 'utf8',
+    env,
+    stdio: 'inherit',
+    timeout
+  });
+  if (result.error || result.status !== 0) {
+    console.error('LOCAL_RUNTIME_STEP_RESULT=FAILED:' + label + ':' + (result.error?.message || result.status));
+    return false;
+  }
+  console.log('LOCAL_RUNTIME_STEP_RESULT=PASSED:' + label);
+  return true;
 }
 
 if (process.env.ALLOW_DISPOSABLE_LOCAL_REPLAY !== '1') {
@@ -222,6 +239,25 @@ run(process.execPath, [
   LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? '',
   LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
 }, 'storage-api-rls-runtime');
+
+const browserE2ePassed = runAllowFailure(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/local-browser-e2e.mjs')
+], {
+  ...env,
+  LOCAL_SUPABASE_URL: process.env.LOCAL_SUPABASE_URL ?? '',
+  LOCAL_SUPABASE_ANON_KEY: process.env.LOCAL_SUPABASE_ANON_KEY ?? '',
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? '',
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
+}, 'browser-auth-chat-realtime-e2e');
+
+run(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/local-message-load.mjs')
+], {
+  ...env,
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
+}, 'message-write-pressure-load');
+
+if (!browserE2ePassed) fail('browser end-to-end verification did not pass; message pressure results above remain diagnostic only');
 
 const patchManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
 if (patchManifest.mode !== 'TEST_COPY_ONLY' || !Array.isArray(patchManifest.patches)) {

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../../app.js', import.meta.url), 'utf8');
 
 function extractFunction(name) {
   const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
