@@ -1472,11 +1472,15 @@ async function loadMessages(){
   state.messages=messages;
   const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];const nextReplyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;if(!replyError)(parents||[]).forEach(x=>nextReplyMessages.set(x.id,x))}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;state.replyMessages=nextReplyMessages;
-  await loadMessageReactions(conversationId,messages,requestId);
+  // Auxiliary metadata must never discard the authoritative chat_messages result.
+  try{await loadMessageReactions(conversationId,messages,requestId)}
+  catch(error){console.warn('Optional message reactions failed:',error?.message||error)}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadMessagePins(conversationId,requestId);
+  try{await loadMessagePins(conversationId,requestId)}
+  catch(error){console.warn('Optional pinned-message metadata failed:',error?.message||error)}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadPrivateReplyContexts(conversationId,messages,requestId);
+  try{await loadPrivateReplyContexts(conversationId,messages,requestId)}
+  catch(error){console.warn('Optional private-reply metadata failed:',error?.message||error)}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   // Reconcile again after auxiliary queries: Realtime INSERTs may arrive while those queries are in flight.
   const latest=new Map(messages.map(m=>[m.id,m]));
@@ -1484,9 +1488,9 @@ async function loadMessages(){
   messages=Array.from(latest.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   state.messages=messages;
   area.replaceChildren();state.messageIds.clear();
+  let allMessagesRendered=true;
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{
-   let allMessagesRendered=true;
    const messageRenderBatchStarted=performance.now();for(const message of messages){
     if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
     const rendered=await renderMessage(message,conversationId,requestId);if(!rendered&&!state.messageIds.has(message.id))allMessagesRendered=false;
