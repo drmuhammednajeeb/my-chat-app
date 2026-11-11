@@ -29,6 +29,7 @@
 })();
 </script>
 <link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./modules/profile-status-and-conversation-images.css">
 
 
 
@@ -817,6 +818,7 @@ function renderConversations(section=state.sidebarView==='groups'?'groups':'dire
   action.setAttribute('aria-label',archived?'استعادة المحادثة':'أرشفة المحادثة');
   const row=document.createElement('button');row.type='button';
   row.className='conversation swipe-conversation'+(state.active?.id===c.id?' active':'')+(archived?' archived-row':'');
+  row.dataset.conversationId=c.id;
   const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at))&&(!pref.cleared_before||new Date(c.last_message.created_at)>new Date(pref.cleared_before)));
   row.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));
   const person=c.type==='direct'?otherMember(c):null;
@@ -2758,4 +2760,5 @@ function renderPrivateReplyQuote(messageId,context){const row=Array.from(documen
 
 </script>
 <script src="./membership.js"></script>
+<script src="./modules/profile-status-and-conversation-images.js" defer></script>
 </body></html>
