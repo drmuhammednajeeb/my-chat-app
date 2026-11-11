@@ -86,3 +86,11 @@ test('browser E2E explicitly verifies empty and multi-message history rendering'
   assert.match(harness, /multiMessageHistory\.renderedPresent, \[true, true, true\]/);
   assert.match(harness, /multiMessageHistory\.renderedRows >= 3/);
 });
+
+
+test('browser E2E waits for the app Home startup barrier before opening conversations', () => {
+  assert.match(harness, /Do not race[\\s\\S]*openDirectConversation against the tail of that startup sequence/);
+  assert.match(harness, /state\.conversationsLoading === false/);
+  assert.match(harness, /state\.active === null/);
+  assert.match(harness, /welcome\.includes\('مرحباً بك في BizmindMakers Chat Pro'\)/);
+});
