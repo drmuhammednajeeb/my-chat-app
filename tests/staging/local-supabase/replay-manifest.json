@@ -700,7 +700,7 @@
     {
       "id": "DAG-014",
       "severity": "BLOCKER",
-      "issue": "Disposable-local PostgreSQL runtime validation PASSED: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exact ACL assertions, active-membership gating, 24 reversed-pair concurrent requests converging on one conversation, and 40 concurrent message inserts. Release remains blocked because the recovered RPC and guard are still test-only and are not yet restored as a reviewed canonical migration.",
+      "issue": "Disposable-local PostgreSQL runtime validation PASSED: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exact ACL assertions, active-membership gating, 24 reversed-pair concurrent requests converging on one conversation, and 40 concurrent message inserts. Release remains blocked because the recovered RPC and guard are still test-only and are not yet restored as a reviewed canonical migration. The real application browser E2E also passed sender send, recipient read, and reload persistence against disposable local Supabase.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
@@ -721,7 +721,7 @@
     {
       "id": "DAG-016",
       "severity": "BLOCKER",
-      "issue": "The test-only least-privilege overlay PASSED disposable-local catalog postconditions, CRUD/RPC compatibility, and Storage API RLS tests. Read-only production inspection still shows broad postgres-owned default ACLs for public tables/sequences/functions; a reviewed canonical ACL migration is required before release. No production privileges were changed."
+      "issue": "The test-only least-privilege overlay PASSED disposable-local catalog postconditions, CRUD/RPC compatibility, and Storage API RLS tests. Read-only production inspection still shows broad postgres-owned default ACLs for public tables/sequences/functions; a reviewed canonical ACL migration is required before release. No production privileges were changed. Additional review gap: the current overlay/assertion does not yet prove a least-privilege EXECUTE allowlist for existing public functions granted to authenticated."
     }
   ],
   "requiredSourceRecovery": [
