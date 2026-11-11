@@ -52,6 +52,7 @@ jobs:
           node --check tests/staging/local-supabase/local-storage-rls-runtime.mjs
           node --check tests/staging/local-supabase/local-supabase-replay-runtime.mjs
           node --check tests/staging/local-supabase/local-realtime-runtime.mjs
+          node --check tests/staging/local-supabase/local-chat-e2e.browser.mjs
       - name: Generate repository SQL object inventory
         run: |
           node tests/staging/local-supabase/build-database-object-inventory.mjs > "$RUNNER_TEMP/database-object-inventory.json"
