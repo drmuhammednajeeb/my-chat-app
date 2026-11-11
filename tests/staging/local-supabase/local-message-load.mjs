@@ -73,7 +73,7 @@ try {
       const sender = ordinal % 2 === 0 ? userA : userB;
       const content = marker + '-' + ordinal;
       const sql = "BEGIN;\nSET LOCAL ROLE authenticated;\n" +
-        "SELECT set_config('request.jwt.claim.sub', '" + sender + "', true);\n" +
+        "SELECT set_config('request.jwt.claim.sub', '" + sender + "', true) IS NOT NULL;\n" +
         "INSERT INTO public.chat_messages(conversation_id, sender_id, content) VALUES ('" +
         conversationId + "'::uuid, '" + sender + "'::uuid, '" + content + "') RETURNING id;\nCOMMIT;";
       return psql(sql).then(result => ({ ...result, content }));
