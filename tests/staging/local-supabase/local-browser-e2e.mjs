@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createReadStream } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +29,21 @@ if (api.protocol !== 'http:' || !['127.0.0.1', 'localhost', '::1'].includes(apiH
 }
 requireValue(anonKey, 'LOCAL_SUPABASE_ANON_KEY');
 requireValue(password, 'LOCAL_SYNTHETIC_AUTH_PASSWORD');
+const rawDb = requireValue(process.env.LOCAL_SUPABASE_DB_URL, 'LOCAL_SUPABASE_DB_URL');
+const db = new URL(rawDb);
+if (!['postgres:', 'postgresql:'].includes(db.protocol)
+  || !['127.0.0.1', 'localhost', '::1'].includes(db.hostname.replace(/^\\[|\\]$/g, '').toLowerCase())
+  || db.port !== '54322' || db.username !== 'postgres' || db.pathname !== '/postgres'
+  || db.search || db.hash) throw new Error('Refusing non-local realtime diagnostic database target.');
+const publicationCheck = spawnSync('psql', [
+  '--no-psqlrc', '--quiet', '--tuples-only', '--no-align', '--set=ON_ERROR_STOP=1',
+  '--command', "SELECT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname='supabase_realtime' AND schemaname='public' AND tablename='chat_messages')::text || '|' || (SELECT pubinsert::text FROM pg_publication WHERE pubname='supabase_realtime');",
+  rawDb
+], { encoding: 'utf8', env: { PATH: process.env.PATH || '', PGCONNECT_TIMEOUT: '5' } });
+if (publicationCheck.error || publicationCheck.status !== 0 || publicationCheck.stdout.trim() !== 'true|true') {
+  throw new Error('chat_messages is not enabled for INSERT publication in local Supabase: ' + (publicationCheck.stderr || publicationCheck.stdout || publicationCheck.error?.message || 'unknown error'));
+}
+console.log('REALTIME_PUBLICATION_CHAT_MESSAGES=true');
 for (const key of ['direct_a', 'direct_b']) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(users[key] || '')) {
     throw new Error('Missing synthetic E2E identity: ' + key);
