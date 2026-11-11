@@ -233,6 +233,13 @@ run(process.execPath, [
   LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
 }, 'browser-auth-chat-realtime-e2e');
 
+run(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/local-message-load.mjs')
+], {
+  ...env,
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
+}, 'message-write-pressure-load');
+
 const patchManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
 if (patchManifest.mode !== 'TEST_COPY_ONLY' || !Array.isArray(patchManifest.patches)) {
   fail('synthetic fixture patch manifest is invalid');
