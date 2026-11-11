@@ -1948,7 +1948,7 @@ async function startVoiceRecording(){
   };
   if(typeof recorder.start==='function')recorder.start()
   $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').title='التسجيل الصوتي جارٍ';$('voiceCancelBtn').classList.add('hidden');setVoiceComposerActive(true);$('sendBtn').disabled=false;$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';$('sendBtn').title='إرسال التسجيل الصوتي';$('sendBtn').setAttribute('aria-label','إرسال التسجيل الصوتي');updateVoiceRecordingUI();
-  state.voiceTimer=setInterval(()=>{const elapsed=Math.floor(currentVoiceElapsedMs()/1000);updateVoiceRecordingUI();if(elapsed>=180){state.voiceSendOnStop=false;stopVoiceRecording()}},250);
+  state.voiceTimer=setInterval(()=>{updateVoiceRecordingUI()},250);
  }catch(error){
   if(stream){stream.getTracks().forEach(track=>track.stop())}
   if(state.voiceStream===stream)cleanupVoiceCapture();
