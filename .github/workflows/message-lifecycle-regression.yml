@@ -24,6 +24,8 @@ jobs:
           node-version: 22
       - name: Run source-contract regression checks
         run: node --test tests/message-lifecycle.test.mjs
+      - name: Run profile status and conversation image regression checks
+        run: node --test tests/profile-status-and-conversation-images.test.mjs
       - name: Install isolated browser test dependency
         run: npm install --no-save --no-package-lock playwright
       - name: Install Chromium
