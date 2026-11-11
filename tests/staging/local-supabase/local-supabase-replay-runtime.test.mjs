@@ -58,6 +58,8 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
     'supabase start --exclude',
     'postgres-meta,inbucket',
     'SUPABASE_CONTAINER_EGRESS_ISOLATION=ENFORCED',
+    'playwright@1.65.0',
+    'local-app-e2e.mjs',
     'DOCKER-USER',
     'SUPABASE_EGRESS_GUARD',
     'iptables',
@@ -68,4 +70,17 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
     'supabase stop'
   ]) assert.ok(workflow.includes(token), 'missing isolated runtime workflow contract: ' + token);
   assert.doesNotMatch(workflow, /supabase link|--remote|--linked|SUPABASE_ACCESS_TOKEN/i);
+});
+
+test('browser E2E rewrites the app to a loopback-only synthetic Supabase target', async () => {
+  const script = await readFile(path.join(root, 'tests/staging/local-supabase/local-app-e2e.mjs'), 'utf8');
+  assert.match(script, /requireLoopbackApi/);
+  assert.match(script, /api\.port, '54321'/);
+  assert.match(script, /127\.0\.0\.1/);
+  assert.match(script, /direct-a@bizmindmakers\.test/);
+  assert.match(script, /direct-b@bizmindmakers\.test/);
+  assert.match(script, /cdn\.jsdelivr\.net/);
+  assert.match(script, /unpkg\.com/);
+  assert.match(script, /LOCAL_APP_E2E_RECIPIENT_READ=PASSED/);
+  assert.match(script, /LOCAL_APP_E2E_RELOAD_PERSISTENCE=PASSED/);
 });
