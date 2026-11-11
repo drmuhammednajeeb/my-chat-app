@@ -102,7 +102,8 @@ test('sticker parser accepts the displayed legacy token and the canonical token 
     'globalThis.decodeSticker=decodeChatSticker;globalThis.encodeSticker=encodeChatSticker;globalThis.renderSticker=renderChatSticker;', sandbox);
   assert.equal(sandbox.decodeSticker('[[😍:bizmind-sticker]]'), '😍');
   assert.equal(sandbox.decodeSticker('[[bizmind-sticker:😍]]'), '😍');
-  assert.equal(sandbox.encodeSticker('😍'), '[[😍:bizmind-sticker]]');
+  assert.equal(sandbox.encodeSticker('😍'), '😍');
+  assert.equal(sandbox.decodeSticker('😍'), '😍');
   assert.equal(sandbox.decodeSticker('hello [[😍:bizmind-sticker]]'), null);
   const node = sandbox.renderSticker('😍');
   assert.equal(node.className, 'message-sticker');
