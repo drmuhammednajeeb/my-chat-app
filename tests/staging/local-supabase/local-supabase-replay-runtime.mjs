@@ -234,6 +234,17 @@ run(process.execPath, [
   LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
 }, 'local-app-browser-e2e');
 
+run(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/local-api-load-runtime.mjs')
+], {
+  ...env,
+  ALLOW_DISPOSABLE_LOCAL_REPLAY: '1',
+  LOCAL_SUPABASE_URL: process.env.LOCAL_SUPABASE_URL ?? '',
+  LOCAL_SUPABASE_ANON_KEY: process.env.LOCAL_SUPABASE_ANON_KEY ?? '',
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? '',
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
+}, 'local-api-load-runtime');
+
 const patchManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
 if (patchManifest.mode !== 'TEST_COPY_ONLY' || !Array.isArray(patchManifest.patches)) {
   fail('synthetic fixture patch manifest is invalid');
