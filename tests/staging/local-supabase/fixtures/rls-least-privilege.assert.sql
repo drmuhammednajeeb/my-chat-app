@@ -118,8 +118,8 @@ begin
     raise exception 'A public-schema function remains executable by anon or PUBLIC';
   end if;
 
-  -- Fifteen RPCs referenced by the current browser client plus three retained
-  -- channel compatibility wrappers. Trigger-only and retired stub functions are excluded.
+  -- Exact RPC surface referenced by the current browser client. Untracked legacy
+  -- channel wrappers are deliberately excluded pending compatibility/provenance review.
   with allowed(function_name, identity_arguments) as (
     values
       ('patch_my_user_settings','p_patch jsonb'),
@@ -136,10 +136,7 @@ begin
       ('admin_set_member_official_number','p_user_id uuid, p_membership_number text'),
       ('admin_update_membership_status','p_user_id uuid, p_status text'),
       ('admin_list_memberships',''),
-      ('admin_create_official_member_invites','p_members jsonb'),
-      ('create_channel','p_title text, p_description text, p_is_public boolean'),
-      ('discover_public_channels','p_search text, p_limit integer, p_offset integer'),
-      ('join_public_channel','p_conversation_id uuid')
+      ('admin_create_official_member_invites','p_members jsonb')
   ),
   actual(function_name, identity_arguments) as (
     select p.proname, pg_get_function_identity_arguments(p.oid)
