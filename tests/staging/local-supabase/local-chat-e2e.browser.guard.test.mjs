@@ -74,3 +74,15 @@ test('message render receipt flag remains in loadMessages scope for empty and no
   assert.ok(declaration < conditional, 'render flag must be declared before the empty/non-empty branch');
   assert.equal((source.match(/let allMessagesRendered=true;/g) || []).length, 1, 'render flag must have one function-scoped declaration');
 });
+
+
+test('browser E2E explicitly verifies empty and multi-message history rendering', () => {
+  assert.match(harness, /verify empty conversation history rendering and read receipt/);
+  assert.match(harness, /emptyHistory\.messageCount, 0/);
+  assert.match(harness, /emptyHistory\.renderedMessageCount, 0/);
+  assert.match(harness, /emptyHistory\.emptyStateVisible, true/);
+  assert.match(harness, /send multiple messages and verify full history reload/);
+  assert.match(harness, /multiMessageHistory\.expectedPresent, \[true, true, true\]/);
+  assert.match(harness, /multiMessageHistory\.renderedPresent, \[true, true, true\]/);
+  assert.match(harness, /multiMessageHistory\.renderedRows >= 3/);
+});
