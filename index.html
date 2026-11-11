@@ -1280,7 +1280,7 @@ async function jumpToMessage(id){
   if(isCurrent())toast('تعذر تحميل الرسائل المحيطة بالرسالة المطلوبة');
  }
 }
-async async function loadMessagePins(id,requestId=null){
+async function loadMessagePins(id,requestId=null){
  const isCurrent=()=>requestId===null||(requestId===state.messageLoadVersion&&state.active?.id===id);
  try{
   const {data,error}=await supabaseClient.from('message_pins').select('id,conversation_id,message_id,pinned_by,pinned_at').eq('conversation_id',id).order('pinned_at',{ascending:false});
@@ -2771,7 +2771,7 @@ async function loadConversationDocuments(id,requestId=state.workspaceLoadVersion
 function sanitizeStorageFileName(value){const safe=String(value||'attachment').normalize('NFKC').replace(/[^A-Za-z0-9._-]+/g,'_').replace(/^\.+/,'').slice(0,120);return safe||'attachment'}
 async function uploadConversationDocument(){const c=state.active,file=$('workspaceDocumentFile').files?.[0];if(!file)return toast('اختر ملفاً');if(!['application/pdf','image/jpeg','image/png','image/webp','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation','text/plain','text/csv'].includes(file.type)||file.size>25*1024*1024)return toast('ملف غير مدعوم أو أكبر من 25 ميجابايت');const path=c.id+'/'+state.user.id+'/'+crypto.randomUUID()+'-'+sanitizeStorageFileName(file.name),visibility=$('workspaceDocumentVisibility').value,button=$('workspaceUploadDocument');button.disabled=true;try{const {error:up}=await supabaseClient.storage.from('conversation-documents').upload(path,file,{contentType:file.type});if(up)throw up;const {error}=await supabaseClient.from('conversation_documents').insert({owner_id:state.user.id,conversation_id:c.id,storage_path:path,file_name:file.name.slice(0,240),mime_type:file.type,size_bytes:file.size,visibility,shared_at:visibility==='shared'?new Date().toISOString():null});if(error){await supabaseClient.storage.from('conversation-documents').remove([path]);throw error}$('workspaceDocumentFile').value='';await loadConversationDocuments(c.id);toast(visibility==='shared'?'تمت المشاركة':'تم الحفظ في المستودع الخاص')}catch(e){console.error(e);toast('تعذر رفع المستند')}finally{button.disabled=false}}
 async function replyPrivatelyToGroupMessage(m){const c=state.active,profile=(c?.members||[]).find(x=>x.user_id===m.sender_id)?.profile;if(c?.type!=='group'||!profile?.id||m.sender_id===state.user.id)return toast('تعذر فتح الرد الخاص');state.privateReplyPending={sourceConversationId:c.id,sourceMessageId:m.id,quotedContent:messagePreview(m).slice(0,1200),quotedSenderId:m.sender_id};await openDirectConversation(profile);if(state.active?.type==='direct'){renderComposerContext();$('messageInput').focus();toast('هذا الرد خاص ولن يظهر في المجموعة')}else{state.privateReplyPending=null;renderComposerContext()}}
-async async function loadPrivateReplyContexts(id,messages,requestId=null){
+async function loadPrivateReplyContexts(id,messages,requestId=null){
  const isCurrent=()=>state.active?.id===id&&(requestId===null||requestId===state.messageLoadVersion);
  if(!isCurrent())return false;
  if(state.active?.type!=='direct'||!messages.length){state.privateReplyContexts=new Map();return true}
