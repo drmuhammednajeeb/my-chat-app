@@ -37,6 +37,8 @@ test('full browser E2E requires local-only endpoints and two synthetic authentic
     "page.locator('#messageInput').fill(message)",
     "page.locator('#sendBtn').click()",
     "textContent?.trim() === 'متصل'",
+    "      null,",
+    "      { timeout: 30000 }",
     "status, 'SUBSCRIBED'",
     "lastEvent, 'INSERT'",
     'BROWSER_E2E_CROSS_SESSION_DELIVERY=PASSED',
