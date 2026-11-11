@@ -218,6 +218,20 @@ begin
     raise exception 'supabase_admin-owned objects found in public; review extension placement';
   end if;
 
+  -- Schema-specific defaults cannot revoke PostgreSQL's global PUBLIC EXECUTE default.
+  if exists (
+    select 1
+    from pg_default_acl d
+    cross join lateral aclexplode(d.defaclacl) a
+    where d.defaclrole = 'postgres'::regrole
+      and d.defaclnamespace = 0
+      and d.defaclobjtype = 'f'
+      and a.grantee = 0
+      and a.privilege_type = 'EXECUTE'
+  ) then
+    raise exception 'Global PUBLIC EXECUTE default remains for postgres-created functions';
+  end if;
+
   -- Private application schema: helper functions may be callable by authenticated,
   -- but its tables must never be directly exposed to API roles.
   if has_schema_privilege('anon','app_private','USAGE') then
