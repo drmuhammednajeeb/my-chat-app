@@ -240,6 +240,30 @@ function handleMessageDeleteRealtime(payload,conversationId){
  if(conversation?.last_message?.id===deletedId)loadConversations().catch(error=>console.warn('Conversation preview refresh failed:',error));
  return true;
 }
+async function handleConversationMemberDeletion(payload,conversationId){
+ if(payload?.old?.conversation_id!==conversationId||state.active?.id!==conversationId)return;
+ const removedUserId=payload.old.user_id;
+ await loadConversations();
+ if(removedUserId===state.user?.id&&state.active?.id===conversationId){
+  state.conversationOpenVersion=(state.conversationOpenVersion||0)+1;
+  state.messageLoadVersion++;
+  stopMessagePolling();
+  const activeChannel=state.channel;state.channel=null;
+  const typingChannel=state.typingChannel;state.typingChannel=null;
+  if(activeChannel)void supabaseClient.removeChannel(activeChannel).catch(error=>console.warn('Revoked chat channel cleanup failed:',error));
+  if(typingChannel)void supabaseClient.removeChannel(typingChannel).catch(error=>console.warn('Revoked typing channel cleanup failed:',error));
+  state.active=null;state.activeChatPreference=null;state.messages=[];state.messageIds.clear();state.renderingMessageIds.clear();
+  state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;state.groupSettings=null;
+  state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');
+  $('messageInput').value='';$('messageInput').disabled=true;$('sendBtn').disabled=true;
+  $('chatTitle').textContent='تم سحب عضويتك من المحادثة';
+  $('chatSub').textContent='لم يعد لديك إذن الوصول إلى هذه المحادثة';
+  $('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-lock"></i></div><h2>انتهى الوصول إلى المحادثة</h2><p>تم سحب عضويتك، وأُغلق عرض الرسائل وأُوقفت إمكانية الإرسال.</p></div>';
+  applyDirectChatTheme();renderPinnedBanner();$('sidebar').classList.remove('closed');
+  toast('تم سحب عضويتك من هذه المحادثة. لم يعد بإمكانك الوصول إلى رسائلها.');
+ }
+ if($('groupManagementModal')?.classList.contains('open'))await openGroupManagement();
+}
 function subscribeConversation(){
  if(state.channel)supabaseClient.removeChannel(state.channel);
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
@@ -256,7 +280,7 @@ function subscribeConversation(){
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'message_pins'},p=>handlePinRealtime(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversation_members',filter:'conversation_id=eq.'+id},p=>handleMembershipRealtime(p,id))
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_members',filter:'conversation_id=eq.'+id},async()=>{if(state.active?.id!==id)return;await loadConversations();if($('groupManagementModal')?.classList.contains('open'))await openGroupManagement()})
-  .on('postgres_changes',{event:'DELETE',schema:'public',table:'conversation_members'},async p=>{if(p.old?.conversation_id!==id||state.active?.id!==id)return;await loadConversations();if($('groupManagementModal')?.classList.contains('open'))await openGroupManagement()})
+  .on('postgres_changes',{event:'DELETE',schema:'public',table:'conversation_members'},p=>handleConversationMemberDeletion(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversation_group_settings',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.groupSettings=p.new;applyGroupTheme();updateGroupComposerPermission()})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversations',filter:'id=eq.'+id},p=>{if(state.active?.id!==id)return;Object.assign(state.active,p.new);$('chatTitle').textContent=convName(state.active);renderConversations()})
   .on('postgres_changes',{event:'*',schema:'public',table:'conversation_documents',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id&&$('conversationWorkspaceModal')?.classList.contains('open'))loadConversationDocuments(id)})
