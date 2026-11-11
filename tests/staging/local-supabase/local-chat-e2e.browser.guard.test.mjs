@@ -102,6 +102,7 @@ test('browser E2E waits for the app Home startup barrier before opening conversa
   assert.ok(harness.includes('Do not race'));
   assert.ok(harness.includes('openDirectConversation against the tail of that startup sequence'));
   assert.ok(harness.includes('state.conversationsLoading === false'));
+  assert.ok(harness.includes("state.realtimeStatus === 'SUBSCRIBED'"), 'cross-session realtime checks must wait for the peer channel subscription');
   assert.ok(harness.includes('state.active === null'));
   assert.ok(harness.includes("welcome.includes('مرحباً بك في BizmindMakers Chat Pro')"));
 });
