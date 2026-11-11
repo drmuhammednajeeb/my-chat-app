@@ -17,7 +17,7 @@ create table if not exists public.profile_statuses (
   ),
   constraint profile_statuses_image_path_check check (
     image_path is null or image_path ~ (
-      '^' || user_id::text || '/[0-9a-fA-F-]{36}\\.(jpg|png|webp)$'
+      '^' || user_id::text || '/[0-9a-fA-F-]{36}\.(jpg|png|webp)$'
     )
   )
 );
@@ -184,7 +184,7 @@ begin
   if p_image_path is not null then
     expected_prefix := p_conversation_id::text || '/' || actor::text || '/';
     if left(p_image_path, length(expected_prefix)) <> expected_prefix
-       or p_image_path !~* '\\.(jpg|png|webp)$'
+       or p_image_path !~* '\.(jpg|png|webp)$'
        or not exists (
          select 1 from storage.objects o
          where o.bucket_id = 'conversation-avatars'
