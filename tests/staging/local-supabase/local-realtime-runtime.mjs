@@ -45,6 +45,9 @@ if (realtimeTables !== 'chat_messages,message_reactions') {
   throw new Error('Required chat tables are not both in supabase_realtime publication: ' + realtimeTables);
 }
 console.log('LOCAL_REALTIME_PUBLICATION_TABLES=' + realtimeTables);
+const appRealtimeTables = psql(`SELECT string_agg(tablename, ',' ORDER BY tablename)
+  FROM pg_publication_tables WHERE pubname='supabase_realtime' AND schemaname='public';`);
+console.log('LOCAL_REALTIME_APP_PUBLICATION_TABLES=' + appRealtimeTables);
 
 
 let users;
