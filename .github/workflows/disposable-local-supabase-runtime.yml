@@ -37,6 +37,7 @@ jobs:
             tests/staging/local-supabase/direct-conversation-concurrency.test.mjs
           node --check tests/staging/local-supabase/local-supabase-replay-runtime.mjs
           node --check tests/staging/local-supabase/local-app-e2e.mjs
+          node --check tests/staging/local-supabase/local-api-load-runtime.mjs
 
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb
