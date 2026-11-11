@@ -40,7 +40,7 @@ test('browser E2E covers two isolated sessions, messaging, reconnect, and member
   for (const marker of [
     'browser.newContext()',
     'authenticate two independent browser contexts',
-    'send and receive message through application UI and Realtime',
+    'send multiple messages and verify full history reload',
     'offline reconciliation and reconnect',
     'revoke membership and verify server-side isolation',
     'revoked browser context must not receive later Realtime messages',
