@@ -299,15 +299,24 @@ test('render and initial-load paths retain stale-result guards', () => {
   assert.match(load, /allMessagesRendered/);
 });
 
-test('fallback synchronization is cursor-based and reconciles edits and deletions', () => {
+test('fallback synchronization uses a bounded overlap and reconciles edits and deletions', () => {
   const poll = extractFunction('pollMessagesFallback');
   assert.match(poll, /messagePollCursor/);
+  assert.match(poll, /overlapStartedAt/);
+  assert.match(poll, /Date\.parse\(pollStartedAt\)-5000/);
   assert.match(poll, /and\(created_at\.eq\./);
   assert.match(poll, /id\.gt\./);
   assert.match(poll, /edited_at\.gt\./);
   assert.match(poll, /deleted_at\.gt\./);
   assert.match(poll, /limit\(200\)/);
   assert.match(poll, /messageRequestId!==state\.messageLoadVersion/);
+});
+
+test('cross-device sync reconciles immediately when the page becomes active or online', () => {
+  assert.match(source, /function requestImmediateMessageReconciliation\(reason='lifecycle'\)/);
+  assert.match(source, /document\.visibilityState==='visible'\)requestImmediateMessageReconciliation\('visible'\)/);
+  assert.match(source, /addEventListener\('online',\(\)=>requestImmediateMessageReconciliation\('online'\)\)/);
+  assert.match(source, /addEventListener\('focus',\(\)=>requestImmediateMessageReconciliation\('focus'\)\)/);
 });
 
 test('send attempts reuse a stable message ID and uploaded attachment on retry', () => {
