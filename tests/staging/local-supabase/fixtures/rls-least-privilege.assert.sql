@@ -95,6 +95,15 @@ begin
     raise exception 'anon/authenticated retain direct public sequence privileges';
   end if;
 
+  if has_function_privilege('anon','public.guard_chat_message_content_update()','EXECUTE')
+     or has_function_privilege('authenticated','public.guard_chat_message_content_update()','EXECUTE')
+     or has_function_privilege('anon','app_private.guard_conversation_member_update()','EXECUTE')
+     or has_function_privilege('authenticated','app_private.guard_conversation_member_update()','EXECUTE')
+     or has_function_privilege('anon','app_private.enforce_chat_message_reply_parent()','EXECUTE')
+     or has_function_privilege('authenticated','app_private.enforce_chat_message_reply_parent()','EXECUTE') then
+    raise exception 'Trigger-only functions remain directly executable by API roles';
+  end if;
+
   if exists (
     select 1 from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
