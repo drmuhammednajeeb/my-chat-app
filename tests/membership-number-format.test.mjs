@@ -12,7 +12,7 @@ function extractFunction(name) {
 }
 
 const normalize = vm.runInNewContext("(" + extractFunction("normalizeForeverMembershipNumber") + ")");
-const format = vm.runInNewContext("(" + extractFunction("formatForeverMembershipNumber") + ")");
+const format = vm.runInNewContext("(" + extractFunction("formatForeverMembershipNumber") + ")", { normalizeForeverMembershipNumber: normalize });
 
 test("accepts grouped and ungrouped official Forever membership numbers", () => {
   assert.equal(normalize("971-000-000-000"), "971000000000");
