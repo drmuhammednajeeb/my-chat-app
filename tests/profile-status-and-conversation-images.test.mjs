@@ -51,7 +51,7 @@ test('conversation images use private storage and a manager-checked RPC', () => 
 test('client limits status and conversation image uploads and keeps status text/image exclusive', () => {
   assert.match(client, /MAX_IMAGE_BYTES = 3 \* 1024 \* 1024/);
   assert.match(client, /IMAGE_TYPES = new Set\(\['image\/jpeg', 'image\/png', 'image\/webp'\]\)/);
-  assert.match(client, /\\(text && file\\)/);
+  assert.match(client, /\(text && file\)/);
   assert.match(client, /statusId \+ '\.' \+ extension/);
   assert.match(client, /upsert: false/);
 });
