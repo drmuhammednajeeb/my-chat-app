@@ -1,8 +1,16 @@
-# Recover the direct-conversation RPC source
+# Direct-conversation RPC source recovery
+
+## Recovery status — 2026-11-11
+
+**Source recovered — runtime approval pending.**
+
+A read-only catalog query was executed against the connected Supabase project. Both deployed definitions were returned with their signatures, security settings, and ACLs. The internal implementation is SECURITY DEFINER with an empty search path; the public wrapper is SECURITY INVOKER. Both definitions match the test-only fixture, and their SHA-256 provenance is recorded in tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json.
+
+This completes source recovery for disposable replay. The definitions are still absent from the canonical migration set, and no production SQL was executed or authorized. Runtime validation and the separate eligibility guard remain blockers.
 
 ## Why this is required
 
-The browser calls \`public.get_or_create_direct_conversation(p_other_user_id => ...)\`. The privilege-hardening migration also alters \`app_private.get_or_create_direct_conversation_impl(uuid)\`. Neither function definition is present in the reviewed repository SQL set.
+The browser calls \`public.get_or_create_direct_conversation(p_other_user_id => ...)\`. The privilege-hardening migration also alters \`app_private.get_or_create_direct_conversation_impl(uuid)\`. The definitions have been recovered from the live catalog and preserved in a test-only fixture; they are not yet part of the canonical migration set.
 
 Do not invent an implementation. The function controls direct-conversation identity, membership creation, duplicate prevention, and access boundaries. A guessed replacement could create duplicate conversations or weaken isolation.
 
