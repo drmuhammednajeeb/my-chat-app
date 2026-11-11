@@ -183,12 +183,11 @@ begin
           and d.defaclobjtype = 'f')
       )
       and a.grantee in (
-        0,
         (select oid from pg_roles where rolname = 'anon'),
         (select oid from pg_roles where rolname = 'authenticated')
       )
   ) then
-    raise exception 'Unsafe default privileges remain for public or app_private objects';
+    raise exception 'Unsafe schema-scoped default grants remain for anon/authenticated API roles';
   end if;
 
   -- supabase_admin is a reserved Supabase platform role. Its default ACLs cannot
@@ -252,6 +251,19 @@ begin
         or has_table_privilege('authenticated',c.oid,'DELETE'))
   ) then
     raise exception 'API roles retain direct access to app_private tables';
+  end if;
+
+  if exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'app_private'
+      and (has_function_privilege('anon',p.oid,'EXECUTE')
+        or exists (
+          select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+          where a.grantee = 0 and a.privilege_type = 'EXECUTE'
+        ))
+  ) then
+    raise exception 'An app_private function remains executable by PUBLIC or anon';
   end if;
 
   -- Every SECURITY DEFINER helper must use an empty search_path and remain
