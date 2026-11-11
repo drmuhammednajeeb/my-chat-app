@@ -7,6 +7,7 @@ SELECT u.id, expected.username, expected.display_name
 FROM (VALUES
   ('direct-a@bizmindmakers.test', 'direct_a', 'Direct Test A'),
   ('direct-b@bizmindmakers.test', 'direct_b', 'Direct Test B'),
+  ('direct-c@bizmindmakers.test', 'direct_c', 'Direct Test C'),
   ('direct-suspended@bizmindmakers.test', 'direct_suspended', 'Direct Test Suspended'),
   ('direct-unverified@bizmindmakers.test', 'direct_unverified', 'Direct Test Unverified'),
   ('direct-unconfirmed@bizmindmakers.test', 'direct_unconfirmed', 'Direct Test Unconfirmed')
@@ -22,10 +23,11 @@ BEGIN
       WHERE u.email IN (
         'direct-a@bizmindmakers.test',
         'direct-b@bizmindmakers.test',
+        'direct-c@bizmindmakers.test',
         'direct-suspended@bizmindmakers.test',
         'direct-unverified@bizmindmakers.test',
         'direct-unconfirmed@bizmindmakers.test'
-      )) <> 5 THEN
+      )) <> 6 THEN
     RAISE EXCEPTION 'Synthetic direct-chat profile seed is incomplete';
   END IF;
 
@@ -44,6 +46,7 @@ BEGIN
     WHERE u.email IN (
       'direct-a@bizmindmakers.test',
       'direct-b@bizmindmakers.test',
+      'direct-c@bizmindmakers.test',
       'direct-suspended@bizmindmakers.test',
       'direct-unverified@bizmindmakers.test',
       'direct-unconfirmed@bizmindmakers.test'

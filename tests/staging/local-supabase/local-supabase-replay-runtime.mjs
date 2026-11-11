@@ -37,6 +37,7 @@ async function provisionSyntheticDirectChatAuthUsers() {
   const users = [
     { key: 'direct_a', email: 'direct-a@bizmindmakers.test', number: '971001000002', verified: true, confirmed: true, username: 'direct_a', displayName: 'Direct Test A' },
     { key: 'direct_b', email: 'direct-b@bizmindmakers.test', number: '971001000003', verified: true, confirmed: true, username: 'direct_b', displayName: 'Direct Test B' },
+    { key: 'direct_c', email: 'direct-c@bizmindmakers.test', number: '971001000008', verified: true, confirmed: true, username: 'direct_c', displayName: 'Direct Test C' },
     { key: 'direct_suspended', email: 'direct-suspended@bizmindmakers.test', number: '971001000004', verified: true, confirmed: true, username: 'direct_suspended', displayName: 'Direct Test Suspended' },
     { key: 'direct_unverified', email: 'direct-unverified@bizmindmakers.test', number: '971001000005', verified: false, confirmed: true, username: 'direct_unverified', displayName: 'Direct Test Unverified' },
     { key: 'direct_unconfirmed', email: 'direct-unconfirmed@bizmindmakers.test', number: '971001000006', verified: true, confirmed: false, username: 'direct_unconfirmed', displayName: 'Direct Test Unconfirmed' },
@@ -168,6 +169,9 @@ if (actualAppOrder[0] !== 'test-fixture.local-platform-preflight') {
 const env = {
   PATH: process.env.PATH ?? '',
   LOCAL_SUPABASE_DB_URL: raw,
+  LOCAL_SUPABASE_URL: process.env.LOCAL_SUPABASE_URL ?? '',
+  LOCAL_SUPABASE_ANON_KEY: process.env.LOCAL_SUPABASE_ANON_KEY ?? '',
+  LOCAL_SUPABASE_SERVICE_ROLE_KEY: process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY ?? '',
   PGCONNECT_TIMEOUT: '5',
   PGOPTIONS: '-c app.test_only_local_replay=enabled -c statement_timeout=60s -c lock_timeout=10s'
 };
@@ -253,6 +257,41 @@ if (expectedSqlCount !== manifest.sourceCoverage.executedMappedSources + manifes
   fail('declared executed SQL coverage does not reconcile with mapped-source replacements');
 }
 if (seenSql.size !== expectedSqlCount) fail('executed SQL coverage mismatch: expected ' + expectedSqlCount + ', found ' + seenSql.size);
+
+// The following destructive reset is intentionally outside the historical replay manifest.
+// It runs only after every legacy-runtime assertion has passed, on the loopback-only
+// disposable database validated at the top of this runner.
+const cleanChatCoreFixture = path.join(ROOT, 'tests/staging/local-supabase/fixtures/clean-chat-core-rebuild.test-only.sql');
+const cleanChatCoreRunner = path.join(ROOT, 'tests/staging/local-supabase/clean-chat-core-runtime.mjs');
+if (!fs.existsSync(cleanChatCoreFixture) || !fs.existsSync(cleanChatCoreRunner)) {
+  fail('clean chat core test-only rebuild fixture or runtime runner is missing');
+}
+run('psql', ['--no-psqlrc', '--set=ON_ERROR_STOP=1', '--file', cleanChatCoreFixture, raw], env, 'clean-chat-core-destructive-local-reset');
+run(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs')
+], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1', LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, 'clean-chat-core-direct-conversation-concurrency');
+run(process.execPath, [
+  cleanChatCoreRunner
+], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1', LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, 'clean-chat-core-message-reactions-stars');
+
+const localRealtimeRunner = path.join(ROOT, 'tests/staging/local-supabase/local-realtime-runtime.mjs');
+if (!fs.existsSync(localRealtimeRunner)) fail('local authenticated Realtime runner is missing');
+run(process.execPath, [localRealtimeRunner], {
+  ...env,
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}),
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? ''
+}, 'clean-chat-core-authenticated-local-realtime');
+
+const localChatE2ERunner = path.join(ROOT, 'tests/staging/local-supabase/local-chat-e2e.browser.mjs');
+if (!fs.existsSync(localChatE2ERunner)) fail('authenticated local browser E2E runner is missing');
+run(process.execPath, [localChatE2ERunner], {
+  ...env,
+  ALLOW_DISPOSABLE_LOCAL_REPLAY: '1',
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}),
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? ''
+}, 'clean-chat-core-authenticated-local-browser-e2e');
+
 console.log('LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED');
+console.log('CLEAN_CHAT_CORE_LOCAL_RUNTIME=PASSED');
 console.log('LOCAL_SUPABASE_SQL_SOURCE_REPLACEMENTS=' + replacedSourcePaths.size);
 console.log('LOCAL_SUPABASE_SQL_FILES_EXECUTED=' + seenSql.size);

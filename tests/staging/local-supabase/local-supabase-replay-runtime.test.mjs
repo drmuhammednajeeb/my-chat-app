@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,6 +42,14 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
     'executedSqlFiles',
     'mappedSourcesReplacedByFixtures',
     'LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED',
+    'clean-chat-core-rebuild.test-only.sql',
+    'clean-chat-core-runtime.mjs',
+    'clean-chat-core-destructive-local-reset',
+    'clean-chat-core-direct-conversation-concurrency',
+    'clean-chat-core-message-reactions-stars',
+    'local-chat-e2e.browser.mjs',
+    'clean-chat-core-authenticated-local-browser-e2e',
+    'CLEAN_CHAT_CORE_LOCAL_RUNTIME=PASSED',
     '/auth/v1/admin/users',
     'syntheticAuthIds[user.key] = data.id',
     'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
@@ -48,6 +57,41 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
   ]) assert.ok(source.includes(token), 'missing replay safety/coverage token: ' + token);
   assert.match(source, /refusing non-local database target/i);
   assert.doesNotMatch(source, /supabase\.co|--remote|--linked/i);
+});
+
+test('clean chat core reset is destructive only inside the loopback disposable runner', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/clean-chat-core-runtime.mjs'), 'utf8');
+  const fixture = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/clean-chat-core-rebuild.test-only.sql'), 'utf8');
+  const syntax = spawnSync(process.execPath, ['--check', path.join(root, 'tests/staging/local-supabase/clean-chat-core-runtime.mjs')], { encoding: 'utf8' });
+  assert.equal(syntax.status, 0, syntax.stderr || 'clean core runner syntax check failed');
+  for (const token of [
+    "dbUrl.port !== '54322'",
+    "dbUrl.username !== 'postgres'",
+    "ALLOW_DISPOSABLE_LOCAL_REPLAY",
+    'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
+    'public.get_or_create_direct_conversation',
+    'message_reactions',
+    'user_message_stars',
+    'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
+    '/storage/v1/object/list/',
+    '/storage/v1/object/',
+    "'chat-media', 'conversation-documents', 'channel-avatars'",
+    '__clean_core_reset_probe__',
+    "'Content-Type': 'image/png'",
+    'PROBE_UPLOADED=true',
+    'VERIFIED_EMPTY=true',
+    'SELECT count(*) FROM storage.objects'
+  ]) assert.ok(runner.includes(token), 'missing clean core runtime safety/coverage token: ' + token);
+  assert.ok(fixture.includes("current_setting('app.test_only_local_replay', true) IS DISTINCT FROM 'enabled'"));
+  assert.ok(fixture.includes('TRUNCATE TABLE public.conversations CASCADE'));
+  assert.ok(!fixture.includes('DELETE FROM storage.objects'), 'Storage metadata must be changed through the Storage API');
+  assert.ok(fixture.includes('Storage objects are removed through the local Storage API'));
+  assert.ok(fixture.includes('direct_user_low'));
+  assert.ok(fixture.includes('direct_user_high'));
+  assert.ok(fixture.includes('conversations_direct_pair_unique_idx'));
+  assert.ok(fixture.includes('message_reactions_conversation_message_v2_fkey'));
+  assert.ok(fixture.includes('user_message_stars_conversation_message_v2_fkey'));
+  assert.ok(fixture.includes('app_private.get_or_create_direct_conversation_impl'));
 });
 
 test('runtime workflow uses an isolated temporary project and pinned local CLI only', async () => {

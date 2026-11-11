@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const indexSource = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const modulePaths = ["js/00-bootstrap.js","js/10-conversations.js","js/20-message-interactions.js","js/30-receipts-rendering.js","js/40-message-runtime.js","js/50-group-management.js","js/60-personal-chat-settings.js","js/70-workspace.js"];
+const moduleSources = await Promise.all(modulePaths.map(path => readFile(new URL('../' + path, import.meta.url), 'utf8')));
+// Keep this order aligned with the classic script tags in index.html.
+const moduleSource = moduleSources.join('\n');
+const source = moduleSource + '\n' + indexSource;
+const MESSAGE_REACTION_OPTIONS = ['like','heart','wow','pray','fire','celebrate'].map(type => ({ type }));
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
@@ -74,13 +80,118 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
 });
 
-test('all inline JavaScript blocks parse without a bundler', () => {
-  const blocks = [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-    .filter(match => !/\bsrc\s*=/.test(match[1]) && match[2].trim());
-  assert.ok(blocks.length > 0, 'Expected inline application scripts');
-  blocks.forEach((match, index) => {
-    new vm.Script(match[2], { filename: 'inline-script-' + index + '.js' });
+test('realtime receives only the active conversation and reconciles missed messages after reconnect', async () => {
+  const registrations = [];
+  let statusCallback;
+  const makeChannel = name => ({
+    name,
+    on(event, filter, handler) { registrations.push({ channel: name, event, filter, handler }); return this; },
+    subscribe(callback) { if (name.startsWith('chat:')) statusCallback = callback; return this; }
   });
+  const state = {
+    active: { id: 'c1' }, channel: null, typingChannel: null,
+    diagnostics: {}, messages: [], messageLoadVersion: 7,
+    user: { id: 'u1' }, activeChatPreference: null,
+    privateReplyContexts: new Map(), messagePollTimer: 1, messagePollGeneration: 3
+  };
+  const rendered = [], receipts = [];
+  let reloads = 0, pollingSchedules = 0;
+  const context = {
+    state,
+    supabaseClient: { removeChannel() {}, channel: makeChannel },
+    diagLog() {},
+    renderMessage: async message => rendered.push(message.id),
+    markConversationReceipt: (...args) => receipts.push(args),
+    handleMessageUpdateRealtime() {}, handleMessageDeleteRealtime() {},
+    handleReactionRealtime() {}, handlePinRealtime() {}, handleMembershipRealtime() {},
+    loadConversations: async () => {}, openGroupManagement: async () => {},
+    applyGroupTheme() {}, updateGroupComposerPermission() {},
+    loadConversationDocuments: async () => {}, renderPrivateReplyQuote() {},
+    loadMessages: async () => { reloads += 1; },
+    scheduleMessagePolling: () => { pollingSchedules += 1; },
+    convName: () => 'Conversation', renderConversations() {},
+    document: { visibilityState: 'visible' },
+    isMessagesNearBottom: () => true,
+    $: () => ({ textContent: '', classList: { contains: () => false } }),
+    clearTimeout() {}, setTimeout: () => 1, console
+  };
+  const subscribe = vm.runInNewContext('(' + extractFunction('subscribeConversation') + ')', context);
+  subscribe();
+  const insert = registrations.find(item => item.channel === 'chat:c1' && item.filter?.table === 'chat_messages' && item.event === 'postgres_changes' && item.filter.event === 'INSERT');
+  assert.ok(insert, 'chat_messages INSERT subscription must be registered');
+  assert.equal(insert.filter.filter, 'conversation_id=eq.c1');
+
+  await insert.handler({ new: { id: 'm1', conversation_id: 'c1', sender_id: 'u2', created_at: '2026-11-11T10:00:00Z' } });
+  assert.deepEqual(state.messages.map(message => message.id), ['m1']);
+  assert.deepEqual(rendered, ['m1']);
+  assert.equal(receipts.length, 1);
+
+  statusCallback('SUBSCRIBED');
+  statusCallback('CHANNEL_ERROR');
+  statusCallback('SUBSCRIBED');
+  await Promise.resolve();
+  assert.equal(reloads, 1, 'reconnect must reload the active timeline to recover missed events');
+  assert.ok(pollingSchedules >= 1, 'connection loss must retain fallback polling');
+
+  state.active = { id: 'c2' };
+  await insert.handler({ new: { id: 'stale', conversation_id: 'c1', sender_id: 'u2', created_at: '2026-11-11T10:01:00Z' } });
+  assert.deepEqual(state.messages.map(message => message.id), ['m1'], 'events from a previous conversation must be ignored');
+});
+
+test('a completed star request cannot mutate the next active conversation state', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' },
+    messages: [{ id: 'm1', conversation_id: 'c1' }],
+    starredMessageIds: new Set(), pendingStarMessageKeys: new Set()
+  };
+  let release;
+  const supabaseClient = {
+    from() { return { upsert() { return new Promise(resolve => { release = resolve; }); } }; }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageStar') + ')', {
+    state, supabaseClient, toast() {}, console
+  });
+  const pending = toggle('m1', true);
+  state.active = { id: 'c2' };
+  state.messages = [];
+  state.starredMessageIds = new Set();
+  release({ error: null });
+  assert.equal(await pending, true);
+  assert.equal(state.starredMessageIds.has('m1'), false);
+});
+
+test('message render completion state remains in scope for empty and populated timelines', () => {
+  const loader = extractFunction('loadMessages');
+  const completionFlag = loader.indexOf('let allMessagesRendered=true;');
+  const emptyState = loader.indexOf('if(!messages.length)');
+  const receiptUpdate = loader.indexOf('if(allMessagesRendered&&');
+  assert.ok(completionFlag >= 0 && emptyState > completionFlag && receiptUpdate > emptyState,
+    'render completion must be declared before both empty and populated branches');
+});
+
+test('rendered message controls are wired to the persisted reaction and star actions', () => {
+  const messageRenderer = extractFunction('renderMessageInternal');
+  const reactionBar = extractFunction('renderReactionBar');
+  assert.match(messageRenderer, /toggleMessageStar/);
+  assert.match(messageRenderer, /starOption\.querySelector\('span'\)/);
+  assert.match(messageRenderer, /starOption\.dataset\.starred/);
+  assert.match(messageRenderer, /إضافة تفاعل/);
+  assert.match(reactionBar, /toggleMessageReaction/);
+  assert.match(reactionBar, /button\.onclick/);
+});
+
+test('all ordered classic JavaScript modules parse independently and as one shared global program', () => {
+  moduleSources.forEach((module, index) => {
+    new vm.Script(module, { filename: modulePaths[index] });
+  });
+  new vm.Script(moduleSource, { filename: 'combined-classic-app.js' });
+  const inlineBlocks = [...indexSource.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(match => !/\bsrc\s*=/.test(match[1]) && match[2].trim());
+  inlineBlocks.forEach((match, index) => {
+    new vm.Script(match[2], { filename: 'inline-bootstrap-' + index + '.js' });
+  });
+  const externalPaths = [...indexSource.matchAll(/<script\b[^>]*src=["']([^"']+\.js)["']/gi)].map(match => match[1]);
+  assert.deepEqual(externalPaths.filter(path => path.startsWith('./js/')), modulePaths.map(path => './' + path));
 });
 
 test('chronological comparator orders timestamps then stable IDs', () => {
@@ -341,7 +452,7 @@ test('late reaction failures cannot mutate the next conversation state', async (
     }
   };
   const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
-    state, supabaseClient, pendingReactionKeys: new Set(),
+    state, supabaseClient, MESSAGE_REACTION_OPTIONS,
     document: { querySelectorAll: () => [] }, renderReactionBar() {},
     toast() {}, console
   });
@@ -356,30 +467,93 @@ test('late reaction failures cannot mutate the next conversation state', async (
   assert.equal(state.reactions.has('m2'), true);
 });
 
-test('message stars persist before updating local state and recover from backend failures', async () => {
+test('ambiguous reaction writes are verified against the authoritative row before rollback', async () => {
   const state = {
-    user: { id: 'u1' },
+    user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
+    reactions: new Map([['m1', []]]), messages: [{ id: 'm1', conversation_id: 'c1' }]
+  };
+  let finishWrite;
+  const verified = { message_id: 'm1', conversation_id: 'c1', user_id: 'u1', reaction_type: 'heart' };
+  const supabaseClient = {
+    from(table) {
+      assert.equal(table, 'message_reactions');
+      return {
+        upsert: () => new Promise(resolve => { finishWrite = resolve; }),
+        select() {
+          const query = { eq() { return query; }, async maybeSingle() { return { data: verified, error: null }; } };
+          return query;
+        }
+      };
+    }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
+    state, supabaseClient, MESSAGE_REACTION_OPTIONS, document: { querySelectorAll: () => [] },
+    renderReactionBar() {}, toast() {}, console
+  });
+  const pending = toggle({ id: 'm1', conversation_id: 'c1' }, 'heart', null);
+  finishWrite({ error: { message: 'response lost after commit' } });
+  assert.equal(await pending, true);
+  const confirmed = state.reactions.get('m1')[0];
+  assert.equal(confirmed.message_id, 'm1');
+  assert.equal(confirmed.conversation_id, 'c1');
+  assert.equal(confirmed.user_id, 'u1');
+  assert.equal(confirmed.reaction_type, 'heart');
+});
+
+test('reaction state stays pending for refresh when both write and verification reads fail', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
+    reactions: new Map([['m1', []]]), messages: [{ id: 'm1', conversation_id: 'c1' }]
+  };
+  const supabaseClient = {
+    from(table) {
+      assert.equal(table, 'message_reactions');
+      return {
+        async upsert() { return { error: { message: 'write response lost' } }; },
+        select() {
+          const query = { eq() { return query; }, async maybeSingle() { return { data: null, error: { message: 'verification unavailable' } }; } };
+          return query;
+        }
+      };
+    }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
+    state, supabaseClient, MESSAGE_REACTION_OPTIONS,
+    document: { querySelectorAll: () => [] }, renderReactionBar() {}, toast() {}, console
+  });
+  assert.equal(await toggle({ id: 'm1', conversation_id: 'c1' }, 'heart', null), false);
+  assert.equal(state.reactions.get('m1')[0].reaction_type, 'heart');
+  assert.equal(state.reactionVerificationNeeded.has('m1'), true);
+});
+
+test('message stars persist, serialize, and verify ambiguous outcomes before changing local state', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' },
     messages: [{ id: 'm1', conversation_id: 'c1' }],
     starredMessageIds: new Set()
   };
   const calls = [];
-  let fail = false;
+  let fail = false, verifiedRow = null;
   const supabaseClient = {
     from(table) {
       assert.equal(table, 'user_message_stars');
       return {
         async upsert(row, options) {
           calls.push({ operation: 'upsert', row, options });
-          return { error: fail ? { message: 'denied' } : null };
+          return { error: fail ? { message: 'simulated network failure' } : null };
         },
         delete() {
           return { eq(key, value) {
             calls.push({ operation: 'delete-user', key, value });
             return { async eq(secondKey, secondValue) {
               calls.push({ operation: 'delete-message', key: secondKey, value: secondValue });
-              return { error: fail ? { message: 'denied' } : null };
+              return { error: fail ? { message: 'simulated network failure' } : null };
             } };
           } };
+        },
+        select() {
+          const query = { eq() { return query; }, async maybeSingle() { return { data: verifiedRow, error: null }; } };
+          return query;
         }
       };
     }
@@ -393,10 +567,40 @@ test('message stars persist before updating local state and recover from backend
   assert.equal(calls[0].options.onConflict, 'user_id,message_id');
   assert.equal(await toggle('m1', false), true);
   assert.equal(state.starredMessageIds.has('m1'), false);
+
   fail = true;
+  verifiedRow = { message_id: 'm1' };
+  assert.equal(await toggle('m1', true), true);
+  assert.equal(state.starredMessageIds.has('m1'), true);
+
+  verifiedRow = null;
   assert.equal(await toggle('m1', true), false);
   assert.equal(state.starredMessageIds.has('m1'), false);
   assert.ok(notices.length > 0);
+});
+
+test('star action rejects a duplicate in-flight operation for the same message', async () => {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' },
+    messages: [{ id: 'm1', conversation_id: 'c1' }],
+    starredMessageIds: new Set()
+  };
+  let release, calls = 0;
+  const supabaseClient = {
+    from(table) {
+      assert.equal(table, 'user_message_stars');
+      return { upsert() { calls += 1; return new Promise(resolve => { release = resolve; }); } };
+    }
+  };
+  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageStar') + ')', {
+    state, supabaseClient, toast() {}, console
+  });
+  const first = toggle('m1', true);
+  assert.equal(await toggle('m1', false), false);
+  assert.equal(calls, 1);
+  release({ error: null });
+  assert.equal(await first, true);
+  assert.equal(state.starredMessageIds.has('m1'), true);
 });
 
 test('chat attachment MIME resolution handles browsers that omit file.type', () => {

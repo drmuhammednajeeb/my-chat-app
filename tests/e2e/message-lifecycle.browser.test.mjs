@@ -4,16 +4,19 @@ import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8');
+const modulePaths = ["js/00-bootstrap.js","js/10-conversations.js","js/20-message-interactions.js","js/30-receipts-rendering.js","js/40-message-runtime.js","js/50-group-management.js","js/60-personal-chat-settings.js","js/70-workspace.js"];
+const moduleSources = await Promise.all(modulePaths.map(path => readFile(new URL('../../' + path, import.meta.url), 'utf8')));
+const appSource = moduleSources.join('\n') + '\n' + html;
 
 function extractFunction(name) {
   const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
-  const match = pattern.exec(html);
+  const match = pattern.exec(appSource);
   assert.ok(match, 'Missing application function: ' + name);
   const start = match.index;
-  const open = html.indexOf('{', start);
+  const open = appSource.indexOf('{', start);
   let depth = 0, quote = null, escaped = false, lineComment = false, blockComment = false;
-  for (let i = open; i < html.length; i += 1) {
-    const char = html[i], next = html[i + 1];
+  for (let i = open; i < appSource.length; i += 1) {
+    const char = appSource[i], next = appSource[i + 1];
     if (lineComment) { if (char === '\n') lineComment = false; continue; }
     if (blockComment) { if (char === '*' && next === '/') { blockComment = false; i += 1; } continue; }
     if (quote) {
@@ -26,13 +29,16 @@ function extractFunction(name) {
     if (char === '/' && next === '*') { blockComment = true; i += 1; continue; }
     if (char === "'" || char === '"' || char === '\x60') { quote = char; continue; }
     if (char === '{') depth += 1;
-    if (char === '}') { depth -= 1; if (depth === 0) return html.slice(start, i + 1); }
+    if (char === '}') { depth -= 1; if (depth === 0) return appSource.slice(start, i + 1); }
   }
   throw new Error('Unbalanced function body: ' + name);
 }
 
 const sendSource = extractFunction('sendMessage');
 const renderSource = extractFunction('renderMessage');
+const reactionSource = extractFunction('toggleMessageReaction');
+const reactionBarSource = extractFunction('renderReactionBar');
+const starSource = extractFunction('toggleMessageStar');
 let browser;
 
 before(async () => { browser = await chromium.launch({ headless: true }); });
@@ -110,6 +116,95 @@ async function installSendHarness(page, { text = 'hello', attachment = false } =
   }, { source: sendSource, text, attachment });
   return page;
 }
+
+test('browser: rendered reaction buttons and star menu action persist and toggle', async () => {
+  const page = await browser.newPage();
+  try {
+    await page.setContent('<!doctype html><html><body><div class="message" data-message-id="m1"></div><button id="starBtn">Star</button></body></html>');
+    await page.evaluate(({ reactionSource, reactionBarSource, starSource }) => {
+      const message = { id: 'm1', conversation_id: 'c1', deleted_at: null };
+      const state = window.__state = {
+        user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
+        messages: [message], reactions: new Map([['m1', []]]),
+        starredMessageIds: new Set(), pendingReactionKeys: new Set(), pendingStarMessageKeys: new Set()
+      };
+      const backend = window.__backend = { operations: [], notices: [] };
+      const supabaseClient = {
+        from(table) {
+          return {
+            upsert(row, options) {
+              backend.operations.push({ table, operation: 'upsert', row: { ...row }, options });
+              return Promise.resolve({ error: null });
+            },
+            delete() {
+              const filters = [];
+              const query = {
+                eq(key, value) {
+                  filters.push([key, value]);
+                  if ((table === 'message_reactions' && filters.length === 4)
+                    || (table === 'user_message_stars' && filters.length === 2)) {
+                    backend.operations.push({ table, operation: 'delete', filters: [...filters] });
+                    return Promise.resolve({ error: null });
+                  }
+                  return query;
+                }
+              };
+              return query;
+            }
+          };
+        }
+      };
+      const options = ['like','heart','wow','pray','fire','celebrate'].map(type => ({ type, label: type, emoji: '❤️' }));
+      const toast = message => backend.notices.push(message);
+      const toggleReaction = new Function(
+        'state','supabaseClient','MESSAGE_REACTION_OPTIONS','document','renderReactionBar','toast','console',
+        'return (' + reactionSource + ');'
+      );
+      window.__runReaction = (...args) => {
+        window.__reactionPromise = toggleReaction(state, supabaseClient, options, document, window.__renderReactionBar, toast, console)(...args);
+        return window.__reactionPromise;
+      };
+      window.__renderReactionBar = new Function(
+        'state','document','MESSAGE_REACTION_OPTIONS','showReactionMembers','positionMessageReactionBar','toggleMessageReaction',
+        'return (' + reactionBarSource + ');'
+      )(state, document, options, () => {}, () => {}, window.__runReaction);
+      window.__renderReactionBar(document.querySelector('.message'), message);
+      window.__runStar = new Function(
+        'state','supabaseClient','toast','console',
+        'return (' + starSource + ');'
+      )(state, supabaseClient, toast, console);
+      document.getElementById('starBtn').addEventListener('click', () => {
+        window.__starPromise = window.__runStar('m1', !state.starredMessageIds.has('m1'));
+      });
+    }, { reactionSource, reactionBarSource, starSource });
+
+    await page.locator('.reaction-btn[data-reaction="heart"]').click();
+    await page.evaluate(() => window.__reactionPromise);
+    assert.equal(await page.locator('.reaction-btn[data-reaction="heart"]').getAttribute('aria-pressed'), 'true');
+
+    await page.locator('.reaction-btn[data-reaction="heart"]').click();
+    await page.evaluate(() => window.__reactionPromise);
+    assert.equal(await page.locator('.reaction-btn[data-reaction="heart"]').getAttribute('aria-pressed'), 'false');
+
+    await page.locator('#starBtn').click();
+    await page.evaluate(() => window.__starPromise);
+    assert.equal(await page.evaluate(() => window.__state.starredMessageIds.has('m1')), true);
+
+    await page.locator('#starBtn').click();
+    await page.evaluate(() => window.__starPromise);
+    const result = await page.evaluate(() => ({
+      starred: window.__state.starredMessageIds.has('m1'),
+      operations: window.__backend.operations.map(item => item.table + ':' + item.operation),
+      notices: window.__backend.notices.length
+    }));
+    assert.equal(result.starred, false);
+    assert.deepEqual(result.operations, [
+      'message_reactions:upsert','message_reactions:delete',
+      'user_message_stars:upsert','user_message_stars:delete'
+    ]);
+    assert.equal(result.notices, 0);
+  } finally { await page.close(); }
+});
 
 test('browser: a successful send persists once, renders, and clears only the sent draft', async () => {
   const page = await newPage();

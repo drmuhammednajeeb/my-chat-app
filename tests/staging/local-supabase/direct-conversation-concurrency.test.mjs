@@ -12,13 +12,15 @@ test('concurrency probe establishes its synthetic pair after rollback-only eligi
   assert.match(source, /LOCAL_SYNTHETIC_AUTH_USERS_JSON/);
   assert.match(source, /syntheticIds\?\.direct_a/);
   assert.match(source, /syntheticIds\?\.direct_b/);
+  assert.match(source, /syntheticIds\?\.direct_c/);
   assert.match(source, /admin_set_member_official_number/);
   assert.match(source, /11111111-1111-4111-8111-111111111111/);
   assert.doesNotMatch(source, /22222222-2222-4222-8222-22222222220[12]/);
   assert.match(source, /971001000002/);
   assert.match(source, /971001000003/);
+  assert.match(source, /971001000008/);
   assert.ok(source.indexOf('admin_set_member_official_number') < source.indexOf('const eligibleSql'));
-  assert.match(source, /Synthetic participant pair is not fully eligible/);
+  assert.match(source, /Three synthetic Realtime participants are not fully eligible/);
   assert.match(source, /Array\.from\(\{ length: 24 \}/);
   assert.match(source, /Array\.from\(\{ length: 40 \}/);
   assert.match(source, /public\.chat_messages\(conversation_id, sender_id, content\)/);

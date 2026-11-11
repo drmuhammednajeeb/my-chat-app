@@ -6,6 +6,7 @@ on:
       - "engineering/stability-css-extraction-20261109"
       - "fix/message-render-scope-20261110"
       - "security/default-acl-owner-coverage-20261110"
+      - "rebuild/clean-chat-core-storage-api-final-verified-20261111"
   pull_request:
     branches:
       - main
@@ -40,6 +41,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
+
+      - name: Install pinned Supabase JavaScript client and Playwright for authenticated browser E2E
+        run: npm install --no-save --no-package-lock @supabase/supabase-js@2.113.0 playwright@1.56.1
+
+      - name: Install Chromium for disposable local browser E2E
+        run: npx playwright install --with-deps chromium
 
       - name: Create an isolated temporary Supabase project
         env:
@@ -89,6 +96,17 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           node tests/staging/local-supabase/local-supabase-replay-runtime.mjs
 
+      - name: Capture sanitized local Realtime diagnostics on failure
+        if: failure()
+        run: |
+          echo "=== local Supabase container state ==="
+          docker ps -a --format '{{.Names}} {{.Status}}' | grep -Ei 'realtime|postgres|kong' || true
+          while IFS= read -r container; do
+            [ -n "$container" ] || continue
+            echo "=== diagnostics: $container ==="
+            docker logs --tail=250 "$container" 2>&1 | grep -Ei 'error|warn|replication|publication|postgres_changes|slot|wal' | tail -100 || true
+          done < <(docker ps -a --format '{{.Names}}' | grep -Ei 'realtime|postgres' || true)
+
       - name: Stop and destroy the disposable Supabase stack
         if: always()
         env:
@@ -98,3 +116,24 @@ jobs:
             cd "$RUNTIME_PROJECT_DIR"
             supabase stop || true
           fi
+
+      - name: Generate the next migration filename with Supabase CLI (no database access)
+        if: always()
+        env:
+          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
+        run: |
+          if [ ! -f "$RUNTIME_PROJECT_DIR/supabase/config.toml" ]; then
+            RUNTIME_PROJECT_DIR="$RUNNER_TEMP/migration-name-project"
+            mkdir -p "$RUNTIME_PROJECT_DIR"
+            cd "$RUNTIME_PROJECT_DIR"
+            supabase init
+          else
+            cd "$RUNTIME_PROJECT_DIR"
+          fi
+          supabase migration new chat_realtime_and_self_chat_rpc
+          generated="$(find "$RUNTIME_PROJECT_DIR/supabase/migrations" -maxdepth 1 -type f -name '*_chat_realtime_and_self_chat_rpc.sql' | sort | tail -1)"
+          test -n "$generated"
+          echo "GENERATED_MIGRATION_PATH=$generated"
+          echo "GENERATED_MIGRATION_CONTENT_BEGIN"
+          cat "$generated"
+          echo "GENERATED_MIGRATION_CONTENT_END"

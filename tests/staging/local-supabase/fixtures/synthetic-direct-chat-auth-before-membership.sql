@@ -10,11 +10,12 @@ BEGIN
       WHERE email IN (
         'direct-a@bizmindmakers.test',
         'direct-b@bizmindmakers.test',
+        'direct-c@bizmindmakers.test',
         'direct-suspended@bizmindmakers.test',
         'direct-unverified@bizmindmakers.test',
         'direct-unconfirmed@bizmindmakers.test',
         'direct-missing-profile@bizmindmakers.test'
-      )) <> 6 THEN
+      )) <> 7 THEN
     RAISE EXCEPTION 'Synthetic direct-chat Auth seed is incomplete';
   END IF;
 
@@ -24,18 +25,20 @@ BEGIN
       WHERE u.email IN (
         'direct-a@bizmindmakers.test',
         'direct-b@bizmindmakers.test',
+        'direct-c@bizmindmakers.test',
         'direct-suspended@bizmindmakers.test',
         'direct-unverified@bizmindmakers.test',
         'direct-unconfirmed@bizmindmakers.test',
         'direct-missing-profile@bizmindmakers.test'
-      ) AND i.provider = 'email') <> 6 THEN
-    RAISE EXCEPTION 'GoTrue did not create all six email identities';
+      ) AND i.provider = 'email') <> 7 THEN
+    RAISE EXCEPTION 'GoTrue did not create all seven email identities';
   END IF;
 
   FOR expected IN
     SELECT * FROM (VALUES
       ('direct-a@bizmindmakers.test', '971001000002', true, true),
       ('direct-b@bizmindmakers.test', '971001000003', true, true),
+      ('direct-c@bizmindmakers.test', '971001000008', true, true),
       ('direct-suspended@bizmindmakers.test', '971001000004', true, true),
       ('direct-unverified@bizmindmakers.test', '971001000005', false, true),
       ('direct-unconfirmed@bizmindmakers.test', '971001000006', true, false),
@@ -59,11 +62,12 @@ BEGIN
       WHERE email IN (
         'direct-a@bizmindmakers.test',
         'direct-b@bizmindmakers.test',
+        'direct-c@bizmindmakers.test',
         'direct-suspended@bizmindmakers.test',
         'direct-unverified@bizmindmakers.test',
         'direct-unconfirmed@bizmindmakers.test',
         'direct-missing-profile@bizmindmakers.test'
-      )) <> 6 THEN
+      )) <> 7 THEN
     RAISE EXCEPTION 'Synthetic membership numbers must be unique';
   END IF;
 END
