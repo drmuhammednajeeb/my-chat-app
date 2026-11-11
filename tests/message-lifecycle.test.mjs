@@ -717,7 +717,7 @@ test('voice send flushes the final recorder chunk and refuses cross-conversation
   assert.match(start, /if\(typeof recorder\.start==='function'\)recorder\.start\(\)/);
   assert.match(start, /recordingConversationId/);
   assert.match(start, /state\.active\?\.id!==recordingConversationId\|\|state\.user\?\.id!==recordingUserId/);
-  assert.match(start, /elapsed>=180/);
+  assert.doesNotMatch(start, /elapsed\s*>=\s*180|180\s*\*\s*1000/);\n  assert.match(start, /state\.voiceTimer=setInterval\(\(\)=>\{updateVoiceRecordingUI\(\)\},250\)/);
 });
 
 test('eight-second fallback is message reconciliation cadence, not a voice recording limit', () => {
