@@ -13,6 +13,22 @@
     return node;
   }
 
+  // Forever IDs are 971 + nine digits. Accept the company's grouped display form
+  // and normalize to digits before sending values to PostgreSQL.
+  function normalizeForeverMembershipNumber(value) {
+    const raw = String(value || "").trim();
+    if (/^971-[0-9]{3}-[0-9]{3}-[0-9]{3}$/.test(raw)) return raw.replace(/-/g, "");
+    if (/^971[0-9]{9}$/.test(raw)) return raw;
+    return null;
+  }
+
+  function formatForeverMembershipNumber(value) {
+    const digits = normalizeForeverMembershipNumber(value);
+    return digits
+      ? digits.replace(/^(971)([0-9]{3})([0-9]{3})([0-9]{3})$/, "$1-$2-$3-$4")
+      : String(value || "—");
+  }
+
   function dateLabel(value) {
     if (!value) return "—";
     const date = new Date(value);
@@ -83,7 +99,7 @@
       const row = make("article", "membership-list-row");
       const info = make("div", "membership-list-info");
       info.append(make("strong", "", item.email));
-      info.append(make("small", "", item.membership_number + " · تنتهي " + dateLabel(item.expires_at)));
+      info.append(make("small", "", formatForeverMembershipNumber(item.membership_number) + " · تنتهي " + dateLabel(item.expires_at)));
       const revoke = make("button", "membership-danger-btn", "إلغاء الدعوة");
       revoke.type = "button";
       revoke.addEventListener("click", async () => {
@@ -118,7 +134,7 @@
       info.append(make("small", "", item.email || "—"));
       info.append(make("small", "membership-number-label",
         item.membership_number_verified
-          ? "رقم فوريفر الرسمي: " + item.membership_number + " · @" + item.username
+          ? "رقم فوريفر الرسمي: " + formatForeverMembershipNumber(item.membership_number) + " · @" + item.username
           : "رقم العضوية الرسمي غير معتمد بعد · @" + item.username));
 
       const isVerified = item.membership_number_verified === true;
@@ -134,13 +150,13 @@
         verify.type = "button";
         verify.addEventListener("click", async () => {
           const officialNumber = prompt(
-            "أدخل رقم العضوية الرسمي لهذا العضو (971 متبوعاً بتسعة أرقام):",
+            "أدخل رقم العضوية الرسمي بصيغة 971-000-000-000:",
             ""
           );
           if (officialNumber === null) return;
-          const normalized = officialNumber.trim();
-          if (!/^971[0-9]{9}$/.test(normalized)) {
-            if (typeof toast === "function") toast("رقم غير صحيح. المطلوب 12 رقماً: 971 + 9 أرقام");
+          const normalized = normalizeForeverMembershipNumber(officialNumber);
+          if (!normalized) {
+            if (typeof toast === "function") toast("رقم غير صحيح. استخدم الصيغة 971-000-000-000 أو 971000000000");
             return;
           }
           verify.disabled = true;
@@ -215,13 +231,13 @@
         return;
       }
       const email = parts[0].toLowerCase();
-      const membership_number = parts[1];
+      const membership_number = normalizeForeverMembershipNumber(parts[1]);
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         if (typeof toast === "function") toast("بريد إلكتروني غير صحيح: " + email);
         return;
       }
-      if (!/^971[0-9]{9}$/.test(membership_number)) {
-        if (typeof toast === "function") toast("رقم فوريفر غير صحيح: " + membership_number + " — المطلوب 971 + 9 أرقام");
+      if (!membership_number) {
+        if (typeof toast === "function") toast("رقم فوريفر غير صحيح: " + parts[1] + " — استخدم الصيغة 971-000-000-000 أو 971000000000");
         return;
       }
       members.push({ email, membership_number });
