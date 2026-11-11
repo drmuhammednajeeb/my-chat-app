@@ -234,6 +234,7 @@ try {
     const realtime = await accountB.page.evaluate(() => ({
       status: eval('state.realtimeStatus'),
       lastEvent: eval('state.diagnostics.lastRealtimeEvent'),
+      lastRealtimeConversation: eval('state.diagnostics.lastRealtimeConversationId'),
       activeConversation: eval('state.active?.id'),
       observer: window.__BIZMIND_E2E_REALTIME_OBSERVER__,
       filteredObserver: window.__BIZMIND_E2E_FILTERED_OBSERVER__
@@ -245,6 +246,39 @@ try {
     assert.equal(realtime.filteredObserver?.status, 'SUBSCRIBED', 'Independent filtered Realtime observer must be subscribed.');
     assert.equal(realtime.filteredObserver?.event?.conversationId, conversation, 'Independent UUID-filtered observer must receive the test insert.');
     assert.equal(realtime.lastEvent, 'INSERT', 'Application channel must receive the message through Realtime, not only polling.');
+    assert.equal(realtime.lastRealtimeConversation, conversation, 'Application Realtime handler must record only its active conversation.');
+
+    console.log('BROWSER_E2E_STEP=prove cross-conversation event isolation for a user in two direct chats');
+    const tokenB = await authenticate('direct-b@bizmindmakers.test');
+    const tokenC = await authenticate('direct-c@bizmindmakers.test');
+    const secondConversation = await apiCall('/rest/v1/rpc/get_or_create_direct_conversation', {
+      method: 'POST',
+      token: tokenB,
+      body: { p_other_user_id: users.direct_c }
+    });
+    if (typeof secondConversation !== 'string' || !/^[0-9a-f-]{36}$/i.test(secondConversation) || secondConversation === conversation) {
+      throw new Error('Second isolated direct conversation RPC returned an invalid or duplicate conversation ID.');
+    }
+    const foreignMessage = 'Foreign conversation isolation ' + Date.now() + ' ' + Math.random().toString(36).slice(2, 10);
+    await accountB.page.evaluate(value => { window.__BIZMIND_E2E_FOREIGN_MESSAGE__ = value; }, foreignMessage);
+    await apiCall('/rest/v1/chat_messages', {
+      method: 'POST',
+      token: tokenC,
+      body: { conversation_id: secondConversation, sender_id: users.direct_c, content: foreignMessage }
+    });
+    await accountB.page.waitForFunction(
+      expected => window.__BIZMIND_E2E_REALTIME_OBSERVER__?.event?.conversationId === expected,
+      secondConversation,
+      { timeout: 20000 }
+    );
+    const isolation = await accountB.page.evaluate(() => ({
+      appConversation: eval('state.diagnostics.lastRealtimeConversationId'),
+      activeConversation: eval('state.active?.id'),
+      foreignMessageVisible: document.querySelector('#messages')?.innerText.includes(window.__BIZMIND_E2E_FOREIGN_MESSAGE__ || '__not_set__') || false
+    }));
+    assert.equal(isolation.activeConversation, conversation, 'Account B must remain in the original active conversation.');
+    assert.equal(isolation.appConversation, conversation, 'Foreign conversation CDC events must not enter the active app handler.');
+    assert.equal(isolation.foreignMessageVisible, false, 'A message from another conversation must never render in the active chat.');
 
     console.log('BROWSER_E2E_STEP=reload account B and verify durable message history');
     await accountB.page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
