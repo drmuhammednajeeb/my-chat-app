@@ -156,7 +156,8 @@ function inspect(file) {
     const indirect = /\bapp_private\.(?:is_conversation_member|can_manage_conversation|is_team_admin)\s*\(/i.test(statement);
     const denyAll = /\busing\s*\(\s*false\s*\)/i.test(statement) || /\bwith\s+check\s*\(\s*false\s*\)/i.test(statement);
     const selfScoped = /\bauth\.uid\s*\(\s*\)/i.test(statement) || /\bowner_id\s*=/i.test(statement) || /\buser_id\s*=/i.test(statement);
-    return { name: m[1].trim(), table: m[2].toLowerCase(), statement, guardClass: denyAll ? 'DENY_ALL' : direct ? 'DIRECT_ACTIVE_MEMBER' : indirect ? 'INDIRECT_ACTIVE_MEMBER' : selfScoped ? 'SELF_SCOPE_ONLY' : 'NO_RECOGNIZED_GUARD' };
+    const expiryGated = /\bexpires_at\s*>\s*now\s*\(\s*\)/i.test(statement);
+    return { name: m[1].trim(), table: m[2].toLowerCase(), statement, guardClass: denyAll ? 'DENY_ALL' : direct ? 'DIRECT_ACTIVE_MEMBER' : indirect ? 'INDIRECT_ACTIVE_MEMBER' : selfScoped ? 'SELF_SCOPE_ONLY' : expiryGated ? 'EXPIRY_GATED' : 'NO_RECOGNIZED_GUARD' };
   });
   const policies = policyDetails.map(({ name, table }) => ({ name, table }));
   const constraints = matches(sql, /\badd\s+constraint\s+([a-z_]\w*)/gi, m => m[1].toLowerCase());
@@ -211,7 +212,7 @@ export async function buildObjectInventory(root = ROOT) {
   const finalCoversInviteImplementations = finalTargets.includes('admin_create_official_member_invites_impl') && finalTargets.includes('admin_set_member_official_number_impl');
   const membershipBaseTimestamp = 20261107144109;
   const policiesAfterMembershipBase = files.filter(file => file.sourceTimestamp && Number(file.sourceTimestamp) > membershipBaseTimestamp).flatMap(file => file.policyDetails.map(policy => ({ path: file.path, ...policy })));
-  const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
+  const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL', 'SELF_SCOPE_ONLY', 'EXPIRY_GATED'].includes(policy.guardClass));
   const clientStorageBuckets = [...new Set(matches(appHtml, /storage\.from\(\s*['"]([^'"]+)['"]/gi, m => m[1]))].sort();
   const declaredStorageBuckets = [...new Set(files.flatMap(file => file.storageBucketIds))].sort();
   const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => file.policyDetails.filter(policy => policy.table === 'storage.objects').flatMap(policy => matches(policy.statement, /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, m => m[1]))) )].sort();
