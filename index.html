@@ -1541,7 +1541,21 @@ function scheduleMessagePolling(conversationId,generation,delay=messagePollingDe
   pollMessagesFallback(conversationId,generation);
  },delay);
 }
-document.addEventListener('visibilitychange',()=>{if(state.active?.id&&state.messagePollTimer)scheduleMessagePolling(state.active.id,state.messagePollGeneration)});
+function requestImmediateMessageReconciliation(reason='lifecycle'){
+ const conversationId=state.active?.id,generation=state.messagePollGeneration;
+ if(!conversationId||!state.user)return false;
+ if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}
+ diagLog('sync-reconcile-requested',{reason});
+ scheduleMessagePolling(conversationId,generation,0);
+ return true;
+}
+document.addEventListener('visibilitychange',()=>{
+ if(!state.active?.id)return;
+ if(document.visibilityState==='visible')requestImmediateMessageReconciliation('visible');
+ else if(state.messagePollTimer)scheduleMessagePolling(state.active.id,state.messagePollGeneration);
+});
+window.addEventListener('online',()=>requestImmediateMessageReconciliation('online'));
+window.addEventListener('focus',()=>requestImmediateMessageReconciliation('focus'));
 function stopMessagePolling(){state.isLoadingMessages=false;state.loadingOlderMessages=false;state.hasMoreMessages=false;state.messagePollGeneration++;if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}state.messagePollBusy=false;diagLog('poll-stopped',{generation:state.messagePollGeneration})}
 function startMessagePolling(conversationId){
  stopMessagePolling();const generation=state.messagePollGeneration;
@@ -1553,9 +1567,10 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
  const cursor=state.messagePollCursor?.conversationId===conversationId?state.messagePollCursor:null;
  state.messagePollBusy=true;state.diagnostics.lastPollAt=new Date().toLocaleTimeString('en-GB');
  try{
+  const overlapStartedAt=new Date(Date.parse(pollStartedAt)-5000).toISOString();
   const syncFilter=cursor
-   ?'created_at.gt.'+cursor.created_at+',and(created_at.eq.'+cursor.created_at+',id.gt.'+cursor.id+'),edited_at.gt.'+pollStartedAt+',deleted_at.gt.'+pollStartedAt
-   :'created_at.gt.'+pollStartedAt+',edited_at.gt.'+pollStartedAt+',deleted_at.gt.'+pollStartedAt;
+   ?'created_at.gt.'+overlapStartedAt+',and(created_at.eq.'+cursor.created_at+',id.gt.'+cursor.id+'),edited_at.gt.'+pollStartedAt+',deleted_at.gt.'+pollStartedAt
+   :'created_at.gt.'+overlapStartedAt+',edited_at.gt.'+pollStartedAt+',deleted_at.gt.'+pollStartedAt;
   let pollQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(syncFilter);
   if(state.activeChatPreference?.cleared_before)pollQuery=pollQuery.gt('created_at',state.activeChatPreference.cleared_before);
   const {data,error}=await pollQuery.order('created_at',{ascending:true}).order('id',{ascending:true}).limit(200);
