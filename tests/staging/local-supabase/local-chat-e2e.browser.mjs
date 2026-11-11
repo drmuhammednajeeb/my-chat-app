@@ -74,6 +74,7 @@ let browser;
 const contexts = [];
 const pages = [];
 const pageErrors = [];
+const browserDiagnostics = [];
 let conversationId = null;
 let adminApiBase = apiUrl.replace(/\/$/, '');
 
@@ -135,7 +136,7 @@ async function signIn(page, email) {
 }
 
 async function openDirect(page, otherId) {
-  const id = await page.evaluate(async peerId => {
+  const result = await page.evaluate(async peerId => {
     const { data, error } = await supabaseClient
       .from('profiles')
       .select('id,username,display_name,avatar_url,membership_number,membership_number_verified')
@@ -143,11 +144,21 @@ async function openDirect(page, otherId) {
       .single();
     if (error) throw error;
     await openDirectConversation(data);
-    return state.active?.id || null;
+    return {
+      activeId: state.active?.id || null,
+      conversationCount: state.conversations?.length || 0,
+      matchingConversation: state.conversations?.find(c => c.type === 'direct' && c.members?.some(m => m.user_id === peerId))?.id || null,
+      userId: state.user?.id || null,
+      profileId: data.id
+    };
   }, otherId);
-  await page.waitForFunction(expected => state.active?.id === expected, id, { timeout: 25000 });
+  if (!result.activeId) {
+    throw new Error('Application did not activate the direct conversation: ' + JSON.stringify(result)
+      + (browserDiagnostics.length ? '\\nBrowser diagnostics:\\n' + browserDiagnostics.join('\\n') : ''));
+  }
+  await page.waitForFunction(expected => state.active?.id === expected, result.activeId, { timeout: 25000 });
   await page.locator('#messageInput').waitFor({ state: 'visible' });
-  return id;
+  return result.activeId;
 }
 
 async function send(page, content) {
@@ -178,6 +189,8 @@ try {
   pages.push(pageA, pageB);
   for (const page of pages) {
     page.on('pageerror', error => pageErrors.push(String(error?.stack || error)));
+    page.on('console', message => { if (['error', 'warning'].includes(message.type())) browserDiagnostics.push('[' + message.type() + '] ' + message.text()); });
+    page.on('requestfailed', request => browserDiagnostics.push('[requestfailed] ' + request.method() + ' ' + request.url() + ' :: ' + (request.failure()?.errorText || 'unknown')));
     await page.route(SDK_URL, route => route.fulfill({
       path: sdkPath,
       contentType: 'application/javascript; charset=utf-8',
