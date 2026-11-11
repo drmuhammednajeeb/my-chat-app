@@ -31,6 +31,8 @@ jobs:
 
       - name: Run direct-conversation static regression tests
         run: |
+          node --check tests/staging/local-supabase/local-browser-e2e.mjs
+          node --check tests/staging/local-supabase/local-message-load.mjs
           node --test \
             tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
