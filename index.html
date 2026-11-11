@@ -1432,7 +1432,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
   const latestMessage=(state.messages||[]).find(item=>item.id===m.id);if(!latestMessage||latestMessage!==m)return false;
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
   const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
-  area.append(row);state.messageIds.add(m.id);reconcileMessageTimeline(area);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
+  area.append(row);state.messageIds.add(m.id);if(!state.batchRenderingMessages)reconcileMessageTimeline(area);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
   if(!state.isLoadingMessages){if(m.sender_id===state.user?.id){clearNewMessages(false);scheduleMessagesBottom(area,'auto')}else if(near){scheduleMessagesBottom(area,'auto')}else{state.newMessageCount=(state.newMessageCount||0)+1;updateNewMessagesIndicator()}}
   updateDiagnostics();
   return true;
@@ -1560,7 +1560,7 @@ async function loadOlderMessages(){
   const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
   const previousMessages=state.messages;
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-  state.isLoadingMessages=true;area.style.overflowAnchor='none';
+  state.isLoadingMessages=true;state.batchRenderingMessages=true;area.style.overflowAnchor='none';
   const beforeRenderNodes=new Set(Array.from(area.childNodes)),olderIds=new Set(older.map(message=>message.id));
   for(const message of older){
    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
@@ -1569,6 +1569,7 @@ async function loadOlderMessages(){
    if(!rendered&&!state.messageIds.has(message.id))throw new Error('Older message rendering did not complete');
   }
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  state.batchRenderingMessages=false;reconcileMessageTimeline(area);
   const addedSet=new Set(Array.from(area.querySelectorAll('.message')).filter(node=>olderIds.has(node.dataset.messageId)));
   addedSet.forEach(node=>{const previous=node.previousElementSibling;if(previous?.classList.contains('day-divider')&&!beforeRenderNodes.has(previous))addedSet.add(previous)});
   const addedNodes=Array.from(area.childNodes).filter(node=>addedSet.has(node));
@@ -1587,7 +1588,7 @@ async function loadOlderMessages(){
   }
   return false;
  }finally{
-  state.loadingOlderMessages=false;loader.remove();
+  state.batchRenderingMessages=false;state.loadingOlderMessages=false;loader.remove();
  }
 }
 function messagePollingDelay(){
