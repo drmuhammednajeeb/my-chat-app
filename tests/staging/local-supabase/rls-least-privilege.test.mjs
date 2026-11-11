@@ -84,12 +84,15 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
 });
 
 
-test('postgres global PUBLIC function execution default is explicitly revoked', async () => {
+test('global PUBLIC function default is platform-controlled; current functions are explicitly revoked', async () => {
   const overlay = await readFile(overlayPath, 'utf8');
   const assertion = await readFile(assertionPath, 'utf8');
-  assert.match(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres\s+REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC/i);
-  assert.match(assertion, /Global PUBLIC EXECUTE default remains for postgres-created functions/i);
-  assert.match(assertion, /Global postgres function default ACL is not explicitly hardened/i);
+  assert.match(overlay, /global PUBLIC EXECUTE default for functions is platform-controlled/i);
+  assert.doesNotMatch(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres\s+REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC/i);
+  assert.match(overlay, /REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM public, anon/i);
+  assert.match(overlay, /REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA app_private FROM public, anon/i);
+  assert.match(assertion, /A public-schema function remains executable by anon or PUBLIC/i);
+  assert.match(assertion, /An app_private function remains executable by PUBLIC or anon/i);
 });
 
 test('Supabase-managed supabase_admin defaults are treated as immutable platform state', async () => {
