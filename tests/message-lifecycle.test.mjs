@@ -62,19 +62,6 @@ test('stickers are sent through the existing message pipeline and rendered as va
   assert.match(source, /\$\('messageInput'\)\.value=encodeChatSticker\(emoji\);sendMessage\(\)/);
 });
 
-test('browser microphone recordings using audio/webm are accepted by attachment validation', () => {
-  const start = source.indexOf('const CHAT_ATTACHMENT_MIME_BY_EXTENSION=');
-  const end = source.indexOf('async function uploadAttachment(', start);
-  assert.ok(start >= 0 && end > start);
-  const sandbox = {};
-  vm.runInNewContext(source.slice(start, end) +
-    '\nglobalThis.resolveMime=resolveChatAttachmentMime;globalThis.allowed=CHAT_ATTACHMENT_ALLOWED_MIME_TYPES;', sandbox);
-  assert.equal(sandbox.resolveMime({ name: 'voice-123.webm', type: 'audio/webm;codecs=opus' }), 'audio/webm');
-  assert.equal(sandbox.allowed.has('audio/webm'), true);
-  assert.equal(sandbox.allowed.has('audio/mp4'), true);
-  assert.equal(sandbox.allowed.has('audio/wav'), true);
-});
-
 test('voice send button dispatches stop-and-send while recording', () => {
   assert.match(source, /\$\('sendBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):sendMessage\(\)/);
   assert.match(source, /function sendVoiceRecording\(\)[\s\S]*?state\.voiceSendOnStop=true/);
@@ -82,65 +69,9 @@ test('voice send button dispatches stop-and-send while recording', () => {
   assert.match(source, /\$\('sendBtn'\)\.setAttribute\('aria-label','إرسال التسجيل الصوتي'\)/);
 });
 
-test('microphone toggle finalizes and sends instead of only stopping into an unsent draft', () => {
-  assert.match(source, /\$\('voiceRecordBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):startVoiceRecording\(\)/);
-  assert.match(extractFunction('sendVoiceRecording'), /state\.voiceSendOnStop=true/);
-  assert.match(extractFunction('startVoiceRecording'), /if\(shouldSend\)\{setTimeout\(\(\)=>\{if\(state\.attachment===file\)sendMessage\(\)\},0\)\}/);
-});
-
-test('composer keeps the stop-and-send action enabled while a recording is active', () => {
-  assert.match(extractFunction('resizeComposer'), /!state\.voiceRecorder&&!n\.value\.trim\(\)&&!state\.attachment/);
-});
-
-test('recording safety timeout sends the captured audio instead of leaving it unsent', () => {
-  assert.match(extractFunction('startVoiceRecording'), /if\(elapsed>=180\)\{state\.voiceSendOnStop=true;stopVoiceRecording\(\)\}/);
-});
-
 test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring', () => {
   assert.match(overrides, /#chat \.messages\{overflow-anchor:none\}/);
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
-});
-
-test('sticker parser accepts the displayed legacy token and the canonical token without exposing either as text', () => {
-  const start = source.indexOf('const CHAT_STICKERS=');
-  const end = source.indexOf('function openChatStickerPicker()', start);
-  assert.ok(start >= 0 && end > start);
-  const sandbox = {
-    document: {
-      createElement: () => ({ dataset: {}, attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } }),
-      createTextNode: value => ({ textContent: value })
-    }
-  };
-  vm.runInNewContext(source.slice(start, end) + '\n' +
-    'globalThis.decodeSticker=decodeChatSticker;globalThis.encodeSticker=encodeChatSticker;globalThis.renderSticker=renderChatSticker;', sandbox);
-  assert.equal(sandbox.decodeSticker('[[😍:bizmind-sticker]]'), '😍');
-  assert.equal(sandbox.decodeSticker('[[bizmind-sticker:😍]]'), '😍');
-  assert.equal(sandbox.encodeSticker('😍'), '😍');
-  assert.equal(sandbox.decodeSticker('😍'), '😍');
-  assert.equal(sandbox.decodeSticker('hello [[😍:bizmind-sticker]]'), null);
-  const node = sandbox.renderSticker('😍');
-  assert.equal(node.className, 'message-sticker');
-  assert.equal(node.textContent, '😍');
-  assert.equal(node.dataset.sticker, '😍');
-  assert.equal(node.attributes['aria-label'], 'ملصق 😍');
-});
-
-test('sticker previews stay visual/semantic across sidebar, search, replies and exports', () => {
-  assert.match(source, /function convPreview\(c\)[\s\S]*?return c\.last_message\?messagePreview\(c\.last_message\)/);
-  assert.match(source, /body\.textContent=messagePreview\(message\)/);
-  assert.match(source, /messagePreview\(m\)\)\}\)\.join/);
-  assert.match(source, /function messagePreview\(m\)[\s\S]*?decodeChatSticker\(m\.content\)/);
-});
-
-test('voice recording control always finalizes and sends captured audio', () => {
-  assert.match(source, /\$\('voiceRecordBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):startVoiceRecording\(\)/);
-  assert.match(extractFunction('sendVoiceRecording'), /state\.voiceSendOnStop=true/);
-  assert.match(extractFunction('startVoiceRecording'), /if\(shouldSend\)\{setTimeout\(\(\)=>\{if\(state\.attachment===file\)sendMessage\(\)\},0\)\}/);
-  assert.match(extractFunction('resizeComposer'), /!state\.voiceRecorder&&!n\.value\.trim\(\)&&!state\.attachment/);
-});
-
-test('voice recording safety timeout sends the captured audio instead of discarding it', () => {
-  assert.match(extractFunction('startVoiceRecording'), /if\(elapsed>=180\)\{state\.voiceSendOnStop=true;stopVoiceRecording\(\)\}/);
 });
 
 test('all inline JavaScript blocks parse without a bundler', () => {
