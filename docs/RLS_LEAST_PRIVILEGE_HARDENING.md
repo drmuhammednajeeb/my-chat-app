@@ -2,7 +2,7 @@
 
 ## Current decision
 
-**Production promotion: BLOCKED. The previous disposable-local baseline passed. The latest extended runtime passed the RLS and Storage checks but stopped in browser E2E because the directory message action was not visible to Playwright; the test now records computed visibility and exercises the row hover state.**
+**Production promotion: BLOCKED. Disposable-local Supabase runtime PASSED on 2026-11-11 (run 42990853351), including RLS/CRUD compatibility, Storage ownership checks, direct-conversation eligibility, concurrency, pg_cron, and the full-app direct-message browser send/read/reload path. Immediate Realtime delivery with both users already connected remains unverified; production hardening migrations and ACL allowlist are not approved.**
 
 - The RLS overlay, direct-conversation eligibility guard, and chat-media uploader-folder guard have been exercised against a disposable local Supabase stack.
 - No production SQL, ACL, policy, or data changes were executed.
@@ -10,6 +10,8 @@
 - The test-only overlays are not yet canonical production migrations and must not be applied to the live project as-is.
 
 ## Verified disposable-local runtime — 2026-11-11
+
+**Latest run:** [42990853351](https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42990853351) — job `local-supabase-runtime` completed with `success`. The log confirms `RLS_LEAST_PRIVILEGE_LOCAL_RUNTIME=PASSED`, `STORAGE_RLS_RUNTIME=PASSED`, `LOCAL_APP_E2E=PASSED`, `LOCAL_API_LOAD=PASSED`, and `LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED`. The disposable stack was stopped and destroyed after the run.
 
 The GitHub Actions disposable runtime completed successfully with:
 
@@ -21,7 +23,7 @@ The GitHub Actions disposable runtime completed successfully with:
 - Twenty-four reversed-pair concurrent RPC requests converged on one conversation.
 - Forty concurrent message writes were stored without duplicate message IDs.
 - The local pg_cron execution probe passed and removed its temporary job.
-- The actual application was served from a test-only copy of index.html rewritten to the loopback Supabase URL and local anon key. Browser E2E passed: user A signed in, opened user B's direct conversation, sent a message, user B read it, and the message remained after reload.
+- The actual application was served from a test-only copy of index.html rewritten to the loopback Supabase URL and local anon key. Browser E2E passed: user A signed in, opened user B's direct conversation, sent a message, user B read it, and the message remained after reload. This sequence does not prove immediate Realtime delivery while user B is already signed in and subscribed before user A sends; a two-session subscribed-recipient test and reconnect coverage remain required.
 - Docker container egress was blocked through the DOCKER-USER firewall chain while local inter-container traffic and host-to-loopback test traffic remained available. GitHub runner host egress remains available for Actions, dependency downloads, and the explicitly allowlisted browser CDNs.
 
 The run used a disposable local stack. It does not prove that the live production policies have been changed.
