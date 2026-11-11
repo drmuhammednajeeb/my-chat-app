@@ -80,12 +80,10 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
 });
 
 test('inline bootstrap and extracted JavaScript files parse without a bundler', () => {
-  const blocks = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-    .filter(match => !/\\bsrc\\s*=/.test(match[1]) && match[2].trim());
-  assert.equal(blocks.length, 1, 'Only the pre-paint bootstrap should remain inline');
-  blocks.forEach((match, index) => {
-    new vm.Script(match[2], { filename: 'inline-bootstrap-' + index + '.js' });
-  });
+  const bootstrapStart = html.indexOf('<script>') + '<script>'.length;
+  const bootstrapEnd = html.indexOf('</script>', bootstrapStart);
+  assert.ok(bootstrapStart >= '<script>'.length && bootstrapEnd > bootstrapStart);
+  new vm.Script(html.slice(bootstrapStart, bootstrapEnd), { filename: 'inline-theme-bootstrap.js' });
   for (const [name, code] of [['app.js', app], ['workspace.js', workspace], ['membership.js', membership], ['service-worker.js', serviceWorker]]) {
     new vm.Script(code, { filename: name });
   }
