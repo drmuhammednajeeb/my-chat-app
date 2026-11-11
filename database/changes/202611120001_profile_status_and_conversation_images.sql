@@ -22,9 +22,8 @@ create table if not exists public.profile_statuses (
   )
 );
 
-create index if not exists profile_statuses_active_user_created_idx
-  on public.profile_statuses(user_id, created_at desc)
-  where expires_at > now();
+create index if not exists profile_statuses_user_created_idx
+  on public.profile_statuses(user_id, created_at desc);
 
 create index if not exists profile_statuses_active_expiry_idx
   on public.profile_statuses(expires_at);
