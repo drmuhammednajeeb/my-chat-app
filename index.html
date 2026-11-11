@@ -1531,7 +1531,9 @@ async function loadOlderMessages(){
 }
 function messagePollingDelay(){
  if(document.visibilityState!=='visible')return 60000;
- return state.realtimeStatus==='SUBSCRIBED'?30000:8000;
+ // Realtime is the primary delivery path. Poll frequently only while its channel
+ // is not subscribed; retain a low-frequency reconciliation while healthy.
+ return state.realtimeStatus==='SUBSCRIBED'?15000:1200;
 }
 function scheduleMessagePolling(conversationId,generation,delay=messagePollingDelay()){
  if(generation!==state.messagePollGeneration||state.active?.id!==conversationId)return;
@@ -1712,7 +1714,9 @@ function subscribeConversation(){
    const reconnected=channelHasSubscribed&&s==='SUBSCRIBED';
    if(s==='SUBSCRIBED')channelHasSubscribed=true;
    state.realtimeStatus=s;diagLog('realtime-status',{status:s,reconnected});
-   if(state.messagePollTimer)scheduleMessagePolling(id,state.messagePollGeneration);
+   if(state.active?.id===id&&(s==='SUBSCRIBED'||s==='CHANNEL_ERROR'||s==='TIMED_OUT')){
+    requestImmediateMessageReconciliation(s==='SUBSCRIBED'?'realtime-subscribed':'realtime-unavailable');
+   }else if(state.messagePollTimer)scheduleMessagePolling(id,state.messagePollGeneration);
    if(reconnected&&state.active?.id===id)loadMessages().catch(error=>console.warn('Reconnect message reconciliation failed:',error));
    $('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';
   });
