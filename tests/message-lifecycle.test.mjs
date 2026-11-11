@@ -455,7 +455,7 @@ test('recorded audio/webm is accepted by the upload MIME allowlist', async () =>
   assert.equal(result.type, 'audio/webm');
   assert.equal(uploaded.length, 1);
   assert.equal(uploaded[0].type, 'audio/webm');
-  assert.match(uploaded[0].path, /^conversation-1\\/user-1\\/voice-test-id_voice-test\\.webm$/);
+  assert.equal(uploaded[0].path, 'conversation-1/user-1/voice-test-id_voice-test.webm');
 });
 
 test('document storage filename sanitizer removes path separators and unsafe characters', () => {
