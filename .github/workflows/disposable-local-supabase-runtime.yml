@@ -107,7 +107,11 @@ jobs:
             echo "No Docker networks found; refusing to run without egress isolation."
             exit 1
           fi
-          if printf '%s\n' "$network_names" | grep -Eq '^(host|none)
+          if printf '%s\n' "$network_names" | grep -Eq '^(host|none)$'; then
+            echo "A Supabase container uses a non-bridge network; refusing to run without egress isolation."
+            exit 1
+          fi
+          declare -a network_subnets=()
           while IFS= read -r network; do
             [ -n "$network" ] || continue
             ipv6_enabled=$(docker network inspect "$network" --format '{{.EnableIPv6}}')
