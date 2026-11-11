@@ -405,6 +405,16 @@
       "parityNote": "Run only after the relevant disposable-local replay nodes. Confirms extension placement and job definition, not actual scheduler execution."
     },
     {
+      "nodeId": "chat.expiry-48h",
+      "status": "REQUIRES_DISPOSABLE_STAGING_RUNTIME_VALIDATION",
+      "testSources": [
+        "supabase/migrations/202611110001_enforce_chat_message_48h_retention.sql",
+        "tests/message-retention-policy.test.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": "Static policy checks are included in CI. Actual PostgreSQL trigger, exact expiry, one-minute cron execution, and large-batch purge remain unverified until a disposable staging Supabase environment is available. Chat-media objects require a separate Storage API worker."
+    },
+    {
       "nodeId": "chat.team-admin-group-overrides",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -441,16 +451,6 @@
       ],
       "blockedBy": [],
       "parityNote": null
-    },
-    {
-      "nodeId": "chat.expiry-48h",
-      "status": "REQUIRES_DISPOSABLE_STAGING_RUNTIME_VALIDATION",
-      "testSources": [
-        "supabase/migrations/202611110001_enforce_chat_message_48h_retention.sql",
-        "tests/message-retention-policy.test.mjs"
-      ],
-      "blockedBy": [],
-      "parityNote": "Static policy checks are included in CI. Actual PostgreSQL trigger, exact expiry, one-minute cron execution, and large-batch purge remain unverified until a disposable staging Supabase environment is available. Chat-media objects require a separate Storage API worker."
     },
     {
       "nodeId": "membership.base",
