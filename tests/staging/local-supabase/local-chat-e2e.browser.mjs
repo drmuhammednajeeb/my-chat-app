@@ -213,11 +213,57 @@ try {
   assert.equal(conversationA, conversationB, 'both authenticated clients must resolve the same direct conversation');
   conversationId = conversationA;
 
-  console.log('LOCAL_CHAT_BROWSER_E2E_STEP=send and receive message through application UI and Realtime');
+  console.log('LOCAL_CHAT_BROWSER_E2E_STEP=verify empty conversation history rendering and read receipt');
+  const emptyHistory = await pageA.evaluate(async () => {
+    if (typeof loadMessages !== 'function') throw new Error('application loadMessages entry point is unavailable');
+    const loaded = await loadMessages();
+    return {
+      loaded,
+      activeConversationId: state.active?.id || null,
+      messageCount: state.messages.filter(message => message.conversation_id === state.active?.id).length,
+      renderedMessageCount: document.querySelectorAll('#messages .message').length,
+      emptyStateVisible: document.querySelector('#messages .welcome')?.innerText.includes('بداية محادثة جديدة') || false,
+      loading: state.isLoadingMessages
+    };
+  });
+  assert.equal(emptyHistory.loaded, true, 'empty history must complete loadMessages successfully');
+  assert.equal(emptyHistory.activeConversationId, conversationId);
+  assert.equal(emptyHistory.messageCount, 0, 'empty conversation must have no persisted messages');
+  assert.equal(emptyHistory.renderedMessageCount, 0, 'empty conversation must not render message rows');
+  assert.equal(emptyHistory.emptyStateVisible, true, 'empty conversation welcome state must be rendered');
+  assert.equal(emptyHistory.loading, false, 'empty history must clear the loading state');
+
+  console.log('LOCAL_CHAT_BROWSER_E2E_STEP=send multiple messages and verify full history reload');
   const firstMessage = 'E2E-' + crypto.randomUUID() + '-realtime';
+  const secondMessage = 'E2E-' + crypto.randomUUID() + '-history';
+  const thirdMessage = 'E2E-' + crypto.randomUUID() + '-history';
   await send(pageA, firstMessage);
+  await send(pageA, secondMessage);
+  await send(pageA, thirdMessage);
   await messageVisible(pageA, firstMessage);
+  await messageVisible(pageA, secondMessage);
+  await messageVisible(pageA, thirdMessage);
   await messageVisible(pageB, firstMessage);
+
+  const multiMessageHistory = await pageA.evaluate(async expected => {
+    const loaded = await loadMessages();
+    const messages = state.messages.filter(message => message.conversation_id === state.active?.id);
+    const renderedText = document.querySelector('#messages')?.innerText || '';
+    return {
+      loaded,
+      count: messages.length,
+      expectedPresent: expected.map(value => messages.some(message => message.content === value)),
+      renderedPresent: expected.map(value => renderedText.includes(value)),
+      renderedRows: document.querySelectorAll('#messages .message').length,
+      loading: state.isLoadingMessages
+    };
+  }, [firstMessage, secondMessage, thirdMessage]);
+  assert.equal(multiMessageHistory.loaded, true, 'multi-message history reload must complete successfully');
+  assert.ok(multiMessageHistory.count >= 3, 'reloaded state must contain all three persisted messages');
+  assert.deepEqual(multiMessageHistory.expectedPresent, [true, true, true], 'all expected messages must be present in application state');
+  assert.deepEqual(multiMessageHistory.renderedPresent, [true, true, true], 'all expected messages must be visible after re-render');
+  assert.ok(multiMessageHistory.renderedRows >= 3, 'multiple message DOM rows must be rendered');
+  assert.equal(multiMessageHistory.loading, false, 'multi-message reload must clear the loading state');
 
   console.log('LOCAL_CHAT_BROWSER_E2E_STEP=offline reconciliation and reconnect');
   await contextB.setOffline(true);
