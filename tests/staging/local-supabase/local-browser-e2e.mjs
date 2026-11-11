@@ -135,6 +135,7 @@ async function openDirectChat(page, otherName) {
     const title = await page.locator('#chatTitle').textContent();
     if (!title?.includes(otherName)) throw new Error('Opened chat title does not match expected peer: ' + title);
   });
+  await page.waitForFunction(() => document.getElementById('connectionState')?.textContent?.trim() === 'متصل', { timeout: 30000 });
 }
 
 try {
@@ -167,7 +168,13 @@ try {
     await accountA.page.locator('#messages .message').filter({ hasText: message }).waitFor({ state: 'visible', timeout: 20000 });
 
     console.log('BROWSER_E2E_STEP=verify account B receives the message in its browser session');
-    await accountB.page.locator('#messages .message').filter({ hasText: message }).waitFor({ state: 'visible', timeout: 20000 });
+    await accountB.page.locator('#messages .message').filter({ hasText: message }).waitFor({ state: 'visible', timeout: 45000 });
+    const realtime = await accountB.page.evaluate(() => ({
+      status: eval('state.realtimeStatus'),
+      lastEvent: eval('state.diagnostics.lastRealtimeEvent')
+    }));
+    assert.equal(realtime.status, 'SUBSCRIBED', 'Account B must be subscribed to Supabase Realtime.');
+    assert.equal(realtime.lastEvent, 'INSERT', 'Account B must receive the message through Realtime, not only polling.');
 
     console.log('BROWSER_E2E_STEP=reload account B and verify durable message history');
     await accountB.page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
