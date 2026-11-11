@@ -53,6 +53,8 @@ test('disposable runtime workflow installs pinned browser dependencies and invok
   assert.match(workflow, /@supabase\/supabase-js@2\.49\.1/);
   assert.match(workflow, /playwright install --with-deps chromium/);
   assert.match(workflow, /LOCAL_SYNTHETIC_AUTH_PASSWORD=/);
+  assert.match(workflow, /LOCAL_SYNTHETIC_AUTH_USERS_FILE=/);
+  assert.match(workflow, /LOCAL_SYNTHETIC_AUTH_USERS_JSON=.*cat/);
   assert.match(workflow, /node tests\/staging\/local-supabase\/local-chat-e2e\.browser\.mjs/);
   assert.match(workflow, /rebuild\/clean-core-20261111/);
 });
