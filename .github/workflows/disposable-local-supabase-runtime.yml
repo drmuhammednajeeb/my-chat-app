@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: disposable-local-supabase-runtime-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   local-supabase-runtime:
