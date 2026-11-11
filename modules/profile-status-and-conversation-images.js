@@ -15,6 +15,7 @@
   let statusPreviewUrl = null;
   let statusViewerUserId = null;
   let statusViewerIndex = 0;
+  let statusViewerRenderVersion = 0;
 
   const byId = id => document.getElementById(id);
   const safeText = (value, fallback = '') => String(value || fallback);
@@ -161,7 +162,7 @@
     const { data, error } = await supabaseClient.from('profile_statuses')
       .select('id,user_id,content,image_path,created_at,expires_at,profiles(id,username,display_name,avatar_url)')
       .gt('expires_at', now)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(250);
     if (request !== statusRequestVersion || currentUserId() !== userId) return;
     if (error) {
@@ -241,6 +242,7 @@
   }
 
   async function renderStatusViewer() {
+    const renderVersion = ++statusViewerRenderVersion;
     const rows = statusesByUser.get(statusViewerUserId) || [];
     if (!rows.length) { closeModal(byId('profileStatusViewer')); await loadProfileStatuses(); return; }
     statusViewerIndex = Math.max(0, Math.min(statusViewerIndex, rows.length - 1));
@@ -256,6 +258,7 @@
     content.className = 'bz-status-content';
     if (row.image_path) {
       const { data, error } = await supabaseClient.storage.from(STATUS_BUCKET).createSignedUrl(row.image_path, 60);
+      if (renderVersion !== statusViewerRenderVersion) return;
       if (error || !data?.signedUrl) {
         toast('انتهت صلاحية الصورة أو تعذر تحميلها');
         await loadProfileStatuses();
@@ -324,6 +327,8 @@
     const path = conversation.image_path;
     const url = await getConversationImageUrl(path);
     if (!url || !container.isConnected || conversation.image_path !== path) return;
+    if (container.id === 'chatAvatar' && state.active?.id !== conversation.id) return;
+    if (container.dataset.conversationId && container.dataset.conversationId !== conversation.id) return;
     const image = document.createElement('img');
     image.src = url;
     image.alt = '';
@@ -434,12 +439,26 @@
     const originalRenderAvatar = renderChatAvatar;
     renderChatAvatar = function(conversation) {
       originalRenderAvatar(conversation);
-      if (conversation?.image_path) decorateConversationAvatar(byId('chatAvatar'), conversation);
+      if (conversation?.image_path) {
+        const target = byId('chatAvatar');
+        if (target) target.dataset.conversationId = conversation.id;
+        decorateConversationAvatar(target, conversation);
+      }
     };
     const originalRenderConversations = renderConversations;
     renderConversations = function() {
       const result = originalRenderConversations.apply(this, arguments);
       refreshConversationListImages();
+      return result;
+    };
+    const originalRenderMyChannels = renderMyChannels;
+    renderMyChannels = function() {
+      const result = originalRenderMyChannels.apply(this, arguments);
+      document.querySelectorAll('.channel-card[data-conversation-id]').forEach(card => {
+        const conversation = state.conversations.find(item => item.id === card.dataset.conversationId);
+        const icon = card.querySelector('.channel-card-icon');
+        if (conversation?.image_path && icon) decorateConversationAvatar(icon, conversation);
+      });
       return result;
     };
     const originalOpenGroupManagement = openGroupManagement;
