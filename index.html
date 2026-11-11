@@ -1031,8 +1031,9 @@ async function loadMessageReactions(conversationId,messages,requestId=null){
  }catch(error){console.warn('Message reactions could not be loaded:',error?.message||error);return false}
 }
 const CHAT_STICKERS=['❤️','😍','😂','🤣','🥰','😘','🔥','👏','👍','🙏','🎉','💯','🌹','✨','🤝','💪','🥳','😎','🤩','😭','😮','🙌','💐','⭐'];
-function encodeChatSticker(emoji){return '[[bizmind-sticker:'+emoji+']]'}
-function decodeChatSticker(content){const value=String(content||''),prefix='[[bizmind-sticker:',suffix=']]';if(!value.startsWith(prefix)||!value.endsWith(suffix))return null;const emoji=value.slice(prefix.length,-suffix.length);return CHAT_STICKERS.includes(emoji)?emoji:null}
+function encodeChatSticker(emoji){return CHAT_STICKERS.includes(emoji)?'[['+emoji+':bizmind-sticker]]':''}
+function decodeChatSticker(content){const value=String(content||'').trim(),prefix='[[bizmind-sticker:',suffix=']]';let emoji=null;if(value.startsWith(prefix)&&value.endsWith(suffix))emoji=value.slice(prefix.length,-suffix.length);else{const reverseSuffix=':bizmind-sticker]]';if(value.startsWith('[[')&&value.endsWith(reverseSuffix))emoji=value.slice(2,-reverseSuffix.length)}return CHAT_STICKERS.includes(emoji)?emoji:null}
+function renderChatSticker(emoji){if(!CHAT_STICKERS.includes(emoji))return document.createTextNode('');const visual=document.createElement('div');visual.className='message-sticker';visual.textContent=emoji;visual.dataset.sticker=emoji;visual.setAttribute('role','img');visual.setAttribute('aria-label','ملصق '+emoji);return visual}
 function openChatStickerPicker(){
  if(!state.active||state.uploading||state.voiceRecorder)return;
  const grid=document.createElement('div');grid.className='chat-sticker-grid';
@@ -1395,7 +1396,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
    }
    if(m.content){
     const sticker=decodeChatSticker(m.content);
-    if(sticker){const visual=document.createElement('div');visual.className='message-sticker';visual.textContent=sticker;visual.setAttribute('role','img');visual.setAttribute('aria-label','ملصق');bubble.append(visual)}
+    if(sticker){bubble.append(renderChatSticker(sticker))}
     else{const t=document.createElement('div');t.className='message-content';t.textContent=m.content;bubble.append(t)}
    }
   }
