@@ -27,6 +27,15 @@ alter default privileges for role postgres in schema public
   revoke all on sequences from public, anon, authenticated;
 alter default privileges for role postgres in schema public
   revoke all on functions from public, anon, authenticated;
+
+-- Supabase's platform administrator can also create public-schema objects.
+-- Keep service_role grants intact while denying default API-role execution.
+alter default privileges for role supabase_admin in schema public
+  revoke all on tables from public, anon, authenticated;
+alter default privileges for role supabase_admin in schema public
+  revoke all on sequences from public, anon, authenticated;
+alter default privileges for role supabase_admin in schema public
+  revoke all on functions from public, anon, authenticated;
 alter default privileges for role postgres in schema app_private
   revoke all on functions from public, anon, authenticated;
 
