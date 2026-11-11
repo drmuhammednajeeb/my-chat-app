@@ -1830,7 +1830,7 @@ async function startVoiceRecording(){
   };
   if(recorder instanceof (window.MediaRecorder||Function)){recorder.start()}
   $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').title='التسجيل الصوتي جارٍ';$('voiceCancelBtn').classList.add('hidden');setVoiceComposerActive(true);$('sendBtn').disabled=false;$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';$('sendBtn').title='إرسال التسجيل الصوتي';$('sendBtn').setAttribute('aria-label','إرسال التسجيل الصوتي');updateVoiceRecordingUI();
-  state.voiceTimer=setInterval(()=>{const elapsed=Math.floor(currentVoiceElapsedMs()/1000);updateVoiceRecordingUI();if(elapsed>=180){state.voiceSendOnStop=false;stopVoiceRecording()}},250);
+  state.voiceTimer=setInterval(()=>{const elapsed=Math.floor(currentVoiceElapsedMs()/1000);updateVoiceRecordingUI();if(elapsed>=180){state.voiceSendOnStop=true;stopVoiceRecording()}},250);
  }catch(error){
   if(stream){stream.getTracks().forEach(track=>track.stop())}
   if(state.voiceStream===stream)cleanupVoiceCapture();
@@ -1935,7 +1935,7 @@ async function sendMessage(){
   }
  }finally{state.uploading=false;resizeComposer()}
 }
-function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role),groupBlocked=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||groupBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
+function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role),groupBlocked=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||groupBlocked||(!state.voiceRecorder&&!n.value.trim()&&!state.attachment);updateDiagnostics()}
 $('messageInput').addEventListener('input',()=>{resizeComposer();if($('messageInput').value.trim())publishTyping(true);else publishTyping(false)});
 $('messageInput').addEventListener('blur',()=>publishTyping(false));
 $('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.stopPropagation();requestAnimationFrame(resizeComposer)}});
@@ -2229,7 +2229,7 @@ $('createGroupBtn').onclick=async()=>{
 })();
 
 $('stickerBtn').onclick=openChatStickerPicker;
-$('voiceRecordBtn').onclick=()=>state.voiceRecorder?stopVoiceRecording():startVoiceRecording();
+$('voiceRecordBtn').onclick=()=>state.voiceRecorder?sendVoiceRecording():startVoiceRecording();
 $('voiceCancelBtn').onclick=cancelVoiceRecording;
 $('attachBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;if(state.voiceRecorder)cancelVoiceRecording();state.attachment=f;showAttachmentPreview(f);resizeComposer()};
