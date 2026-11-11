@@ -46,6 +46,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
+      - name: Install pinned Playwright and Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.65.0
+          ./node_modules/.bin/playwright install --with-deps chromium
+
       - name: Create an isolated temporary Supabase project
         env:
           RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
