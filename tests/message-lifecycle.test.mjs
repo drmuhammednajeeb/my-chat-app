@@ -68,7 +68,7 @@ test('browser microphone recordings using audio/webm are accepted by attachment 
   assert.ok(start >= 0 && end > start);
   const sandbox = {};
   vm.runInNewContext(source.slice(start, end) +
-    '\\nglobalThis.resolveMime=resolveChatAttachmentMime;globalThis.allowed=CHAT_ATTACHMENT_ALLOWED_MIME_TYPES;', sandbox);
+    '\nglobalThis.resolveMime=resolveChatAttachmentMime;globalThis.allowed=CHAT_ATTACHMENT_ALLOWED_MIME_TYPES;', sandbox);
   assert.equal(sandbox.resolveMime({ name: 'voice-123.webm', type: 'audio/webm;codecs=opus' }), 'audio/webm');
   assert.equal(sandbox.allowed.has('audio/webm'), true);
   assert.equal(sandbox.allowed.has('audio/mp4'), true);
