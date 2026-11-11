@@ -282,6 +282,15 @@ run(process.execPath, [localRealtimeRunner], {
   LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? ''
 }, 'clean-chat-core-authenticated-local-realtime');
 
+const localChatE2ERunner = path.join(ROOT, 'tests/staging/local-supabase/local-chat-e2e.browser.mjs');
+if (!fs.existsSync(localChatE2ERunner)) fail('authenticated local browser E2E runner is missing');
+run(process.execPath, [localChatE2ERunner], {
+  ...env,
+  ALLOW_DISPOSABLE_LOCAL_REPLAY: '1',
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}),
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? ''
+}, 'clean-chat-core-authenticated-local-browser-e2e');
+
 console.log('LOCAL_SUPABASE_REPLAY_RUNTIME=PASSED');
 console.log('CLEAN_CHAT_CORE_LOCAL_RUNTIME=PASSED');
 console.log('LOCAL_SUPABASE_SQL_SOURCE_REPLACEMENTS=' + replacedSourcePaths.size);
