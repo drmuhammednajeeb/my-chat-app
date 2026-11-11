@@ -20,7 +20,7 @@ test('application test endpoint override is loopback-only and keeps production d
   assert.match(app, /SUPABASE_URL=endpoint\.origin/);
   assert.match(app, /SUPABASE_ANON_KEY=__localSupabaseTestConfig\.anonKey/);
   assert.match(app, /p\.new\?\.conversation_id!==id\|\|state\.active\?\.id!==id/);
-  assert.match(app, /lastRealtimeConversationId:id/);
+  assert.match(app, /lastRealtimeConversationId=id/);
 });
 
 test('full browser E2E requires local-only endpoints and two synthetic authenticated users', async () => {
