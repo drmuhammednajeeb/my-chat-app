@@ -250,7 +250,7 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
   const node = dag.nodes.find(item => item.id === 'test-fixture.local-pg-cron-runtime');
   assert.ok(node);
   assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED');
-  assert.ok(node.blockedBy.includes('DAG-008'));
+  assert.equal(node.blockedBy.includes('DAG-008'), false);
   assert.ok(node.requires.includes('test-fixture.local-platform-postflight'));
   assert.ok(dag.blockers.find(item => item.id === 'DAG-008').evidence.includes('tests/staging/local-supabase/local-pg-cron-runtime.mjs'));
   assert.equal(dag.executionAuthorized, false);
