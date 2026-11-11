@@ -63,6 +63,13 @@ revoke execute on all functions in schema public from public, anon;
 revoke all on function public.guard_chat_message_content_update()
   from public, anon, authenticated, service_role;
 
+-- These app_private routines are trigger-only. RLS helpers and RPC implementations
+-- retain their separately reviewed authenticated grants.
+revoke execute on function app_private.guard_conversation_member_update()
+  from public, anon, authenticated;
+revoke execute on function app_private.enforce_chat_message_reply_parent()
+  from public, anon, authenticated;
+
 
 -- Add a restrictive membership gate in addition to each table's feature-specific
 -- permissive policy. PostgreSQL combines permissive policies with OR, so this
