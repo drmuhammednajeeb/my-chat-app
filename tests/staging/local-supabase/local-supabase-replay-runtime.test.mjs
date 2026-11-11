@@ -52,7 +52,7 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
   const workflow = await readFile(path.join(root, '.github/workflows/disposable-local-supabase-runtime.yml'), 'utf8');
   for (const token of [
     'workflow_dispatch',
-    'supabase/setup-cli@v1',
+    'supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb',
     'version: 3.0.0',
     'supabase init',
     'supabase start --exclude',
