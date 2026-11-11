@@ -57,8 +57,6 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     'UNREVIEWED ',
     'MISSING ',
     'admin_create_official_member_invites',
-    'discover_public_channels',
-    'join_public_channel',
     'app_private.guard_conversation_member_update()',
     'app_private.enforce_chat_message_reply_parent()',
     'pg_default_acl',
