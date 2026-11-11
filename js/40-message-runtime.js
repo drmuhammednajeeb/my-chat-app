@@ -178,7 +178,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
 }
 function subscribeProfileUpdates(conversation){
  if(state.profileChannel)supabaseClient.removeChannel(state.profileChannel);
- let channel=supabaseClient.channel('profile-updates:'+state.user.id);
+ let channel=supabaseClient.channel('profile-updates:'+state.user.id,{config:{postgres_changes_options:{wait:true,timeout:15000}}});
  channel=channel.on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles'},payload=>{
   const updated=payload.new;if(!updated?.id)return;
   if(updated.id===state.user?.id){state.profile={...(state.profile||{}),...updated};$('myName').textContent=updated.display_name||updated.username;$('myHandle').textContent='@'+updated.username+' · '+(updated.membership_number||state.profile?.membership_number||'');renderAvatar($('myAvatar'),state.profile,'avatar profile-avatar-edit')}
@@ -245,7 +245,7 @@ function subscribeConversation(){
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  const id=state.active.id;diagLog('realtime-subscribe',{conversationId:id});
  let channelHasSubscribed=false;
- state.channel=supabaseClient.channel('chat:'+id)
+ state.channel=supabaseClient.channel('chat:'+id,{config:{postgres_changes_options:{wait:true,timeout:15000}}})
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id,state.messageLoadVersion).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom(),state.messageLoadVersion)})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>handleMessageUpdateRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'chat_messages'},p=>handleMessageDeleteRealtime(p,id))
