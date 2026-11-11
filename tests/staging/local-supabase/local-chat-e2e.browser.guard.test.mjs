@@ -57,4 +57,7 @@ test('disposable runtime workflow installs pinned browser dependencies and invok
   assert.match(workflow, /LOCAL_SYNTHETIC_AUTH_USERS_JSON=.*cat/);
   assert.match(workflow, /node tests\/staging\/local-supabase\/local-chat-e2e\.browser\.mjs/);
   assert.match(workflow, /rebuild\/clean-core-20261111/);
+  assert.match(workflow, /group: disposable-local-supabase-runtime-repository-wide/);
+  assert.match(workflow, /RUNTIME_PROJECT_ID: my-chat-app-supabase-runtime-\\$\\{\\{ github\\.run_id \\}\\}/);
+  assert.match(workflow, /project_id =/);
 });
