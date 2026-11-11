@@ -234,6 +234,7 @@ try {
     await receivedMessage.waitFor({ state: 'visible', timeout: 45000 });
     assert.equal(await receivedMessage.count(), 1, 'Account B must render the incoming message exactly once.');
     const realtime = await accountB.page.evaluate(() => ({
+      appChannel: (() => { const channel = eval('state.channel'); return { topic: channel?.topic || null, state: channel?.state || null, joined: typeof channel?.isJoined === 'function' ? channel.isJoined() : null, bindings: Array.isArray(channel?.bindings) ? channel.bindings.map(binding => ({ type: binding.type, event: binding.filter?.event, schema: binding.filter?.schema, table: binding.filter?.table, filter: binding.filter?.filter })) : null }; })(),
       status: eval('state.realtimeStatus'),
       lastEvent: eval('state.diagnostics.lastRealtimeEvent'),
       lastRealtimeConversation: eval('state.diagnostics.lastRealtimeConversationId'),
@@ -241,6 +242,8 @@ try {
       observer: window.__BIZMIND_E2E_REALTIME_OBSERVER__,
       filteredObserver: window.__BIZMIND_E2E_FILTERED_OBSERVER__
     }));
+    console.log('BROWSER_E2E_APP_CHANNEL_DIAGNOSTICS=' + JSON.stringify(realtime.appChannel));
+    console.log('BROWSER_E2E_OBSERVER_DIAGNOSTICS=' + JSON.stringify({ observer: realtime.observer, filteredObserver: realtime.filteredObserver, appStatus: realtime.status, appLastEvent: realtime.lastEvent }));
     assert.equal(realtime.status, 'SUBSCRIBED', 'Account B must be subscribed to Supabase Realtime.');
     assert.equal(realtime.activeConversation, conversation, 'Account B must have the expected conversation active.');
     assert.equal(realtime.observer?.status, 'SUBSCRIBED', 'Independent Realtime observer must be subscribed.');
