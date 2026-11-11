@@ -19,8 +19,9 @@ begin
 end;
 $local_guard$;
 
--- Fail closed for future application objects created by the postgres migration owner.
--- Application migrations must explicitly GRANT only the privileges their client needs.
+-- Restrict future schema-scoped API-role grants on objects created by postgres.
+-- The global PUBLIC EXECUTE default for functions is platform-controlled here;
+-- every new function migration must explicitly REVOKE EXECUTE FROM PUBLIC.
 alter default privileges for role postgres in schema public
   revoke all on tables from public, anon, authenticated;
 alter default privileges for role postgres in schema public
