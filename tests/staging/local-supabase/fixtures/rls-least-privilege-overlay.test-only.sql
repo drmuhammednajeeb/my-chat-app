@@ -27,6 +27,8 @@ alter default privileges for role postgres in schema public
   revoke all on sequences from public, anon, authenticated;
 alter default privileges for role postgres in schema public
   revoke all on functions from public, anon, authenticated;
+alter default privileges for role postgres in schema app_private
+  revoke all on functions from public, anon, authenticated;
 
 -- Remove API access from anon at the table/sequence layer. RLS remains an independent
 -- mandatory boundary; this also prevents non-RLS privileges such as TRUNCATE.
@@ -62,6 +64,13 @@ revoke delete on public.conversation_group_settings from authenticated;
 revoke execute on all functions in schema public from public, anon;
 revoke all on function public.guard_chat_message_content_update()
   from public, anon, authenticated, service_role;
+
+-- Private trigger functions are not API RPCs; RLS helpers and RPC implementations
+-- retain their separately reviewed authenticated grants.
+revoke execute on function app_private.guard_conversation_member_update()
+  from public, anon, authenticated;
+revoke execute on function app_private.enforce_chat_message_reply_parent()
+  from public, anon, authenticated;
 
 -- These app_private routines are trigger-only. RLS helpers and RPC implementations
 -- retain their separately reviewed authenticated grants.
