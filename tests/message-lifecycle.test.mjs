@@ -674,6 +674,15 @@ test('starting and stopping the polling timer does not erase the loaded history 
   assert.equal(state.messagePollTimer, null);
   assert.equal(state.messagePollGeneration, 5);
   assert.equal(state.messagePollBusy, false);
+  const start = vm.runInNewContext('(' + extractFunction('startMessagePolling') + ')', {
+    state,
+    stopMessagePolling: stop,
+    scheduleMessagePolling() {},
+    diagLog() {},
+    messagePollingDelay: () => 15000
+  });
+  start('c1');
+  assert.equal(state.hasMoreMessages, true);
 });
 
 test('Realtime reconnection does not start a competing full timeline reload', () => {
@@ -685,5 +694,5 @@ test('Realtime reconnection does not start a competing full timeline reload', ()
 test('conversation opens latest-message loading before optional settings finish', () => {
   const open = extractFunction('openConversation');
   assert.ok(open.indexOf('subscribeConversation();subscribeProfileUpdates(c)') < open.indexOf('const messageLoadPromise=loadMessages()'));
-  assert.ok(open.indexOf('const messageLoadPromise=loadMessages()') < open.indexOf('await Promise.all([messageLoadPromise,starredLoadPromise,settingsLoadPromise])'));
+  assert.ok(open.indexOf('const messageLoadPromise=loadMessages().finally') < open.indexOf('await Promise.all([messageLoadPromise,starredLoadPromise,settingsLoadPromise])'));
 });
