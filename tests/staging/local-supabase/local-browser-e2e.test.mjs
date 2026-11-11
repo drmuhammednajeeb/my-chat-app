@@ -55,3 +55,25 @@ test('disposable replay invokes browser E2E before destroying local Supabase', a
   assert.match(workflow, /playwright@1\.56\.1/);
   assert.match(workflow, /playwright install --with-deps chromium/);
 });
+
+
+test('bounded message pressure probe is local-only and verifies all persisted writes', async () => {
+  const runner = await read('tests/staging/local-supabase/local-message-load.mjs');
+  for (const token of [
+    "db.port !== '54322'",
+    "db.username !== 'postgres'",
+    "db.pathname !== '/postgres'",
+    'const batchSize = 40, batches = 3, expected = batchSize * batches',
+    'Promise.allSettled(tasks)',
+    'MESSAGE_LOAD_PERSISTED=',
+    'MESSAGE_LOAD_UNIQUE_IDS=',
+    'MESSAGE_LOAD_P50_CLIENT_MS=',
+    'MESSAGE_LOAD_P95_CLIENT_MS=',
+    'MESSAGE_LOAD_MAX_CLIENT_MS=',
+    'MESSAGE_LOAD_RESULT=PASSED'
+  ]) assert.ok(runner.includes(token), 'missing message pressure check: ' + token);
+  assert.match(runner, /Refusing non-local message load target/);
+  const replay = await read('tests/staging/local-supabase/local-supabase-replay-runtime.mjs');
+  assert.ok(replay.includes("local-message-load.mjs"));
+  assert.ok(replay.indexOf("local-message-load.mjs") > replay.indexOf("local-browser-e2e.mjs"));
+});
