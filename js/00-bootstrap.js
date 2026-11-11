@@ -180,7 +180,7 @@ function subscribeNotifications(){
  if(!state.user)return;
  if(state.notificationChannel)supabaseClient.removeChannel(state.notificationChannel);
  const userId=state.user.id;
- const channel=supabaseClient.channel('user-notifications:'+userId)
+ const channel=supabaseClient.channel('user-notifications:'+userId,{config:{postgres_changes_options:{wait:true,timeout:15000}}})
   // RLS limits visible rows to the recipient. Avoid a server-side filter here:
   // Realtime's filter validator has rejected recipient_id on some deployed sessions.
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'user_notifications'},payload=>{
