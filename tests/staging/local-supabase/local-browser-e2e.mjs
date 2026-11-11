@@ -135,7 +135,16 @@ async function openDirectChat(page, otherName) {
     const title = await page.locator('#chatTitle').textContent();
     if (!title?.includes(otherName)) throw new Error('Opened chat title does not match expected peer: ' + title);
   });
-  await page.waitForFunction(() => document.getElementById('connectionState')?.textContent?.trim() === 'متصل', { timeout: 30000 });
+  try {
+    await page.waitForFunction(
+      () => document.getElementById('connectionState')?.textContent?.trim() === 'متصل',
+      null,
+      { timeout: 30000 }
+    );
+  } catch {
+    const connection = await page.locator('#connectionState').textContent().catch(() => 'missing');
+    throw new Error('Supabase Realtime did not reach SUBSCRIBED state; connection indicator: ' + connection);
+  }
 }
 
 try {
