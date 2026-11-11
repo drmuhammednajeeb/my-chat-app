@@ -57,6 +57,7 @@ jobs:
       - name: Create an isolated temporary Supabase project
         env:
           RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime-${{ github.run_id }}
+          RUNTIME_PROJECT_ID: my-chat-app-supabase-runtime-${{ github.run_id }}
         run: |
           mkdir -p "$RUNTIME_PROJECT_DIR"
           cd "$RUNTIME_PROJECT_DIR"
@@ -66,7 +67,16 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const file = process.env.RUNTIME_PROJECT_DIR + '/supabase/config.toml';
+          const projectId = process.env.RUNTIME_PROJECT_ID;
+          if (!projectId || !/^[a-z0-9][a-z0-9-]{0,62}$/.test(projectId)) {
+            throw new Error('RUNTIME_PROJECT_ID must be a unique lowercase slug');
+          }
           let config = fs.readFileSync(file, 'utf8');
+          if (/^project_id\s*=/m.test(config)) {
+            config = config.replace(/^project_id\s*=.*$/m, 'project_id = "' + projectId + '"');
+          } else {
+            config = 'project_id = "' + projectId + '"\n' + config;
+          }
           if (/^major_version\s*=\s*\d+/m.test(config)) {
             config = config.replace(/^major_version\s*=\s*\d+/m, 'major_version = 17');
           } else {
