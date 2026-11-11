@@ -484,3 +484,96 @@ test('document storage filename sanitizer removes path separators and unsafe cha
   assert.equal(sanitize('folder\\\\name.pdf').includes('/'), false);
   assert.equal(sanitize('folder\\\\name.pdf').includes('\\\\'), false);
 });
+
+
+test('loadMessages completes for both empty and populated timelines without a render-scope ReferenceError', async () => {
+  const loadSource = extractFunction('loadMessages');
+  const runLoad = async rows => {
+    const area = {
+      innerHTML: '',
+      scrollHeight: 0,
+      scrollTop: 0,
+      replaceChildren() { this.cleared = true; }
+    };
+    const state = {
+      active: { id: 'c1', type: 'group', members: [] },
+      activeChatPreference: null,
+      messageLoadVersion: 0,
+      messages: [],
+      messageIds: new Set(),
+      hasMoreMessages: false,
+      newMessageCount: 0,
+      messagePollLastCheckedAt: null,
+      messagePollCursor: null,
+      diagnostics: {},
+      isLoadingMessages: false,
+      reactions: new Map(),
+      pinnedMessages: new Map(),
+      replyMessages: new Map(),
+      privateReplyContexts: new Map()
+    };
+    let receipts = 0;
+    const queryFor = table => {
+      const query = {
+        select() { return query; },
+        eq() { return query; },
+        order() { return query; },
+        limit() { return query; },
+        in() { return query; },
+        then(resolve, reject) {
+          return Promise.resolve({ data: table === 'chat_messages' ? rows : [], error: null }).then(resolve, reject);
+        }
+      };
+      return query;
+    };
+    const supabaseClient = { from: table => queryFor(table) };
+    const load = vm.runInNewContext('(' + loadSource + ')', {
+      state,
+      supabaseClient,
+      $: id => id === 'messages' ? area : null,
+      performance: { now: () => 1 },
+      Date,
+      Set,
+      Map,
+      Array,
+      console: { error() {}, warn() {} },
+      document: { visibilityState: 'visible' },
+      updateNewMessagesIndicator() {},
+      diagLog() {},
+      recordPerf() {},
+      compareMessagesChronologically(a, b) {
+        const delta = Date.parse(a.created_at) - Date.parse(b.created_at);
+        return delta || String(a.id).localeCompare(String(b.id));
+      },
+      loadMessageReactions: async () => true,
+      loadMessagePins: async () => true,
+      loadPrivateReplyContexts: async () => true,
+      renderMessage: async message => {
+        state.messageIds.add(message.id);
+        return true;
+      },
+      markConversationReceipt: async () => { receipts += 1; return true; },
+      toast() {}
+    });
+    const result = await load();
+    return { result, state, area, receipts };
+  };
+
+  const empty = await runLoad([]);
+  assert.equal(empty.result, true);
+  assert.equal(empty.state.isLoadingMessages, false);
+  assert.match(empty.area.innerHTML, /بداية محادثة جديدة/);
+  assert.equal(empty.receipts, 1);
+
+  const populated = await runLoad([{
+    id: 'm1',
+    conversation_id: 'c1',
+    sender_id: 'u1',
+    content: 'hello',
+    created_at: '2026-11-11T06:00:00.000Z'
+  }]);
+  assert.equal(populated.result, true);
+  assert.equal(populated.state.isLoadingMessages, false);
+  assert.equal(populated.state.messageIds.has('m1'), true);
+  assert.equal(populated.receipts, 1);
+});
