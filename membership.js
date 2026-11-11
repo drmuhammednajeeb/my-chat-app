@@ -95,7 +95,7 @@
       const row = make("article", "membership-list-row");
       const info = make("div", "membership-list-info");
       info.append(make("strong", "", item.email));
-      info.append(make("small", "", formatForeverMembershipNumber(item.membership_number) + " · تنتهي  + dateLabel(item.expires_at)));
+      info.append(make("small", "", formatForeverMembershipNumber(item.membership_number) + " · تنتهي " + dateLabel(item.expires_at)));
       const revoke = make("button", "membership-danger-btn", "إلغاء الدعوة");
       revoke.type = "button";
       revoke.addEventListener("click", async () => {
