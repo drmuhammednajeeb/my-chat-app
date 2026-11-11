@@ -1007,7 +1007,7 @@ async function openConversation(c){
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Start the live channel and latest-message fetch before optional settings complete.
  subscribeConversation();subscribeProfileUpdates(c);
- const messageLoadPromise=loadMessages();
+ const messageLoadPromise=loadMessages().finally(()=>{if(openToken===state.conversationOpenVersion&&state.active?.id===c.id)startMessagePolling(c.id)});
  const starredLoadPromise=loadStarredMessageIds(c.id);
  const settingsLoadPromise=(async()=>{
   if(c.type==='group')await loadGroupSettings(c.id);else state.groupSettings=null;
@@ -1021,7 +1021,6 @@ async function openConversation(c){
  $('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));
  $('chatSub').textContent=isSelfConversation(c)?'مساحة شخصية · مراسلة نفسك':c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين':'محادثة خاصة';
  $('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
- startMessagePolling(c.id);
  recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:true,latestOnly:true});
 }
 
@@ -1536,7 +1535,7 @@ async function loadOlderMessages(){
  const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
  const oldTop=area.scrollTop,requestId=state.messageLoadVersion;
  const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
- const originalFirstChild=loader.nextSibling,initialChildCount=area.childNodes.length;
+ const originalFirstChild=loader.nextSibling;
  try{
   const cursorFilter='created_at.lt.'+oldest.created_at+',and(created_at.eq.'+oldest.created_at+',id.lt.'+oldest.id+')';
   let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(cursorFilter);
@@ -1562,6 +1561,7 @@ async function loadOlderMessages(){
   const previousMessages=state.messages;
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   state.isLoadingMessages=true;area.style.overflowAnchor='none';
+  const beforeRenderNodes=new Set(Array.from(area.childNodes)),olderIds=new Set(older.map(message=>message.id));
   for(const message of older){
    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
    if(state.messageIds.has(message.id))continue;
@@ -1569,7 +1569,9 @@ async function loadOlderMessages(){
    if(!rendered&&!state.messageIds.has(message.id))throw new Error('Older message rendering did not complete');
   }
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  const addedNodes=Array.from(area.childNodes).slice(initialChildCount);
+  const addedSet=new Set(Array.from(area.querySelectorAll('.message')).filter(node=>olderIds.has(node.dataset.messageId)));
+  addedSet.forEach(node=>{const previous=node.previousElementSibling;if(previous?.classList.contains('day-divider')&&!beforeRenderNodes.has(previous))addedSet.add(previous)});
+  const addedNodes=Array.from(area.childNodes).filter(node=>addedSet.has(node));
   const fragment=document.createDocumentFragment();addedNodes.forEach(node=>fragment.append(node));
   if(fragment.childNodes.length)area.insertBefore(fragment,originalFirstChild);
   loader.remove();
