@@ -1587,7 +1587,7 @@ async function loadOlderMessages(){
   }
   return false;
  }finally{
-  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area)}state.loadingOlderMessages=false;state.loadingOlderRequestId=null}
+  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area)}state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.isLoadingMessages=false;area.style.overflowAnchor=''}
   loader.remove();
  }
 }
