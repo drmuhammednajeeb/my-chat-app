@@ -32,6 +32,8 @@ The run used a disposable local stack. It does not prove that the live productio
 2. The current chat-media Storage policy checks conversation membership but does not bind the uploader folder segment in the object path to `auth.uid()`. The test-only overlay adds this guard and the Storage API test proves the denial case locally.
 3. The deployed `app_private.get_or_create_direct_conversation_impl(uuid)` and `public.get_or_create_direct_conversation(uuid)` definitions were recovered read-only and match the test-only source fixture. The deployed SECURITY DEFINER implementation does not yet contain the tested active-membership and verified-member eligibility guard.
 4. The current least-privilege overlay revokes default function EXECUTE privileges for future objects, but its existing-function revocation covers `PUBLIC` and `anon`, not `authenticated`. The current assertion also does not prove an allowlist for existing authenticated RPC execution. This must be resolved before calling the policy set least-privilege or promoting it.
+5. Supabase Security Advisor reports Leaked Password Protection disabled. Enable the Auth setting before public release after reviewing the impact on password creation and changes. The advisor did not surface the custom ACL, direct-RPC eligibility, or Storage path-owner gaps found by catalog inspection.
+6. Supabase Performance Advisor reports 27 unused indexes. Treat these as review candidates only; do not drop them until representative production query and workload evidence confirms they are unnecessary.
 
 ## Remaining blockers before production promotion
 
@@ -41,6 +43,8 @@ The run used a disposable local stack. It does not prove that the live productio
 4. Review table and sequence grants against every client query and mutation before tightening existing-object privileges. The current CRUD/RPC tests are necessary but are not a complete feature inventory.
 5. Resolve the canonical SQL bootstrap blockers: historical references to `public.messages` require an explicit legacy compatibility decision, and the historical membership-invitation SQL source has a terminator defect handled by a declared test-only patch. Do not silently remove or rewrite historical SQL without documenting the migration-history decision.
 6. Re-run the complete disposable runtime and browser E2E after canonical migration candidates are added. Then run the concurrency and load suite again.
+7. Review and enable Supabase Auth leaked-password protection before release; this is a project Auth setting, not a database migration.
+8. Review the 27 unused-index advisories under representative workload; do not remove indexes based only on low or absent historical scans.
 
 ## Scope and safety
 
