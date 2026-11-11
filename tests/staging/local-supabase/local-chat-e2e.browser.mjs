@@ -39,7 +39,7 @@ for (const key of ['direct_a', 'direct_b']) {
 }
 
 const vendorPackageEntry = require.resolve('@supabase/supabase-js');
-const packageRoot = path.resolve(path.dirname(vendorPackageEntry), '../..');
+const packageRoot = path.resolve(path.dirname(vendorPackageEntry), '..');
 const vendorPath = path.join(packageRoot, 'dist/umd/supabase.min.js');
 await stat(vendorPath);
 
