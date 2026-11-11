@@ -2,7 +2,7 @@
 
 ## Current decision
 
-**Production promotion: BLOCKED. Disposable-local runtime: PASSED.**
+**Production promotion: BLOCKED. Previous disposable-local baseline: PASSED. The latest extended runtime exposed an invalid attempt to alter Supabase-managed `supabase_admin` default ACLs; that path is being corrected to match the platform's privilege model.**
 
 - The RLS overlay, direct-conversation eligibility guard, and chat-media uploader-folder guard have been exercised against a disposable local Supabase stack.
 - No production SQL, ACL, policy, or data changes were executed.
@@ -28,7 +28,7 @@ The run used a disposable local stack. It does not prove that the live productio
 
 ## Read-only production findings
 
-1. PostgreSQL default ACLs owned by `postgres` grant broad table, sequence, and function privileges to `PUBLIC`, `anon`, and `authenticated`. These grants affect existing objects and future objects differently; a production migration must address both deliberately.
+1. PostgreSQL default ACLs owned by `postgres` grant broad table, sequence, and function privileges to `PUBLIC`, `anon`, and `authenticated`; these can be hardened by the project migration owner. Supabase's `supabase_admin` defaults are reserved platform state and cannot be altered by `postgres`. A read-only production check found no objects owned by `supabase_admin` in `public`, and extensions are installed in `extensions`, `pg_catalog`, or `vault`. The local assertion now protects that placement instead of attempting an unauthorized `ALTER DEFAULT PRIVILEGES`.
 2. The current chat-media Storage policy checks conversation membership but does not bind the uploader folder segment in the object path to `auth.uid()`. The test-only overlay adds this guard and the Storage API test proves the denial case locally.
 3. The deployed `app_private.get_or_create_direct_conversation_impl(uuid)` and `public.get_or_create_direct_conversation(uuid)` definitions were recovered read-only and match the test-only source fixture. The deployed SECURITY DEFINER implementation does not yet contain the tested active-membership and verified-member eligibility guard.
 4. The current least-privilege overlay revokes default function EXECUTE privileges for future objects, but its existing-function revocation covers `PUBLIC` and `anon`, not `authenticated`. The current assertion also does not prove an allowlist for existing authenticated RPC execution. This must be resolved before calling the policy set least-privilege or promoting it.

@@ -27,7 +27,6 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
     'REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM public, anon',
     'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public',
     'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA app_private',
-    'ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public',
     'REVOKE EXECUTE ON FUNCTION app_private.guard_conversation_member_update()',
     'REVOKE EXECUTE ON FUNCTION app_private.enforce_chat_message_reply_parent()',
     'REVOKE EXECUTE ON FUNCTION public.admin_create_member_invites(text[])',
@@ -81,6 +80,17 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
     "has_table_privilege('authenticated','public.user_settings','DELETE')"
   ]) assert.ok(sql.toLowerCase().includes(token.toLowerCase()), 'missing assertion: ' + token);
   assert.doesNotMatch(sql, /\b(insert\s+into|update\s+\w|delete\s+from|create\s+table|alter\s+table)\b/i);
+});
+
+
+test('Supabase-managed supabase_admin defaults are treated as immutable platform state', async () => {
+  const overlay = await readFile(overlayPath, 'utf8');
+  const assertion = await readFile(assertionPath, 'utf8');
+  assert.doesNotMatch(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin/i);
+  assert.match(assertion, /Extensions must not be installed in public/i);
+  assert.match(assertion, /supabase_admin-owned objects found in public/i);
+  assert.match(assertion, /d\.defaclrole = 'postgres'::regrole/i);
+  assert.doesNotMatch(assertion, /d\.defaclrole in \('postgres'::regrole, 'supabase_admin'::regrole\)/i);
 });
 
 test('assertion file is guarded to a disposable local database', async () => {

@@ -176,7 +176,7 @@ begin
     cross join lateral aclexplode(d.defaclacl) a
     where (
         (n.nspname = 'public'
-          and d.defaclrole in ('postgres'::regrole, 'supabase_admin'::regrole)
+          and d.defaclrole = 'postgres'::regrole
           and d.defaclobjtype in ('r','S','f'))
         or (n.nspname = 'app_private'
           and d.defaclrole = 'postgres'::regrole
@@ -189,6 +189,33 @@ begin
       )
   ) then
     raise exception 'Unsafe default privileges remain for public or app_private objects';
+  end if;
+
+  -- supabase_admin is a reserved Supabase platform role. Its default ACLs cannot
+  -- be changed by postgres; keep extensions out of public so it creates no public objects.
+  if exists (
+    select 1
+    from pg_extension e
+    join pg_namespace n on n.oid = e.extnamespace
+    where n.nspname = 'public'
+  ) then
+    raise exception 'Extensions must not be installed in public; use extensions or the required managed schema';
+  end if;
+
+  if exists (
+    select 1 from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relowner = 'supabase_admin'::regrole
+    union all
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proowner = 'supabase_admin'::regrole
+    union all
+    select 1 from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public' and t.typowner = 'supabase_admin'::regrole
+  ) then
+    raise exception 'supabase_admin-owned objects found in public; review extension placement';
   end if;
 
   -- Private application schema: helper functions may be callable by authenticated,
