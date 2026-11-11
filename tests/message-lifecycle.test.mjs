@@ -88,6 +88,39 @@ test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring'
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
 });
 
+test('sticker parser accepts the displayed legacy token and the canonical token without exposing either as text', () => {
+  const start = source.indexOf('const CHAT_STICKERS=');
+  const end = source.indexOf('function openChatStickerPicker()', start);
+  assert.ok(start >= 0 && end > start);
+  const sandbox = {
+    document: {
+      createElement: () => ({ dataset: {}, setAttribute() {} }),
+      createTextNode: value => ({ textContent: value })
+    }
+  };
+  vm.runInNewContext(source.slice(start, end) + '\n' +
+    'globalThis.decodeSticker=decodeChatSticker;globalThis.encodeSticker=encodeChatSticker;globalThis.renderSticker=renderChatSticker;', sandbox);
+  assert.equal(sandbox.decodeSticker('[[😍:bizmind-sticker]]'), '😍');
+  assert.equal(sandbox.decodeSticker('[[bizmind-sticker:😍]]'), '😍');
+  assert.equal(sandbox.encodeSticker('😍'), '[[😍:bizmind-sticker]]');
+  assert.equal(sandbox.decodeSticker('hello [[😍:bizmind-sticker]]'), null);
+  const node = sandbox.renderSticker('😍');
+  assert.equal(node.className, 'message-sticker');
+  assert.equal(node.textContent, '😍');
+  assert.equal(node.getAttribute, undefined);
+});
+
+test('voice recording control always finalizes and sends captured audio', () => {
+  assert.match(source, /\$\('voiceRecordBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):startVoiceRecording\(\)/);
+  assert.match(extractFunction('sendVoiceRecording'), /state\.voiceSendOnStop=true/);
+  assert.match(extractFunction('startVoiceRecording'), /if\(shouldSend\)\{setTimeout\(\(\)=>\{if\(state\.attachment===file\)sendMessage\(\)\},0\)\}/);
+  assert.match(extractFunction('resizeComposer'), /!state\.voiceRecorder&&!n\.value\.trim\(\)&&!state\.attachment/);
+});
+
+test('voice recording safety timeout sends the captured audio instead of discarding it', () => {
+  assert.match(extractFunction('startVoiceRecording'), /if\(elapsed>=180\)\{state\.voiceSendOnStop=true;stopVoiceRecording\(\)\}/);
+});
+
 test('all inline JavaScript blocks parse without a bundler', () => {
   const blocks = [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
     .filter(match => !/\bsrc\s*=/.test(match[1]) && match[2].trim());
