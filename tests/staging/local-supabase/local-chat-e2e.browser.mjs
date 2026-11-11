@@ -135,7 +135,21 @@ async function openDirectChat(page, otherName) {
     const input = document.getElementById('messageInput');
     return input && !input.disabled;
   }, null, { timeout: 30000 });
-  await page.waitForFunction(() => document.getElementById('connectionState')?.textContent?.trim() === 'متصل', null, { timeout: 30000 });
+  await page.waitForFunction(() => {
+    const status = document.getElementById('connectionState')?.textContent?.trim();
+    return status === 'متصل' || status === 'مشكلة اتصال — إعادة المحاولة';
+  }, null, { timeout: 30000 });
+  const connectionStatus = await page.locator('#connectionState').textContent();
+  if (connectionStatus?.trim() !== 'متصل') {
+    const diagnostics = await page.evaluate(() => ({
+      realtimeStatus: state.realtimeStatus,
+      activeConversation: state.active?.id || null,
+      events: (state.diagnostics?.events || []).slice(-15),
+      channelState: state.channel?.state || null,
+      bindingKeys: state.channel?.bindings ? Object.keys(state.channel.bindings) : []
+    })).catch(error => ({ diagnosticError: error.message }));
+    throw new Error('Chat Realtime did not reach SUBSCRIBED: ' + JSON.stringify({ connectionStatus, diagnostics }));
+  }
 }
 async function sendFrom(page, message) {
   await page.locator('#messageInput').fill(message);
