@@ -112,6 +112,13 @@ test('sticker parser accepts the displayed legacy token and the canonical token 
   assert.equal(node.attributes['aria-label'], 'ملصق 😍');
 });
 
+test('sticker previews stay visual/semantic across sidebar, search, replies and exports', () => {
+  assert.match(source, /function convPreview\(c\)[\s\S]*?return c\.last_message\?messagePreview\(c\.last_message\)/);
+  assert.match(source, /body\.textContent=messagePreview\(message\)/);
+  assert.match(source, /messagePreview\(m\)\)\}\)\.join/);
+  assert.match(source, /function messagePreview\(m\)[\s\S]*?decodeChatSticker\(m\.content\)/);
+});
+
 test('voice recording control always finalizes and sends captured audio', () => {
   assert.match(source, /\$\('voiceRecordBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):startVoiceRecording\(\)/);
   assert.match(extractFunction('sendVoiceRecording'), /state\.voiceSendOnStop=true/);
