@@ -62,6 +62,19 @@ test('stickers are sent through the existing message pipeline and rendered as va
   assert.match(source, /\$\('messageInput'\)\.value=encodeChatSticker\(emoji\);sendMessage\(\)/);
 });
 
+test('browser microphone recordings using audio/webm are accepted by attachment validation', () => {
+  const start = source.indexOf('const CHAT_ATTACHMENT_MIME_BY_EXTENSION=');
+  const end = source.indexOf('async function uploadAttachment(', start);
+  assert.ok(start >= 0 && end > start);
+  const sandbox = {};
+  vm.runInNewContext(source.slice(start, end) +
+    '\\nglobalThis.resolveMime=resolveChatAttachmentMime;globalThis.allowed=CHAT_ATTACHMENT_ALLOWED_MIME_TYPES;', sandbox);
+  assert.equal(sandbox.resolveMime({ name: 'voice-123.webm', type: 'audio/webm;codecs=opus' }), 'audio/webm');
+  assert.equal(sandbox.allowed.has('audio/webm'), true);
+  assert.equal(sandbox.allowed.has('audio/mp4'), true);
+  assert.equal(sandbox.allowed.has('audio/wav'), true);
+});
+
 test('voice send button dispatches stop-and-send while recording', () => {
   assert.match(source, /\$\('sendBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):sendMessage\(\)/);
   assert.match(source, /function sendVoiceRecording\(\)[\s\S]*?state\.voiceSendOnStop=true/);
