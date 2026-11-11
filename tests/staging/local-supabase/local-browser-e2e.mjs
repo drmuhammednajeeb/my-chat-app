@@ -32,7 +32,7 @@ requireValue(password, 'LOCAL_SYNTHETIC_AUTH_PASSWORD');
 const rawDb = requireValue(process.env.LOCAL_SUPABASE_DB_URL, 'LOCAL_SUPABASE_DB_URL');
 const db = new URL(rawDb);
 if (!['postgres:', 'postgresql:'].includes(db.protocol)
-  || !['127.0.0.1', 'localhost', '::1'].includes(db.hostname.replace(/^\\[|\\]$/g, '').toLowerCase())
+  || !['127.0.0.1', 'localhost', '::1'].includes(db.hostname.replace(/^\[|\]$/g, '').toLowerCase())
   || db.port !== '54322' || db.username !== 'postgres' || db.pathname !== '/postgres'
   || db.search || db.hash) throw new Error('Refusing non-local realtime diagnostic database target.');
 const publicationCheck = spawnSync('psql', [
