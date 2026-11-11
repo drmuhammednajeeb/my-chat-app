@@ -185,14 +185,9 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.js"></script>
+<script src="./js/bootstrap/supabase-client.js"></script>
 <script>
 'use strict';
-const __bootMainScriptStarted=performance.now();
-const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
-const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
-const __supabaseResource=performance.getEntriesByType('resource').find(entry=>entry.name.includes('supabase.min.js'));
-window.__BIZMIND_BOOT_TIMINGS__={mainScriptStarted:__bootMainScriptStarted,supabaseScriptMs:__supabaseResource?Math.round(__supabaseResource.duration):null,clientReady:performance.now()};
 const $=id=>document.getElementById(id);
 const APP_THEME_KEY='bizmindmakers-chat-theme';
 let appThemePreference=window.__BIZMIND_THEME_PREFERENCE__||'system';

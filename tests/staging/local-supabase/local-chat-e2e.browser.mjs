@@ -51,15 +51,17 @@ for (const key of ['direct_a', 'direct_b']) {
 if (!fs.existsSync(HTML_PATH)) fail('current application entry point index.html is missing');
 const originalHtml = fs.readFileSync(HTML_PATH, 'utf8');
 if (!originalHtml.includes(SDK_URL)) fail('pinned Supabase UMD script reference changed; review SDK loading before updating this harness');
-if ((originalHtml.match(/const SUPABASE_URL=/g) || []).length !== 1
-  || (originalHtml.match(/const SUPABASE_ANON_KEY=/g) || []).length !== 1) {
-  fail('expected exactly one inline Supabase URL and publishable-key declaration');
+const bootstrapTag = '<script src="./js/bootstrap/supabase-client.js"></script>';
+if ((originalHtml.match(/<script src="\.\/js\/bootstrap\/supabase-client\.js"><\/script>/g) || []).length !== 1) {
+  fail('expected exactly one external Supabase client bootstrap script');
 }
-const testHtml = originalHtml
-  .replace(/const SUPABASE_URL='[^']*';/, 'const SUPABASE_URL=' + JSON.stringify(apiUrl) + ';')
-  .replace(/const SUPABASE_ANON_KEY='[^']*';/, 'const SUPABASE_ANON_KEY=' + JSON.stringify(anonKey) + ';');
-if (testHtml === originalHtml || testHtml.includes('lvkeohpuucuklagvwpnq.supabase.co')) {
-  fail('in-memory staging configuration replacement did not complete');
+const testConfigScript = '<script>window.__BIZMIND_TEST_SUPABASE_CONFIG__='
+  + JSON.stringify({ url: apiUrl, anonKey }) + ';</script>';
+const testHtml = originalHtml.replace(bootstrapTag, testConfigScript + '\\n' + bootstrapTag);
+if (testHtml === originalHtml || !testHtml.includes(testConfigScript)
+  || testHtml.indexOf(testConfigScript) > testHtml.indexOf(bootstrapTag)
+  || testHtml.includes('window.__BIZMIND_TEST_SUPABASE_CONFIG__=undefined')) {
+  fail('in-memory staging bootstrap configuration injection did not complete');
 }
 
 const sdkCandidates = [

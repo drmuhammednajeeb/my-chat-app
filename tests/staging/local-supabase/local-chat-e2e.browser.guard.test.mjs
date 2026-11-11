@@ -3,15 +3,25 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const root = new URL('../../../', import.meta.url);
-const [html, harness, workflow] = await Promise.all([
+const [html, harness, workflow, bootstrap] = await Promise.all([
   readFile(new URL('../../../index.html', import.meta.url), 'utf8'),
   readFile(new URL('./local-chat-e2e.browser.mjs', import.meta.url), 'utf8'),
-  readFile(new URL('../../../.github/workflows/disposable-local-supabase-runtime.yml', import.meta.url), 'utf8')
+  readFile(new URL('../../../.github/workflows/disposable-local-supabase-runtime.yml', import.meta.url), 'utf8'),
+  readFile(new URL('../../../js/bootstrap/supabase-client.js', import.meta.url), 'utf8')
 ]);
 
-test('browser E2E targets the current inline bootstrap, not the removed legacy bootstrap file', () => {
-  assert.match(html, /const SUPABASE_URL=/);
-  assert.match(html, /const SUPABASE_ANON_KEY=/);
+test('Supabase client bootstrap is extracted and loaded between SDK and application code', () => {
+  const sdkTag = html.indexOf('supabase-js@2.49.1/dist/umd/supabase.js');
+  const bootstrapTag = html.indexOf('./js/bootstrap/supabase-client.js');
+  const appScript = html.indexOf("const $=id=>document.getElementById(id);");
+  assert.ok(sdkTag >= 0 && bootstrapTag > sdkTag && appScript > bootstrapTag,
+    'SDK, extracted bootstrap, and application script must load in dependency order');
+  assert.doesNotMatch(html, /const SUPABASE_URL=|const SUPABASE_ANON_KEY=/);
+  assert.match(bootstrap, /global\.supabase\.createClient/);
+  assert.match(bootstrap, /global\.SUPABASE_URL = SUPABASE_URL/);
+  assert.match(bootstrap, /global\.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY/);
+  assert.match(bootstrap, /global\.supabaseClient = supabaseClient/);
+  assert.match(bootstrap, /__BIZMIND_TEST_SUPABASE_CONFIG__/);
   assert.doesNotMatch(harness, /js\/00-bootstrap\.js/);
   assert.doesNotMatch(harness, /bootstrapPath/);
 });
