@@ -188,7 +188,7 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
   assert.match(subscribe, /event:'DELETE',schema:'public',table:'chat_messages'/);
   assert.match(subscribe, /handleMessageDeleteRealtime\(p,id\)/);
   assert.match(subscribe, /channelHasSubscribed&&s==='SUBSCRIBED'/);
-  assert.match(subscribe, /reconnected&&state\.active\?\.id===id\)loadMessages\(\)/);
+  assert.doesNotMatch(subscribe, /reconnected&&state\\.active\\?\\.id===id\\)loadMessages\\(\\)/);
   assert.match(update, /renderMessage\(incoming,conversationId,state\.messageLoadVersion\)/);
   assert.doesNotMatch(update, /Deleted message refresh failed/);
 });
@@ -565,16 +565,27 @@ test('loadMessages completes for both empty and populated timelines without a re
   assert.match(empty.area.innerHTML, /بداية محادثة جديدة/);
   assert.equal(empty.receipts, 1);
 
-  const populated = await runLoad([{
-    id: 'm1',
-    conversation_id: 'c1',
-    sender_id: 'u1',
-    content: 'hello',
-    created_at: '2026-11-11T06:00:00.000Z'
-  }]);
+  const populated = await runLoad([
+    {
+      id: 'm2',
+      conversation_id: 'c1',
+      sender_id: 'u1',
+      content: 'latest',
+      created_at: '2026-11-11T06:01:00.000Z'
+    },
+    {
+      id: 'm1',
+      conversation_id: 'c1',
+      sender_id: 'u1',
+      content: 'older',
+      created_at: '2026-11-11T06:00:00.000Z'
+    }
+  ]);
   assert.equal(populated.result, true);
   assert.equal(populated.state.isLoadingMessages, false);
-  assert.equal(populated.state.messageIds.has('m1'), true);
+  assert.equal(populated.state.messageIds.has('m2'), true);
+  assert.equal(populated.state.messageIds.has('m1'), false);
+  assert.equal(populated.state.hasMoreMessages, true);
   assert.equal(populated.receipts, 1);
 });
 
@@ -628,4 +639,51 @@ test('optional private-reply metadata network failures do not reject the message
   });
   assert.equal(await loadContexts('c1', [{ id: 'm1' }], 8), false);
   assert.equal(state.privateReplyContexts.size, 0);
+});
+
+
+test('opening a conversation fetches only the newest message and defers older history to pagination', () => {
+  const load = extractFunction('loadMessages');
+  assert.match(load, /\.order\('created_at',\{ascending:false\}\)\.order\('id',\{ascending:false\}\)\.limit\(2\)/);
+  assert.match(load, /const fetchedRows=\(data\|\|\[\]\)\.slice\(0,1\)/);
+  assert.match(load, /state\.hasMoreMessages=\(data\|\|\[\]\)\.length>1/);
+  const older = extractFunction('loadOlderMessages');
+  assert.match(older, /\.limit\(50\)/);
+  assert.doesNotMatch(older, /area\.replaceChildren\(\)/);
+  assert.match(older, /insertBefore\(fragment,originalFirstChild\)/);
+});
+
+test('starting and stopping the polling timer does not erase the loaded history cursor', () => {
+  const state = {
+    messagePollGeneration: 4,
+    messagePollTimer: 12,
+    messagePollBusy: true,
+    hasMoreMessages: true,
+    isLoadingMessages: true,
+    loadingOlderMessages: false
+  };
+  const stop = vm.runInNewContext('(' + extractFunction('stopMessagePolling') + ')', {
+    state,
+    clearTimeout() {},
+    diagLog() {}
+  });
+  stop();
+  assert.equal(state.hasMoreMessages, true);
+  assert.equal(state.isLoadingMessages, true);
+  assert.equal(state.loadingOlderMessages, false);
+  assert.equal(state.messagePollTimer, null);
+  assert.equal(state.messagePollGeneration, 5);
+  assert.equal(state.messagePollBusy, false);
+});
+
+test('Realtime reconnection does not start a competing full timeline reload', () => {
+  const subscribe = extractFunction('subscribeConversation');
+  assert.doesNotMatch(subscribe, /reconnected&&state\.active\?\.id===id\)loadMessages\(\)/);
+  assert.match(subscribe, /requestImmediateMessageReconciliation/);
+});
+
+test('conversation opens latest-message loading before optional settings finish', () => {
+  const open = extractFunction('openConversation');
+  assert.ok(open.indexOf('subscribeConversation();subscribeProfileUpdates(c)') < open.indexOf('const messageLoadPromise=loadMessages()'));
+  assert.ok(open.indexOf('const messageLoadPromise=loadMessages()') < open.indexOf('await Promise.all([messageLoadPromise,starredLoadPromise,settingsLoadPromise])'));
 });
