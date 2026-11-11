@@ -657,7 +657,7 @@
     {
       "id": "DAG-002",
       "severity": "RESOLVED_FOR_LOCAL_REPLAY",
-      "issue": "Resolved for source recovery: authoritative internal and public direct-conversation RPC definitions and inspected ACLs were recovered read-only from the Supabase catalog and preserved in a test-only fixture with SHA-256 provenance. Runtime behavior remains blocked separately by DAG-014 and DAG-015.",
+      "issue": "Authoritative internal and public direct-conversation RPC definitions and inspected ACLs were recovered read-only from the Supabase catalog, preserved in the test-only fixture, and verified against the live definitions. Disposable-local runtime tests also passed; canonical migration restoration and production eligibility hardening remain separate gates.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
@@ -666,41 +666,41 @@
     },
     {
       "id": "DAG-003",
-      "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
-      "issue": "The historical-to-final membership format transition is represented and the final migration allowlist is tested for all six function targets, including both admin RPC implementations. A PostgreSQL local apply test must still prove the replacement and resulting constraints."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The historical-to-final membership format transition replayed successfully in disposable local PostgreSQL. The final constraints and official-number eligibility assertions passed."
     },
     {
       "id": "DAG-006",
-      "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
-      "issue": "Static source review found three policy definitions timestamped after the membership rewrite; all three use a direct or indirect active-membership guard, with zero later unguarded policies detected. The DAG sequences all earlier feature policy sources before the rewrite. Runtime PostgreSQL RLS tests are still required."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The ordered post-membership policy set and active-member restrictive overlay passed disposable-local RLS/CRUD runtime verification."
     },
     {
       "id": "DAG-007",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "Verify pgcrypto extension schema and extensions.digest / extensions.gen_random_bytes resolution locally."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "Disposable-local preflight/postflight verified pgcrypto extension placement and function resolution."
     },
     {
       "id": "DAG-008",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "pg_cron availability and the expected purge-job definition now have read-only local pre/postflight assertions. A separate loopback-only probe runner is prepared to prove actual scheduler execution using a temporary SELECT 1 job with scoped cleanup. Neither the probe nor the scheduler has been run; this blocker remains until disposable-local runtime evidence exists.",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The disposable-local pg_cron probe scheduled and executed its temporary SELECT 1 job successfully, then removed only its own job and run details.",
       "evidence": [
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
       ]
     },
     {
       "id": "DAG-010",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "Disposable-local preflight verified Supabase Auth, Storage, Realtime, roles, pgcrypto, and pg_cron availability."
     },
     {
       "id": "DAG-013",
-      "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
-      "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
+      "severity": "REVIEW_REQUIRED_SECURITY_HARDENING_RUNTIME_PASSED",
+      "issue": "The test-only chat-media uploader-folder ownership policy passed Storage API runtime checks, including denial of cross-user path spoofing. Production still lacks the path-segment auth.uid() guard; prepare a reviewed canonical migration before promotion."
     },
     {
       "id": "DAG-014",
       "severity": "BLOCKER",
-      "issue": "The direct-conversation RPC source is restored and rollback-only PostgreSQL assertions plus a two-session reversed-pair runner are prepared. Runtime execution is still required in a disposable local Supabase environment to prove unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exactly-one concurrent creation, exact ACL enforcement, and active-membership gating. Do not enable replay until those runtime tests pass.",
+      "issue": "Disposable-local PostgreSQL runtime validation PASSED: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exact ACL assertions, active-membership gating, 24 reversed-pair concurrent requests converging on one conversation, and 40 concurrent message inserts. Release remains blocked because the recovered RPC and guard are still test-only and are not yet restored as a reviewed canonical migration.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
@@ -710,7 +710,7 @@
     {
       "id": "DAG-015",
       "severity": "BLOCKER",
-      "issue": "The recovered production RPC lacked caller and target eligibility checks. A separate test-only overlay now checks both participants against active membership, verified membership number, final number format, and confirmed Auth email while locking authoritative rows. The overlay and negative-case PostgreSQL assertions are prepared, but runtime validation, concurrency, and exact ACL behavior remain blocked; no production migration is authorized.",
+      "issue": "The test-only caller/target eligibility guard PASSED disposable-local PostgreSQL runtime assertions for active membership, verified official membership number, final number format, and confirmed Auth email. The live production SECURITY DEFINER RPC remains unguarded; a reviewed canonical migration and production promotion are still required. No production SQL was executed.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
@@ -721,7 +721,7 @@
     {
       "id": "DAG-016",
       "severity": "BLOCKER",
-      "issue": "Least-privilege overlay is prepared for disposable local replay only. Must prove API role table/sequence/function privileges, active-member policy coverage, and unchanged legitimate CRUD/RPC behavior before any production migration is designed."
+      "issue": "The test-only least-privilege overlay PASSED disposable-local catalog postconditions, CRUD/RPC compatibility, and Storage API RLS tests. Read-only production inspection still shows broad postgres-owned default ACLs for public tables/sequences/functions; a reviewed canonical ACL migration is required before release. No production privileges were changed."
     }
   ],
   "requiredSourceRecovery": [
