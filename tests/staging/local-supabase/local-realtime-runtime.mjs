@@ -40,14 +40,18 @@ function psql(sql) {
 const realtimeTables = psql(`SELECT string_agg(tablename, ',' ORDER BY tablename)
   FROM pg_publication_tables
   WHERE pubname='supabase_realtime' AND schemaname='public'
-    AND tablename IN ('chat_messages','message_reactions');`);
-if (realtimeTables !== 'chat_messages,message_reactions') {
-  throw new Error('Required chat tables are not both in supabase_realtime publication: ' + realtimeTables);
+    AND tablename IN ('chat_messages','conversations','message_reactions');`);
+if (realtimeTables !== 'chat_messages,conversations,message_reactions') {
+  throw new Error('Required chat/message/conversation tables are not all in supabase_realtime publication: ' + realtimeTables);
 }
 console.log('LOCAL_REALTIME_PUBLICATION_TABLES=' + realtimeTables);
 const appRealtimeTables = psql(`SELECT string_agg(tablename, ',' ORDER BY tablename)
   FROM pg_publication_tables WHERE pubname='supabase_realtime' AND schemaname='public';`);
 console.log('LOCAL_REALTIME_APP_PUBLICATION_TABLES=' + appRealtimeTables);
+const requiredAppTables = ['chat_messages','message_reactions','message_pins','conversation_members','conversation_group_settings','conversations','conversation_documents','private_reply_contexts','conversation_member_events'];
+const publishedAppTables = new Set((appRealtimeTables || '').split(',').filter(Boolean));
+const missingAppTables = requiredAppTables.filter(table => !publishedAppTables.has(table));
+if (missingAppTables.length) throw new Error('App realtime subscriptions reference tables outside supabase_realtime: ' + missingAppTables.join(','));
 
 
 let users;
@@ -112,6 +116,10 @@ async function subscribeToConversation(client, conversationId) {
     event: 'INSERT', schema: 'public', table: 'message_reactions',
     filter: 'conversation_id=eq.' + conversationId
   }, payload => record({ kind: 'reaction', conversationId, payload }));
+  channel.on('postgres_changes', {
+    event: 'UPDATE', schema: 'public', table: 'conversations',
+    filter: 'id=eq.' + conversationId
+  }, payload => record({ kind: 'conversation', conversationId, payload }));
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Realtime subscription timed out for ' + conversationId)), 12000);
     channel.subscribe((status, error) => {
@@ -216,6 +224,16 @@ try {
   );
   if (reactionEvent.payload.new.conversation_id !== directConversationId) throw new Error('Reaction event conversation mismatch');
   console.log('PASS: authenticated local Realtime delivered a message reaction event.');
+
+  console.log('LOCAL_REALTIME_STEP=conversation-update-event');
+  psql(`UPDATE public.conversations SET updated_at=now() WHERE id='${directConversationId}'::uuid;`);
+  const conversationEvent = await waitForEvent(
+    event => event.kind === 'conversation' && event.payload.eventType === 'UPDATE'
+      && event.payload.new?.id === directConversationId,
+    'authenticated conversations UPDATE'
+  );
+  if (conversationEvent.payload.new.id !== directConversationId) throw new Error('Conversation update event ID mismatch');
+  console.log('PASS: authenticated local Realtime delivered the filtered conversations UPDATE event.');
 
   console.log('LOCAL_REALTIME_STEP=reconnect-and-reconcile-gap');
   await channel.unsubscribe();
