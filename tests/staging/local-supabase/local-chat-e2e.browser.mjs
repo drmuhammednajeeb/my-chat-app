@@ -104,7 +104,8 @@ const clientOptions = { auth: { persistSession: false, autoRefreshToken: false, 
 const clientA = createClient(api.origin, anonKey, clientOptions);
 const clientB = createClient(api.origin, anonKey, clientOptions);
 let browser;
-const pageErrors = [];
+let pageA = null, pageB = null;
+const pageErrors = [], pageConsole = [];
 function logStep(step) { console.log('LOCAL_CHAT_E2E_STEP=' + step); }
 async function signIn(client, email) {
   const { data, error } = await client.auth.signInWithPassword({ email, password });
