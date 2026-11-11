@@ -39,6 +39,6 @@ test("rejects malformed separators, lengths, prefixes and non-digits", () => {
 
 test("pending invitation renderer formats the number and appends its expiry date", () => {
   const renderer = extractFunction("renderPendingInvites");
-  assert.match(renderer, /formatForeverMembershipNumber\\(item\\.membership_number\\)/);
-  assert.match(renderer, /" · تنتهي " \\+ dateLabel\\(item\\.expires_at\\)/);
+  assert.ok(renderer.includes("formatForeverMembershipNumber(item.membership_number)"));
+  assert.ok(renderer.includes('" · تنتهي " + dateLabel(item.expires_at)'));
 });
