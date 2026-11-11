@@ -90,7 +90,7 @@ test('browser E2E rewrites the app to a loopback-only synthetic Supabase target'
 test('API load probe is loopback-only, bounded, and read-only', async () => {
   const script = await readFile(path.join(root, 'tests/staging/local-supabase/local-api-load-runtime.mjs'), 'utf8');
   assert.match(script, /ALLOW_DISPOSABLE_LOCAL_REPLAY/);
-  assert.match(script, /api\\.port, '54321'/);
+  assert.match(script, /url\\.port, '54321'/);
   assert.match(script, /127\.0\.0\.1/);
   assert.match(script, /concurrency = 8/);
   assert.match(script, /requestsPerWorker = 25/);
