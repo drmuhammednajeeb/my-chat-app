@@ -61,3 +61,16 @@ test('disposable runtime workflow installs pinned browser dependencies and invok
   assert.match(workflow, /RUNTIME_PROJECT_ID: my-chat-app-supabase-runtime-\$\{\{ github\.run_id \}\}/);
   assert.match(workflow, /project_id =/);
 });
+
+test('message render receipt flag remains in loadMessages scope for empty and non-empty histories', () => {
+  const start = html.indexOf('async function loadMessages(){');
+  const end = html.indexOf('\\nfunction compareMessagesChronologically', start);
+  assert.ok(start >= 0 && end > start, 'loadMessages function must exist');
+  const source = html.slice(start, end);
+  const declaration = source.indexOf('let allMessagesRendered=true;');
+  const conditional = source.indexOf("if(!messages.length)");
+  const receipt = source.indexOf('if(allMessagesRendered&&requestId===');
+  assert.ok(declaration >= 0 && conditional >= 0 && receipt > declaration, 'render flag declaration and receipt guard must exist');
+  assert.ok(declaration < conditional, 'render flag must be declared before the empty/non-empty branch');
+  assert.equal((source.match(/let allMessagesRendered=true;/g) || []).length, 1, 'render flag must have one function-scoped declaration');
+});
