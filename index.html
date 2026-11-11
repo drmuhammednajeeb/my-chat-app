@@ -1618,7 +1618,13 @@ document.addEventListener('visibilitychange',()=>{
 });
 window.addEventListener('online',()=>requestImmediateMessageReconciliation('online'));
 window.addEventListener('focus',()=>requestImmediateMessageReconciliation('focus'));
-function stopMessagePolling(){state.isLoadingMessages=false;state.loadingOlderMessages=false;state.hasMoreMessages=false;state.messagePollGeneration++;if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}state.messagePollBusy=false;diagLog('poll-stopped',{generation:state.messagePollGeneration})}
+function stopMessagePolling(){
+ state.messagePollGeneration++;
+ if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}
+ state.messagePollBusy=false;
+ // Stopping the timer must not reset the loaded timeline or its history cursor.
+ diagLog('poll-stopped',{generation:state.messagePollGeneration});
+}
 function startMessagePolling(conversationId){
  stopMessagePolling();const generation=state.messagePollGeneration;
  scheduleMessagePolling(conversationId,generation);diagLog('poll-started',{conversationId,generation,delay:messagePollingDelay()});
