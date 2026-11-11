@@ -2261,11 +2261,18 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRES
  },8000);
  try{
   const sessionStarted=performance.now();
-  const {data,error}=await withAuthTimeout(
-   supabaseClient.auth.getSession(),
-   'استغرق التحقق من جلسة الدخول أكثر من 12 ثانية. تحقق من الاتصال ثم أعد تحميل التطبيق.',
-   12000
-  );
+  let sessionResult;
+  try{
+   sessionResult=await withAuthTimeout(
+    supabaseClient.auth.getSession(),
+    'استغرق التحقق من جلسة الدخول أكثر من 12 ثانية. تحقق من الاتصال ثم أعد تحميل التطبيق.',
+    12000
+   );
+  }catch(error){
+   recordPerf('startup_get_session',performance.now()-sessionStarted,{success:false,timeout:true});
+   throw error;
+  }
+  const {data,error}=sessionResult;
   recordPerf('startup_get_session',performance.now()-sessionStarted,{success:!error,timeout:false});
   if(window.__BIZMIND_BOOT_TIMINGS__){window.__BIZMIND_BOOT_TIMINGS__.getSessionMs=Math.round(performance.now()-sessionStarted);window.__BIZMIND_BOOT_TIMINGS__.authResolved=performance.now()}
   if(error)throw error;
