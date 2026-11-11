@@ -174,10 +174,13 @@ begin
     from pg_default_acl d
     join pg_namespace n on n.oid = d.defaclnamespace
     cross join lateral aclexplode(d.defaclacl) a
-    where d.defaclrole = 'postgres'::regrole
-      and (
-        (n.nspname = 'public' and d.defaclobjtype in ('r','S','f'))
-        or (n.nspname = 'app_private' and d.defaclobjtype = 'f')
+    where (
+        (n.nspname = 'public'
+          and d.defaclrole in ('postgres'::regrole, 'supabase_admin'::regrole)
+          and d.defaclobjtype in ('r','S','f'))
+        or (n.nspname = 'app_private'
+          and d.defaclrole = 'postgres'::regrole
+          and d.defaclobjtype = 'f')
       )
       and a.grantee in (
         0,
