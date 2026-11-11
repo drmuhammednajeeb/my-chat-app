@@ -740,14 +740,16 @@
     {
       "id": "membership.chat-rls-fix",
       "source": [
-        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql",
+        "supabase/migrations/20261111004020_chat_realtime_and_self_chat_rpc.sql"
       ],
       "requires": [
         "membership.official",
         "chat.groups"
       ],
       "testSource": [
-        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql",
+        "supabase/migrations/20261111004020_chat_realtime_and_self_chat_rpc.sql"
       ]
     },
     {
