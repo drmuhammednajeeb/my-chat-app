@@ -421,7 +421,9 @@ test('chat attachment upload enforces non-empty bounded files and sends normaliz
 });
 
 test('recorded audio/webm is accepted by the upload MIME allowlist', async () => {
-  const allowed = vm.runInNewContext('CHAT_ATTACHMENT_ALLOWED_MIME_TYPES', {
+  const allowlistDeclaration = source.match(/const CHAT_ATTACHMENT_ALLOWED_MIME_TYPES=(new Set\\([^;]+\\));/);
+  assert.ok(allowlistDeclaration, 'Expected the attachment MIME allowlist declaration');
+  const allowed = vm.runInNewContext(allowlistDeclaration[1], {
     CHAT_ATTACHMENT_MIME_BY_EXTENSION: {
       jpg: 'image/jpeg', webm: 'video/webm', m4a: 'audio/mp4',
       mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav', aac: 'audio/aac'
