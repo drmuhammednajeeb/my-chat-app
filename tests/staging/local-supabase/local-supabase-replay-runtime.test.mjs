@@ -76,7 +76,7 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
 test('browser E2E rewrites the app to a loopback-only synthetic Supabase target', async () => {
   const script = await readFile(path.join(root, 'tests/staging/local-supabase/local-app-e2e.mjs'), 'utf8');
   assert.match(script, /requireLoopbackApi/);
-  assert.match(script, /api\.port, '54321'/);
+  assert.match(script, /url\.port, '54321'/);
   assert.match(script, /127\.0\.0\.1/);
   assert.match(script, /direct-a@bizmindmakers\.test/);
   assert.match(script, /direct-b@bizmindmakers\.test/);
