@@ -236,7 +236,7 @@ test('delete action uses the returned database row and avoids a competing full r
 test('initial message snapshot removes stale rows inside its authoritative window', () => {
   const load = extractFunction('loadMessages');
   assert.match(load, /fetchedIds=new Set\(fetchedRows\.map\(m=>m\.id\)\)/);
-  assert.match(load, /isOlderHistory=fetchedRows\.length===50/);
+  assert.match(load, /isOlderHistory=newestFetched&&compareMessagesChronologically\(m,newestFetched\)<0/);
   assert.match(load, /afterPersonalClear=!state\.activeChatPreference\?\.cleared_before/);
   assert.match(load, /if\(afterPersonalClear&&\(fetchedIds\.has\(m\.id\)\|\|isNewerRealtime\|\|isOlderHistory\|\|arrivedDuringEmptyFetch\)\)/);
 });
@@ -651,7 +651,7 @@ test('opening a conversation fetches only the newest message and defers older hi
   assert.doesNotMatch(older, /area\.replaceChildren\(\)/);
   assert.match(older, /insertBefore\(fragment,originalFirstChild\)/);
   assert.match(older, /state\.batchRenderingMessages=true/);
-  assert.match(older, /state\.batchRenderingMessages=false;reconcileMessageTimeline\(area\)/);
+  assert.match(older, /state\.batchRenderingMessages=false;state\.batchRenderingConversationId=null;reconcileMessageTimeline\(area\)/);
   assert.match(older, /olderIds/);
 });
 
