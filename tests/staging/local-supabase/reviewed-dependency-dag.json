@@ -10,7 +10,7 @@
     },
     "historicalChanges": {
       "path": "database/changes",
-      "count": 43,
+      "count": 45,
       "note": "Not a canonical Supabase CLI sequence."
     }
   },
@@ -1084,6 +1084,31 @@
       "testSource": [
         "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql"
       ]
+    },
+    {
+      "id": "chat.profile-status-and-conversation-images",
+      "source": [
+        "database/changes/20261112000100_profile_status_and_conversation_images.sql"
+      ],
+      "provides": [
+        "profile_statuses with database-enforced 24-hour expiry",
+        "conversations.image_path",
+        "storage.buckets.profile-status-media",
+        "storage.buckets.conversation-avatars",
+        "public.set_conversation_image(uuid,text)"
+      ],
+      "requires": [
+        "core.base",
+        "chat.channels-public",
+        "chat.avatar-storage",
+        "platform.storage",
+        "platform.realtime"
+      ],
+      "testSource": [
+        "database/changes/20261112000100_profile_status_and_conversation_images.sql"
+      ],
+      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "note": "Private status and conversation media; expiry controls visibility and Storage read authorization. This historical source is not a Supabase CLI migration and is not approved for execution."
     }
   ],
   "explicitEdges": [
@@ -1750,6 +1775,26 @@
     [
       "chat.workspaces",
       "chat.media-and-reactions"
+    ],
+    [
+      "core.base",
+      "chat.profile-status-and-conversation-images"
+    ],
+    [
+      "chat.channels-public",
+      "chat.profile-status-and-conversation-images"
+    ],
+    [
+      "chat.avatar-storage",
+      "chat.profile-status-and-conversation-images"
+    ],
+    [
+      "platform.storage",
+      "chat.profile-status-and-conversation-images"
+    ],
+    [
+      "platform.realtime",
+      "chat.profile-status-and-conversation-images"
     ]
   ],
   "blockers": [
