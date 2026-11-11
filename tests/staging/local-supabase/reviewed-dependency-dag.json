@@ -6,7 +6,7 @@
   "sourceSets": {
     "cliMigrations": {
       "path": "supabase/migrations",
-      "count": 10
+      "count": 11
     },
     "historicalChanges": {
       "path": "database/changes",
@@ -532,6 +532,26 @@
       ]
     },
     {
+      "id": "chat.expiry-48h",
+      "source": [
+        "supabase/migrations/202611110001_enforce_chat_message_48h_retention.sql"
+      ],
+      "provides": [
+        "chat_messages.expires_at exact 48-hour retention",
+        "app_private.purge_expired_chat_messages() one-minute purge"
+      ],
+      "requires": [
+        "chat.expiry-purge",
+        "platform.pg_cron"
+      ],
+      "status": "REQUIRES_DISPOSABLE_STAGING_RUNTIME_VALIDATION",
+      "testSource": [
+        "supabase/migrations/202611110001_enforce_chat_message_48h_retention.sql",
+        "tests/message-retention-policy.test.mjs"
+      ],
+      "note": "Uniform DB-enforced 48-hour TTL for every chat_messages row. Storage objects are not deleted by SQL; chat-media Storage API cleanup remains a separate required worker."
+    },
+    {
       "id": "membership.base",
       "source": [
         "database/changes/20261107144109_private_membership_system_20261107.sql"
@@ -570,7 +590,8 @@
         "chat.remove-duplicate-favorite",
         "chat.workspace-indexes",
         "chat.media-upload-path-hardening",
-        "test-fixture.direct-chat-auth-seed"
+        "test-fixture.direct-chat-auth-seed",
+        "chat.expiry-48h"
       ],
       "testSource": [
         "database/changes/20261107144109_private_membership_system_20261107.sql"
@@ -1750,6 +1771,18 @@
     [
       "chat.workspaces",
       "chat.media-and-reactions"
+    ],
+    [
+      "chat.expiry-purge",
+      "chat.expiry-48h"
+    ],
+    [
+      "platform.pg_cron",
+      "chat.expiry-48h"
+    ],
+    [
+      "chat.expiry-48h",
+      "membership.base"
     ]
   ],
   "blockers": [

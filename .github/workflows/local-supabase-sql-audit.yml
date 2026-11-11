@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "engineering/stability-css-extraction-20261109"
+      - "feat/enforce-48h-message-retention-20261111"
   pull_request:
     branches:
       - "main"

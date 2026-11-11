@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 54,
-    "mappedSources": 51,
+    "sqlFiles": 55,
+    "mappedSources": 52,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -30,9 +30,9 @@
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
-    "executedMappedSources": 47,
+    "executedMappedSources": 48,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 66
+    "executedSqlFiles": 67
   },
   "execution": {
     "enabled": false,
@@ -403,6 +403,16 @@
       ],
       "blockedBy": [],
       "parityNote": "Run only after the relevant disposable-local replay nodes. Confirms extension placement and job definition, not actual scheduler execution."
+    },
+    {
+      "nodeId": "chat.expiry-48h",
+      "status": "REQUIRES_DISPOSABLE_STAGING_RUNTIME_VALIDATION",
+      "testSources": [
+        "supabase/migrations/202611110001_enforce_chat_message_48h_retention.sql",
+        "tests/message-retention-policy.test.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": "Static policy checks are included in CI. Actual PostgreSQL trigger, exact expiry, one-minute cron execution, and large-batch purge remain unverified until a disposable staging Supabase environment is available. Chat-media objects require a separate Storage API worker."
     },
     {
       "nodeId": "chat.team-admin-group-overrides",
