@@ -113,7 +113,7 @@
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
       ],
       "provenance": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
-      "parityNote": "Authoritative pg_get_functiondef source and inspected ACL match the test-only fixture. Disposable-local PostgreSQL runtime passed eligibility matrix, exact ACL assertions, 24 reversed-pair concurrent requests, and 40 concurrent message inserts. Canonical migration restoration and production promotion remain blocked by DAG-015; no production SQL executed.",
+      "parityNote": "Authoritative pg_get_functiondef source and inspected ACL match the test-only fixture. Disposable-local PostgreSQL runtime passed eligibility matrix, exact ACL assertions, 24 reversed-pair concurrent requests, and 40 concurrent message inserts. Canonical migration restoration and production promotion remain blocked by DAG-015; no production SQL executed. The full application browser E2E also passed: sender sign-in, direct conversation open, message send, recipient read, and recipient reload persistence against the disposable local API.",
       "blockedBy": [
         "DAG-015"
       ]
@@ -951,7 +951,7 @@
       "blockedBy": [
         "DAG-015"
       ],
-      "note": "Disposable-local PostgreSQL assertions passed for caller/target eligibility, invalid membership, missing profile, unauthenticated/null/self targets, existing-conversation reuse, and exact function ACLs. This remains test-only; production promotion is blocked by DAG-015."
+      "note": "Disposable-local PostgreSQL assertions passed for caller/target eligibility, invalid membership, missing profile, unauthenticated/null/self targets, existing-conversation reuse, and exact function ACLs. This remains test-only; production promotion is blocked by DAG-015. The browser E2E also passed the real application send/read/reload path using the same synthetic identities."
     },
     {
       "id": "test-fixture.direct-chat-concurrency",
@@ -1059,7 +1059,7 @@
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Disposable-local runtime passed the least-privilege catalog assertions, rollback-only CRUD/RPC compatibility tests, and Storage API RLS probes, including cross-user chat-media uploader-folder spoof denial. Production catalog inspection still shows broad postgres-owned default ACLs; no production ACL or policy changes have been applied, so promotion remains blocked by DAG-016."
+      "note": "Disposable-local runtime passed the least-privilege catalog assertions, rollback-only CRUD/RPC compatibility tests, and Storage API RLS probes, including cross-user chat-media uploader-folder spoof denial. Production catalog inspection still shows broad postgres-owned default ACLs; no production ACL or policy changes have been applied, so promotion remains blocked by DAG-016. Remaining gap: the overlay does not revoke existing EXECUTE grants from authenticated on all public functions, and the assertion does not prove an authenticated RPC allowlist. This must be designed and tested before promotion."
     },
     {
       "id": "chat.media-and-reactions",
@@ -1874,7 +1874,7 @@
         "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
       ],
-      "issue": "Disposable-local PostgreSQL runtime validation PASSED: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exact ACL assertions, active-membership gating, 24 reversed-pair concurrent requests converging on one conversation, and 40 concurrent message inserts. Release remains blocked because the recovered RPC and guard are still test-only and are not yet restored as a reviewed canonical migration."
+      "issue": "Disposable-local PostgreSQL runtime validation PASSED: unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exact ACL assertions, active-membership gating, 24 reversed-pair concurrent requests converging on one conversation, and 40 concurrent message inserts. Release remains blocked because the recovered RPC and guard are still test-only and are not yet restored as a reviewed canonical migration. The real application browser E2E also passed sender send, recipient read, and reload persistence against disposable local Supabase."
     },
     {
       "id": "DAG-015",
@@ -1905,7 +1905,7 @@
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
       ],
-      "issue": "The test-only least-privilege overlay PASSED disposable-local catalog postconditions, CRUD/RPC compatibility, and Storage API RLS tests. Read-only production inspection still shows broad postgres-owned default ACLs for public tables/sequences/functions; a reviewed canonical ACL migration is required before release. No production privileges were changed."
+      "issue": "The test-only least-privilege overlay PASSED disposable-local catalog postconditions, CRUD/RPC compatibility, and Storage API RLS tests. Read-only production inspection still shows broad postgres-owned default ACLs for public tables/sequences/functions; a reviewed canonical ACL migration is required before release. No production privileges were changed. Additional review gap: the current overlay/assertion does not yet prove a least-privilege EXECUTE allowlist for existing public functions granted to authenticated."
     }
   ],
   "duplicateProvenance": [
