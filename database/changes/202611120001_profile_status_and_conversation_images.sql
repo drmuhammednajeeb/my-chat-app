@@ -24,8 +24,7 @@ create table if not exists public.profile_statuses (
 
 create index if not exists profile_statuses_user_created_idx
   on public.profile_statuses(user_id, created_at desc);
-
-create index if not exists profile_statuses_active_expiry_idx
+create index if not exists profile_statuses_expiry_idx
   on public.profile_statuses(expires_at);
 
 create or replace function app_private.enforce_profile_status_24h()
@@ -46,7 +45,6 @@ end;
 $$;
 
 revoke all on function app_private.enforce_profile_status_24h() from public, anon, authenticated;
-
 drop trigger if exists profile_statuses_enforce_24h on public.profile_statuses;
 create trigger profile_statuses_enforce_24h
 before insert or update on public.profile_statuses
@@ -82,9 +80,7 @@ grant select, insert, delete on public.profile_statuses to authenticated;
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('profile-status-media', 'profile-status-media', false, 3145728, array['image/jpeg','image/png','image/webp'])
 on conflict (id) do update
-set public = false,
-    file_size_limit = excluded.file_size_limit,
-    allowed_mime_types = excluded.allowed_mime_types;
+set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "Users upload own profile status media" on storage.objects;
 create policy "Users upload own profile status media"
@@ -100,8 +96,7 @@ on storage.objects for select to authenticated
 using (
   bucket_id = 'profile-status-media'
   and exists (
-    select 1
-    from public.profile_statuses s
+    select 1 from public.profile_statuses s
     where s.image_path = storage.objects.name
       and s.user_id::text = (storage.foldername(storage.objects.name))[1]
       and s.expires_at > now()
@@ -119,12 +114,52 @@ using (
 alter table public.conversations
   add column if not exists image_path text;
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('conversation-avatars', 'conversation-avatars', false, 3145728, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do update
+set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Conversation managers upload conversation avatars" on storage.objects;
+create policy "Conversation managers upload conversation avatars"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'conversation-avatars'
+  and (storage.foldername(name))[1] ~* '^[0-9a-f-]{36}$'
+  and (storage.foldername(name))[2] = (select auth.uid())::text
+  and app_private.can_manage_conversation(((storage.foldername(name))[1])::uuid)
+);
+
+drop policy if exists "Conversation members read conversation avatars" on storage.objects;
+create policy "Conversation members read conversation avatars"
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'conversation-avatars'
+  and (
+    app_private.is_conversation_member(((storage.foldername(name))[1])::uuid)
+    or exists (
+      select 1 from public.conversations c
+      where c.id = ((storage.foldername(name))[1])::uuid
+        and c.type = 'channel'
+        and c.is_public = true
+    )
+  )
+);
+
+drop policy if exists "Conversation managers delete conversation avatars" on storage.objects;
+create policy "Conversation managers delete conversation avatars"
+on storage.objects for delete to authenticated
+using (
+  bucket_id = 'conversation-avatars'
+  and (storage.foldername(name))[1] ~* '^[0-9a-f-]{36}$'
+  and app_private.can_manage_conversation(((storage.foldername(name))[1])::uuid)
+);
+
 create or replace function app_private.validate_conversation_image_path()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   actor uuid := (select auth.uid());
   expected_prefix text;
@@ -138,112 +173,7 @@ begin
   if new.image_path is not null then
     expected_prefix := new.id::text || '/' || actor::text || '/';
     if left(new.image_path, length(expected_prefix)) <> expected_prefix
-       or new.image_path !~* '\.(jpg|png|webp)insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('conversation-avatars', 'conversation-avatars', false, 3145728, array['image/jpeg','image/png','image/webp'])
-on conflict (id) do update
-set public = false,
-    file_size_limit = excluded.file_size_limit,
-    allowed_mime_types = excluded.allowed_mime_types;
-
-drop policy if exists "Conversation managers upload conversation avatars" on storage.objects;
-create policy "Conversation managers upload conversation avatars"
-on storage.objects for insert to authenticated
-with check (
-  bucket_id = 'conversation-avatars'
-  and (storage.foldername(name))[1] ~* '^[0-9a-f-]{36}$'
-  and (storage.foldername(name))[2] = (select auth.uid())::text
-  and app_private.can_manage_conversation(((storage.foldername(name))[1])::uuid)
-);
-
-drop policy if exists "Conversation members read conversation avatars" on storage.objects;
-create policy "Conversation members read conversation avatars"
-on storage.objects for select to authenticated
-using (
-  bucket_id = 'conversation-avatars'
-  and (
-    app_private.is_conversation_member(((storage.foldername(name))[1])::uuid)
-    or exists (
-      select 1 from public.conversations c
-      where c.id = ((storage.foldername(name))[1])::uuid
-        and c.type = 'channel'
-        and c.is_public = true
-    )
-  )
-);
-
-drop policy if exists "Conversation managers delete conversation avatars" on storage.objects;
-create policy "Conversation managers delete conversation avatars"
-on storage.objects for delete to authenticated
-using (
-  bucket_id = 'conversation-avatars'
-  and (storage.foldername(name))[1] ~* '^[0-9a-f-]{36}$'
-  and app_private.can_manage_conversation(((storage.foldername(name))[1])::uuid)
-);
-
-create or replace function public.set_conversation_image(
-  p_conversation_id uuid,
-  p_image_path text
-)
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  actor uuid := (select auth.uid());
-  expected_prefix text;
-begin
-  if actor is null then
-    raise exception 'يجب تسجيل الدخول لتغيير صورة المحادثة' using errcode = '28000';
-  end if;
-  if not app_private.can_manage_conversation(p_conversation_id) then
-    raise exception 'تغيير الصورة متاح لمالك المحادثة أو مشرفها فقط' using errcode = '42501';
-  end if;
-
-  if p_image_path is not null then
-    expected_prefix := p_conversation_id::text || '/' || actor::text || '/';
-    if left(p_image_path, length(expected_prefix)) <> expected_prefix
-       or p_image_path !~* '\.(jpg|png|webp)$'
-       or not exists (
-         select 1 from storage.objects o
-         where o.bucket_id = 'conversation-avatars'
-           and o.name = p_image_path
-       ) then
-      raise exception 'مسار صورة المحادثة غير صالح' using errcode = '22023';
-    end if;
-  end if;
-
-  update public.conversations
-  set image_path = p_image_path,
-      updated_at = now()
-  where id = p_conversation_id
-    and type in ('group','channel');
-
-  if not found then
-    raise exception 'المجموعة أو القناة غير موجودة' using errcode = 'P0002';
-  end if;
-end;
-$$;
-
-revoke all on function public.set_conversation_image(uuid,text) from public, anon;
-grant execute on function public.set_conversation_image(uuid,text) to authenticated;
-
-do $$
-begin
-  if exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'profile_statuses'
-  ) then
-    return;
-  end if;
-  alter publication supabase_realtime add table public.profile_statuses;
-end
-$$;
-
-commit;
-
+       or new.image_path !~* '\.(jpg|png|webp)$'
        or not exists (
          select 1 from storage.objects o
          where o.bucket_id = 'conversation-avatars'
@@ -254,56 +184,13 @@ commit;
   end if;
   return new;
 end;
-$;
+$$;
 
 revoke all on function app_private.validate_conversation_image_path() from public, anon, authenticated;
-
 drop trigger if exists conversations_validate_image_path on public.conversations;
 create trigger conversations_validate_image_path
 before update of image_path on public.conversations
 for each row execute function app_private.validate_conversation_image_path();
-
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('conversation-avatars', 'conversation-avatars', false, 3145728, array['image/jpeg','image/png','image/webp'])
-on conflict (id) do update
-set public = false,
-    file_size_limit = excluded.file_size_limit,
-    allowed_mime_types = excluded.allowed_mime_types;
-
-drop policy if exists "Conversation managers upload conversation avatars" on storage.objects;
-create policy "Conversation managers upload conversation avatars"
-on storage.objects for insert to authenticated
-with check (
-  bucket_id = 'conversation-avatars'
-  and (storage.foldername(name))[1] ~* '^[0-9a-f-]{36}$'
-  and (storage.foldername(name))[2] = (select auth.uid())::text
-  and app_private.can_manage_conversation(((storage.foldername(name))[1])::uuid)
-);
-
-drop policy if exists "Conversation members read conversation avatars" on storage.objects;
-create policy "Conversation members read conversation avatars"
-on storage.objects for select to authenticated
-using (
-  bucket_id = 'conversation-avatars'
-  and (
-    app_private.is_conversation_member(((storage.foldername(name))[1])::uuid)
-    or exists (
-      select 1 from public.conversations c
-      where c.id = ((storage.foldername(name))[1])::uuid
-        and c.type = 'channel'
-        and c.is_public = true
-    )
-  )
-);
-
-drop policy if exists "Conversation managers delete conversation avatars" on storage.objects;
-create policy "Conversation managers delete conversation avatars"
-on storage.objects for delete to authenticated
-using (
-  bucket_id = 'conversation-avatars'
-  and (storage.foldername(name))[1] ~* '^[0-9a-f-]{36}$'
-  and app_private.can_manage_conversation(((storage.foldername(name))[1])::uuid)
-);
 
 create or replace function public.set_conversation_image(
   p_conversation_id uuid,
@@ -339,10 +226,8 @@ begin
   end if;
 
   update public.conversations
-  set image_path = p_image_path,
-      updated_at = now()
-  where id = p_conversation_id
-    and type in ('group','channel');
+  set image_path = p_image_path, updated_at = now()
+  where id = p_conversation_id and type in ('group','channel');
 
   if not found then
     raise exception 'المجموعة أو القناة غير موجودة' using errcode = 'P0002';
@@ -355,15 +240,14 @@ grant execute on function public.set_conversation_image(uuid,text) to authentica
 
 do $$
 begin
-  if exists (
+  if not exists (
     select 1 from pg_publication_tables
     where pubname = 'supabase_realtime'
       and schemaname = 'public'
       and tablename = 'profile_statuses'
   ) then
-    return;
+    alter publication supabase_realtime add table public.profile_statuses;
   end if;
-  alter publication supabase_realtime add table public.profile_statuses;
 end
 $$;
 
