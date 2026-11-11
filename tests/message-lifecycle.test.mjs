@@ -545,9 +545,9 @@ test('loadMessages completes for both empty and populated timelines without a re
         const delta = Date.parse(a.created_at) - Date.parse(b.created_at);
         return delta || String(a.id).localeCompare(String(b.id));
       },
-      loadMessageReactions: async () => true,
-      loadMessagePins: async () => true,
-      loadPrivateReplyContexts: async () => true,
+      loadMessageReactions: async () => false,
+      loadMessagePins: async () => false,
+      loadPrivateReplyContexts: async () => false,
       renderMessage: async message => {
         state.messageIds.add(message.id);
         return true;
@@ -576,4 +576,56 @@ test('loadMessages completes for both empty and populated timelines without a re
   assert.equal(populated.state.isLoadingMessages, false);
   assert.equal(populated.state.messageIds.has('m1'), true);
   assert.equal(populated.receipts, 1);
+});
+
+
+test('optional pin metadata network failures do not reject the message timeline load', async () => {
+  const state = {
+    active: { id: 'c1' },
+    messageLoadVersion: 5,
+    messages: [],
+    replyMessages: new Map(),
+    pinnedMessages: new Map([['stale', {}]])
+  };
+  const query = {
+    select() { return query; },
+    eq() { return query; },
+    order() { return query; },
+    then(resolve, reject) {
+      return Promise.reject(new Error('simulated network failure')).then(resolve, reject);
+    }
+  };
+  let bannerRenders = 0;
+  const loadPins = vm.runInNewContext('(' + extractFunction('loadMessagePins') + ')', {
+    state,
+    supabaseClient: { from: () => query },
+    renderPinnedBanner() { bannerRenders += 1; },
+    console: { warn() {} }
+  });
+  assert.equal(await loadPins('c1', 5), false);
+  assert.equal(state.pinnedMessages.size, 0);
+  assert.equal(bannerRenders, 1);
+});
+
+test('optional private-reply metadata network failures do not reject the message timeline load', async () => {
+  const state = {
+    active: { id: 'c1', type: 'direct' },
+    messageLoadVersion: 8,
+    privateReplyContexts: new Map([['stale', {}]])
+  };
+  const query = {
+    select() { return query; },
+    in() { return query; },
+    then(resolve, reject) {
+      return Promise.reject(new Error('simulated network failure')).then(resolve, reject);
+    }
+  };
+  const loadContexts = vm.runInNewContext('(' + extractFunction('loadPrivateReplyContexts') + ')', {
+    state,
+    supabaseClient: { from: () => query },
+    console: { warn() {} },
+    Map
+  });
+  assert.equal(await loadContexts('c1', [{ id: 'm1' }], 8), false);
+  assert.equal(state.privateReplyContexts.size, 0);
 });
