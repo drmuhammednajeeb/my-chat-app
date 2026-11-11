@@ -27,7 +27,9 @@ jobs:
         with:
           node-version: 22
       - name: Run source-contract regression checks
-        run: node --test tests/message-lifecycle.test.mjs
+        run: node --test tests/message-lifecycle.test.mjs tests/membership-number-format.test.mjs
+      - name: Syntax-check membership administration module
+        run: node --check membership.js
       - name: Install isolated browser test dependency
         run: npm install --no-save --no-package-lock playwright
       - name: Install Chromium
