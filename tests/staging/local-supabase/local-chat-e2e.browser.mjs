@@ -196,6 +196,11 @@ try {
   if (deleted.split(/\s+/).filter(Boolean).at(-1) !== '0') throw new Error('Membership revocation did not remove the target member');
   const { data: deniedRows, error: deniedError } = await clientB.from('chat_messages').select('id').eq('conversation_id', conversationId);
   if (deniedError || (deniedRows || []).length !== 0) throw new Error('Revoked member retained message read access');
+  await pageB.waitForFunction(() => {
+    const input = document.getElementById('messageInput');
+    const title = document.getElementById('chatTitle')?.textContent || '';
+    return input?.disabled === true && title.includes('سحب عضويتك');
+  }, null, { timeout: 15000 });
 
   const postRevocationMessage = 'E2E revoked-member isolation ' + Date.now();
   await sendFrom(pageA, postRevocationMessage);
