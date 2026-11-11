@@ -130,8 +130,8 @@ jobs:
           else
             cd "$RUNTIME_PROJECT_DIR"
           fi
-          supabase migration new conversations_realtime_publication
-          generated="$(find "$RUNTIME_PROJECT_DIR/supabase/migrations" -maxdepth 1 -type f -name '*_conversations_realtime_publication.sql' | sort | tail -1)"
+          supabase migration new chat_realtime_and_self_chat_rpc
+          generated="$(find "$RUNTIME_PROJECT_DIR/supabase/migrations" -maxdepth 1 -type f -name '*_chat_realtime_and_self_chat_rpc.sql' | sort | tail -1)"
           test -n "$generated"
           echo "GENERATED_MIGRATION_PATH=$generated"
           echo "GENERATED_MIGRATION_CONTENT_BEGIN"
