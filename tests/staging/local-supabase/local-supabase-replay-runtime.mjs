@@ -37,6 +37,7 @@ async function provisionSyntheticDirectChatAuthUsers() {
   const users = [
     { key: 'direct_a', email: 'direct-a@bizmindmakers.test', number: '971001000002', verified: true, confirmed: true, username: 'direct_a', displayName: 'Direct Test A' },
     { key: 'direct_b', email: 'direct-b@bizmindmakers.test', number: '971001000003', verified: true, confirmed: true, username: 'direct_b', displayName: 'Direct Test B' },
+    { key: 'direct_c', email: 'direct-c@bizmindmakers.test', number: '971001000008', verified: true, confirmed: true, username: 'direct_c', displayName: 'Direct Test C' },
     { key: 'direct_suspended', email: 'direct-suspended@bizmindmakers.test', number: '971001000004', verified: true, confirmed: true, username: 'direct_suspended', displayName: 'Direct Test Suspended' },
     { key: 'direct_unverified', email: 'direct-unverified@bizmindmakers.test', number: '971001000005', verified: false, confirmed: true, username: 'direct_unverified', displayName: 'Direct Test Unverified' },
     { key: 'direct_unconfirmed', email: 'direct-unconfirmed@bizmindmakers.test', number: '971001000006', verified: true, confirmed: false, username: 'direct_unconfirmed', displayName: 'Direct Test Unconfirmed' },
