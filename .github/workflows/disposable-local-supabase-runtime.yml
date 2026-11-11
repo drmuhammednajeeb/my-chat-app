@@ -58,13 +58,28 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const file = process.env.RUNTIME_PROJECT_DIR + '/supabase/config.toml';
-          let config = fs.readFileSync(file, 'utf8');
-          if (/^major_version\s*=\s*\d+/m.test(config)) {
-            config = config.replace(/^major_version\s*=\s*\d+/m, 'major_version = 17');
+          const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+          const dbHeader = lines.findIndex(line => /^\s*\[db\]\s*$/.test(line));
+          if (dbHeader === -1) {
+            lines.push('', '[db]', 'major_version = 17');
           } else {
-            config += '\n[db]\nmajor_version = 17\n';
+            let dbEnd = lines.length;
+            for (let index = dbHeader + 1; index < lines.length; index += 1) {
+              if (/^\s*\[[^\]]+\]\s*$/.test(lines[index])) {
+                dbEnd = index;
+                break;
+              }
+            }
+            const majorVersion = lines.findIndex((line, index) =>
+              index > dbHeader && index < dbEnd && /^\s*major_version\s*=/.test(line)
+            );
+            if (majorVersion >= 0) {
+              lines[majorVersion] = 'major_version = 17';
+            } else {
+              lines.splice(dbHeader + 1, 0, 'major_version = 17');
+            }
           }
-          fs.writeFileSync(file, config);
+          fs.writeFileSync(file, lines.join('\n') + '\n');
           NODE
 
       - name: Start disposable Supabase and execute the reviewed replay
