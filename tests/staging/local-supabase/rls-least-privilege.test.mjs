@@ -89,6 +89,7 @@ test('postgres global PUBLIC function execution default is explicitly revoked', 
   const assertion = await readFile(assertionPath, 'utf8');
   assert.match(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres\s+REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC/i);
   assert.match(assertion, /Global PUBLIC EXECUTE default remains for postgres-created functions/i);
+  assert.match(assertion, /Global postgres function default ACL is not explicitly hardened/i);
 });
 
 test('Supabase-managed supabase_admin defaults are treated as immutable platform state', async () => {

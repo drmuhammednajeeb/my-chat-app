@@ -217,6 +217,16 @@ begin
     raise exception 'supabase_admin-owned objects found in public; review extension placement';
   end if;
 
+  -- The global function ACL must exist explicitly; no row means PostgreSQL's implicit PUBLIC EXECUTE remains.
+  if not exists (
+    select 1 from pg_default_acl d
+    where d.defaclrole = 'postgres'::regrole
+      and d.defaclnamespace = 0
+      and d.defaclobjtype = 'f'
+  ) then
+    raise exception 'Global postgres function default ACL is not explicitly hardened';
+  end if;
+
   -- Schema-specific defaults cannot revoke PostgreSQL's global PUBLIC EXECUTE default.
   if exists (
     select 1
