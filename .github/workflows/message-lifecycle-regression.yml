@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: message-lifecycle-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   source-contract-regression:
     runs-on: ubuntu-latest
