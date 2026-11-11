@@ -204,6 +204,24 @@ try {
       null,
       { timeout: 20000 }
     );
+    await accountB.page.evaluate(conversationId => {
+      const client = eval('supabaseClient');
+      const filter = 'conversation_id=eq.' + conversationId;
+      window.__BIZMIND_E2E_FILTERED_OBSERVER__ = { status: 'CONNECTING', event: null, filter };
+      window.__BIZMIND_E2E_FILTERED_CHANNEL__ = client.channel('e2e-filtered-observer-' + crypto.randomUUID())
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter }, payload => {
+          window.__BIZMIND_E2E_FILTERED_OBSERVER__.event = {
+            id: payload.new?.id || null,
+            conversationId: payload.new?.conversation_id || null
+          };
+        })
+        .subscribe(status => { window.__BIZMIND_E2E_FILTERED_OBSERVER__.status = status; });
+    }, conversation);
+    await accountB.page.waitForFunction(
+      () => window.__BIZMIND_E2E_FILTERED_OBSERVER__?.status === 'SUBSCRIBED',
+      null,
+      { timeout: 20000 }
+    );
 
     const message = 'Local staging E2E ' + Date.now() + ' ' + Math.random().toString(36).slice(2, 10);
     console.log('BROWSER_E2E_STEP=send a message from account A through the real composer');
@@ -217,11 +235,15 @@ try {
       status: eval('state.realtimeStatus'),
       lastEvent: eval('state.diagnostics.lastRealtimeEvent'),
       activeConversation: eval('state.active?.id'),
-      observer: window.__BIZMIND_E2E_REALTIME_OBSERVER__
+      observer: window.__BIZMIND_E2E_REALTIME_OBSERVER__,
+      filteredObserver: window.__BIZMIND_E2E_FILTERED_OBSERVER__
     }));
     assert.equal(realtime.status, 'SUBSCRIBED', 'Account B must be subscribed to Supabase Realtime.');
+    assert.equal(realtime.activeConversation, conversation, 'Account B must have the expected conversation active.');
     assert.equal(realtime.observer?.status, 'SUBSCRIBED', 'Independent Realtime observer must be subscribed.');
     assert.equal(realtime.observer?.event?.conversationId, conversation, 'Unfiltered Realtime observer must receive the test insert.');
+    assert.equal(realtime.filteredObserver?.status, 'SUBSCRIBED', 'Independent filtered Realtime observer must be subscribed.');
+    assert.equal(realtime.filteredObserver?.event?.conversationId, conversation, 'Independent UUID-filtered observer must receive the test insert.');
     assert.equal(realtime.lastEvent, 'INSERT', 'Application channel must receive the message through Realtime, not only polling.');
 
     console.log('BROWSER_E2E_STEP=reload account B and verify durable message history');
