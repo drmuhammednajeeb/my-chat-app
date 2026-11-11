@@ -96,6 +96,22 @@ function run(command, args, env, label) {
   if (result.error) fail(label + ' could not start: ' + result.error.message);
   if (result.status !== 0) fail(label + ' failed with exit code ' + result.status);
 }
+function runAllowFailure(command, args, env, label, timeout = 4 * 60 * 1000) {
+  console.log('LOCAL_RUNTIME_STEP=' + label);
+  const result = spawnSync(command, args, {
+    cwd: ROOT,
+    encoding: 'utf8',
+    env,
+    stdio: 'inherit',
+    timeout
+  });
+  if (result.error || result.status !== 0) {
+    console.error('LOCAL_RUNTIME_STEP_RESULT=FAILED:' + label + ':' + (result.error?.message || result.status));
+    return false;
+  }
+  console.log('LOCAL_RUNTIME_STEP_RESULT=PASSED:' + label);
+  return true;
+}
 
 if (process.env.ALLOW_DISPOSABLE_LOCAL_REPLAY !== '1') {
   fail('set ALLOW_DISPOSABLE_LOCAL_REPLAY=1 only inside the disposable local Supabase job');
@@ -223,7 +239,7 @@ run(process.execPath, [
   LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
 }, 'storage-api-rls-runtime');
 
-run(process.execPath, [
+const browserE2ePassed = runAllowFailure(process.execPath, [
   path.join(ROOT, 'tests/staging/local-supabase/local-browser-e2e.mjs')
 ], {
   ...env,
@@ -239,6 +255,8 @@ run(process.execPath, [
   ...env,
   LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
 }, 'message-write-pressure-load');
+
+if (!browserE2ePassed) fail('browser end-to-end verification did not pass; message pressure results above remain diagnostic only');
 
 const patchManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
 if (patchManifest.mode !== 'TEST_COPY_ONLY' || !Array.isArray(patchManifest.patches)) {
