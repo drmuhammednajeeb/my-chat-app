@@ -160,6 +160,15 @@ test('a completed star request cannot mutate the next active conversation state'
   assert.equal(state.starredMessageIds.has('m1'), false);
 });
 
+test('message render completion state remains in scope for empty and populated timelines', () => {
+  const loader = extractFunction('loadMessages');
+  const completionFlag = loader.indexOf('let allMessagesRendered=true;');
+  const emptyState = loader.indexOf('if(!messages.length)');
+  const receiptUpdate = loader.indexOf('if(allMessagesRendered&&');
+  assert.ok(completionFlag >= 0 && emptyState > completionFlag && receiptUpdate > emptyState,
+    'render completion must be declared before both empty and populated branches');
+});
+
 test('rendered message controls are wired to the persisted reaction and star actions', () => {
   const messageRenderer = extractFunction('renderMessageInternal');
   const reactionBar = extractFunction('renderReactionBar');
