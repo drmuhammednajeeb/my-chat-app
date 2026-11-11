@@ -64,7 +64,7 @@ test('disposable runtime workflow installs pinned browser dependencies and invok
 
 test('message render receipt flag remains in loadMessages scope for empty and non-empty histories', () => {
   const start = html.indexOf('async function loadMessages(){');
-  const end = html.indexOf('\\nfunction compareMessagesChronologically', start);
+  const end = html.indexOf('function compareMessagesChronologically', start);
   assert.ok(start >= 0 && end > start, 'loadMessages function must exist');
   const source = html.slice(start, end);
   const declaration = source.indexOf('let allMessagesRendered=true;');
