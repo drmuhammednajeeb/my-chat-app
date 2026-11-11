@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 54,
-    "mappedSources": 51,
+    "sqlFiles": 55,
+    "mappedSources": 52,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 21,
@@ -32,9 +32,9 @@
       "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
-    "executedMappedSources": 47,
+    "executedMappedSources": 48,
     "executedTestOnlySqlFixtures": 21,
-    "executedSqlFiles": 68
+    "executedSqlFiles": 69
   },
   "execution": {
     "enabled": false,
@@ -537,7 +537,8 @@
     {
       "nodeId": "membership.chat-rls-fix",
       "testSources": [
-        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql",
+        "supabase/migrations/20261111004020_chat_realtime_and_self_chat_rpc.sql"
       ],
       "blockedBy": [],
       "parityNote": null
