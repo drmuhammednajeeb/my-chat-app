@@ -44,7 +44,7 @@ if (publicationCheck.error || publicationCheck.status !== 0 || publicationCheck.
   throw new Error('chat_messages is not enabled for INSERT publication in local Supabase: ' + (publicationCheck.stderr || publicationCheck.stdout || publicationCheck.error?.message || 'unknown error'));
 }
 console.log('REALTIME_PUBLICATION_CHAT_MESSAGES=true');
-for (const key of ['direct_a', 'direct_b']) {
+for (const key of ['direct_a', 'direct_b', 'direct_c']) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(users[key] || '')) {
     throw new Error('Missing synthetic E2E identity: ' + key);
   }
