@@ -47,6 +47,8 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
     'clean-chat-core-destructive-local-reset',
     'clean-chat-core-direct-conversation-concurrency',
     'clean-chat-core-message-reactions-stars',
+    'local-chat-e2e.browser.mjs',
+    'clean-chat-core-authenticated-local-browser-e2e',
     'CLEAN_CHAT_CORE_LOCAL_RUNTIME=PASSED',
     '/auth/v1/admin/users',
     'syntheticAuthIds[user.key] = data.id',
