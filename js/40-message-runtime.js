@@ -39,9 +39,9 @@ async function loadMessages(){
   messages=Array.from(latest.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   state.messages=messages;
   area.replaceChildren();state.messageIds.clear();
+  let allMessagesRendered=true;
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{
-   let allMessagesRendered=true;
    const messageRenderBatchStarted=performance.now();for(const message of messages){
     if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
     const rendered=await renderMessage(message,conversationId,requestId);if(!rendered&&!state.messageIds.has(message.id))allMessagesRendered=false;
