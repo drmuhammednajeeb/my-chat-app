@@ -253,7 +253,8 @@ async function handleConversationMemberDeletion(payload,conversationId){
   if(activeChannel)void supabaseClient.removeChannel(activeChannel).catch(error=>console.warn('Revoked chat channel cleanup failed:',error));
   if(typingChannel)void supabaseClient.removeChannel(typingChannel).catch(error=>console.warn('Revoked typing channel cleanup failed:',error));
   state.active=null;state.activeChatPreference=null;state.messages=[];state.messageIds.clear();state.renderingMessageIds.clear();
-  state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;state.groupSettings=null;
+  state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.replyTarget=null;state.editTarget=null;state.privateReplyPending=null;state.groupSettings=null;
+  renderComposerContext();
   state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden');
   $('messageInput').value='';$('messageInput').disabled=true;$('sendBtn').disabled=true;
   $('chatTitle').textContent='تم سحب عضويتك من المحادثة';
