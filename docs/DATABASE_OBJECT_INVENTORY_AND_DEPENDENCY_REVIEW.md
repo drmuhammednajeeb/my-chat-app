@@ -2,7 +2,7 @@
 
 ## Decision
 
-**Status: BLOCKED — source inventory and dependency design only.** This work reads repository files and application call sites. It does not connect to a database, execute SQL, create Supabase configuration, or modify canonical SQL.
+**Static inventory status: READ-ONLY SOURCE REVIEW. Canonical bootstrap and production promotion remain BLOCKED.** This document's inventory parser reads repository files and application call sites; it is not itself a live catalog dump. Separately, the disposable-local runtime was executed successfully on 2026-11-11 (run [42990853351](https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42990853351)): 66 SQL files replayed with four declared test-only patches, followed by PostgreSQL, RLS, Storage, concurrency, pg_cron, browser direct-message, and bounded API-read checks. No production SQL or canonical migration was applied.
 
 ## Why this matters
 
@@ -50,9 +50,11 @@ The unresolved direct-conversation RPC source can be retrieved without changing 
 
 Two CLI migrations reference **public.messages**, but no repository SQL creates that table. The current browser client reads and writes **public.chat_messages**; no client-side access to the legacy messages table was found. Both legacy migrations only need the table to exist for table-level policy and privilege operations; they do not reference its columns. A minimal empty compatibility stub is therefore appropriate for disposable local replay only. It is not a reconstruction of the deployed legacy table and must never be deployed or used to replace production schema.
 
-### 2. Missing direct-conversation RPC implementation
+### 2. Direct-conversation RPC source recovered; canonical migration still pending
 
-The browser calls **public.get_or_create_direct_conversation(p_other_user_id)**. The privilege-hardening migration also alters **app_private.get_or_create_direct_conversation_impl(uuid)**. Neither function is defined in the reviewed SQL source set. This is a hard bootstrap blocker and a potential application feature gap. Recover the authoritative function definition from the intended source or deployed schema before designing a compatibility fixture. Do not create a guessed implementation.
+The browser calls **public.get_or_create_direct_conversation(p_other_user_id)**. The authoritative definitions of **public.get_or_create_direct_conversation(uuid)** and **app_private.get_or_create_direct_conversation_impl(uuid)** were recovered from the deployed schema using read-only inspection and stored as a provenance-tracked test fixture. Their source and inspected ACL were used in the disposable-local replay; the eligibility matrix and 24 reversed-pair concurrency checks passed in run [42990853351](https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42990853351).
+
+This closes the missing-source/bootstrap discovery gap, but it does not close production security: the deployed SECURITY DEFINER implementation still lacks the tested active-membership and verified-member eligibility guard. The next step is a reviewed canonical migration that preserves the recovered implementation, adds the approved guard, and proves exact ACL/search_path behavior. Do not promote the test-only fixture directly.
 
 ### 3. Forever membership format conflict
 
@@ -112,13 +114,13 @@ The DAG sequences the membership policy rewrite after every pre-membership polic
 
 ## Next safe steps
 
-1. Recover the authoritative direct-conversation RPC source and verify whether it exists in the intended schema without changing it.
-2. Prove the staged Forever membership-number format transition: historical 971001 + six digits, followed by the final migration updating all six functions and constraints to 971 + nine digits.
-3. Decide the legacy **public.messages** replay treatment based on actual historical compatibility needs.
-4. Review the dynamic membership-policy rewrite and all later policies.
-5. Build the explicit test-only allowlist and fixtures only after the blockers are resolved.
-6. Run PostgreSQL parse/apply rehearsal in a disposable local environment.
-7. Start Supabase Local only after rehearsal and loopback/network guards pass.
+1. Convert the proven direct-conversation eligibility guard and chat-media uploader-folder ownership guard into reviewed canonical migration candidates; preserve the recovered RPC source and test exact ACL/search_path behavior.
+2. Complete a per-table and per-sequence client privilege matrix. The current disposable overlay and CRUD tests do not yet prove a complete existing-object allowlist for every application feature.
+3. Resolve the remaining canonical bootstrap decisions: the two historical references to **public.messages**, the declared test-only SQL terminator patch, and the absence of a committed canonical supabase/config.toml. Keep test-only compatibility objects and substitutions out of production.
+4. Close the RPC contract: reconcile the 15 client-expected RPCs with the 20 production authenticated EXECUTE grants, classify legacy channel/admin wrappers, and ensure Trigger-only functions are not directly executable by API roles.
+5. Extend Browser E2E so both users are connected and subscribed before sending; verify Realtime delivery, reconnect, groups/channels, attachments, reactions, edits/deletes, and third-party isolation.
+6. Run bounded mixed read/write/Realtime/Storage load tests with duration and resource limits; the existing 200-request API read test is only a baseline.
+7. Re-run the complete disposable runtime after canonical migration candidates and ACL assertions change. Only then submit a separate production-promotion review; do not merge or deploy as part of the test work.
 
 ## Safety invariants
 
