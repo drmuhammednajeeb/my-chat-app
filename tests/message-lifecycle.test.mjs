@@ -69,6 +69,20 @@ test('voice send button dispatches stop-and-send while recording', () => {
   assert.match(source, /\$\('sendBtn'\)\.setAttribute\('aria-label','إرسال التسجيل الصوتي'\)/);
 });
 
+test('microphone toggle finalizes and sends instead of only stopping into an unsent draft', () => {
+  assert.match(source, /\$\('voiceRecordBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):startVoiceRecording\(\)/);
+  assert.match(extractFunction('sendVoiceRecording'), /state\.voiceSendOnStop=true/);
+  assert.match(extractFunction('startVoiceRecording'), /if\(shouldSend\)\{setTimeout\(\(\)=>\{if\(state\.attachment===file\)sendMessage\(\)\},0\)\}/);
+});
+
+test('composer keeps the stop-and-send action enabled while a recording is active', () => {
+  assert.match(extractFunction('resizeComposer'), /!state\.voiceRecorder&&!n\.value\.trim\(\)&&!state\.attachment/);
+});
+
+test('recording safety timeout sends the captured audio instead of leaving it unsent', () => {
+  assert.match(extractFunction('startVoiceRecording'), /if\(elapsed>=180\)\{state\.voiceSendOnStop=true;stopVoiceRecording\(\)\}/);
+});
+
 test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring', () => {
   assert.match(overrides, /#chat \.messages\{overflow-anchor:none\}/);
   assert.match(overrides, /#chat \.messages>\.message,[\s\S]*?#chat \.messages>\.messages-history-loader\{flex:0 0 auto\}/);
