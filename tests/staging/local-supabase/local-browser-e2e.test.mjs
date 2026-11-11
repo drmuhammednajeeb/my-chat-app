@@ -45,6 +45,7 @@ test('full browser E2E requires local-only endpoints and two synthetic authentic
     'pg_publication_tables',
     '__BIZMIND_E2E_REALTIME_OBSERVER__',
     'lastRealtimeConversationId',
+    "['direct_a', 'direct_b', 'direct_c']",
     'prove cross-conversation event isolation',
     'Foreign conversation isolation',
     'foreignMessageVisible',
