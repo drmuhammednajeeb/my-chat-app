@@ -779,7 +779,7 @@ async function ensureSelfConversation(){
 }
 function otherMember(conv){return (conv.members||[]).find(m=>m.user_id!==state.user.id)?.profile}
 function convName(c){if(isSelfConversation(c))return (state.profile?.display_name||state.profile?.username||'أنا')+' (أنا)';if(c.type==='group')return c.title||'مجموعة جديدة';if(c.type==='channel')return c.title||'قناة بدون اسم';const p=otherMember(c);return p?.display_name||p?.username||'محادثة خاصة'}
-function convPreview(c){const cleared=state.chatPrefs.get(c.id)?.cleared_before;if(c.type==='direct'&&cleared&&c.last_message?.created_at&&new Date(c.last_message.created_at)<=new Date(cleared))return 'تم مسح السجل من طرفك';return c.last_message?messagePreview(c.last_message):'ابدأ المحادثة الآن'}
+function convPreview(c){const cleared=state.chatPrefs.get(c.id)?.cleared_before;if(c.type==='direct'&&cleared&&c.last_message?.created_at&&new Date(c.last_message.created_at)<=new Date(cleared))return 'تم مسح السجل من طرفك';return c.last_message?.content||'ابدأ المحادثة الآن'}
 function renderConversations(section=state.sidebarView==='groups'?'groups':'direct'){
  const q=$('search').value.trim().toLowerCase(),list=$('conversationList');
  if(state.conversationsLoading&&!state.conversations.length){showListSkeleton(list,6);return}
@@ -1031,9 +1031,8 @@ async function loadMessageReactions(conversationId,messages,requestId=null){
  }catch(error){console.warn('Message reactions could not be loaded:',error?.message||error);return false}
 }
 const CHAT_STICKERS=['❤️','😍','😂','🤣','🥰','😘','🔥','👏','👍','🙏','🎉','💯','🌹','✨','🤝','💪','🥳','😎','🤩','😭','😮','🙌','💐','⭐'];
-function encodeChatSticker(emoji){return CHAT_STICKERS.includes(emoji)?emoji:''}
-function decodeChatSticker(content){const value=String(content||'').trim();if(CHAT_STICKERS.includes(value))return value;const prefix='[[bizmind-sticker:',suffix=']]';let emoji=null;if(value.startsWith(prefix)&&value.endsWith(suffix))emoji=value.slice(prefix.length,-suffix.length);else{const reverseSuffix=':bizmind-sticker]]';if(value.startsWith('[[')&&value.endsWith(reverseSuffix))emoji=value.slice(2,-reverseSuffix.length)}return CHAT_STICKERS.includes(emoji)?emoji:null}
-function renderChatSticker(emoji){if(!CHAT_STICKERS.includes(emoji))return document.createTextNode('');const visual=document.createElement('div');visual.className='message-sticker';visual.textContent=emoji;visual.dataset.sticker=emoji;visual.setAttribute('role','img');visual.setAttribute('aria-label','ملصق '+emoji);return visual}
+function encodeChatSticker(emoji){return '[[bizmind-sticker:'+emoji+']]'}
+function decodeChatSticker(content){const value=String(content||''),prefix='[[bizmind-sticker:',suffix=']]';if(!value.startsWith(prefix)||!value.endsWith(suffix))return null;const emoji=value.slice(prefix.length,-suffix.length);return CHAT_STICKERS.includes(emoji)?emoji:null}
 function openChatStickerPicker(){
  if(!state.active||state.uploading||state.voiceRecorder)return;
  const grid=document.createElement('div');grid.className='chat-sticker-grid';
@@ -1223,7 +1222,7 @@ async function searchActiveConversation(term){
   if(error)throw error;if(request!==state.chatSearchRequest||state.active?.id!==conversationId)return;
   panel.replaceChildren();
   if(!data?.length){const p=document.createElement('p');p.textContent='لا توجد رسائل مطابقة في هذه المحادثة.';panel.append(p);return}
-  data.forEach(message=>{const button=document.createElement('button');button.type='button';button.className='chat-search-result';const member=(state.active?.members||[]).find(m=>m.user_id===message.sender_id);const name=document.createElement('strong');name.textContent=member?.profile?.display_name||(message.sender_id===state.user?.id?'أنت':'عضو');const body=document.createElement('span');body.textContent=messagePreview(message);const date=document.createElement('small');date.textContent=new Date(message.created_at).toLocaleString('ar-SA');button.append(name,body,date);button.onclick=()=>{$('chatSearchPanel').classList.add('hidden');jumpToMessage(message.id)};panel.append(button)});
+  data.forEach(message=>{const button=document.createElement('button');button.type='button';button.className='chat-search-result';const member=(state.active?.members||[]).find(m=>m.user_id===message.sender_id);const name=document.createElement('strong');name.textContent=member?.profile?.display_name||(message.sender_id===state.user?.id?'أنت':'عضو');const body=document.createElement('span');body.textContent=message.deleted_at?'تم حذف هذه الرسالة':message.content||'مرفق';const date=document.createElement('small');date.textContent=new Date(message.created_at).toLocaleString('ar-SA');button.append(name,body,date);button.onclick=()=>{$('chatSearchPanel').classList.add('hidden');jumpToMessage(message.id)};panel.append(button)});
  }catch(error){console.error('Conversation search failed:',error);panel.replaceChildren();const p=document.createElement('p');p.textContent='تعذر البحث. حاول مرة أخرى.';panel.append(p)}
 }
 async function jumpToMessage(id){
@@ -1396,7 +1395,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
    }
    if(m.content){
     const sticker=decodeChatSticker(m.content);
-    if(sticker){bubble.append(renderChatSticker(sticker))}
+    if(sticker){const visual=document.createElement('div');visual.className='message-sticker';visual.textContent=sticker;visual.setAttribute('role','img');visual.setAttribute('aria-label','ملصق');bubble.append(visual)}
     else{const t=document.createElement('div');t.className='message-content';t.textContent=m.content;bubble.append(t)}
    }
   }
@@ -1831,7 +1830,7 @@ async function startVoiceRecording(){
   };
   if(recorder instanceof (window.MediaRecorder||Function)){recorder.start()}
   $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').title='التسجيل الصوتي جارٍ';$('voiceCancelBtn').classList.add('hidden');setVoiceComposerActive(true);$('sendBtn').disabled=false;$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';$('sendBtn').title='إرسال التسجيل الصوتي';$('sendBtn').setAttribute('aria-label','إرسال التسجيل الصوتي');updateVoiceRecordingUI();
-  state.voiceTimer=setInterval(()=>{const elapsed=Math.floor(currentVoiceElapsedMs()/1000);updateVoiceRecordingUI();if(elapsed>=180){state.voiceSendOnStop=true;stopVoiceRecording()}},250);
+  state.voiceTimer=setInterval(()=>{const elapsed=Math.floor(currentVoiceElapsedMs()/1000);updateVoiceRecordingUI();if(elapsed>=180){state.voiceSendOnStop=false;stopVoiceRecording()}},250);
  }catch(error){
   if(stream){stream.getTracks().forEach(track=>track.stop())}
   if(state.voiceStream===stream)cleanupVoiceCapture();
@@ -1851,7 +1850,7 @@ const CHAT_ATTACHMENT_MIME_BY_EXTENSION={
  ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',
  txt:'text/plain',csv:'text/csv',m4a:'audio/mp4',mp3:'audio/mpeg',ogg:'audio/ogg',wav:'audio/wav',aac:'audio/aac'
 };
-const CHAT_ATTACHMENT_ALLOWED_MIME_TYPES=new Set([...Object.values(CHAT_ATTACHMENT_MIME_BY_EXTENSION),'audio/webm']);
+const CHAT_ATTACHMENT_ALLOWED_MIME_TYPES=new Set(Object.values(CHAT_ATTACHMENT_MIME_BY_EXTENSION));
 function resolveChatAttachmentMime(file){
  const declared=String(file?.type||'').split(';')[0].trim().toLowerCase();
  if(declared&&declared!=='application/octet-stream')return declared;
@@ -1936,7 +1935,7 @@ async function sendMessage(){
   }
  }finally{state.uploading=false;resizeComposer()}
 }
-function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role),groupBlocked=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||groupBlocked||(!state.voiceRecorder&&!n.value.trim()&&!state.attachment);updateDiagnostics()}
+function resizeComposer(){const n=$('messageInput');n.style.height='auto';n.style.height=Math.min(n.scrollHeight,130)+'px';const role=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role,channelBlocked=state.active?.type==='channel'&&!['owner','admin'].includes(role),groupBlocked=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(role);$('sendBtn').disabled=state.uploading||!state.active||channelBlocked||groupBlocked||(!n.value.trim()&&!state.attachment);updateDiagnostics()}
 $('messageInput').addEventListener('input',()=>{resizeComposer();if($('messageInput').value.trim())publishTyping(true);else publishTyping(false)});
 $('messageInput').addEventListener('blur',()=>publishTyping(false));
 $('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.stopPropagation();requestAnimationFrame(resizeComposer)}});
@@ -2230,7 +2229,7 @@ $('createGroupBtn').onclick=async()=>{
 })();
 
 $('stickerBtn').onclick=openChatStickerPicker;
-$('voiceRecordBtn').onclick=()=>state.voiceRecorder?sendVoiceRecording():startVoiceRecording();
+$('voiceRecordBtn').onclick=()=>state.voiceRecorder?stopVoiceRecording():startVoiceRecording();
 $('voiceCancelBtn').onclick=cancelVoiceRecording;
 $('attachBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;if(state.voiceRecorder)cancelVoiceRecording();state.attachment=f;showAttachmentPreview(f);resizeComposer()};
@@ -2572,7 +2571,7 @@ function updateMessageSelectionToolbar(){const count=state.selectedMessageIds.si
 async function starSelectedMessages(){const ids=[...state.selectedMessageIds];let succeeded=0;for(const id of ids){if(await toggleMessageStar(id,true))succeeded++}toast('تم تمييز '+succeeded+' من '+ids.length+' رسالة');setMessageSelectionMode(false)}
 function exportSelectedMessages(){const ids=state.selectedMessageIds,items=state.messages.filter(m=>ids.has(m.id));downloadMessages(items,'messages-selected.txt');setMessageSelectionMode(false)}
 function downloadMessages(messages,filename){
- const content=(messages||[]).map(m=>{const member=(state.active?.members||[]).find(x=>x.user_id===m.sender_id);return '['+new Date(m.created_at).toLocaleString('ar-SA')+'] '+(member?.profile?.display_name||(m.sender_id===state.user.id?'أنت':'عضو'))+': '+(m.deleted_at?'[رسالة محذوفة]':messagePreview(m))}).join('\n');
+ const content=(messages||[]).map(m=>{const member=(state.active?.members||[]).find(x=>x.user_id===m.sender_id);return '['+new Date(m.created_at).toLocaleString('ar-SA')+'] '+(member?.profile?.display_name||(m.sender_id===state.user.id?'أنت':'عضو'))+': '+(m.deleted_at?'[رسالة محذوفة]':m.content||'[مرفق]')}).join('\n');
  const blob=new Blob(['\ufeff'+content],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 async function exportActiveConversation(){
