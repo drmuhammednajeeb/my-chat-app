@@ -98,7 +98,9 @@ async function createDirect(client, otherUserId) {
   return data;
 }
 async function subscribeToConversation(client, conversationId) {
-  const channel = client.channel('clean-core-realtime:' + conversationId + ':' + randomUUID());
+  const channel = client.channel('clean-core-realtime:' + conversationId + ':' + randomUUID(), {
+    config: { postgres_changes_options: { wait: true, timeout: 15000 } }
+  });
   channel.on('postgres_changes', {
     event: 'INSERT', schema: 'public', table: 'chat_messages',
     filter: 'conversation_id=eq.' + conversationId
@@ -109,8 +111,8 @@ async function subscribeToConversation(client, conversationId) {
   }, payload => record({ kind: 'reaction', conversationId, payload }));
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Realtime subscription timed out for ' + conversationId)), 12000);
-    channel.subscribe(status => {
-      console.log('LOCAL_REALTIME_CHANNEL_STATUS=' + status + ' CONVERSATION=' + conversationId);
+    channel.subscribe((status, error) => {
+      console.log('LOCAL_REALTIME_CHANNEL_STATUS=' + status + ' CONVERSATION=' + conversationId + (error ? ' ERROR=' + JSON.stringify({ name: error.name, message: error.message, cause: error.cause }) : ''));
       if (status === 'SUBSCRIBED') { clearTimeout(timer); resolve(); }
       if (['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) { clearTimeout(timer); reject(new Error('Realtime subscription failed: ' + status)); }
     });
@@ -118,7 +120,9 @@ async function subscribeToConversation(client, conversationId) {
   return channel;
 }
 async function subscribeUnfilteredMessages(client) {
-  const channel = client.channel('clean-core-realtime-unfiltered:' + randomUUID());
+  const channel = client.channel('clean-core-realtime-unfiltered:' + randomUUID(), {
+    config: { postgres_changes_options: { wait: true, timeout: 15000 } }
+  });
   channel.on('postgres_changes', {
     event: 'INSERT', schema: 'public', table: 'chat_messages'
   }, payload => record({ kind: 'message_unfiltered', payload }));
@@ -130,7 +134,7 @@ async function subscribeUnfilteredMessages(client) {
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Unfiltered Realtime subscription timed out')), 12000);
     channel.subscribe((status, error) => {
-      console.log('LOCAL_REALTIME_UNFILTERED_STATUS=' + status + (error ? ' ERROR=' + String(error.message || error) : ''));
+      console.log('LOCAL_REALTIME_UNFILTERED_STATUS=' + status + (error ? ' ERROR=' + JSON.stringify({ name: error.name, message: error.message, cause: error.cause }) : ''));
       if (status === 'SUBSCRIBED') { clearTimeout(timer); resolve(); }
       if (['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) { clearTimeout(timer); reject(new Error('Unfiltered Realtime subscription failed: ' + status + ' ' + String(error?.message || ''))); }
     });
