@@ -2100,7 +2100,7 @@ function renderMyChannels(){
  const rows=(state.conversations||[]).filter(c=>c.type==='channel'&&((c.title||'')+' '+(c.description||'')).toLocaleLowerCase('ar').includes(q));
  if(!rows.length){const empty=document.createElement('div');empty.className='channel-empty';empty.textContent=q?'لا توجد قناة تطابق البحث.':'لا توجد قنوات في مساحتك بعد. أنشئ قناة خاصة أو افتح رابط دعوة للانضمام إلى قناة.';list.append(empty);return}
  rows.forEach(channel=>{
-  const card=document.createElement('article');card.className='channel-card';
+  const card=document.createElement('article');card.className='channel-card';card.dataset.conversationId=channel.id;
   const top=document.createElement('div');top.className='channel-card-top';
   const icon=document.createElement('div');icon.className='channel-card-icon';icon.innerHTML='<i class="ph ph-lock-key"></i>';
   const copy=document.createElement('div');copy.className='channel-card-copy';
