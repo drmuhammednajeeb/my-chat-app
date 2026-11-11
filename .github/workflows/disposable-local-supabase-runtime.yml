@@ -88,10 +88,58 @@ jobs:
           ALLOW_DISPOSABLE_LOCAL_REPLAY: "1"
         run: |
           cd "$RUNTIME_PROJECT_DIR"
+          export SUPABASE_TELEMETRY_DISABLED=1
+          export SUPABASE_UPDATE_DISABLED=1
           if ! supabase start --exclude studio,edge-runtime,logflare,vector,supavisor,postgres-meta,inbucket > "$RUNNER_TEMP/supabase-start.log" 2>&1; then
             cat "$RUNNER_TEMP/supabase-start.log"
             exit 1
           fi
+
+          # Block outbound traffic from every Supabase container network while preserving
+          # traffic between the local Supabase networks and host-to-loopback test requests.
+          mapfile -t container_ids < <(docker ps -q)
+          if [ "${#container_ids[@]}" -eq 0 ]; then
+            echo "No Supabase containers found; refusing to run without egress isolation."
+            exit 1
+          fi
+          network_names=$(docker inspect "${container_ids[@]}" --format '{{range $name, $network := .NetworkSettings.Networks}}{{println $name}}{{end}}' | sort -u)
+          if [ -z "$network_names" ]; then
+            echo "No Docker networks found; refusing to run without egress isolation."
+            exit 1
+          fi
+          declare -a network_subnets=()
+          while IFS= read -r network; do
+            [ -n "$network" ] || continue
+            ipv6_enabled=$(docker network inspect "$network" --format '{{.EnableIPv6}}')
+            if [ "$ipv6_enabled" = "true" ]; then
+              echo "IPv6-enabled Supabase network is not supported by this egress guard: $network"
+              exit 1
+            fi
+            while IFS= read -r subnet; do
+              [ -n "$subnet" ] || continue
+              case "$subnet" in
+                *:*) echo "IPv6 subnet is not supported by this egress guard: $subnet"; exit 1 ;;
+              esac
+              network_subnets+=("$subnet")
+            done < <(docker network inspect "$network" --format '{{range .IPAM.Config}}{{println .Subnet}}{{end}}')
+          done <<< "$network_names"
+          if [ "${#network_subnets[@]}" -eq 0 ]; then
+            echo "No IPv4 Docker subnets found; refusing to run without egress isolation."
+            exit 1
+          fi
+          sudo iptables -S DOCKER-USER >/dev/null
+          sudo iptables -N SUPABASE_EGRESS_GUARD
+          for source_subnet in "${network_subnets[@]}"; do
+            for destination_subnet in "${network_subnets[@]}"; do
+              sudo iptables -A SUPABASE_EGRESS_GUARD -s "$source_subnet" -d "$destination_subnet" -j RETURN
+            done
+            sudo iptables -A SUPABASE_EGRESS_GUARD -s "$source_subnet" -j DROP
+          done
+          sudo iptables -A SUPABASE_EGRESS_GUARD -j RETURN
+          sudo iptables -I DOCKER-USER 1 -j SUPABASE_EGRESS_GUARD
+          echo "SUPABASE_CONTAINER_EGRESS_ISOLATION=ENFORCED"
+          printf '%s\n' "${network_subnets[@]}" > "$RUNNER_TEMP/supabase-egress-subnets.txt"
+
           supabase status -o env > "$RUNNER_TEMP/supabase-runtime.env"
           set -a
           . "$RUNNER_TEMP/supabase-runtime.env"
@@ -114,6 +162,11 @@ jobs:
         env:
           RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
         run: |
+          if sudo iptables -C DOCKER-USER -j SUPABASE_EGRESS_GUARD 2>/dev/null; then
+            sudo iptables -D DOCKER-USER -j SUPABASE_EGRESS_GUARD || true
+          fi
+          sudo iptables -F SUPABASE_EGRESS_GUARD 2>/dev/null || true
+          sudo iptables -X SUPABASE_EGRESS_GUARD 2>/dev/null || true
           if [ -d "$RUNTIME_PROJECT_DIR" ]; then
             cd "$RUNTIME_PROJECT_DIR"
             supabase stop || true
