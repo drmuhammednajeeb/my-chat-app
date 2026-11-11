@@ -19,6 +19,8 @@ test('application test endpoint override is loopback-only and keeps production d
   assert.match(app, /endpoint\.pathname!=='\/'/);
   assert.match(app, /SUPABASE_URL=endpoint\.origin/);
   assert.match(app, /SUPABASE_ANON_KEY=__localSupabaseTestConfig\.anonKey/);
+  assert.match(app, /p\.new\?\.conversation_id!==id\|\|state\.active\?\.id!==id/);
+  assert.match(app, /lastRealtimeConversationId:id/);
 });
 
 test('full browser E2E requires local-only endpoints and two synthetic authenticated users', async () => {
@@ -45,6 +47,8 @@ test('full browser E2E requires local-only endpoints and two synthetic authentic
     'pg_publication_tables',
     '__BIZMIND_E2E_REALTIME_OBSERVER__',
     'lastRealtimeConversationId',
+    'receivedMessage.count(), 1',
+    'reloadedMessage.count(), 1',
     "['direct_a', 'direct_b', 'direct_c']",
     'prove cross-conversation event isolation',
     'Foreign conversation isolation',
