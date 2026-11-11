@@ -50,6 +50,7 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
 
 test('runtime workflow uses an isolated temporary project and pinned local CLI only', async () => {
   const workflow = await readFile(path.join(root, '.github/workflows/disposable-local-supabase-runtime.yml'), 'utf8');
+  const runtimeRunner = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
   for (const token of [
     'workflow_dispatch',
     'supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb',
@@ -59,7 +60,6 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
     'postgres-meta,inbucket',
     'SUPABASE_CONTAINER_EGRESS_ISOLATION=ENFORCED',
     'playwright@1.65.0',
-    'local-app-e2e.mjs',
     'DOCKER-USER',
     'SUPABASE_EGRESS_GUARD',
     'iptables',
@@ -70,6 +70,7 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
     'supabase stop'
   ]) assert.ok(workflow.includes(token), 'missing isolated runtime workflow contract: ' + token);
   assert.doesNotMatch(workflow, /supabase link|--remote|--linked|SUPABASE_ACCESS_TOKEN/i);
+  assert.ok(runtimeRunner.includes('local-app-e2e.mjs'), 'runtime runner must invoke the browser E2E against local Supabase');
 });
 
 test('browser E2E rewrites the app to a loopback-only synthetic Supabase target', async () => {
