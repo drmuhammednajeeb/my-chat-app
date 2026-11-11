@@ -116,3 +116,24 @@ jobs:
             cd "$RUNTIME_PROJECT_DIR"
             supabase stop || true
           fi
+
+      - name: Generate the next migration filename with Supabase CLI (no database access)
+        if: always()
+        env:
+          RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
+        run: |
+          if [ ! -f "$RUNTIME_PROJECT_DIR/supabase/config.toml" ]; then
+            RUNTIME_PROJECT_DIR="$RUNNER_TEMP/migration-name-project"
+            mkdir -p "$RUNTIME_PROJECT_DIR"
+            cd "$RUNTIME_PROJECT_DIR"
+            supabase init
+          else
+            cd "$RUNTIME_PROJECT_DIR"
+          fi
+          supabase migration new conversations_realtime_publication
+          generated="$(find "$RUNTIME_PROJECT_DIR/supabase/migrations" -maxdepth 1 -type f -name '*_conversations_realtime_publication.sql' | sort | tail -1)"
+          test -n "$generated"
+          echo "GENERATED_MIGRATION_PATH=$generated"
+          echo "GENERATED_MIGRATION_CONTENT_BEGIN"
+          cat "$generated"
+          echo "GENERATED_MIGRATION_CONTENT_END"
