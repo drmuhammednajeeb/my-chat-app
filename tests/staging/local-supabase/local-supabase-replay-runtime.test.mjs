@@ -71,6 +71,7 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
   ]) assert.ok(workflow.includes(token), 'missing isolated runtime workflow contract: ' + token);
   assert.doesNotMatch(workflow, /supabase link|--remote|--linked|SUPABASE_ACCESS_TOKEN/i);
   assert.ok(runtimeRunner.includes('local-app-e2e.mjs'), 'runtime runner must invoke the browser E2E against local Supabase');
+  assert.ok(runtimeRunner.includes('local-api-load-runtime.mjs'), 'runtime runner must invoke the bounded API load probe');
 });
 
 test('browser E2E rewrites the app to a loopback-only synthetic Supabase target', async () => {
@@ -84,4 +85,17 @@ test('browser E2E rewrites the app to a loopback-only synthetic Supabase target'
   assert.match(script, /unpkg\.com/);
   assert.match(script, /LOCAL_APP_E2E_RECIPIENT_READ=PASSED/);
   assert.match(script, /LOCAL_APP_E2E_RELOAD_PERSISTENCE=PASSED/);
+});
+
+test('API load probe is loopback-only, bounded, and read-only', async () => {
+  const script = await readFile(path.join(root, 'tests/staging/local-supabase/local-api-load-runtime.mjs'), 'utf8');
+  assert.match(script, /ALLOW_DISPOSABLE_LOCAL_REPLAY/);
+  assert.match(script, /url\.port, '54321'/);
+  assert.match(script, /127\.0\.0\.1/);
+  assert.match(script, /concurrency = 8/);
+  assert.match(script, /requestsPerWorker = 25/);
+  assert.match(script, /AbortSignal\.timeout/);
+  assert.match(script, /LOCAL_API_LOAD_P95_MS=/);
+  assert.match(script, /LOCAL_API_LOAD=PASSED/);
+  assert.doesNotMatch(script, /https:\/\/[^\s'"]+\.supabase\.co/i);
 });
