@@ -65,7 +65,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
   <div id="signupFields" class="hidden">
    <div class="form-row"><label for="displayName">الاسم الظاهر</label><input id="displayName" class="field" maxlength="48" autocomplete="name" placeholder="اسمك الذي سيظهر للآخرين"></div>
    <div class="form-row"><label for="username">اسم المستخدم</label><input id="username" class="field" maxlength="24" pattern="[a-zA-Z0-9_]{3,24}" autocomplete="username" placeholder="username"></div>
-   <div class="form-row"><label for="membershipNumber">رقم العضوية الرسمي</label><input id="membershipNumber" class="field" maxlength="12" inputmode="numeric" pattern="971[0-9]{9}" autocomplete="off" placeholder="971123456789"></div>
+   <div class="form-row"><label for="membershipNumber">رقم العضوية الرسمي</label><input id="membershipNumber" class="field" maxlength="14" inputmode="text" pattern="(?:971[0-9]{9}|971-[0-9]{3}-[0-9]{3}-[0-9]{3})" autocomplete="off" placeholder="971-000-000-000"></div>
    <div class="form-row"><label for="membershipInviteCode">رمز الدعوة الخاص</label><input id="membershipInviteCode" class="field" maxlength="36" autocomplete="off" spellcheck="false" placeholder="أدخل رمز الدعوة الذي استلمته"></div>
    <p class="auth-note" style="margin:4px 0 10px">التسجيل متاح بدعوة معتمدة فقط. يجب أن يطابق البريد الإلكتروني الدعوة وأن يتم توثيقه قبل الدخول.</p>
   </div>
@@ -523,6 +523,7 @@ async function enterApp(user){
 }
 async function enterAppInternal(user,lifecycleVersion){
  if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
+ function normalizeForeverMembershipNumber(value){const raw=String(value||'').trim();if(/^971-[0-9]{3}-[0-9]{3}-[0-9]{3}$/.test(raw))return raw.replace(/-/g,'');if(/^971[0-9]{9}$/.test(raw))return raw;return null;}
  const membershipStarted=performance.now();
  const {data:membershipState,error:membershipStateError}=await supabaseClient.rpc('get_my_membership_state');
  recordPerf('startup_membership_check',performance.now()-membershipStarted,{success:!membershipStateError});
@@ -597,10 +598,10 @@ $('authForm').addEventListener('submit',async e=>{
   if(state.authMode==='signup'){
    if(password.length<8)throw new Error('كلمة المرور يجب ألا تقل عن 8 أحرف.');
    const username=slug($('username').value),display=$('displayName').value.trim();
-   const membershipNumber=$('membershipNumber').value.trim(),membershipInviteCode=$('membershipInviteCode').value.trim();
+   const membershipNumberInput=$('membershipNumber').value.trim(),membershipNumber=normalizeForeverMembershipNumber(membershipNumberInput),membershipInviteCode=$('membershipInviteCode').value.trim();
    if(username.length<3)throw new Error('اسم المستخدم يجب أن يتكون من 3 إلى 24 حرفاً إنجليزياً أو رقماً أو _');
    if(!display)throw new Error('أدخل الاسم الظاهر');
-   if(!/^971[0-9]{9}$/.test(membershipNumber))throw new Error('أدخل رقم فوريفر الرسمي: 971 ثم تسعة أرقام.');
+   if(!membershipNumber)throw new Error('أدخل رقم فوريفر الرسمي بصيغة 971-000-000-000 أو 971000000000.');
    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(membershipInviteCode))throw new Error('رمز الدعوة غير صحيح. استخدم الرمز الذي أنشأه مسؤول التطبيق.');
    btn.disabled=true;btn.textContent='جارٍ إنشاء الحساب...';authProgress('جارٍ إنشاء حسابك والتحقق من البيانات...');
    const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0],data:{username,display_name:display,membership_number:membershipNumber,membership_invite_code:membershipInviteCode}}});
