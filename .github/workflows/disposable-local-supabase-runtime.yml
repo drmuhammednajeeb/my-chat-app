@@ -100,8 +100,11 @@ jobs:
           export LOCAL_SUPABASE_ANON_KEY="$ANON_KEY"
           export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
           export LOCAL_SYNTHETIC_AUTH_PASSWORD="$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex') + '!aA9')")"
+          export LOCAL_SYNTHETIC_AUTH_USERS_FILE="$RUNNER_TEMP/local-synthetic-auth-users.json"
           cd "$GITHUB_WORKSPACE"
           node tests/staging/local-supabase/local-supabase-replay-runtime.mjs
+          test -s "$LOCAL_SYNTHETIC_AUTH_USERS_FILE"
+          export LOCAL_SYNTHETIC_AUTH_USERS_JSON="$(cat "$LOCAL_SYNTHETIC_AUTH_USERS_FILE")"
           node tests/staging/local-supabase/local-chat-e2e.browser.mjs
 
       - name: Stop and destroy the disposable Supabase stack
