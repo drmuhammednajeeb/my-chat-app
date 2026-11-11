@@ -27,7 +27,6 @@ test('least-privilege overlay revokes dangerous and unnecessary API privileges',
     'REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM public, anon',
     'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public',
     'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA app_private',
-    'ALTER DEFAULT PRIVILEGES FOR ROLE postgres REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC',
     'REVOKE EXECUTE ON FUNCTION app_private.guard_conversation_member_update()',
     'REVOKE EXECUTE ON FUNCTION app_private.enforce_chat_message_reply_parent()',
     'REVOKE EXECUTE ON FUNCTION public.admin_create_member_invites(text[])',
@@ -87,7 +86,7 @@ test('read-only assertions cover RLS, active membership, table, sequence, functi
 test('postgres global PUBLIC function execution default is explicitly revoked', async () => {
   const overlay = await readFile(overlayPath, 'utf8');
   const assertion = await readFile(assertionPath, 'utf8');
-  assert.match(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres\\s+REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC/i);
+  assert.match(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres\s+REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC/i);
   assert.match(assertion, /Global PUBLIC EXECUTE default remains for postgres-created functions/i);
 });
 
