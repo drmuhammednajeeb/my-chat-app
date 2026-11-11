@@ -287,10 +287,11 @@ function subscribeConversation(){
   .on('postgres_changes',{event:'*',schema:'public',table:'conversation_documents',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id&&$('conversationWorkspaceModal')?.classList.contains('open'))loadConversationDocuments(id)})
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'private_reply_contexts',filter:'direct_conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.privateReplyContexts.set(p.new.direct_message_id,p.new);renderPrivateReplyQuote(p.new.direct_message_id,p.new)})
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_member_events',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id&&$('groupManagementModal')?.classList.contains('open'))openGroupManagement()})
-  .subscribe(s=>{
+  .subscribe((s,error)=>{
    const reconnected=channelHasSubscribed&&s==='SUBSCRIBED';
    if(s==='SUBSCRIBED')channelHasSubscribed=true;
-   state.realtimeStatus=s;diagLog('realtime-status',{status:s,reconnected});
+   state.realtimeStatus=s;diagLog('realtime-status',{status:s,reconnected,error:error?.message||null});
+   if(s==='CHANNEL_ERROR'||s==='TIMED_OUT')console.warn('Chat realtime subscription:',s,error?.message||error);
    if(state.messagePollTimer)scheduleMessagePolling(id,state.messagePollGeneration);
    if(reconnected&&state.active?.id===id)loadMessages().catch(error=>console.warn('Reconnect message reconciliation failed:',error));
    $('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';
