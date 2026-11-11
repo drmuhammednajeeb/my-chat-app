@@ -57,7 +57,7 @@ if ((originalHtml.match(/<script src="\.\/js\/bootstrap\/supabase-client\.js"><\
 }
 const testConfigScript = '<script>window.__BIZMIND_TEST_SUPABASE_CONFIG__='
   + JSON.stringify({ url: apiUrl, anonKey }) + ';</script>';
-const testHtml = originalHtml.replace(bootstrapTag, testConfigScript + '\\n' + bootstrapTag);
+const testHtml = originalHtml.replace(bootstrapTag, testConfigScript + '\n' + bootstrapTag);
 if (testHtml === originalHtml || !testHtml.includes(testConfigScript)
   || testHtml.indexOf(testConfigScript) > testHtml.indexOf(bootstrapTag)
   || testHtml.includes('window.__BIZMIND_TEST_SUPABASE_CONFIG__=undefined')) {
