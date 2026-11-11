@@ -41,6 +41,11 @@ test('full browser E2E requires local-only endpoints and two synthetic authentic
     "      { timeout: 30000 }",
     "status, 'SUBSCRIBED'",
     "lastEvent, 'INSERT'",
+    'REALTIME_PUBLICATION_CHAT_MESSAGES=true',
+    'pg_publication_tables',
+    '__BIZMIND_E2E_REALTIME_OBSERVER__',
+    'unfiltered authenticated Realtime diagnostic observer',
+    "observer?.event?.conversationId, conversation",
     'BROWSER_E2E_CROSS_SESSION_DELIVERY=PASSED',
     'BROWSER_E2E_MESSAGE_PERSISTENCE=PASSED',
     'BROWSER_E2E_PRODUCTION_REQUESTS=0'
