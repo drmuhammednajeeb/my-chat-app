@@ -42,8 +42,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Install pinned Supabase JavaScript client for live Realtime verification
-        run: npm install --no-save --no-package-lock @supabase/supabase-js@2.113.0
+      - name: Install pinned Supabase JavaScript client and Playwright for authenticated browser E2E
+        run: npm install --no-save --no-package-lock @supabase/supabase-js@2.113.0 playwright@1.56.1
+
+      - name: Install Chromium for disposable local browser E2E
+        run: npx playwright install --with-deps chromium
 
       - name: Create an isolated temporary Supabase project
         env:
