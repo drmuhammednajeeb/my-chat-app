@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - "engineering/stability-css-extraction-20261109"
+      - "rebuild/clean-core-20261111"
   workflow_dispatch:
 
 permissions:
