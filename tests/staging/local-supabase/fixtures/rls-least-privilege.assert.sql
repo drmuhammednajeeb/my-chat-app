@@ -4,6 +4,7 @@ do $assert$
 declare
   r record;
   storage_policy_issues text;
+  rpc_acl_issues text;
 begin
   if current_database() <> 'postgres'
      or current_user <> 'postgres'
@@ -116,6 +117,60 @@ begin
   ) then
     raise exception 'A public-schema function remains executable by anon or PUBLIC';
   end if;
+
+  -- Fifteen RPCs referenced by the current browser client plus three retained
+  -- channel compatibility wrappers. Trigger-only and retired stub functions are excluded.
+  with allowed(function_name, identity_arguments) as (
+    values
+      ('patch_my_user_settings','p_patch jsonb'),
+      ('get_my_membership_state',''),
+      ('join_channel_by_invite','p_token text'),
+      ('ensure_self_chat',''),
+      ('get_or_create_direct_conversation','p_other_user_id uuid'),
+      ('edit_message_secure','p_message_id uuid, p_new_content text, p_expected_revision integer'),
+      ('get_team_dashboard_stats',''),
+      ('create_private_channel','p_title text, p_description text'),
+      ('create_channel_invite','p_conversation_id uuid'),
+      ('transfer_group_ownership','p_conversation_id uuid, p_new_owner uuid'),
+      ('admin_revoke_member_invite','p_invite_id uuid'),
+      ('admin_set_member_official_number','p_user_id uuid, p_membership_number text'),
+      ('admin_update_membership_status','p_user_id uuid, p_status text'),
+      ('admin_list_memberships',''),
+      ('admin_create_official_member_invites','p_members jsonb'),
+      ('create_channel','p_title text, p_description text, p_is_public boolean'),
+      ('discover_public_channels','p_search text, p_limit integer, p_offset integer'),
+      ('join_public_channel','p_conversation_id uuid')
+  ),
+  actual(function_name, identity_arguments) as (
+    select p.proname, pg_get_function_identity_arguments(p.oid)
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and has_function_privilege('authenticated',p.oid,'EXECUTE')
+  ),
+  differences as (
+    select 'UNREVIEWED ' || a.function_name || '(' || a.identity_arguments || ')' as item
+    from actual a
+    where not exists (
+      select 1 from allowed x
+      where x.function_name = a.function_name
+        and x.identity_arguments = a.identity_arguments
+    )
+    union all
+    select 'MISSING ' || x.function_name || '(' || x.identity_arguments || ')' as item
+    from allowed x
+    where not exists (
+      select 1 from actual a
+      where a.function_name = x.function_name
+        and a.identity_arguments = x.identity_arguments
+    )
+  )
+  select string_agg(item, ', ') into rpc_acl_issues from differences;
+
+  if rpc_acl_issues is not null then
+    raise exception 'Authenticated public RPC allowlist mismatch: %', rpc_acl_issues;
+  end if;
+
 
   if exists (
     select 1
