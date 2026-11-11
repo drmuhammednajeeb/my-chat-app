@@ -651,8 +651,8 @@ test('opening a conversation fetches only the newest message and defers older hi
   assert.match(older, /\.limit\(50\)/);
   assert.doesNotMatch(older, /area\.replaceChildren\(\)/);
   assert.match(older, /insertBefore\(fragment,originalFirstChild\)/);
-  assert.match(older, /state\\.batchRenderingMessages=true/);
-  assert.match(older, /state\\.batchRenderingMessages=false;reconcileMessageTimeline\\(area\\)/);
+  assert.match(older, /state\.batchRenderingMessages=true/);
+  assert.match(older, /state\.batchRenderingMessages=false;reconcileMessageTimeline\(area\)/);
   assert.match(older, /olderIds/);
 });
 
