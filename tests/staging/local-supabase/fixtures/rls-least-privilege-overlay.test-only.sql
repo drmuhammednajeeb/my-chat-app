@@ -60,19 +60,14 @@ revoke update, delete on public.private_reply_contexts from authenticated;
 revoke delete on public.user_settings from authenticated;
 revoke delete on public.conversation_group_settings from authenticated;
 
--- Public-schema RPCs are opt-in. Trigger functions are never client-callable.
+-- Remove PUBLIC/anon execution from all public functions. Authenticated execution is checked against the reviewed RPC allowlist in the assertion file.
 revoke execute on all functions in schema public from public, anon;
 revoke all on function public.guard_chat_message_content_update()
   from public, anon, authenticated, service_role;
+revoke execute on function public.admin_create_member_invites(text[])
+  from public, anon, authenticated;
 
 -- Private trigger functions are not API RPCs; RLS helpers and RPC implementations
--- retain their separately reviewed authenticated grants.
-revoke execute on function app_private.guard_conversation_member_update()
-  from public, anon, authenticated;
-revoke execute on function app_private.enforce_chat_message_reply_parent()
-  from public, anon, authenticated;
-
--- These app_private routines are trigger-only. RLS helpers and RPC implementations
 -- retain their separately reviewed authenticated grants.
 revoke execute on function app_private.guard_conversation_member_update()
   from public, anon, authenticated;
