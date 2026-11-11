@@ -170,6 +170,8 @@ async function openDirect(page, otherId) {
   }
   await page.waitForFunction(expected => state.active?.id === expected, result.activeId, { timeout: 25000 });
   await page.locator('#messageInput').waitFor({ state: 'visible' });
+  // Do not send cross-session assertions until the conversation's Realtime channel is live.
+  await page.waitForFunction(() => state.realtimeStatus === 'SUBSCRIBED', null, { timeout: 20000 });
   return result.activeId;
 }
 
@@ -325,8 +327,13 @@ try {
   process.exitCode = 1;
 } finally {
   if (conversationId) {
-    try { await adminRequest('conversations?id=eq.' + encodeURIComponent(conversationId), 'DELETE'); }
-    catch (error) { console.warn('LOCAL_CHAT_BROWSER_E2E_CLEANUP_WARNING=' + (error?.message || error)); }
+    try {
+      const scopedConversation = 'conversation_id=eq.' + encodeURIComponent(conversationId);
+      // Delete membership rows while the parent conversation still exists so audit triggers can write safely.
+      await adminRequest('conversation_members?' + scopedConversation, 'DELETE');
+      await adminRequest('conversation_member_events?' + scopedConversation, 'DELETE');
+      await adminRequest('conversations?id=eq.' + encodeURIComponent(conversationId), 'DELETE');
+    } catch (error) { console.warn('LOCAL_CHAT_BROWSER_E2E_CLEANUP_WARNING=' + (error?.message || error)); }
   }
   for (const context of contexts.reverse()) {
     try { await context.close(); } catch (_) {}
