@@ -28,13 +28,12 @@ alter default privileges for role postgres in schema public
 alter default privileges for role postgres in schema public
   revoke all on functions from public, anon, authenticated;
 
--- PostgreSQL's global function default grants EXECUTE to PUBLIC; a schema-scoped
--- REVOKE cannot remove that global default. Disable it for postgres-created functions.
-alter default privileges for role postgres
-  revoke execute on functions from public;
-
 alter default privileges for role postgres in schema app_private
   revoke all on functions from public, anon, authenticated;
+
+-- Remove direct PUBLIC/anon execution from current private helpers. Authenticated
+-- grants remain for the RLS predicates and reviewed client RPC implementations.
+revoke execute on all functions in schema app_private from public, anon;
 
 -- Remove API access from anon at the table/sequence layer. RLS remains an independent
 -- mandatory boundary; this also prevents non-RLS privileges such as TRUNCATE.
