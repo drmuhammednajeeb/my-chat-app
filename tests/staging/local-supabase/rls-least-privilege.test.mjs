@@ -152,3 +152,30 @@ test('CRUD runtime fixture verifies upsert, secure edit, and cross-user isolatio
   assert.match(sql, /SET LOCAL ROLE authenticated/i);
   assert.match(sql, /request.jwt.claim.sub/i);
 });
+
+
+test('browser RPC call sites match the reviewed authenticated RPC allowlist exactly', async () => {
+  const [indexHtml, membershipJs, assertionSql] = await Promise.all([
+    readFile(path.join(root, 'index.html'), 'utf8'),
+    readFile(path.join(root, 'membership.js'), 'utf8'),
+    readFile(assertionPath, 'utf8')
+  ]);
+  const clientSource = indexHtml + '\\n' + membershipJs;
+  const allRpcCalls = [...clientSource.matchAll(/\\.rpc\\s*\\(/g)];
+  const literalRpcCalls = [...clientSource.matchAll(/\\.rpc\\s*\\(\\s*(['"`])([a-z][a-z0-9_]*)\\1/g)];
+  assert.equal(literalRpcCalls.length, allRpcCalls.length, 'every browser RPC call must use a statically reviewable literal name');
+  const clientNames = [...new Set(literalRpcCalls.map(match => match[2]))];
+
+  const allowlistBlock = assertionSql.match(/with allowed\\(function_name,\\s*identity_arguments\\) as \\(\\s*values([\\s\\S]*?)\\n\\s*\\),\\s*actual\\(/i)?.[1];
+  assert.ok(allowlistBlock, 'SQL assertion must declare the authenticated RPC allowlist');
+  const allowlistEntries = [...allowlistBlock.matchAll(/\\(\\s*'([a-z][a-z0-9_]*)'\\s*,\\s*'([^']*)'\\s*\\)/g)]
+    .map(match => ({ name: match[1], identityArguments: match[2] }));
+  const allowedNames = allowlistEntries.map(entry => entry.name);
+  assert.equal(new Set(allowedNames).size, allowedNames.length, 'RPC allowlist must not contain duplicate names');
+
+  assert.deepEqual(
+    [...clientNames].sort(),
+    [...allowedNames].sort(),
+    'browser RPC call sites and the database authenticated EXECUTE allowlist must match exactly'
+  );
+});
