@@ -698,3 +698,31 @@ test('conversation opens latest-message loading before optional settings finish'
   assert.ok(open.indexOf('subscribeConversation();subscribeProfileUpdates(c)') < open.indexOf('const messageLoadPromise=loadMessages()'));
   assert.ok(open.indexOf('const messageLoadPromise=loadMessages().finally') < open.indexOf('await Promise.all([messageLoadPromise,starredLoadPromise,settingsLoadPromise])'));
 });
+
+
+test('message reconciliation keeps the current timeline on fetch failure and treats metadata as optional', () => {
+  const load = extractFunction('loadMessages');
+  assert.match(load, /Promise\.allSettled\(\[/);
+  assert.match(load, /Optional '\+name\+' metadata unavailable/);
+  const catchBlock = load.slice(load.indexOf('}catch(error){'));
+  assert.match(catchBlock, /if\(!state\.messageIds\.size\)area\.innerHTML=/);
+  assert.doesNotMatch(catchBlock, /state\.messageIds\.clear\(\)/);
+});
+
+test('voice send flushes the final recorder chunk and refuses cross-conversation attachment', () => {
+  const send = extractFunction('sendVoiceRecording');
+  const start = extractFunction('startVoiceRecording');
+  assert.match(send, /recorder\.requestData\(\)/);
+  assert.match(send, /stopVoiceRecording\(\)/);
+  assert.match(start, /if\(typeof recorder\.start==='function'\)recorder\.start\(\)/);
+  assert.match(start, /recordingConversationId/);
+  assert.match(start, /state\.active\?\.id!==recordingConversationId\|\|state\.user\?\.id!==recordingUserId/);
+  assert.match(start, /elapsed>=180/);
+});
+
+test('eight-second fallback is message reconciliation cadence, not a voice recording limit', () => {
+  const delay = extractFunction('messagePollingDelay');
+  const voice = extractFunction('startVoiceRecording');
+  assert.match(delay, /return state\.realtimeStatus==='SUBSCRIBED'\?15000:1200/);
+  assert.doesNotMatch(voice, /8000|elapsed>=8/);
+});
