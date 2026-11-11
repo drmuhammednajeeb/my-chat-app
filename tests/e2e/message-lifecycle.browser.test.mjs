@@ -369,8 +369,31 @@ test('voice recording finalizes the last MediaRecorder chunk before dispatching 
       helpers.updateVoiceRecordingUI,helpers.currentVoiceElapsedMs,helpers.formatVoiceDuration,
       helpers.showAttachmentPreview,helpers.resizeComposer,helpers.toast,helpers.sendMessage
     );
-    const stop = new Function('state','stopVoiceRecording',sendSource + '; return sendVoiceRecording;')(
+    const stop = new Function('state','
+    const directStop = new Function('state',stopSource + '; return stopVoiceRecording;')(state);
+    window.__startVoice = start;
+    window.__sendVoice = stop;
+    window.__stopVoice = directStop;
+  }, { startSource, sendSource, stopSource });
+  await page.evaluate(() => window.__startVoice());
+  await page.evaluate(() => window.__sendVoice());
+  await page.waitForTimeout(20);
+  const result = await page.evaluate(() => ({
+    events: window.__voiceRecorderEvents,
+    sent: window.__voiceSent,
+    preview: window.__voicePreview,
+    toast: window.__voiceToast
+  }));
+  assert.deepEqual(result.events, ['start','requestData','stop'], 'Voice harness did not reach recorder start/stop: ' + JSON.stringify(result));
+  assert.equal(result.sent.length, 1);
+  assert.equal(result.sent[0].recorderCleared, true);
+  assert.equal(result.sent[0].type, 'audio/webm');
+  assert.equal(result.preview.type, 'audio/webm');
+  await page.close();
+});
+,'stopVoiceRecording',sendSource + '; return sendVoiceRecording;')(
       state,
+      $,
       () => { if(state.voiceRecorder && state.voiceRecorder.state !== 'inactive') state.voiceRecorder.stop(); return true; }
     );
     const directStop = new Function('state',stopSource + '; return stopVoiceRecording;')(state);
