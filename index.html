@@ -1870,11 +1870,20 @@ function resumeVoiceRecording(){
 }
 function toggleVoicePause(){if(state.voicePaused)resumeVoiceRecording();else pauseVoiceRecording()}
 function sendVoiceRecording(){
- if(!state.voiceRecorder)return;
+ const recorder=state.voiceRecorder;if(!recorder)return false;
  state.voiceSendOnStop=true;
  const send=$('sendBtn');if(send)send.disabled=true;
  if(state.voicePaused){state.voicePaused=false;state.voiceSegmentStartedAt=null}
- stopVoiceRecording();
+ if(recorder.state==='recording'&&typeof recorder.requestData==='function'){
+  try{recorder.requestData()}catch(error){console.warn('Final voice chunk request was unavailable:',error?.message||error)}
+ }
+ const stopped=stopVoiceRecording();
+ if(!stopped&&recorder.state!=='inactive'){
+  state.voiceSendOnStop=false;if(send)send.disabled=false;
+  toast('تعذر إنهاء التسجيل. حاول إيقافه ثم الإرسال مرة أخرى.');
+  return false;
+ }
+ return true;
 }
 function encodeVoiceWav(chunks,sampleRate){
  const total=chunks.reduce((sum,chunk)=>sum+chunk.length,0),input=new Float32Array(total);let offset=0;
@@ -1929,6 +1938,7 @@ async function startVoiceRecording(){
    const mime=(recorder.mimeType||supported||'audio/wav').split(';')[0].toLowerCase();
    state.voiceSendOnStop=false;cleanupVoiceCapture();
    if(cancelled){state.cancelVoiceOnStop=false;state.voiceElapsedMs=0;resizeComposer();return}
+   if(state.active?.id!==recordingConversationId||state.user?.id!==recordingUserId){toast('تغيرت المحادثة أو جلسة الدخول قبل اكتمال التسجيل. لم يتم إرفاق التسجيل بمحادثة أخرى.');resizeComposer();return}
    const blob=new Blob(chunks,{type:mime});if(!blob.size){toast('لم يتم التقاط صوت. تحقق من إذن الميكروفون وحاول مرة أخرى.');resizeComposer();return}
    if(blob.size>12*1024*1024){toast('حجم التسجيل تجاوز الحد الأقصى 12 ميجابايت');resizeComposer();return}
    const ext=mime==='audio/mp4'?'m4a':mime==='audio/ogg'?'ogg':mime==='audio/mpeg'?'mp3':mime==='audio/wav'?'wav':'webm';
@@ -1936,7 +1946,7 @@ async function startVoiceRecording(){
    showAttachmentPreview(file,'رسالة صوتية · '+formatVoiceDuration(elapsed)+' · '+Math.ceil(file.size/1024)+' كيلوبايت');resizeComposer();
    if(shouldSend){setTimeout(()=>{if(state.attachment===file)sendMessage()},0)}
   };
-  if(recorder instanceof (window.MediaRecorder||Function)){recorder.start()}
+  if(typeof recorder.start==='function')recorder.start()
   $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').title='التسجيل الصوتي جارٍ';$('voiceCancelBtn').classList.add('hidden');setVoiceComposerActive(true);$('sendBtn').disabled=false;$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';$('sendBtn').title='إرسال التسجيل الصوتي';$('sendBtn').setAttribute('aria-label','إرسال التسجيل الصوتي');updateVoiceRecordingUI();
   state.voiceTimer=setInterval(()=>{const elapsed=Math.floor(currentVoiceElapsedMs()/1000);updateVoiceRecordingUI();if(elapsed>=180){state.voiceSendOnStop=false;stopVoiceRecording()}},250);
  }catch(error){
@@ -1946,7 +1956,11 @@ async function startVoiceRecording(){
   toast(error?.name==='NotAllowedError'?'اسمح للمتصفح باستخدام الميكروفون من إعدادات الموقع ثم حاول مجدداً':error?.name==='NotFoundError'?'لم يتم العثور على ميكروفون متصل بالجهاز':error?.name==='NotReadableError'?'الميكروفون مشغول بتطبيق آخر. أغلقه ثم أعد المحاولة':error?.message||'تعذر تشغيل الميكروفون');
  }
 }
-function stopVoiceRecording(){if(state.voiceRecorder&&state.voiceRecorder.state!=='inactive')state.voiceRecorder.stop()}
+function stopVoiceRecording(){
+ const recorder=state.voiceRecorder;if(!recorder||recorder.state==='inactive')return false;
+ try{recorder.stop();return true}
+ catch(error){console.error('Voice recorder stop failed:',error);return false}
+}
 function cancelVoiceRecording(){if(!state.voiceRecorder)return;state.cancelVoiceOnStop=true;state.voiceSendOnStop=false;state.voiceElapsedMs=0;state.voiceSegmentStartedAt=null;stopVoiceRecording()}
 $('voicePauseBtn').onclick=toggleVoicePause;
 $('voiceTrashBtn').onclick=()=>{if(state.voiceRecorder){cancelVoiceRecording();toast('تم حذف التسجيل وإعادة ضبط المؤقت')}};
