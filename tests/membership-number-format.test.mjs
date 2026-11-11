@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 const source = readFileSync(new URL("../membership.js", import.meta.url), "utf8");
-const match = source.match(/function normalizeForeverMembershipNumber\\(value\\) \\{[\\s\\S]*?\\n  \\}/);
+const match = source.match(/function normalizeForeverMembershipNumber\(value\) \{[\s\S]*?\n  \}/);
 assert.ok(match, "membership.js must define the shared Forever number normalizer");
 const normalize = vm.runInNewContext("(" + match[0] + ")");
 
