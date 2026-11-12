@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 56,
-    "mappedSources": 53,
+    "sqlFiles": 57,
+    "mappedSources": 54,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -284,6 +284,16 @@
       ],
       "blockedBy": [],
       "parityNote": "Source migration is tracked for reproducibility. It was applied and verified in production on 2026-11-12 under explicit user authorization; this design-only manifest does not replay production changes or authorize any further database execution."
+    },
+    {
+      "nodeId": "chat.profile-status-combined-content-media",
+      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "testSources": [
+        "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql",
+        "tests/status-workspace.test.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": "Corrects the mutually exclusive content/media check and insert RLS predicate, and fixes UUID media-path regex escaping. Production application will be tracked separately from the disposable-local replay status."
     },
     {
       "nodeId": "chat.hardening",
