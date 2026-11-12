@@ -315,3 +315,167 @@ html.dark .new-messages-jump{background:#153c36;color:#b8f3d6;border-color:#276b
   clip:rect(0,0,0,0);white-space:nowrap;border:0;
 }
 @media(max-width:760px){#messages>.message{max-width:90%}}
+
+
+/* High-contrast visual system — accessible, vivid, and consistent in both themes. */
+html.light{
+ color-scheme:light;
+ --bg:#f3f6fb;
+ --panel:#ffffff;
+ --panel2:#edf2f8;
+ --panel3:#e1eaf3;
+ --line:#cbd5e1;
+ --text:#101828;
+ --muted:#475467;
+ --accent:#007f6b;
+ --accent2:#006653;
+ --danger:#c4323b;
+ --bubble:#ffffff;
+ --mine:#d1f5e3;
+ --shadow:0 3px 16px #152b4518;
+}
+html.dark{
+ color-scheme:dark;
+ --bg:#08131d;
+ --panel:#101f2b;
+ --panel2:#1b2d3a;
+ --panel3:#294252;
+ --line:#405667;
+ --text:#f8fafc;
+ --muted:#bdc9d5;
+ --accent:#39d9b5;
+ --accent2:#22bd9b;
+ --danger:#ff7b86;
+ --bubble:#1b2d3a;
+ --mine:#075e50;
+ --shadow:0 3px 18px #0007;
+}
+html.light body,html.light #app,html.light #auth,
+html.dark body,html.dark #app,html.dark #auth{
+ color:var(--text);
+}
+html.light .sidebar,html.light .chat,html.light .chat-head,
+html.light .profile,html.light .auth-card,html.light .conversation,
+html.light .team-dashboard,html.light .team-kpi,html.light .notification-item,
+html.light .chat-search-result,html.light .group-dialog,
+html.dark .sidebar,html.dark .chat,html.dark .chat-head,
+html.dark .profile,html.dark .auth-card,html.dark .conversation,
+html.dark .team-dashboard,html.dark .team-kpi,html.dark .notification-item,
+html.dark .chat-search-result,html.dark .group-dialog{
+ color:var(--text);
+ border-color:var(--line);
+}
+html.light .messages,html.light .composer-wrap{background:var(--bg)}
+html.dark .messages,html.dark .composer-wrap{background:var(--bg)}
+html.light .brand,html.light .sidebar-foot,html.light .searchbox,
+html.light .sidebar-tabs,html.light .composer,html.light .field,
+html.light input,html.light textarea,html.light select,
+html.dark .brand,html.dark .sidebar-foot,html.dark .searchbox,
+html.dark .sidebar-tabs,html.dark .composer,html.dark .field,
+html.dark input,html.dark textarea,html.dark select{
+ background-color:var(--panel2);
+ color:var(--text);
+ border-color:var(--line);
+}
+html.light input::placeholder,html.light textarea::placeholder,
+html.light .composer-hint,html.light .conv-last,html.light .conv-time,
+html.light .profile-info small,html.light .brand p,
+html.dark input::placeholder,html.dark textarea::placeholder,
+html.dark .composer-hint,html.dark .conv-last,html.dark .conv-time,
+html.dark .profile-info small,html.dark .brand p{
+ color:var(--muted);
+ opacity:1;
+}
+html.light .bubble,html.light .message:not(.mine) .bubble{
+ background:var(--bubble);color:var(--text);border:1px solid var(--line);
+}
+html.light .mine .bubble{background:var(--mine);color:#12352a;border:1px solid #8acfb0}
+html.dark .bubble,html.dark .message:not(.mine) .bubble{
+ background:var(--bubble);color:var(--text);border:1px solid var(--line);
+}
+html.dark .mine .bubble{background:var(--mine);color:#f4fffb;border:1px solid #168c73}
+html.light #messages .meta{color:#475467}
+html.light #messages>.message.mine .meta{color:#285b4c}
+html.dark #messages .meta{color:#bdc9d5}
+html.dark #messages>.message.mine .meta{color:#d8fff2}
+html.light #messages .sender,html.light .typing{color:#006b5b}
+html.dark #messages .sender,html.dark .typing{color:#55e5c3}
+html.light .day-divider,html.light .messages-history-loader{
+ background:#fff;color:#344054;border:1px solid #cbd5e1;
+}
+html.dark .day-divider,html.dark .messages-history-loader{
+ background:#1b2d3a;color:#e5edf5;border:1px solid #526779;
+}
+html.light .conversation:hover,html.light .sidebar-tab:hover,
+html.light .iconbtn:hover,html.light .notification-item:hover,
+html.dark .conversation:hover,html.dark .sidebar-tab:hover,
+html.dark .iconbtn:hover,html.dark .notification-item:hover{
+ background:var(--panel3);color:var(--text);
+}
+html.light .conversation.active,html.light .sidebar-tab.active,
+html.light .directory-filter.active{
+ background:#d8f3e9;color:#064f43;border-color:#79bda5;
+}
+html.dark .conversation.active,html.dark .sidebar-tab.active,
+html.dark .directory-filter.active{
+ background:#174b43;color:#f1fffb;border-color:#39a98d;
+}
+html.light .iconbtn,html.light .direct-chat-control,
+html.light .sidebar-tab,html.light .directory-filter,
+html.dark .iconbtn,html.dark .direct-chat-control,
+html.dark .sidebar-tab,html.dark .directory-filter{
+ color:var(--text);border-color:var(--line);
+}
+html.light .send,html.light .primary,html.light .group-create{
+ background:#007f6b;color:#fff;
+}
+html.dark .send,html.dark .primary,html.dark .group-create{
+ background:#20bd9a;color:#06251f;
+}
+html.light .send:hover,html.light .primary:hover,html.light .group-create:hover{
+ background:#006653;
+}
+html.dark .send:hover,html.dark .primary:hover,html.dark .group-create:hover{
+ background:#55e5c3;
+}
+html.light .new-messages-jump{
+ background:#d8f3e9;color:#064f43;border-color:#79bda5;
+}
+html.dark .new-messages-jump{
+ background:#174b43;color:#eafff8;border-color:#39a98d;
+}
+html.light .auth-card,html.dark .auth-card,
+html.light .group-dialog,html.dark .group-dialog,
+html.light .profile-dialog,html.dark .profile-dialog{
+ border-color:var(--line);
+}
+html.light :focus-visible,html.dark :focus-visible{
+ outline:3px solid var(--accent);outline-offset:2px;
+}
+html.light button:disabled,html.dark button:disabled{opacity:.58}
+html.light .sectionhead,html.light .custom-lists-heading,
+html.light .message-history-entry small,
+html.dark .sectionhead,html.dark .custom-lists-heading,
+html.dark .message-history-entry small{color:var(--muted)}
+/* Stronger hierarchy: readable body copy and unmistakable primary labels. */
+html body{font-weight:500}
+#sidebar .brand h1,#sidebar .profile-info strong,
+#sidebar .conv-top strong,#chat .chat-title strong,
+#app h1,#app h2,#app h3,.auth-card h2{
+ font-weight:800;
+}
+#sidebar .sectionhead,.sidebar-tab,.chat-filter,
+#messages .sender,#messages .day-divider,
+#app label,.group-field-label,.group-management-btn{
+ font-weight:700;
+}
+#messages .bubble,#messages .message-content{
+ font-weight:500;
+}
+#messages .bubble{font-size:15px;line-height:1.62}
+#messages .meta{font-size:11.5px;font-weight:600}
+#chat .chat-title small,.profile-info small,.conv-last,
+.sidebar-foot,.composer-hint{font-weight:500}
+@media(max-width:760px){
+ #messages .bubble{font-size:14.5px;line-height:1.6}
+}
