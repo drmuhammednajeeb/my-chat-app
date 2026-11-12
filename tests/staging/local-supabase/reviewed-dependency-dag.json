@@ -6,7 +6,7 @@
   "sourceSets": {
     "cliMigrations": {
       "path": "supabase/migrations",
-      "count": 10
+      "count": 13
     },
     "historicalChanges": {
       "path": "database/changes",
@@ -1088,7 +1088,7 @@
     {
       "id": "chat.profile-status-and-conversation-images",
       "source": [
-        "database/changes/20261112000100_profile_status_and_conversation_images.sql"
+        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql"
       ],
       "provides": [
         "public.profile_statuses",
@@ -1105,9 +1105,50 @@
         "platform.realtime"
       ],
       "testSource": [
-        "database/changes/20261112000100_profile_status_and_conversation_images.sql",
+        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
         "tests/profile-status-and-conversation-images.test.mjs"
-      ]
+      ],
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "note": "Production-applied migration source copied byte-for-byte into the canonical CLI directory. No clean local replay has been executed."
+    },
+    {
+      "id": "chat.profile-status-video-media",
+      "source": [
+        "supabase/migrations/20261112091605_profile_status_video_media.sql"
+      ],
+      "provides": [
+        "public.profile_statuses.media_type",
+        "profile-status-media video MIME support"
+      ],
+      "requires": [
+        "chat.profile-status-and-conversation-images",
+        "platform.storage"
+      ],
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSource": [
+        "supabase/migrations/20261112091605_profile_status_video_media.sql"
+      ],
+      "blockedBy": [],
+      "note": "Copied byte-for-byte from PR #138 source; applied migration is in production history. Local replay remains blocked."
+    },
+    {
+      "id": "chat.profile-status-combined-content-media",
+      "source": [
+        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
+      ],
+      "provides": [
+        "combined profile status text and media constraint",
+        "profile status image/video path validation"
+      ],
+      "requires": [
+        "chat.profile-status-video-media"
+      ],
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSource": [
+        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
+      ],
+      "blockedBy": [],
+      "note": "Copied byte-for-byte from PR #138 source; applied migration is in production history. Local replay remains blocked."
     }
   ],
   "explicitEdges": [
@@ -1794,6 +1835,14 @@
     [
       "platform.realtime",
       "chat.profile-status-and-conversation-images"
+    ],
+    [
+      "chat.profile-status-and-conversation-images",
+      "chat.profile-status-video-media"
+    ],
+    [
+      "chat.profile-status-video-media",
+      "chat.profile-status-combined-content-media"
     ]
   ],
   "blockers": [
@@ -1975,6 +2024,12 @@
       "canonicalTestSource": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
       "duplicate": "database/changes/index_user_notification_foreign_keys.sql",
       "sha256": "c59daeb5b307f67ed8148611530d94f4330ac9fedbbe52df0e9c908a2b687ea2"
+    },
+    {
+      "logicalChange": "profile status base migration",
+      "canonicalTestSource": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
+      "duplicate": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
+      "sha256": "dff699a1dabbef75c1dc6089a2e998eb01ae89d404c0320d0520f9e6c45892e1"
     }
   ],
   "safety": {
