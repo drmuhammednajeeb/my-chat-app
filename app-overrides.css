@@ -57,11 +57,6 @@
 .chat-header-menu .direct-chat-control{height:auto;border:0;border-radius:8px;background:transparent;justify-content:flex-start}
 .chat-header-menu .install-app-btn{width:100%;min-width:0;padding:9px 11px}
 .chat-header-menu .install-app-label{display:inline}
-.message-menu-wrap{position:absolute;z-index:8;top:4px;left:5px;display:flex;align-items:flex-start}
-.message-menu-trigger{width:27px;height:27px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:#ffffffd9;color:#53636c;opacity:0;pointer-events:none;transition:opacity .16s,background .16s;box-shadow:0 1px 3px #0b141a18}
-.message:hover .message-menu-trigger,.message-menu-trigger:focus-visible,.message-menu-trigger[aria-expanded="true"]{opacity:1;pointer-events:auto}
-.message-menu-trigger:hover,.message-menu-trigger[aria-expanded="true"]{background:#e8f1ee;color:#008f72}
-.message-menu-trigger i{font-size:17px}
 .message-options-menu{position:absolute;top:30px;left:0;z-index:40;min-width:154px;padding:5px;background:#fff;border:1px solid #e7ebed;border-radius:11px;box-shadow:0 8px 28px #0b141a24;display:flex;flex-direction:column;gap:2px}
 .message-options-menu.hidden{display:none!important}
 .message-menu-option{width:100%;min-height:36px;display:flex;align-items:center;gap:10px;padding:7px 10px;border:0;border-radius:7px;background:transparent;color:#26343b;text-align:right;font-size:12px}
@@ -70,7 +65,7 @@
 .message-menu-option i{font-size:16px;color:#667781}
 .message-menu-option:last-child{color:#c03935}
 .message-menu-option:last-child i{color:#c03935}
-@media(hover:none){.message-menu-trigger{opacity:1;pointer-events:auto;width:25px;height:25px;background:#ffffffd9}}
+
 @media(max-width:760px){.chat-header-menu{top:55px;left:8px}.message-options-menu{min-width:148px}}
 
 /* Unified WhatsApp-inspired global theme and typography */
@@ -262,13 +257,29 @@ html.dark .new-messages-jump{background:#153c36;color:#b8f3d6;border-color:#276b
 .message-sticker{font-size:clamp(54px,10vw,76px);line-height:1.15;padding:5px 8px;text-align:center;user-select:none}
 .sticker-composer-btn{color:var(--accent)}
 @media(max-width:420px){.chat-sticker-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.chat-sticker-option{font-size:26px}}
-/* Keep message controls reachable on touch and keyboard, not hover-only. */
-.message-menu-trigger{opacity:1;pointer-events:auto}
+/* Message menu: discreet chevron on desktop hover, reachable on touch and keyboard. */
+.message-menu-wrap{position:absolute;z-index:8;top:4px;width:20px;height:20px;display:flex;align-items:flex-start}
+#messages>.message.mine .message-menu-wrap{left:-20px;right:auto}
+#messages>.message:not(.mine) .message-menu-wrap{right:-20px;left:auto}
+.message-menu-trigger{
+  width:20px;height:20px;min-width:20px;padding:0;border:0;border-radius:0;
+  display:grid;place-items:center;background:transparent;color:var(--muted);
+  opacity:0;pointer-events:none;box-shadow:none;transition:opacity .14s ease,color .14s ease;
+}
+#messages>.message:hover .message-menu-trigger,
+#messages>.message:focus-within .message-menu-trigger,
+.message-menu-trigger:focus-visible,
+.message-menu-trigger[aria-expanded="true"]{opacity:1;pointer-events:auto}
+.message-menu-trigger:hover,.message-menu-trigger[aria-expanded="true"]{background:transparent;color:var(--text)}
+.message-menu-trigger i{font-size:13px}
+@media(hover:none),(pointer:coarse){
+  .message-menu-trigger{opacity:1;pointer-events:auto}
+}
 .message-menu-trigger:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .reaction-btn{touch-action:manipulation;cursor:pointer}
 .reaction-btn:disabled{opacity:.55;cursor:wait}
 
-/* Stable message geometry: prevent text, metadata and media from competing for flex space. */
+/* Compact WhatsApp-inspired message geometry and inline delivery metadata. */
 #messages>.message{
   box-sizing:border-box;min-width:0;max-width:min(78%,680px);
   display:flex;flex-direction:column;align-items:stretch;direction:rtl;
@@ -277,22 +288,30 @@ html.dark .new-messages-jump{background:#153c36;color:#b8f3d6;border-color:#276b
 #messages>.message.mine{align-self:flex-end}
 #messages .bubble{
   box-sizing:border-box;display:block;width:100%;max-width:100%;min-width:0;
-  padding:9px 12px 8px;margin:0;direction:rtl;white-space:pre-wrap;
-  overflow-wrap:anywhere;word-break:normal;
+  padding:6px 9px 8px 9px;margin:0;direction:rtl;white-space:pre-wrap;
+  overflow-wrap:anywhere;word-break:normal;border-radius:8px;
 }
+#messages>.message.mine .bubble{border-radius:8px 8px 2px 8px}
 #messages .message-content{
-  display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;
+  display:flow-root;box-sizing:border-box;width:100%;max-width:100%;min-width:0;
   margin:0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;
   direction:auto;unicode-bidi:plaintext;
 }
-#messages .bubble>.meta{
-  display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;
-  gap:4px 7px;max-width:100%;margin:6px 0 0;line-height:1.35;
+#messages .bubble>.meta,
+#messages .message-content>.meta{
+  float:left;display:inline-block;max-width:100%;margin:0 8px 0 0;
+  font-size:11px;line-height:1.35;letter-spacing:0;white-space:nowrap;
+  color:var(--muted);direction:ltr;vertical-align:baseline;
 }
-#messages .bubble>.reply-quote{box-sizing:border-box;width:100%;max-width:100%;min-width:0;margin:0 0 7px}
-#messages .bubble>img,#messages .bubble>video{display:block;max-width:100%;height:auto;margin:0 0 7px}
-#messages .bubble>.voice-message-player{flex:none}
-@media(max-width:760px){
-  #messages>.message{max-width:90%}
-  #messages .bubble{padding:8px 10px 7px}
+#messages>.message.mine .bubble>.meta,
+#messages>.message.mine .message-content>.meta{color:rgba(255,255,255,.6)}
+#messages .bubble>.message-status,
+#messages .message-content>.message-status{
+  float:left;display:inline-flex;align-items:center;gap:3px;margin:0 0 0 4px;
+  font-size:10px;line-height:1.35;white-space:nowrap;vertical-align:baseline;
 }
+#messages .message-status:not(.group-status)>span:not(.ticks){
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+@media(max-width:760px){#messages>.message{max-width:90%}}

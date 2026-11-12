@@ -1,0 +1,28 @@
+ .app-update-overlay{
+  position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;
+  padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));
+  background:rgba(5,12,22,.68);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+}
+.app-update-dialog{
+  width:min(100%,420px);box-sizing:border-box;padding:26px 22px 20px;
+  border:1px solid var(--line);border-radius:22px;background:var(--panel);
+  color:var(--text);text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.32);
+  font-family:"Tajawal","Cairo",sans-serif;
+}
+.app-update-icon{
+  width:54px;height:54px;margin:0 auto 12px;display:grid;place-items:center;
+  border-radius:18px;background:color-mix(in srgb,var(--accent) 14%,transparent);
+  color:var(--accent);font-size:32px;font-weight:800;
+}
+.app-update-dialog h2{margin:0 0 8px;font-size:21px;font-weight:800}
+.app-update-description{margin:0 auto 12px;max-width:34ch;color:var(--muted);font-size:14px;line-height:1.8}
+.app-update-version{margin:0 0 18px;color:var(--muted);font-size:11px;direction:ltr}
+.app-update-actions{display:flex;gap:9px;align-items:center}
+.app-update-actions button{
+  min-height:44px;padding:10px 16px;border-radius:12px;font:700 14px "Tajawal","Cairo",sans-serif;
+  cursor:pointer;flex:1
+}
+.app-update-now{border:1px solid var(--accent);background:var(--accent);color:#fff}
+.app-update-now:disabled{opacity:.65;cursor:wait}
+.app-update-later{border:1px solid var(--line);background:var(--panel2);color:var(--text)}
+@media(prefers-reduced-motion:reduce){.app-update-overlay{backdrop-filter:none;-webkit-backdrop-filter:none}}

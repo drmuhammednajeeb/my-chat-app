@@ -52,7 +52,8 @@
       audio.preload = "metadata";
       audio.src = settings.src || "";
       audio.setAttribute("playsinline", "");
-      audio.setAttribute("aria-hidden", "true");
+      audio.setAttribute("aria-label", "تشغيل الصوت عبر عناصر المتصفح");
+      audio.className = "voice-player-native-audio";
       audio.tabIndex = -1;
 
       const wrapper = documentRef.createElement("div");
@@ -92,6 +93,11 @@
         bars.push(bar);
       }
 
+      const fallbackMessage = documentRef.createElement("span");
+      fallbackMessage.className = "voice-player-fallback-message";
+      fallbackMessage.setAttribute("role", "status");
+      fallbackMessage.textContent = "تعذر تشغيل الصوت بالمشغل المخصص. استخدم المشغل البديل أدناه.";
+
       const currentTime = documentRef.createElement("span");
       currentTime.className = "voice-player-time voice-player-current";
       currentTime.textContent = "00:00";
@@ -102,12 +108,25 @@
       const timeline = documentRef.createElement("div");
       timeline.className = "voice-player-timeline";
       timeline.append(waveform, currentTime, duration);
-      wrapper.append(playButton, timeline, audio);
+      wrapper.append(playButton, timeline, audio, fallbackMessage);
 
       let signedAt = Date.now();
       let refreshing = false;
       let retried = false;
       let destroyed = false;
+      let fallbackVisible = false;
+
+      function showFallback(error) {
+        if (destroyed) return;
+        fallbackVisible = true;
+        wrapper.classList.add("has-playback-error");
+        audio.controls = true;
+        audio.tabIndex = 0;
+        fallbackMessage.hidden = false;
+        playButton.disabled = true;
+        playButton.setAttribute("aria-label", "تعذر تشغيل المشغل المخصص");
+        if (typeof settings.onError === "function") settings.onError(error || new Error("تعذر تشغيل الرسالة الصوتية"));
+      }
 
       function render() {
         if (destroyed) return;
@@ -116,6 +135,7 @@
         const ratio = total > 0 ? Math.max(0, Math.min(1, elapsed / total)) : 0;
         const playing = !audio.paused && !audio.ended;
         wrapper.classList.toggle("is-playing", playing);
+        if (!fallbackVisible) playButton.disabled = false;
         playButton.innerHTML = playing
           ? '<i class="ph ph-pause-fill" aria-hidden="true"></i>'
           : '<i class="ph ph-play-fill" aria-hidden="true"></i>';
@@ -137,10 +157,13 @@
           audio.src = nextUrl;
           signedAt = Date.now();
           audio.load();
-          if (resume) await audio.play();
+          if (resume) {
+            coordinator.activate(audio);
+            await audio.play();
+          }
           return true;
         } catch (error) {
-          if (typeof settings.onError === "function") settings.onError(error);
+          showFallback(error);
           return false;
         } finally {
           refreshing = false;
@@ -155,9 +178,14 @@
         }
         if (audio.ended) audio.currentTime = 0;
         try {
+          coordinator.activate(audio);
+          audio.muted = false;
+          audio.volume = 1;
           await audio.play();
+          render();
         } catch (error) {
-          if (typeof settings.onError === "function") settings.onError(error);
+          coordinator.release(audio);
+          showFallback(error);
         }
       }
 
@@ -217,9 +245,11 @@
       audio.addEventListener("error", () => {
         if (!retried) {
           retried = true;
-          void refreshAudioUrl(false);
-        } else if (typeof settings.onError === "function") {
-          settings.onError(new Error("تعذر تحميل الرسالة الصوتية"));
+          void refreshAudioUrl(false).then(refreshed => {
+            if (!refreshed) showFallback(new Error("تعذر تحميل ملف الصوت من التخزين"));
+          });
+        } else {
+          showFallback(new Error("صيغة الصوت غير مدعومة أو تعذر تحميل الملف"));
         }
       });
 
@@ -231,6 +261,8 @@
         audio.load();
       };
       render();
+      // Explicit load initialises metadata for dynamically-created media elements.
+      try { audio.load(); } catch (_) {}
       return wrapper;
     }
 

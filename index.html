@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.12.2"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -48,6 +48,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 @media(prefers-reduced-motion:reduce){#boot-screen .boot-spinner{animation:none;border-top-color:#55cdb8}}
 </style>
 <link rel="stylesheet" href="./app-overrides.css">
+<link rel="stylesheet" href="./modules/app-updater.css">
 </head>
 <body>
 <div id="boot-screen" role="status" aria-live="polite" aria-atomic="true">
@@ -191,6 +192,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/message-loader.js"></script>
 <script src="./modules/voice-recorder.js"></script>
 <script src="./modules/audio-player.js"></script>
+<script src="./modules/app-updater.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -261,11 +263,7 @@ installAppButton?.addEventListener('click',async()=>{
  try{await promptEvent.prompt();await promptEvent.userChoice;}catch(error){console.warn('PWA install prompt:',error)}
  if(installAppButton)installAppButton.hidden=true;
 });
-if('serviceWorker' in navigator&&location.protocol==='https:'){
- window.addEventListener('load',()=>{
-  navigator.serviceWorker.register('./service-worker.js').catch(error=>console.warn('Service worker registration failed:',error));
- });
-}
+window.BizmindAppUpdater?.start();
 const groupSelectedProfiles=new Map();let groupSearchTimer=null;let groupSearchRequest=0;let publicChannelsCache=[];let channelDirectoryRequest=0;
 let messagesScrollFrame=0;
 function showListSkeleton(container,count=5){
@@ -1331,7 +1329,7 @@ async function loadMessagePins(id,requestId=null){
 }
 async function toggleMessagePin(m){if(!m?.id||!state.active?.id)return;const id=state.active.id,existing=state.pinnedMessages.get(m.id);try{if(existing){const {error}=await supabaseClient.from('message_pins').delete().eq('conversation_id',id).eq('message_id',m.id);if(error)throw error;state.pinnedMessages.delete(m.id);toast('تم إلغاء تثبيت الرسالة')}else{const {data,error}=await supabaseClient.from('message_pins').insert({conversation_id:id,message_id:m.id,pinned_by:state.user.id}).select().single();if(error)throw error;state.pinnedMessages.set(m.id,data);toast('تم تثبيت الرسالة')}renderPinnedBanner();const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===m.id);if(row)renderMessagePinMark(row,m)}catch(error){console.error('Pin action failed',error);toast('تعذر تغيير تثبيت الرسالة. تحقق من صلاحياتك')}}
 function renderMessagePinMark(row,m){row.querySelector('.message-pinned-mark')?.remove();if(!state.pinnedMessages.has(m.id)||m.deleted_at)return;const mark=document.createElement('div');mark.className='message-pinned-mark';mark.textContent='📌 رسالة مثبتة';row.querySelector('.bubble')?.prepend(mark)}
-function renderMessageStatus(m,bubble){if(m.sender_id!==state.user?.id||m.deleted_at)return;const others=(state.active?.members||[]).filter(x=>x.user_id!==state.user.id),delivered=others.filter(x=>x.last_delivered_at&&new Date(x.last_delivered_at)>=new Date(m.created_at)).length,read=others.filter(x=>x.last_read_at&&new Date(x.last_read_at)>=new Date(m.created_at)).length,status=document.createElement('span');status.className='message-status';if(others.length===1){if(read){status.classList.add('read');status.innerHTML='<span class="ticks">✓✓</span><span>مقروءة</span>'}else if(delivered){status.classList.add('delivered');status.innerHTML='<span class="ticks">✓✓</span><span>تم التسليم</span>'}else status.innerHTML='<span class="ticks">✓</span><span>تم الإرسال</span>'}else if(others.length>1){if(read){status.classList.add('read','group-status');status.textContent='قُرئت '+read+'/'+others.length}else if(delivered){status.classList.add('delivered','group-status');status.textContent='وصلت '+delivered+'/'+others.length}else status.textContent='تم الإرسال'}else status.innerHTML='<span class="ticks">✓</span><span>تم الإرسال</span>';bubble.append(status)}
+function renderMessageStatus(m,bubble){if(m.sender_id!==state.user?.id||m.deleted_at)return;const others=(state.active?.members||[]).filter(x=>x.user_id!==state.user.id),delivered=others.filter(x=>x.last_delivered_at&&new Date(x.last_delivered_at)>=new Date(m.created_at)).length,read=others.filter(x=>x.last_read_at&&new Date(x.last_read_at)>=new Date(m.created_at)).length,status=document.createElement('span');status.className='message-status';if(others.length===1){if(read){status.classList.add('read');status.innerHTML='<span class="ticks">✓✓</span><span>مقروءة</span>'}else if(delivered){status.classList.add('delivered');status.innerHTML='<span class="ticks">✓✓</span><span>تم التسليم</span>'}else status.innerHTML='<span class="ticks">✓</span><span>تم الإرسال</span>'}else if(others.length>1){if(read){status.classList.add('read','group-status');status.textContent='قُرئت '+read+'/'+others.length}else if(delivered){status.classList.add('delivered','group-status');status.textContent='وصلت '+delivered+'/'+others.length}else status.textContent='تم الإرسال'}else status.innerHTML='<span class="ticks">✓</span><span>تم الإرسال</span>';(bubble.querySelector('.message-content')||bubble).append(status)}
 function handlePinRealtime(p,id){const r=p.eventType==='DELETE'?p.old:p.new;if(r?.conversation_id!==id)return;if(p.eventType==='DELETE')state.pinnedMessages.delete(r.message_id);else state.pinnedMessages.set(r.message_id,r);renderPinnedBanner();const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===r.message_id),m=state.messages.find(x=>x.id===r.message_id);if(row&&m)renderMessagePinMark(row,m)}
 function handleMembershipRealtime(p,id){const m=p.new;if(m?.conversation_id!==id||state.active?.id!==id)return;const current=(state.active.members||[]).find(x=>x.user_id===m.user_id);if(current)Object.assign(current,m);document.querySelectorAll('.message.mine').forEach(row=>{const msg=state.messages.find(x=>x.id===row.dataset.messageId),bubble=row.querySelector('.bubble');if(msg&&bubble){bubble.querySelector('.message-status')?.remove();renderMessageStatus(msg,bubble)}})}
 async function markConversationReceipt(conversationId,markRead=true,requestId=null){
@@ -1433,8 +1431,8 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
     else{const t=document.createElement('div');t.className='message-content';t.textContent=m.content;bubble.append(t)}
    }
   }
-  const meta=document.createElement('div');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · تم تعديلها':'');bubble.append(meta);renderMessageStatus(m,bubble);
-  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-dots-three-vertical"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption('إضافة تفاعل','ph-smiley',()=>openMessageReactions(row));addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
+  const meta=document.createElement('span');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · تم تعديلها':'');(bubble.querySelector('.message-content')||bubble).append(meta);renderMessageStatus(m,bubble);
+  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-caret-down"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption('إضافة تفاعل','ph-smiley',()=>openMessageReactions(row));addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
   if(activeConversation?.type==='group'&&m.sender_id!==state.user?.id)addOption('رد خاص','ph-chat-circle-dots',()=>replyPrivatelyToGroupMessage(m));if(m.edited_at&&(m.sender_id===state.user?.id||state.isTeamAdmin))addOption('سجل التعديلات','ph-clock-counter-clockwise',()=>openMessageEditHistory(m));trigger.onclick=event=>{
  event.stopPropagation();const opening=menu.classList.contains('hidden');
  document.querySelectorAll('.message-options-menu').forEach(other=>{if(other!==menu){if(other._closeMenu)other._closeMenu();else other.classList.add('hidden')}});
@@ -1676,8 +1674,16 @@ function handleMessageUpdateRealtime(payload,conversationId){
  if(row){
   const bubble=row.querySelector('.bubble');let content=bubble?.querySelector('.message-content');
   if(bubble&&incoming.content){
-   if(!content){content=document.createElement('div');content.className='message-content';const meta=bubble.querySelector('.meta');bubble.insertBefore(content,meta||null)}
-   content.textContent=incoming.content;
+   if(!content){
+    content=document.createElement('div');content.className='message-content';
+    const meta=bubble.querySelector('.meta'),status=bubble.querySelector('.message-status');
+    if(meta&&meta.parentElement===bubble)bubble.insertBefore(content,meta);else bubble.append(content);
+    if(meta)content.append(meta);if(status)content.append(status);
+   }else{
+    const meta=bubble.querySelector('.meta'),status=bubble.querySelector('.message-status');
+    content.textContent=incoming.content;
+    if(meta)content.append(meta);if(status)content.append(status);
+   }
   }
   const meta=row.querySelector('.meta');if(meta)meta.textContent=time(incoming.created_at)+(incoming.edited_at?' · تم تعديلها':'');
  }
@@ -2707,7 +2713,7 @@ async function loadPrivateReplyContexts(id,messages,requestId=null){
   return false;
  }
 }
-function renderPrivateReplyQuote(messageId,context){const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId),bubble=row?.querySelector('.bubble');if(!bubble||bubble.querySelector('.private-reply-quote'))return;const quote=document.createElement('div'),who=document.createElement('strong'),preview=document.createElement('span');quote.className='reply-quote private-reply-quote';who.textContent='رد خاص من مجموعة';preview.textContent=context?.quoted_content||'رسالة مقتبسة';quote.append(who,preview);const meta=bubble.querySelector('.meta');if(meta)bubble.insertBefore(quote,meta);else bubble.append(quote)}
+function renderPrivateReplyQuote(messageId,context){const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId),bubble=row?.querySelector('.bubble');if(!bubble||bubble.querySelector('.private-reply-quote'))return;const quote=document.createElement('div'),who=document.createElement('strong'),preview=document.createElement('span');quote.className='reply-quote private-reply-quote';who.textContent='رد خاص من مجموعة';preview.textContent=context?.quoted_content||'رسالة مقتبسة';quote.append(who,preview);const content=bubble.querySelector('.message-content');if(content)bubble.insertBefore(quote,content);else bubble.prepend(quote)}
 
 </script>
 <script src="./membership.js"></script>
