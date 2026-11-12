@@ -7,7 +7,7 @@
     "mappedSources": 66,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 17,
+    "testOnlySqlFixtures": 19,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -15,22 +15,24 @@
       "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql",
       "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
       "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+      "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql",
+      "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
       "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
       "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
       "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
       "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
       "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
       "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+      "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql",
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql"
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
     "executedMappedSources": 64,
-    "executedTestOnlySqlFixtures": 17,
-    "executedSqlFiles": 81
+    "executedTestOnlySqlFixtures": 19,
+    "executedSqlFiles": 83
   },
   "execution": {
     "enabled": false,
@@ -661,42 +663,12 @@
       "parityNote": null
     },
     {
-      "nodeId": "test-fixture.direct-chat-concurrency",
-      "status": "TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_NOT_EXECUTED",
-      "testSources": [
-        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
-        "tests/staging/local-supabase/direct-conversation-concurrency.test.mjs"
-      ],
-      "blockedBy": [
-        "DAG-014",
-        "DAG-015"
-      ],
-      "parityNote": null
-    },
-    {
       "nodeId": "chat.profile-status-combined-content-media",
       "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
       "testSources": [
         "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
       ],
       "blockedBy": [],
-      "parityNote": null
-    },
-    {
-      "nodeId": "security.least-privilege-overlay",
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
-        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
-        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
-        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
-        "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
-        "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
-        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
-      ],
-      "blockedBy": [
-        "DAG-016"
-      ],
       "parityNote": null
     },
     {
@@ -740,12 +712,65 @@
       "parityNote": null
     },
     {
+      "nodeId": "test-fixture.forward-direct-conversation-eligibility",
+      "status": "TEST_ONLY_POST_FORWARD_DIRECT_CONVERSATION_ASSERTIONS_NOT_EXECUTED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "parityNote": null
+    },
+    {
       "nodeId": "security.active-membership-rls-forward",
       "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
       "testSources": [
         "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
         "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.direct-chat-concurrency",
+      "status": "TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_NOT_EXECUTED",
+      "testSources": [
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.test.mjs"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.forward-hardening-postconditions",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_NOT_EXECUTED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "security.least-privilege-overlay",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
+        "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
+        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
       ],
       "blockedBy": [
         "DAG-016"
@@ -873,6 +898,21 @@
     {
       "path": "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-016"
+      ]
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql",
+      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ]
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
+      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
       "blockedBy": [
         "DAG-016"
       ]
