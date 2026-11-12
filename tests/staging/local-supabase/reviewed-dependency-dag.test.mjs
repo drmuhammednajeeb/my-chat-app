@@ -266,6 +266,7 @@ test('forward default-privilege migration leaves Supabase-managed role defaults 
   const sql = await readFile(path.join(root, 'supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql'), 'utf8');
   assert.doesNotMatch(sql, /alter default privileges for role supabase_admin/i);
   assert.match(sql, /supabase_admin owns public-schema objects/);
+  assert.match(sql, /from pg_proc p[\\s\\S]*?r\\.rolname = 'supabase_admin'/i);
   assert.match(sql, /alter default privileges for role postgres/i);
 });
 
