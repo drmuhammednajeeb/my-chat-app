@@ -137,9 +137,9 @@ test('public conversation-image SECURITY DEFINER RPC is intentional and enforces
   const sql = await readFile(path.join(root, 'supabase/migrations/20261112091557_profile_status_and_conversation_images.sql'), 'utf8');
   const start = sql.toLowerCase().indexOf('create or replace function public.set_conversation_image(');
   assert.ok(start >= 0, 'public.set_conversation_image source is missing');
-  const end = sql.indexOf('$function$;', start);
+  const end = sql.indexOf('\n$$;', start);
   assert.ok(end > start, 'public.set_conversation_image body terminator is missing');
-  const functionSql = sql.slice(start, end + '$function$;'.length);
+  const functionSql = sql.slice(start, end + '\n$$;'.length);
   assert.match(functionSql, /security definer/i);
   assert.match(functionSql, /set search_path\s*(?:to|=)\s*''/i);
   assert.match(functionSql, /actor uuid := \(select auth\.uid\(\)\)/i);
