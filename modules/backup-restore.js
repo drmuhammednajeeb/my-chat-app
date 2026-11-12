@@ -3,7 +3,7 @@
 'use strict';
 
 const BACKUP_FORMAT='bizmindmakers-chat-backup';
-const BACKUP_SCHEMA_VERSION=2;
+const BACKUP_SCHEMA_VERSION=3;
 const BACKUP_MAX_FILE_BYTES=140*1024*1024;
 const BACKUP_MAX_BINARY_BYTES=65*1024*1024;
 const BACKUP_MAX_PLAINTEXT_BYTES=100*1024*1024;
@@ -152,17 +152,17 @@ async function backupCreate(){
  }));
  const membership=await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id').eq('user_id',user.id),'عضويات المحادثات','conversation_id');
  const conversationIds=[...new Set(membership.map(row=>row.conversation_id).filter(Boolean))];
- const conversationArchive={conversationCount:conversationIds.length,conversations:[],memberships:[],messages:[],reactions:[],pins:[],documents:[],groupSettings:[],membershipEvents:[],privateReplyContexts:[],messageEditHistory:[],attachments:[]};
+ const conversationArchive={conversationCount:conversationIds.length,conversations:[],memberships:[],messages:[],pins:[],documents:[],groupSettings:[],membershipEvents:[],privateReplyContexts:[],messageEditHistory:[],attachments:[]};
  for(let i=0;i<conversationIds.length;i+=100){
   const ids=conversationIds.slice(i,i+100);
   conversationArchive.conversations.push(...await backupFetchAll(()=>supabaseClient.from('conversations').select('id,type,title,created_by,created_at,updated_at,last_message_at,description,is_public,avatar_path').in('id',ids),'المحادثات',['created_at','id']));
-  for(const table of ['chat_messages','message_reactions','message_pins']){
-   const key=table==='chat_messages'?'messages':table==='message_reactions'?'reactions':'pins';
+  for(const table of ['chat_messages','message_pins']){
+   const key=table==='chat_messages'?'messages':'pins';
    conversationArchive[key].push(...await backupFetchAll(()=>{
-    const columns=table==='chat_messages'?'id,conversation_id,sender_id,content,attachment_path,attachment_type,reply_to,edited_at,deleted_at,created_at,edit_revision,expires_at':table==='message_reactions'?'conversation_id,message_id,user_id,reaction_type,created_at':'id,conversation_id,message_id,pinned_by,pinned_at';
+    const columns=table==='chat_messages'?'id,conversation_id,sender_id,content,attachment_path,attachment_type,reply_to,edited_at,deleted_at,created_at,edit_revision,expires_at':'id,conversation_id,message_id,pinned_by,pinned_at';
     const query=supabaseClient.from(table).select(columns).in('conversation_id',ids);
     return table==='chat_messages'?query.is('deleted_at',null):query;
-   },'أرشيف '+table,table==='message_pins'?['pinned_at','id']:table==='message_reactions'?['created_at','message_id','user_id']:['created_at','id']));
+   },'أرشيف '+table,table==='message_pins'?['pinned_at','id']:['created_at','id']));
   }
   conversationArchive.memberships.push(...await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id,user_id,role,joined_at,last_read_at,last_delivered_at').in('conversation_id',ids),'عضويات المحادثات',['conversation_id','user_id']));
   conversationArchive.groupSettings.push(...await backupFetchAll(()=>supabaseClient.from('conversation_group_settings').select('conversation_id,only_admins_can_send,disappearing_seconds,theme_color,updated_by,updated_at,background_theme').in('conversation_id',ids),'إعدادات المجموعات',['updated_at','conversation_id']));
@@ -220,7 +220,7 @@ async function backupDownload(backup,passphrase){
 function backupValidateShape(value,user,expectedSchemaVersion=value?.schemaVersion){
  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('ملف النسخة غير صالح.');
  if(value.format!==BACKUP_FORMAT)throw new Error('صيغة الملف ليست نسخة احتياطية معتمدة من BizmindMakers Chat.');
- if(![1,2].includes(value.schemaVersion))throw new Error('إصدار النسخة غير مدعوم. لا يمكن المتابعة بأمان.');
+ if(![1,2,3].includes(value.schemaVersion))throw new Error('إصدار النسخة غير مدعوم. لا يمكن المتابعة بأمان.');
  if(value.userId!==user.id)throw new Error('هذه النسخة مرتبطة بحساب آخر. لن يتم استيراد بياناتها إلى حسابك.');
  if(!value.personal||typeof value.personal!=='object'||!value.conversationArchive||typeof value.conversationArchive!=='object'||value.schemaVersion!==expectedSchemaVersion)throw new Error('بنية النسخة ناقصة أو تالفة.');
  const requiredTables=value.schemaVersion===1?PERSONAL_TABLES_V1:PERSONAL_TABLES;
@@ -235,7 +235,8 @@ function backupValidateShape(value,user,expectedSchemaVersion=value?.schemaVersi
    }else if(row.user_id!==user.id)throw new Error('تحتوي النسخة على سجل لا يخص الحساب الحالي: '+table);
   }
  }
- for(const key of ['conversations','messages','reactions','pins']){
+ const requiredArchiveKeys=['conversations','messages','pins'];
+  for(const key of requiredArchiveKeys){
   if(!Array.isArray(value.conversationArchive[key]))throw new Error('أرشيف المحادثات غير مكتمل.');
   if(value.conversationArchive[key].length>BACKUP_MAX_ROWS)throw new Error('أرشيف المحادثات يتجاوز الحد الآمن.');
  }
@@ -265,7 +266,7 @@ async function backupParseFile(file,passphrase){
  try{envelope=JSON.parse(raw)}catch(_){throw new Error('تعذر قراءة الملف؛ تأكد أنه ملف JSON سليم.')}
  const user=backupCurrentUser();
  if(!user)throw new Error('يجب تسجيل الدخول أولاً.');
- if(envelope?.format!==BACKUP_FORMAT||![1,2].includes(envelope?.schemaVersion))throw new Error('صيغة النسخة أو إصدارها غير مدعوم.');
+ if(envelope?.format!==BACKUP_FORMAT||![1,2,3].includes(envelope?.schemaVersion))throw new Error('صيغة النسخة أو إصدارها غير مدعوم.');
  if(envelope.userId!==user.id)throw new Error('هذه النسخة مرتبطة بحساب آخر. لن يتم استيراد بياناتها إلى حسابك.');
  const meta=envelope.encryption;
  if(meta?.algorithm!=='AES-256-GCM'||meta?.kdf!=='PBKDF2-SHA-256'||meta?.iterations!==BACKUP_KDF_ITERATIONS||typeof envelope.ciphertext!=='string')throw new Error('بيانات التشفير في الملف غير صالحة.');
@@ -286,7 +287,7 @@ async function backupParseFile(file,passphrase){
 function backupCountSummary(backup){
  const personal=Object.entries(backup.personal).map(([name,rows])=>({name,count:rows.length}));
  const archive=backup.conversationArchive;
- return {personal,archive:{conversations:archive.conversations.length,messages:archive.messages.length,reactions:archive.reactions.length,pins:archive.pins.length,documents:(archive.documents||[]).length,attachments:(archive.attachments||[]).length,attachmentBytes:(archive.attachments||[]).reduce((sum,item)=>sum+(item.sizeBytes||0),0)}};
+ return {personal,archive:{conversations:archive.conversations.length,messages:archive.messages.length,pins:archive.pins.length,documents:(archive.documents||[]).length,attachments:(archive.attachments||[]).length,attachmentBytes:(archive.attachments||[]).reduce((sum,item)=>sum+(item.sizeBytes||0),0)}};
 }
 async function backupExistingConversationIds(userId){
  const rows=await backupFetchAll(()=>supabaseClient.from('conversation_members').select('conversation_id').eq('user_id',userId),'التحقق من المحادثات المتاحة','conversation_id');
@@ -453,13 +454,12 @@ function backupRenderPreview(backup){
   'أرشيف للقراءة فقط:',
   'المحادثات: '+summary.archive.conversations,
   'الرسائل: '+summary.archive.messages,
-  'التفاعلات: '+summary.archive.reactions,
   'الرسائل المثبتة: '+summary.archive.pins,
   'المستندات: '+summary.archive.documents,
   'الملفات المرفقة: '+summary.archive.attachments,
   'حجم الملفات: '+(summary.archive.attachmentBytes/1024/1024).toFixed(2)+' ميجابايت',
   '',
-  'المحادثات والرسائل والتفاعلات والملفات المشتركة محفوظة في الأرشيف؛ لا تُنشأ من جديد.',
+  'المحادثات والرسائل والملفات المشتركة محفوظة في الأرشيف؛ لا تُنشأ من جديد.',
   'تُستعاد القوائم الشخصية ومرفقات الحساب التي يملكها فقط.',
   'الإشعارات محفوظة داخل الملف للرجوع إليها، ولا تُدرج تلقائياً عند الاستعادة.',
   'صور القنوات أصول مشتركة؛ تُحفظ مراجعها ولا تُنسخ ضمن مرفقات الحساب.'

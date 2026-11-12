@@ -122,7 +122,7 @@ The current service worker precaches the app root, manifest, icons, `membership.
 | 4 | Diagnostics, theme/settings and notifications | More bounded than chat lifecycle | Persistence, multi-tab theme sync and notification receipt tests |
 | 5 | Membership and workspace | Clear feature domains but sensitive data/admin paths | Owner-only access, invitation lifecycle, private notes/docs and Storage policy tests |
 | 6 | Directory, presence, groups and channels | Crosses conversation membership and realtime permissions | Two-account membership, discover/join, private/public visibility and admin-role tests |
-| 7 | Messages, reactions, pins and media | Highest coupling and lifecycle sensitivity | Full two-account realtime, edit/delete, reply, pins, voice and attachment tests |
+| 7 | Messages, pins and media | Highest coupling and lifecycle sensitivity | Full two-account realtime, edit/delete, reply, pins, voice and attachment tests |
 
 Each phase must be a separate reviewable commit or pull request. A phase must preserve observable behavior. No phase may weaken RLS or replace server-side authorization with client checks.
 
