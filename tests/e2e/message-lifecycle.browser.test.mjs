@@ -390,19 +390,30 @@ test('voice recording finalizes the last MediaRecorder chunk before dispatching 
     window.__startVoice = start;
     window.__sendVoice = send;
   }, { startSource, sendSource, stopSource });
-  await page.evaluate(() => window.__startVoice());
-  await page.evaluate(() => window.__sendVoice());
-  await page.waitForTimeout(20);
+  // Exercise two complete record/send cycles in the same page and session.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await page.evaluate(() => window.__startVoice());
+    await page.evaluate(() => window.__sendVoice());
+    await page.waitForTimeout(20);
+  }
   const result = await page.evaluate(() => ({
     events: window.__voiceRecorderEvents,
     sent: window.__voiceSent,
     preview: window.__voicePreview,
-    toast: window.__voiceToast
+    toast: window.__voiceToast,
+    recorderCleared: window.__voiceState.voiceRecorder === null,
+    chunksCleared: window.__voiceState.voiceChunks.length === 0
   }));
-  assert.deepEqual(result.events, ['start','requestData','stop'], 'Voice harness did not reach recorder start/stop: ' + JSON.stringify(result));
-  assert.equal(result.sent.length, 1);
-  assert.equal(result.sent[0].recorderCleared, true);
+  assert.deepEqual(result.events, [
+    'start','requestData','stop',
+    'start','requestData','stop'
+  ], 'Two consecutive voice record/send cycles did not complete: ' + JSON.stringify(result));
+  assert.equal(result.sent.length, 2, 'Both voice recordings must reach the send pipeline');
+  assert.ok(result.sent.every(item => item.recorderCleared), 'Recorder state must be reset after each send');
   assert.equal(result.sent[0].type, 'audio/webm');
+  assert.equal(result.sent[1].type, 'audio/webm');
+  assert.equal(result.recorderCleared, true);
+  assert.equal(result.chunksCleared, true);
   assert.equal(result.preview.type, 'audio/webm');
   await page.close();
 });
