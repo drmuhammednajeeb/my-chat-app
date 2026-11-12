@@ -514,6 +514,11 @@
       profile.insertAdjacentElement('afterend', strip);
     }
     setupConversationImageControls();
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      const opened = [...document.querySelectorAll('.bz-feature-modal.open')].at(-1);
+      if (opened) closeModal(opened);
+    });
     if (!statusExpiryTimer) statusExpiryTimer = setInterval(() => {
       if (currentUserId() && document.visibilityState === 'visible') loadProfileStatuses();
     }, 60000);
