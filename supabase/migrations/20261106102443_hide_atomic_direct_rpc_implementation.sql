@@ -1,0 +1,5 @@
+-- Historical production migration: hide_atomic_direct_rpc_implementation (2026-11-06 10:24:43 UTC).
+-- Its final implementation and inspected ACLs are folded into
+-- 20261106102326_atomic_direct_conversation_creation.sql for deterministic clean bootstrap.
+-- The production migration ledger already contains version 20261106102443.
+-- Intentionally no-op in a fresh replay; do not apply this file to production.
