@@ -1,3 +1,4 @@
+// Integrated release audit: includes all standalone feature modules and their policy coverage.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildObjectInventory } from './build-database-object-inventory.mjs';
