@@ -16,9 +16,8 @@
 .bz-secondary{background:var(--surface-2,#eef2f7);color:inherit}
 .bz-danger{background:#b42318;color:#fff}
 .bz-feature-actions button:disabled{opacity:.55;cursor:not-allowed}
-.bz-status-viewer .bz-feature-dialog{width:min(100%,520px)}
 .conv-avatar.has-conversation-image img,#chatAvatar.has-conversation-image img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
 #chatAvatar{cursor:pointer}
-@media(max-width:760px){.bz-status-strip{padding-inline:10px}.bz-feature-modal{padding:10px}.bz-feature-dialog{max-height:92dvh}}
+@media(max-width:760px){.bz-feature-modal{padding:10px}.bz-feature-dialog{max-height:92dvh}}
 
 .channel-card-icon.has-conversation-image img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
