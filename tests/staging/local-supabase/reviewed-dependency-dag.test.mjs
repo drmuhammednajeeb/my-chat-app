@@ -100,7 +100,9 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   for (const name of requiredFixtures) await access(path.join(root, 'tests/staging/local-supabase/fixtures', name));
   for (const fixture of patchManifest.fixtures) await access(path.join(root, fixture.path));
   assert.equal(patchManifest.fixtures[0].path, 'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql');
-  assert.ok(patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql') > patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
+  assert.ok(patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql',
+    'tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql',
+    'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql') > patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.includes('supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
   assert.equal(dag.nodes.find(node => node.id === 'team.admin').source.length, 0);
@@ -175,7 +177,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 17);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 19);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
@@ -380,4 +382,22 @@ test('four forward hardening migrations remain outside the production ledger and
     assert.equal(registry.forwardMigrations.some(item => item.path === path && item.status === 'FORWARD_RECONCILIATION_NOT_APPLIED'), true);
   }
   assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
+});
+
+
+test('post-forward runtime assertions are ordered after their matching security migrations', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const direct = dag.nodes.find(item => item.id === 'test-fixture.forward-direct-conversation-eligibility');
+  const hardening = dag.nodes.find(item => item.id === 'test-fixture.forward-hardening-postconditions');
+  assert.ok(direct && hardening);
+  assert.ok(direct.requires.includes('security.direct-conversation-eligibility-forward'));
+  assert.ok(hardening.requires.includes('security.active-membership-rls-forward'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === direct.id && to === 'test-fixture.direct-chat-concurrency'));
+  for (const path of [
+    'tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql',
+    'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql'
+  ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 19);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 83);
 });
