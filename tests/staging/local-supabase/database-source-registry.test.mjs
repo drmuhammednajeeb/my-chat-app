@@ -93,7 +93,7 @@ test('private-channel deny policy is created once by its own production version'
   assert.doesNotMatch(base, /No direct access to channel invites|REVOKE ALL ON TABLE app_private\\.channel_invites/i);
   assert.match(deny, /DROP POLICY IF EXISTS "No direct access to channel invites"/i);
   assert.match(deny, /CREATE POLICY "No direct access to channel invites"/i);
-  assert.match(deny, /REVOKE ALL ON TABLE app_private\\.channel_invites FROM PUBLIC, anon, authenticated/i);
+  assert.ok(deny.includes('REVOKE ALL ON TABLE app_private.channel_invites FROM PUBLIC, anon, authenticated;'));
 });
 
 test('archive manifest is provenance-only and excluded from Supabase CLI discovery', async () => {
