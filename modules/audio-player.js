@@ -40,6 +40,15 @@
       + ":" + String(value % 60).padStart(2, "0");
   }
 
+  // Show the full duration until playback starts, then count down the remaining time.
+  // Unknown metadata is deliberately not rendered as a misleading 00:00.
+  function formatPlaybackTime(duration, currentTime, hasStarted, ended, metadataReady) {
+    const total = Number(duration);
+    if (!metadataReady || !Number.isFinite(total) || total < 0) return "--:--";
+    const elapsed = Math.max(0, Number(currentTime) || 0);
+    return formatTime(hasStarted && !ended ? Math.max(0, total - elapsed) : total);
+  }
+
   function create(options) {
     const config = options || {};
     const documentRef = config.document || (typeof document !== "undefined" ? document : null);
@@ -98,16 +107,14 @@
       fallbackMessage.setAttribute("role", "status");
       fallbackMessage.textContent = "تعذر تشغيل الصوت بالمشغل المخصص. استخدم المشغل البديل أدناه.";
 
-      const currentTime = documentRef.createElement("span");
-      currentTime.className = "voice-player-time voice-player-current";
-      currentTime.textContent = "00:00";
-      const duration = documentRef.createElement("span");
-      duration.className = "voice-player-time voice-player-duration";
-      duration.textContent = "00:00";
+      const timerLabel = documentRef.createElement("span");
+      timerLabel.className = "voice-player-time voice-player-timer";
+      timerLabel.textContent = "--:--";
+      timerLabel.setAttribute("aria-live", "off");
 
       const timeline = documentRef.createElement("div");
       timeline.className = "voice-player-timeline";
-      timeline.append(waveform, currentTime, duration);
+      timeline.append(waveform, timerLabel);
       wrapper.append(playButton, timeline, audio, fallbackMessage);
 
       let signedAt = Date.now();
@@ -115,6 +122,7 @@
       let retried = false;
       let destroyed = false;
       let fallbackVisible = false;
+      let hasStarted = false;
 
       function showFallback(error) {
         if (destroyed) return;
@@ -130,21 +138,30 @@
 
       function render() {
         if (destroyed) return;
-        const total = Number.isFinite(audio.duration) ? audio.duration : 0;
-        const elapsed = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
-        const ratio = total > 0 ? Math.max(0, Math.min(1, elapsed / total)) : 0;
+        const metadataReady = audio.readyState >= 1
+          && Number.isFinite(audio.duration) && audio.duration >= 0;
+        const total = metadataReady ? audio.duration : 0;
+        const elapsed = Number.isFinite(audio.currentTime) ? Math.max(0, audio.currentTime) : 0;
+        const ratio = metadataReady && total > 0 ? Math.max(0, Math.min(1, elapsed / total)) : 0;
         const playing = !audio.paused && !audio.ended;
+        if (playing) hasStarted = true;
         wrapper.classList.toggle("is-playing", playing);
         if (!fallbackVisible) playButton.disabled = false;
         playButton.innerHTML = playing
           ? '<i class="ph ph-pause-fill" aria-hidden="true"></i>'
           : '<i class="ph ph-play-fill" aria-hidden="true"></i>';
+        playButton.dataset.playbackState = playing ? "playing" : "paused";
+        playButton.setAttribute("aria-pressed", playing ? "true" : "false");
         playButton.setAttribute("aria-label", playing ? "إيقاف الرسالة الصوتية مؤقتاً" : "تشغيل الرسالة الصوتية");
-        currentTime.textContent = formatTime(elapsed);
-        duration.textContent = formatTime(total);
+        timerLabel.textContent = formatPlaybackTime(audio.duration, elapsed, hasStarted, audio.ended, metadataReady);
+        timerLabel.setAttribute("aria-label", metadataReady
+          ? (hasStarted && !audio.ended ? "الوقت المتبقي " : "مدة الرسالة الصوتية ") + timerLabel.textContent
+          : "جار تحميل مدة الرسالة الصوتية");
         waveform.setAttribute("aria-valuemax", String(Math.floor(total)));
         waveform.setAttribute("aria-valuenow", String(Math.floor(elapsed)));
-        waveform.setAttribute("aria-valuetext", formatTime(elapsed) + " من " + formatTime(total));
+        waveform.setAttribute("aria-valuetext", metadataReady
+          ? formatTime(elapsed) + " من " + formatTime(total)
+          : "مدة الرسالة الصوتية قيد التحميل");
         bars.forEach((bar, index) => bar.classList.toggle("is-played", (index + 1) / bars.length <= ratio));
       }
 
@@ -190,8 +207,12 @@
       }
 
       playButton.addEventListener("click", () => {
-        if (!audio.paused && !audio.ended) audio.pause();
-        else void startPlayback();
+        if (!audio.paused && !audio.ended) {
+          audio.pause();
+          render();
+        } else {
+          void startPlayback();
+        }
       });
 
       function seek(clientX) {
@@ -201,6 +222,7 @@
         if (!rect.width) return;
         const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         audio.currentTime = ratio * total;
+        if (audio.currentTime > 0) hasStarted = true;
         render();
       }
 
@@ -224,6 +246,7 @@
       });
 
       audio.addEventListener("play", () => {
+        hasStarted = true;
         coordinator.activate(audio);
         if (Date.now() - signedAt > 50 * 60 * 1000) {
           audio.pause();
@@ -269,5 +292,5 @@
     return { createPlayer, stopAll: () => coordinator.stop(), coordinator };
   }
 
-  return { create, createPlaybackCoordinator, formatTime };
+  return { create, createPlaybackCoordinator, formatTime, formatPlaybackTime };
 });
