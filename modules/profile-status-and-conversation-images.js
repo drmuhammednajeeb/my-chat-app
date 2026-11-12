@@ -209,13 +209,25 @@
     const subtitle = document.createElement('p');
     subtitle.textContent = 'شارك تحديثاتك النصية والمرئية مع أعضاء المنصة. تختفي تلقائياً بعد 24 ساعة.';
     titleWrap.append(eyebrow, title, subtitle);
+    const actions = document.createElement('div');
+    actions.className = 'bz-status-head-actions';
+    const back = document.createElement('button');
+    back.id = 'statusPageBack';
+    back.type = 'button';
+    back.className = 'bz-status-back';
+    back.textContent = 'العودة إلى المحادثات';
+    back.addEventListener('click', () => {
+      if (typeof setSidebarView === 'function') setSidebarView('chats');
+      byId('sidebar')?.classList.remove('closed');
+    });
     const publish = document.createElement('button');
     publish.id = 'statusPagePublish';
     publish.type = 'button';
     publish.className = 'bz-status-publish';
     publish.textContent = '+ إضافة حالة';
     publish.addEventListener('click', () => { clearStatusComposer(); openModal(getStatusModal()); });
-    header.append(titleWrap, publish);
+    actions.append(back, publish);
+    header.append(titleWrap, actions);
 
     const ownSection = document.createElement('section');
     ownSection.className = 'bz-status-section';
