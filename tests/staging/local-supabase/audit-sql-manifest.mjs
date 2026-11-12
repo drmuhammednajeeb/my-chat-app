@@ -193,7 +193,7 @@ function inspectFile(file) {
     line: sql.slice(0, match.index).split('\n').length,
     offset: match.index
   }));
-  const publicTableReferences = [...sql.matchAll(/\\b(?:from|join|update|into|on(?:\\s+table)?|references|alter\\s+table|drop\\s+table)\\s+public\\s*\\.\\s*([a-z_][\\w$]*)/gi)].map(match => ({ name: match[1].toLowerCase(), line: sql.slice(0, match.index).split('\\n').length, offset: match.index }));
+  const publicTableReferences = [...sql.matchAll(/\b(?:from|join|update|into|on(?:\s+table)?|references|alter\s+table|drop\s+table)\s+public\s*\.\s*([a-z_][\w$]*)/gi)].map(match => ({ name: match[1].toLowerCase(), line: sql.slice(0, match.index).split('\n').length, offset: match.index }));
   const referencedPublicTables = [...new Set(publicTableReferences.map(reference => reference.name))].sort();
   const timestamp = file.kind === 'migration'
     ? file.path.split('/').at(-1).match(/^(\d{14}|\d{12}|\d{8})/)?.[1] ?? null
