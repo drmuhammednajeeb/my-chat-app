@@ -99,9 +99,9 @@ test('player renders persisted duration immediately and keeps play/pause glyphs 
       this.currentTime = 0;
       this.readyState = 0;
       this.classList = {
-        add: name => { if (!this.className.split(/\\s+/).includes(name)) this.className = (this.className + ' ' + name).trim(); },
+        add: name => { if (!this.className.split(/\s+/).includes(name)) this.className = (this.className + ' ' + name).trim(); },
         toggle: (name, force) => {
-          const names = this.className.split(/\\s+/).filter(Boolean);
+          const names = this.className.split(/\s+/).filter(Boolean);
           const enabled = force === undefined ? !names.includes(name) : !!force;
           this.className = (enabled ? [...new Set([...names, name])] : names.filter(item => item !== name)).join(' ');
           return enabled;
@@ -129,7 +129,7 @@ test('player renders persisted duration immediately and keeps play/pause glyphs 
     durationSeconds: 83
   });
   const find = (node, className) => {
-    if (node.className.split(/\\s+/).includes(className)) return node;
+    if (node.className.split(/\s+/).includes(className)) return node;
     for (const child of node.children) {
       const match = find(child, className);
       if (match) return match;
