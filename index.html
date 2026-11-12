@@ -731,7 +731,8 @@ function setSidebarView(view){
  $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث في قنواتك…':groups?'ابحث في مجموعات العمل…':team?'ابحث عن مجموعة…':'ابحث في المحادثات الشخصية…';
  $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في القنوات':groups?'البحث في مجموعات العمل':team?'البحث في المجموعات':'بحث المحادثات الشخصية');$('search').value='';if(users)state.directorySearch='';
  $('teamDashboard').classList.toggle('hidden',!team);$('chat').classList.toggle('team-mode',team);
- if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');if(state.teamData)renderTeamDashboard();else showTeamDashboardSkeleton();if(!state.teamLoading&&!state.teamData)loadTeamDashboard(true)}
+ if(status){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');window.BizmindStatusWorkspace?.open?.()}
+ else if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');if(state.teamData)renderTeamDashboard();else showTeamDashboardSkeleton();if(!state.teamLoading&&!state.teamData)loadTeamDashboard(true)}
  else if(users){renderDirectory();if(!state.directoryUsers.length&&!state.directoryLoading)loadDirectory()}
  else if(channels){renderMyChannels()}else renderConversations();
 }
