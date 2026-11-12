@@ -1711,7 +1711,7 @@ async function uploadAttachment(file,conversationId=state.active?.id,userId=stat
 async function sendMessage(){
  if(voiceRecorder.isActive()){toast('أرسل التسجيل أو ألغِه أولاً قبل إرسال رسالة أخرى');return}
  const activeConversation=state.active,draftValue=$('messageInput').value,content=draftValue.trim(),file=state.attachment,conversationId=activeConversation?.id,userId=state.user?.id,editTarget=state.editTarget,editing=!!editTarget,replyTo=state.replyTarget?.id||null,privateContext=state.privateReplyPending?{...state.privateReplyPending}:null;
- const voiceDurationSeconds=file&&resolveChatAttachmentMime(file).startsWith('audio/')?Math.max(0,Math.round(Number(state.voiceDuration)||0)):null;
+ const voiceDurationSeconds=file&&String(file.type||'').toLowerCase().startsWith('audio/')?Math.max(0,Math.round(Number(state.voiceDuration)||0)):null;
  const activeRole=(activeConversation?.members||[]).find(m=>m.user_id===userId)?.role;if(activeConversation?.type==='channel'&&!['owner','admin'].includes(activeRole)){toast('النشر في هذه القناة مخصص للمشرفين');return}if(activeConversation?.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole)){toast('الإرسال متاح لمشرفي المجموعة فقط');return}
  if(!conversationId||!userId||(!content&&!file)||state.uploading)return;
  const pendingKey=conversationId+':'+userId;
