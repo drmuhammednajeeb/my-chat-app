@@ -25,6 +25,7 @@ alter table public.profile_statuses
     (
       content is null
       and image_path is not null
+      and media_type is not null
       and media_type in ('image', 'video')
     )
   );
@@ -40,11 +41,47 @@ alter table public.profile_statuses
       image_path ~ (
         '^' || user_id::text || '/[0-9a-fA-F-]{36}\.(jpg|png|webp|mp4|webm|mov)$'
       )
-      and (
-        (media_type = 'image' and image_path ~* '\.(jpg|png|webp)$')
-        or
-        (media_type = 'video' and image_path ~* '\.(mp4|webm|mov)$')
-      )
+      and case media_type
+        when 'image' then image_path ~* '\.(jpg|png|webp)
+    )
+  );
+
+update storage.buckets
+set public = false,
+    file_size_limit = 26214400,
+    allowed_mime_types = array[
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'video/mp4',
+      'video/webm',
+      'video/quicktime'
+    ]
+where id = 'profile-status-media';
+
+commit;
+
+        when 'video' then image_path ~* '\.(mp4|webm|mov)
+    )
+  );
+
+update storage.buckets
+set public = false,
+    file_size_limit = 26214400,
+    allowed_mime_types = array[
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'video/mp4',
+      'video/webm',
+      'video/quicktime'
+    ]
+where id = 'profile-status-media';
+
+commit;
+
+        else false
+      end
     )
   );
 
