@@ -333,5 +333,5 @@ test('chat composer media allowlists remain aligned while emoji reactions are ab
     assert.ok(html.includes(mime), 'workspace document picker is missing ' + mime);
     assert.ok(migration.includes(mime), 'conversation-documents allow-list is missing ' + mime);
   }
-  assert.match(html, /attachment_type\\?\\.startsWith\\('video\\/'\\)/);
+  assert.ok(html.includes("attachment_type?.startsWith('video/')"));
 });
