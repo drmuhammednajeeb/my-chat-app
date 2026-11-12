@@ -175,7 +175,7 @@
       "version": "20261106125643",
       "name": "message_reactions_and_realtime",
       "path": "supabase/migrations/20261106125643_message_reactions_and_realtime.sql",
-      "gitBlobSha": "1444735fc30fe847457edf5f0b2df7843b2a3fda",
+      "gitBlobSha": "a161966e306a32c3887131e36523aa4d8a30c4f7",
       "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_AND_UNRECORDED_BASELINE",
       "confidence": "reconstructed-not-original-body-proven",
       "originalSources": [
@@ -215,7 +215,7 @@
       "version": "20261106130351",
       "name": "professional_message_controls_and_receipts",
       "path": "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
-      "gitBlobSha": "78bf91c7b31f55802c776beb27a052dbf187bead",
+      "gitBlobSha": "d3c70514d7dc31c71d78cd86a302ad41162fcf5f",
       "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_AND_UNRECORDED_BASELINE",
       "confidence": "reconstructed-not-original-body-proven",
       "originalSources": [
@@ -1073,7 +1073,7 @@
     },
     {
       "path": "supabase/migrations/20261106125643_message_reactions_and_realtime.sql",
-      "gitBlobSha": "1444735fc30fe847457edf5f0b2df7843b2a3fda",
+      "gitBlobSha": "a161966e306a32c3887131e36523aa4d8a30c4f7",
       "sourceType": "canonical-production-migration",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
     },
@@ -1085,7 +1085,7 @@
     },
     {
       "path": "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
-      "gitBlobSha": "78bf91c7b31f55802c776beb27a052dbf187bead",
+      "gitBlobSha": "d3c70514d7dc31c71d78cd86a302ad41162fcf5f",
       "sourceType": "canonical-production-migration",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
     },
