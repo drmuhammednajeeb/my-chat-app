@@ -1,33 +1,3 @@
--- Recovered dependency closure for clean bootstrap:
--- these channel visibility columns and the team-admin boundary existed in production
--- before the membership RLS rewrite. Their original standalone SQL was not retained.
-ALTER TABLE public.conversations
-  ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT '',
-  ADD COLUMN IF NOT EXISTS is_public boolean NOT NULL DEFAULT false;
-ALTER TABLE public.conversations
-  DROP CONSTRAINT IF EXISTS conversations_type_check,
-  DROP CONSTRAINT IF EXISTS conversations_check,
-  DROP CONSTRAINT IF EXISTS conversations_description_length_check,
-  DROP CONSTRAINT IF EXISTS conversations_only_channels_public;
-ALTER TABLE public.conversations
-  ADD CONSTRAINT conversations_type_check
-    CHECK (type = ANY (ARRAY['direct','group','channel'])),
-  ADD CONSTRAINT conversations_check
-    CHECK ((type='direct' AND title IS NULL)
-      OR (type IN ('group','channel') AND title IS NOT NULL AND char_length(btrim(title)) BETWEEN 1 AND 80)),
-  ADD CONSTRAINT conversations_description_length_check CHECK (char_length(description) <= 500),
-  ADD CONSTRAINT conversations_only_channels_public CHECK ((type='channel') OR (is_public=false));
-
-CREATE TABLE IF NOT EXISTS app_private.team_admins (
-  user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-ALTER TABLE app_private.team_admins ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE app_private.team_admins FROM PUBLIC, anon, authenticated, service_role;
-DROP POLICY IF EXISTS "Deny direct team admin table access" ON app_private.team_admins;
-CREATE POLICY "Deny direct team admin table access"
-ON app_private.team_admins FOR ALL TO authenticated USING (false) WITH CHECK (false);
-
 create sequence if not exists app_private.membership_number_seq
   as bigint start with 1726363 increment by 1 minvalue 1 maxvalue 999999999 no cycle;
 

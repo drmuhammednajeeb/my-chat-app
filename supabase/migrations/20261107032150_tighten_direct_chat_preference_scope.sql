@@ -1,0 +1,4 @@
+-- Historical production version retained for ledger parity.
+-- The surviving SQL source contains the final direct-chat preference scope,
+-- so its changes are folded into the preceding canonical migration.
+-- Deliberate no-op: no independent SQL body for this version survives.

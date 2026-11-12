@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE",
+  "cliDiscoveryPath": "supabase/migrations/",
+  "sqlFiles": [
+    {
+      "path": "database/archive/source-provenance/message_reactions_and_whatsapp_typography.sql",
+      "classification": "compound-source-provenance",
+      "foldedInto": [
+        "20261106125643",
+        "20261106125901"
+      ]
+    },
+    {
+      "path": "database/archive/source-provenance/professional_message_controls_and_receipts.sql",
+      "classification": "compound-source-provenance",
+      "foldedInto": [
+        "20261106130351",
+        "20261106130540",
+        "20261106130804"
+      ]
+    },
+    {
+      "path": "database/archive/source-provenance/private_channels_with_secure_invites.sql",
+      "classification": "compound-source-provenance",
+      "foldedInto": [
+        "20261106132655",
+        "20261106132740",
+        "20261106132753"
+      ]
+    },
+    {
+      "path": "database/archive/source-provenance/user_specific_direct_chat_preferences.sql",
+      "classification": "compound-source-provenance",
+      "foldedInto": [
+        "20261107032052",
+        "20261107032150"
+      ]
+    },
+    {
+      "path": "database/archive/source-provenance/20261107035500_user_avatars_storage.sql",
+      "classification": "compound-source-provenance",
+      "foldedInto": [
+        "20261107035217",
+        "20261107035243",
+        "20261107035443"
+      ]
+    },
+    {
+      "path": "database/archive/source-provenance/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "classification": "pre-repair-source-provenance",
+      "foldedInto": [
+        "20261107152733"
+      ],
+      "note": "The canonical migration adds the missing function-statement terminator; the archived original remains unchanged."
+    },
+    {
+      "path": "database/archive/source-provenance/public_announcement_channels.sql",
+      "classification": "unrecorded-production-baseline-source",
+      "foldedInto": [
+        "20261106125643"
+      ]
+    },
+    {
+      "path": "database/archive/source-provenance/team_management_dashboard.sql",
+      "classification": "unrecorded-production-baseline-source",
+      "foldedInto": [
+        "20261106130351"
+      ],
+      "note": "The real administrator seed is intentionally excluded; first-admin assignment is operational."
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261107080000_chat_voice_messages.sql",
+      "classification": "production-storage-drift-not-in-ledger",
+      "executionAuthorized": false
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261112120000_reconcile_team_management_dashboard.sql",
+      "classification": "superseded-forward-reconciliation",
+      "executionAuthorized": false,
+      "note": "Schema baseline folded into 20261106130351 without administrator identity seed."
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261112120001_reconcile_chat_media_voice_mime_types.sql",
+      "classification": "pending-forward-reconciliation",
+      "executionAuthorized": false
+    },
+    {
+      "path": "database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql",
+      "classification": "unapplied-proposal",
+      "executionAuthorized": false
+    }
+  ],
+  "safety": {
+    "productionModified": false,
+    "sqlExecuted": false,
+    "executionAuthorized": false
+  }
+}
