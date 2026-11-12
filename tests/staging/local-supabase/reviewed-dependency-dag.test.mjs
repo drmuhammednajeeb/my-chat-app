@@ -94,15 +94,15 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'synthetic-direct-chat-auth-before-membership.sql',
     'synthetic-direct-chat-profiles-after-membership.sql',
     'direct-conversation-eligibility-runtime.test.sql',
+    'forward-direct-conversation-eligibility.assert.sql',
+    'forward-hardening-postconditions.assert.sql',
     'local-platform-prerequisites.assert.sql',
     'local-platform-postconditions.assert.sql'
   ];
   for (const name of requiredFixtures) await access(path.join(root, 'tests/staging/local-supabase/fixtures', name));
   for (const fixture of patchManifest.fixtures) await access(path.join(root, fixture.path));
   assert.equal(patchManifest.fixtures[0].path, 'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql');
-  assert.ok(patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql',
-    'tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql',
-    'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql') > patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
+  assert.ok(patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql') > patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.includes('supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
   assert.equal(dag.nodes.find(node => node.id === 'team.admin').source.length, 0);
