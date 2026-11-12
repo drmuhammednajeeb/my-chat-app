@@ -39,7 +39,9 @@ self.addEventListener("install", event => {
       new URL("./modules/message-reactions.js", base).href,
       new URL("./modules/message-reactions.css", base).href,
       new URL("./modules/profile-status-and-conversation-images.js", base).href,
-      new URL("./modules/profile-status-and-conversation-images.css", base).href
+      new URL("./modules/profile-status-and-conversation-images.css", base).href,
+      new URL("./modules/status-workspace.js", base).href,
+      new URL("./modules/status-workspace.css", base).href
     ]);
   })());
 });
