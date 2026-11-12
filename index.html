@@ -29,6 +29,7 @@
 })();
 </script>
 <link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./modules/voice-recorder.css">
 <link rel="stylesheet" href="./modules/profile-status-and-conversation-images.css">
 
 
@@ -117,14 +118,14 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
   <button id="newMessagesJump" class="new-messages-jump hidden" type="button" aria-live="polite" aria-label="الانتقال إلى أحدث الرسائل"><i class="ph ph-arrow-down"></i><span id="newMessagesJumpText">رسائل جديدة</span></button>
   <div id="typing" class="typing"></div>
   <div class="composer-wrap"><div id="composerContext" class="composer-context hidden"><div class="composer-context-copy"><small id="composerContextLabel">الرد على</small><strong id="composerContextText"></strong></div><button id="composerContextCancel" type="button" title="إلغاء"><i class="ph ph-x"></i></button></div><div class="composer">
-   <button id="voiceRecordBtn" class="voice-record-btn" type="button" title="تسجيل رسالة صوتية" aria-label="تسجيل رسالة صوتية"><i class="ph ph-microphone"></i></button><button id="voiceCancelBtn" class="voice-record-btn voice-cancel-btn hidden" type="button" title="إلغاء التسجيل" aria-label="إلغاء التسجيل"><i class="ph ph-x"></i></button><button id="stickerBtn" class="attach sticker-composer-btn" type="button" title="إرسال ملصق" aria-label="إرسال ملصق"><i class="ph ph-sticker"></i></button><button id="attachBtn" class="attach" title="إرفاق صورة أو ملف"><i class="ph ph-paperclip"></i></button>
+   <button id="voiceRecordBtn" class="voice-record-btn" type="button" title="تسجيل رسالة صوتية" aria-label="تسجيل رسالة صوتية"><i class="ph ph-microphone"></i></button><button id="stickerBtn" class="attach sticker-composer-btn" type="button" title="إرسال ملصق" aria-label="إرسال ملصق"><i class="ph ph-sticker"></i></button><button id="attachBtn" class="attach" title="إرفاق صورة أو ملف"><i class="ph ph-paperclip"></i></button>
    <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,video/quicktime,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv" class="hidden">
    <textarea id="messageInput" rows="1" maxlength="5000" placeholder="اكتب رسالتك هنا…" aria-label="رسالة جديدة" disabled></textarea>
    <div id="voiceRecordingControls" class="voice-recording-controls hidden" role="group" aria-label="التحكم في التسجيل الصوتي">
     <button id="voicePauseBtn" class="voice-control-btn voice-pause-btn" type="button" aria-label="إيقاف مؤقت" title="إيقاف مؤقت"><i class="ph ph-pause"></i></button>
     <strong id="voiceRecordingTime" class="voice-recording-time" dir="ltr" aria-live="off">٠٠:٠٠</strong>
-    <div class="voice-recording-meta"><div class="voice-recording-status"><span class="voice-recording-dot"></span><span id="voiceRecordingStatus">جارٍ التسجيل</span></div><div class="voice-waveform" aria-hidden="true"><span style="--bar-height:7px;--bar-index:0"></span><span style="--bar-height:12px;--bar-index:1"></span><span style="--bar-height:17px;--bar-index:2"></span><span style="--bar-height:9px;--bar-index:3"></span><span style="--bar-height:21px;--bar-index:4"></span><span style="--bar-height:13px;--bar-index:5"></span><span style="--bar-height:25px;--bar-index:6"></span><span style="--bar-height:10px;--bar-index:7"></span><span style="--bar-height:16px;--bar-index:8"></span><span style="--bar-height:22px;--bar-index:9"></span><span style="--bar-height:8px;--bar-index:10"></span><span style="--bar-height:18px;--bar-index:11"></span><span style="--bar-height:26px;--bar-index:12"></span><span style="--bar-height:12px;--bar-index:13"></span><span style="--bar-height:20px;--bar-index:14"></span><span style="--bar-height:9px;--bar-index:15"></span><span style="--bar-height:15px;--bar-index:16"></span><span style="--bar-height:23px;--bar-index:17"></span><span style="--bar-height:11px;--bar-index:18"></span><span style="--bar-height:19px;--bar-index:19"></span><span style="--bar-height:8px;--bar-index:20"></span><span style="--bar-height:24px;--bar-index:21"></span><span style="--bar-height:14px;--bar-index:22"></span><span style="--bar-height:10px;--bar-index:23"></span></div></div>
-    <button id="voiceTrashBtn" class="voice-control-btn voice-trash-btn" type="button" aria-label="حذف التسجيل" title="حذف التسجيل"><i class="ph ph-trash"></i></button>
+    <div class="voice-recording-meta"><span class="voice-recording-dot" aria-hidden="true"></span><span id="voiceRecordingStatus" class="voice-recording-status">جارٍ التسجيل</span></div>
+    <button id="voiceTrashBtn" class="voice-control-btn voice-trash-btn" type="button" aria-label="إلغاء التسجيل" title="إلغاء التسجيل"><i class="ph ph-trash"></i></button>
    </div>
    <button id="sendBtn" class="send" disabled title="إرسال"><i class="ph ph-paper-plane-tilt"></i></button>
   </div><div id="attachmentPreview" class="hidden" style="font-size:11px;color:var(--muted);padding:7px 12px"></div><div class="composer-hint">Enter لإضافة سطر جديد · زر الإرسال لإرسال الرسالة</div></div>
@@ -187,6 +188,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="./modules/message-loader.js"></script>
+<script src="./modules/voice-recorder.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -284,7 +286,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceRecorder:null,voiceChunks:[],voiceStream:null,voiceTimer:null,voiceStartedAt:null,voiceElapsedMs:0,voiceSegmentStartedAt:null,voicePaused:false,voiceSendOnStop:false,cancelVoiceOnStop:false,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
@@ -1010,7 +1012,7 @@ async function openConversation(c){
  const openToken=state.conversationOpenVersion=(state.conversationOpenVersion||0)+1;
  closeConversationWorkspace();state.messageLoadVersion++;stopMessagePolling();
  const conversationOpenStarted=performance.now();
- if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
+ if(voiceRecorder.isActive()){voiceRecorder.cancel();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
  state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
  applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
@@ -1056,7 +1058,7 @@ const CHAT_STICKERS=['❤️','😍','😂','🤣','🥰','😘','🔥','👏','
 function encodeChatSticker(emoji){return '[[bizmind-sticker:'+emoji+']]'}
 function decodeChatSticker(content){const value=String(content||''),prefix='[[bizmind-sticker:',suffix=']]';if(!value.startsWith(prefix)||!value.endsWith(suffix))return null;const emoji=value.slice(prefix.length,-suffix.length);return CHAT_STICKERS.includes(emoji)?emoji:null}
 function openChatStickerPicker(){
- if(!state.active||state.uploading||state.voiceRecorder)return;
+ if(!state.active||state.uploading||voiceRecorder.isActive())return;
  const grid=document.createElement('div');grid.className='chat-sticker-grid';
  CHAT_STICKERS.forEach(emoji=>{const button=document.createElement('button');button.type='button';button.className='chat-sticker-option';button.textContent=emoji;button.setAttribute('aria-label','إرسال ملصق '+emoji);button.onclick=()=>{document.querySelector('.message-detail-overlay')?.remove();$('messageInput').value=encodeChatSticker(emoji);sendMessage()};grid.append(button)});
  showMessageDetailModal('اختر ملصقاً',grid);
@@ -1749,145 +1751,15 @@ async function deleteMessage(m){
   handleMessageUpdateRealtime({new:data},data.conversation_id);
  }catch(error){console.error('Message delete failed:',error);toast(error?.message||'تعذر حذف الرسالة')}
 }
-function formatVoiceDuration(seconds){
- const total=Math.max(0,Math.floor(seconds||0)),minutes=String(Math.floor(total/60)).padStart(2,'0'),secs=String(total%60).padStart(2,'0');
- return (minutes+':'+secs).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+function showAttachmentPreview(file,label){
+ const preview=$('attachmentPreview');preview.replaceChildren();
+ const text=document.createElement('span');text.textContent=label||('المرفق المحدد: '+file.name+' ('+Math.ceil(file.size/1024)+' كيلوبايت)');
+ preview.append(text);
+ const clear=document.createElement('button');clear.type='button';clear.textContent='إزالة';
+ clear.style.cssText='margin-inline-start:12px;border:0;background:transparent;color:#dc5555;cursor:pointer;font:inherit';
+ clear.onclick=()=>{state.attachment=null;state.voiceDuration=0;$('fileInput').value='';preview.classList.add('hidden');preview.replaceChildren();resizeComposer()};
+ preview.append(clear);preview.classList.remove('hidden');
 }
-function currentVoiceElapsedMs(){
- return Math.max(0,state.voiceElapsedMs+(state.voicePaused||!state.voiceSegmentStartedAt?0:Date.now()-state.voiceSegmentStartedAt));
-}
-function updateVoiceRecordingUI(){
- const controls=$('voiceRecordingControls'),time=$('voiceRecordingTime'),pause=$('voicePauseBtn'),status=$('voiceRecordingStatus');
- if(!controls||!state.voiceRecorder)return;
- const elapsed=Math.floor(currentVoiceElapsedMs()/1000);
- if(time)time.textContent=formatVoiceDuration(elapsed);
- controls.classList.toggle('is-paused',!!state.voicePaused);
- if(status)status.textContent=state.voicePaused?'متوقف مؤقتاً':'جارٍ التسجيل';
- if(pause){pause.innerHTML=state.voicePaused?'<i class="ph ph-play"></i>':'<i class="ph ph-pause"></i>';pause.setAttribute('aria-label',state.voicePaused?'استئناف التسجيل':'إيقاف مؤقت');pause.title=state.voicePaused?'استئناف التسجيل':'إيقاف مؤقت'}
-}
-function clearVoiceTimer(){if(state.voiceTimer){clearInterval(state.voiceTimer);state.voiceTimer=null}}
-function setVoiceComposerActive(active){
- const composer=$('voiceRecordBtn')?.closest('.composer');
- composer?.classList.toggle('voice-recording-active',!!active);
- $('voiceRecordingControls')?.classList.toggle('hidden',!active);
- if(!active){
-  const send=$('sendBtn');if(send){send.innerHTML='<i class="ph ph-paper-plane-tilt"></i>';send.title='إرسال';send.setAttribute('aria-label','إرسال')}
- }
-}
-function cleanupVoiceCapture(){
- clearVoiceTimer();
- if(state.voiceAudioProcessor){try{state.voiceAudioProcessor.disconnect()}catch(_e){}state.voiceAudioProcessor=null}
- if(state.voiceAudioSource){try{state.voiceAudioSource.disconnect()}catch(_e){}state.voiceAudioSource=null}
- if(state.voiceAudioContext){const context=state.voiceAudioContext;state.voiceAudioContext=null;if(context.state!=='closed')context.close().catch(()=>{})}
- if(state.voiceStream){state.voiceStream.getTracks().forEach(track=>track.stop());state.voiceStream=null}
- state.voiceRecorder=null;state.voiceChunks=[];state.voiceStartedAt=null;state.voiceElapsedMs=0;state.voiceSegmentStartedAt=null;state.voicePaused=false;
- $('voiceRecordBtn').classList.remove('recording');$('voiceRecordBtn').innerHTML='<i class="ph ph-microphone"></i>';$('voiceRecordBtn').title='تسجيل رسالة صوتية';$('voiceCancelBtn').classList.add('hidden');
- setVoiceComposerActive(false);
-}
-function pauseVoiceRecording(){
- const recorder=state.voiceRecorder;if(!recorder||state.voicePaused||recorder.state!=='recording'||typeof recorder.pause!=='function')return;
- try{recorder.pause();if(state.voiceSegmentStartedAt)state.voiceElapsedMs+=Date.now()-state.voiceSegmentStartedAt;state.voiceSegmentStartedAt=null;state.voicePaused=true;updateVoiceRecordingUI()}catch(error){console.warn('Voice pause failed:',error);toast('تعذر إيقاف التسجيل مؤقتاً في هذا المتصفح')}
-}
-function resumeVoiceRecording(){
- const recorder=state.voiceRecorder;if(!recorder||!state.voicePaused||recorder.state!=='paused'||typeof recorder.resume!=='function')return;
- try{recorder.resume();state.voicePaused=false;state.voiceSegmentStartedAt=Date.now();updateVoiceRecordingUI()}catch(error){console.warn('Voice resume failed:',error);toast('تعذر استئناف التسجيل')}
-}
-function toggleVoicePause(){if(state.voicePaused)resumeVoiceRecording();else pauseVoiceRecording()}
-function sendVoiceRecording(){
- const recorder=state.voiceRecorder;if(!recorder)return false;
- state.voiceSendOnStop=true;
- const send=$('sendBtn');if(send)send.disabled=true;
- if(state.voicePaused){state.voicePaused=false;state.voiceSegmentStartedAt=null}
- if(recorder.state==='recording'&&typeof recorder.requestData==='function'){
-  try{recorder.requestData()}catch(error){console.warn('Final voice chunk request was unavailable:',error?.message||error)}
- }
- const stopped=stopVoiceRecording();
- if(!stopped&&recorder.state!=='inactive'){
-  state.voiceSendOnStop=false;if(send)send.disabled=false;
-  toast('تعذر إنهاء التسجيل. حاول إيقافه ثم الإرسال مرة أخرى.');
-  return false;
- }
- return true;
-}
-function encodeVoiceWav(chunks,sampleRate){
- const total=chunks.reduce((sum,chunk)=>sum+chunk.length,0),input=new Float32Array(total);let offset=0;
- chunks.forEach(chunk=>{input.set(chunk,offset);offset+=chunk.length});
- const targetRate=16000,ratio=sampleRate/targetRate,outLength=Math.max(1,Math.floor(input.length/ratio)),buffer=new ArrayBuffer(44+outLength*2),view=new DataView(buffer);
- const write=(pos,value)=>{for(let i=0;i<value.length;i++)view.setUint8(pos+i,value.charCodeAt(i))};
- write(0,'RIFF');view.setUint32(4,36+outLength*2,true);write(8,'WAVE');write(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,targetRate,true);view.setUint32(28,targetRate*2,true);view.setUint16(32,2,true);view.setUint16(34,16,true);write(36,'data');view.setUint32(40,outLength*2,true);
- for(let i=0;i<outLength;i++){const sourceIndex=Math.min(input.length-1,Math.floor(i*ratio)),sample=Math.max(-1,Math.min(1,input[sourceIndex]));view.setInt16(44+i*2,sample<0?sample*0x8000:sample*0x7fff,true)}
- return new Blob([buffer],{type:'audio/wav'});
-}
-async function createFallbackVoiceRecorder(stream){
- const AudioContextClass=window.AudioContext||window.webkitAudioContext;
- if(!AudioContextClass)throw new Error('هذا المتصفح لا يدعم التسجيل الصوتي. حدّث المتصفح أو استخدم Chrome أو Safari.');
- const context=new AudioContextClass();state.voiceAudioContext=context;
- if(context.state==='suspended')await context.resume();
- if(context.state!=='running')throw new Error('تعذر تشغيل محرك الصوت. اضغط تسجيل مرة أخرى واسمح باستخدام الميكروفون.');
- const source=context.createMediaStreamSource(stream),processor=context.createScriptProcessor(4096,1,1),chunks=[];
- processor.onaudioprocess=event=>{if(!state.voiceRecorder||state.voiceRecorder.state!=='recording')return;chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));event.outputBuffer.getChannelData(0).fill(0)};
- source.connect(processor);processor.connect(context.destination);state.voiceAudioSource=source;state.voiceAudioProcessor=processor;
- return {state:'recording',mimeType:'audio/wav',onstop:null,pause(){if(this.state==='recording')this.state='paused'},resume(){if(this.state==='paused')this.state='recording'},stop(){if(this.state==='inactive')return;this.state='inactive';state.voiceChunks=[encodeVoiceWav(chunks,context.sampleRate)];if(typeof this.onstop==='function')this.onstop()}};
-}
-function showAttachmentPreview(file,label){const preview=$('attachmentPreview');preview.replaceChildren();const text=document.createElement('span');text.textContent=label||('المرفق المحدد: '+file.name+' ('+Math.ceil(file.size/1024)+' كيلوبايت)');preview.append(text);const clear=document.createElement('button');clear.type='button';clear.textContent='إزالة';clear.style.cssText='margin-inline-start:12px;border:0;background:transparent;color:#dc5555;cursor:pointer;font:inherit';clear.onclick=()=>{state.attachment=null;state.voiceDuration=0;$('fileInput').value='';preview.classList.add('hidden');preview.replaceChildren();resizeComposer()};preview.append(clear);preview.classList.remove('hidden')}
-async function startVoiceRecording(){
- if(!state.active||state.uploading||state.attachment||state.voiceRecorder)return;
- const recordingConversationId=state.active.id,recordingUserId=state.user?.id;
- const role=(state.active.members||[]).find(m=>m.user_id===state.user?.id)?.role;
- if(state.active.type==='channel'&&!['owner','admin'].includes(role)){toast('التسجيل في هذه القناة مخصص للمشرفين');return}
- if(state.active.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(role)){toast('التسجيل في هذه المجموعة مخصص للمشرفين');return}
- if(!window.isSecureContext){toast('يلزم فتح التطبيق عبر اتصال HTTPS لتفعيل الميكروفون');return}
- if(!navigator.mediaDevices?.getUserMedia){toast('الميكروفون غير متاح. افتح التطبيق في Chrome أو Safari واسمح باستخدامه');return}
- let stream=null;
- try{
-  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
-  catch(firstError){if(firstError?.name==='NotAllowedError'||firstError?.name==='SecurityError')throw firstError;stream=await navigator.mediaDevices.getUserMedia({audio:true})}
-  if(state.active?.id!==recordingConversationId||state.user?.id!==recordingUserId){stream.getTracks().forEach(track=>track.stop());toast('تغيرت المحادثة قبل بدء التسجيل');return}
-  state.voiceStream=stream;state.voiceChunks=[];state.cancelVoiceOnStop=false;state.voiceSendOnStop=false;state.voiceElapsedMs=0;state.voiceSegmentStartedAt=Date.now();state.voicePaused=false;state.voiceStartedAt=Date.now();
-  let recorder=null,supported=null;
-  if(typeof MediaRecorder!=='undefined'){
-   const ua=navigator.userAgent||'',preferMp4=/iPhone|iPad|iPod/i.test(ua);
-   const candidates=preferMp4?['audio/mp4','audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/webm']:['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus','audio/webm'];
-   supported=candidates.find(type=>{try{return MediaRecorder.isTypeSupported?.(type)}catch(_e){return false}});
-   try{recorder=new MediaRecorder(stream,supported?{mimeType:supported}:undefined)}catch(_e){recorder=null}
-  }
-  if(!recorder)recorder=await createFallbackVoiceRecorder(stream);
-  state.voiceRecorder=recorder;
-  recorder.ondataavailable=event=>{if(event.data?.size)state.voiceChunks.push(event.data)};
-  recorder.onerror=event=>{console.error('Voice recording failed:',event.error||event);state.voiceSendOnStop=false;toast('تعذر تسجيل الصوت. تحقق من إذن الميكروفون ثم حاول مجدداً.');cleanupVoiceCapture();resizeComposer()};
-  recorder.onstop=()=>{
-   const cancelled=state.cancelVoiceOnStop,shouldSend=state.voiceSendOnStop;
-   if(state.voiceSegmentStartedAt)state.voiceElapsedMs+=Date.now()-state.voiceSegmentStartedAt;
-   const elapsed=Math.round(state.voiceElapsedMs/1000),chunks=state.voiceChunks.slice();
-   const mime=(recorder.mimeType||supported||'audio/wav').split(';')[0].toLowerCase();
-   state.voiceSendOnStop=false;cleanupVoiceCapture();
-   if(cancelled){state.cancelVoiceOnStop=false;state.voiceElapsedMs=0;resizeComposer();return}
-   if(state.active?.id!==recordingConversationId||state.user?.id!==recordingUserId){toast('تغيرت المحادثة أو جلسة الدخول قبل اكتمال التسجيل. لم يتم إرفاق التسجيل بمحادثة أخرى.');resizeComposer();return}
-   const blob=new Blob(chunks,{type:mime});if(!blob.size){toast('لم يتم التقاط صوت. تحقق من إذن الميكروفون وحاول مرة أخرى.');resizeComposer();return}
-   if(blob.size>12*1024*1024){toast('حجم التسجيل تجاوز الحد الأقصى 12 ميجابايت');resizeComposer();return}
-   const ext=mime==='audio/mp4'?'m4a':mime==='audio/ogg'?'ogg':mime==='audio/mpeg'?'mp3':mime==='audio/wav'?'wav':'webm';
-   const file=new File([blob],'voice-'+Date.now()+'.'+ext,{type:mime});state.attachment=file;state.voiceDuration=elapsed;
-   showAttachmentPreview(file,'رسالة صوتية · '+formatVoiceDuration(elapsed)+' · '+Math.ceil(file.size/1024)+' كيلوبايت');resizeComposer();
-   if(shouldSend){setTimeout(()=>{if(state.attachment===file)sendMessage()},0)}
-  };
-  if(typeof recorder.start==='function')recorder.start()
-  $('voiceRecordBtn').classList.add('recording');$('voiceRecordBtn').title='التسجيل الصوتي جارٍ';$('voiceCancelBtn').classList.add('hidden');setVoiceComposerActive(true);$('sendBtn').disabled=false;$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';$('sendBtn').title='إرسال التسجيل الصوتي';$('sendBtn').setAttribute('aria-label','إرسال التسجيل الصوتي');updateVoiceRecordingUI();
-  state.voiceTimer=setInterval(()=>{updateVoiceRecordingUI()},250);
- }catch(error){
-  if(stream){stream.getTracks().forEach(track=>track.stop())}
-  if(state.voiceStream===stream)cleanupVoiceCapture();
-  console.error('Microphone access failed:',error);
-  toast(error?.name==='NotAllowedError'?'اسمح للمتصفح باستخدام الميكروفون من إعدادات الموقع ثم حاول مجدداً':error?.name==='NotFoundError'?'لم يتم العثور على ميكروفون متصل بالجهاز':error?.name==='NotReadableError'?'الميكروفون مشغول بتطبيق آخر. أغلقه ثم أعد المحاولة':error?.message||'تعذر تشغيل الميكروفون');
- }
-}
-function stopVoiceRecording(){
- const recorder=state.voiceRecorder;if(!recorder||recorder.state==='inactive')return false;
- try{recorder.stop();return true}
- catch(error){console.error('Voice recorder stop failed:',error);return false}
-}
-function cancelVoiceRecording(){if(!state.voiceRecorder)return;state.cancelVoiceOnStop=true;state.voiceSendOnStop=false;state.voiceElapsedMs=0;state.voiceSegmentStartedAt=null;stopVoiceRecording()}
-$('voicePauseBtn').onclick=toggleVoicePause;
-$('voiceTrashBtn').onclick=()=>{if(state.voiceRecorder){cancelVoiceRecording();toast('تم حذف التسجيل وإعادة ضبط المؤقت')}};
 const CHAT_ATTACHMENT_MIME_BY_EXTENSION={
  jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',
  pdf:'application/pdf',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',
@@ -1913,7 +1785,7 @@ async function uploadAttachment(file,conversationId=state.active?.id,userId=stat
  const {error}=await supabaseClient.storage.from('chat-media').upload(path,file,{upsert:false,contentType:type});if(error)throw error;return {path,type};
 }
 async function sendMessage(){
- if(state.voiceRecorder){toast('أوقف التسجيل الصوتي أولاً قبل الإرسال');return}
+ if(voiceRecorder.isActive()){toast('أرسل التسجيل أو ألغِه أولاً قبل إرسال رسالة أخرى');return}
  const activeConversation=state.active,draftValue=$('messageInput').value,content=draftValue.trim(),file=state.attachment,conversationId=activeConversation?.id,userId=state.user?.id,editTarget=state.editTarget,editing=!!editTarget,replyTo=state.replyTarget?.id||null,privateContext=state.privateReplyPending?{...state.privateReplyPending}:null;
  const activeRole=(activeConversation?.members||[]).find(m=>m.user_id===userId)?.role;if(activeConversation?.type==='channel'&&!['owner','admin'].includes(activeRole)){toast('النشر في هذه القناة مخصص للمشرفين');return}if(activeConversation?.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole)){toast('الإرسال متاح لمشرفي المجموعة فقط');return}
  if(!conversationId||!userId||(!content&&!file)||state.uploading)return;
@@ -2002,7 +1874,7 @@ $('messages').addEventListener('scroll',()=>{
  if(state.loadingOlderMessages||!state.hasMoreMessages||state.isLoadingMessages)return;
  if(area.scrollTop<=110){if(!state.historyScrollFrame){state.historyScrollFrame=requestAnimationFrame(()=>{state.historyScrollFrame=0;if(area.scrollTop<=140)loadOlderMessages()})}}
 },{passive:true});
-$('sendBtn').onclick=()=>state.voiceRecorder?sendVoiceRecording():sendMessage();$('search').oninput=()=>{
+$('sendBtn').onclick=()=>voiceRecorder.isActive()?voiceRecorder.send():sendMessage();$('search').oninput=()=>{
  if(state.sidebarView==='team'){state.teamSearch=$('search').value.trim().toLocaleLowerCase('ar');renderTeamDashboard()}
  else if(state.sidebarView==='users'){
   state.directorySearch=$('search').value.trim().toLocaleLowerCase('ar').replace(/[^\\p{L}\\p{N}\\s@_-]/gu,'').slice(0,60);
@@ -2274,16 +2146,31 @@ $('createGroupBtn').onclick=async()=>{
  document.addEventListener('pointercancel',reset,{passive:true});
 })();
 
+const voiceRecorder=window.BizmindVoiceRecorder.create({
+ getContext:()=>({active:state.active,user:state.user,groupSettings:state.groupSettings,uploading:state.uploading,attachment:state.attachment}),
+ elements:{composer:$('voiceRecordBtn').closest('.composer'),recordButton:$('voiceRecordBtn'),controls:$('voiceRecordingControls'),pauseButton:$('voicePauseBtn'),trashButton:$('voiceTrashBtn'),time:$('voiceRecordingTime'),status:$('voiceRecordingStatus'),sendButton:$('sendBtn')},
+ toast,
+ isSecureContext:()=>window.isSecureContext,
+ onStateChange:phase=>{if(phase==='idle')resizeComposer()},
+ onRecordingReady:({file,duration})=>{
+  state.attachment=file;state.voiceDuration=duration;
+  showAttachmentPreview(file,'رسالة صوتية · '+window.BizmindVoiceRecorder.formatDuration(duration)+' · '+Math.ceil(file.size/1024)+' كيلوبايت');
+  resizeComposer();
+ },
+ send:()=>sendMessage()
+});
+$('voicePauseBtn').onclick=()=>voiceRecorder.togglePause();
+$('voiceTrashBtn').onclick=()=>voiceRecorder.cancel();
 $('stickerBtn').onclick=openChatStickerPicker;
-$('voiceRecordBtn').onclick=()=>state.voiceRecorder?stopVoiceRecording():startVoiceRecording();
-$('voiceCancelBtn').onclick=cancelVoiceRecording;
+$('voiceRecordBtn').onclick=()=>voiceRecorder.start();
+
 $('attachBtn').onclick=()=>$('fileInput').click();
-$('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;if(state.voiceRecorder)cancelVoiceRecording();state.attachment=f;showAttachmentPreview(f);resizeComposer()};
+$('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;if(voiceRecorder.isActive())voiceRecorder.cancel();state.attachment=f;state.voiceDuration=0;showAttachmentPreview(f);resizeComposer()};
 $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox').onclick=e=>{if(e.target===$('lightbox'))$('lightbox').classList.add('hidden')};
 $('conversationWorkspaceBtn').onclick=()=>{closeChatHeaderMenu();openConversationWorkspace()};
 $('workspaceInboxTabs').addEventListener('click',e=>{const label=e.target.closest('[data-workspace-label]');if(label){state.workspaceActiveLabelId=state.workspaceActiveLabelId===label.dataset.workspaceLabel?null:label.dataset.workspaceLabel;renderWorkspaceInboxTabs();renderConversations();return}const b=e.target.closest('[data-workspace-category]');if(!b)return;state.workspaceCategory=b.dataset.workspaceCategory;state.workspaceActiveLabelId=null;renderWorkspaceInboxTabs();renderConversations()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('conversationWorkspaceModal')?.classList.contains('open'))closeConversationWorkspace()});
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authLifecycleVersion++;diagLog('auth-signed-out');if(state.voiceRecorder){state.cancelVoiceOnStop=true;cancelVoiceRecording()}stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authLifecycleVersion++;diagLog('auth-signed-out');if(voiceRecorder.isActive())voiceRecorder.cancel();stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
 (async()=>{
  const bootStatus=document.getElementById('bootStatus');
  const bootSupabaseMs=window.__BIZMIND_BOOT_TIMINGS__?.supabaseScriptMs;
@@ -2644,7 +2531,7 @@ async function clearActiveConversation(){
  state.messages=[];state.messageIds.clear();$('messages').innerHTML='<div class="welcome"><h2>تم مسح الدردشة من طرفك</h2><p>يمكنك متابعة المحادثة من هنا.</p></div>';renderPinnedBanner();toast('تم مسح الدردشة من طرفك فقط');
 }
 async function closeActiveConversation(){
- if(state.voiceRecorder){toast('أوقف التسجيل قبل إغلاق الدردشة');return}
+ if(voiceRecorder.isActive()){toast('أرسل التسجيل أو ألغِه قبل إغلاق الدردشة');return}
  closeChatHeaderMenu();stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  state.channel=null;state.typingChannel=null;state.active=null;state.messages=[];state.messageIds.clear();state.messageLoadVersion++;
  $('chatTitle').textContent='اختر محادثة';$('chatSub').textContent='محادثاتك الخاصة والمجموعات';$('messages').innerHTML='<div class="welcome"><h2>تم إغلاق الدردشة</h2><p>اختر محادثة أخرى من القائمة.</p></div>';$('messageInput').disabled=true;$('sendBtn').disabled=true;
