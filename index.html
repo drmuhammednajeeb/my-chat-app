@@ -1314,7 +1314,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
     if(signedError){const failed=document.createElement('span');failed.textContent='تعذر فتح المرفق';bubble.append(failed)}
     else if(m.attachment_type?.startsWith('image/')){const img=document.createElement('img');img.src=signed.signedUrl;img.alt='مرفق';img.loading='lazy';img.onclick=()=>{$('lightboxImage').src=img.src;$('lightbox').classList.remove('hidden')};bubble.append(img)}
     else if(m.attachment_type?.startsWith('video/')){const video=document.createElement('video');video.className='message-video';video.controls=true;video.preload='metadata';video.playsInline=true;video.src=signed.signedUrl;video.setAttribute('aria-label','مرفق فيديو');bubble.append(video)}
-    else if(m.attachment_type?.startsWith('audio/')){const player=voiceMessagePlayer.createPlayer({messageId:m.id,src:signed.signedUrl,refreshUrl:async()=>{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;if(!isCurrent())return null;return renewed.signedUrl},onError:error=>{console.warn('Audio player error:',error?.message||error);toast('تعذر تشغيل الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}});bubble.append(player)}
+    else if(m.attachment_type?.startsWith('audio/')){const player=voiceMessagePlayer.createPlayer({messageId:m.id,src:signed.signedUrl,durationSeconds:m.attachment_duration_seconds,refreshUrl:async()=>{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;if(!isCurrent())return null;return renewed.signedUrl},onError:error=>{console.warn('Audio player error:',error?.message||error);toast('تعذر تشغيل الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}});bubble.append(player)}
     else{const a=document.createElement('a');a.href=signed.signedUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}
    }
    if(m.content){
@@ -1346,7 +1346,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
   const last=area.lastElementChild;if(!last||last.dataset.day!==day){const sep=document.createElement('div');sep.className='day-divider';sep.textContent=day;sep.dataset.day=day;area.append(sep)}
   area.append(row);state.messageIds.add(m.id);if(!state.batchRenderingMessages||state.batchRenderingConversationId!==conversationId)reconcileMessageTimeline(area);state.diagnostics.lastRenderAt=new Date().toLocaleTimeString('en-GB');
   if(!state.isLoadingMessages){if(m.sender_id===state.user?.id){clearNewMessages(false);scheduleMessagesBottom(area,'auto')}else if(near){scheduleMessagesBottom(area,'auto')}else{state.newMessageCount=(state.newMessageCount||0)+1;updateNewMessagesIndicator()}}
-  updateDiagnostics();
+  if(!state.batchRenderingMessages)updateDiagnostics();
   return true;
  }catch(error){
   state.messageIds.delete(m.id);state.diagnostics.lastRenderError=String(error?.message||error);console.error('Message rendering failed:',error);diagLog('render-error',{id:m.id,error:state.diagnostics.lastRenderError});
@@ -1357,7 +1357,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
 async function loadMessages(){
  return window.BizmindMessageLoader.loadMessages({
   state,$,supabaseClient,document,performance,
-  updateNewMessagesIndicator,diagLog,recordPerf,
+  updateNewMessagesIndicator,diagLog,recordPerf,reconcileMessageTimeline,
   compareMessagesChronologically,
   loadMessagePins,loadPrivateReplyContexts,renderMessage,
   markConversationReceipt,toast
@@ -1711,6 +1711,7 @@ async function uploadAttachment(file,conversationId=state.active?.id,userId=stat
 async function sendMessage(){
  if(voiceRecorder.isActive()){toast('أرسل التسجيل أو ألغِه أولاً قبل إرسال رسالة أخرى');return}
  const activeConversation=state.active,draftValue=$('messageInput').value,content=draftValue.trim(),file=state.attachment,conversationId=activeConversation?.id,userId=state.user?.id,editTarget=state.editTarget,editing=!!editTarget,replyTo=state.replyTarget?.id||null,privateContext=state.privateReplyPending?{...state.privateReplyPending}:null;
+ const voiceDurationSeconds=file&&resolveChatAttachmentMime(file).startsWith('audio/')?Math.max(0,Math.round(Number(state.voiceDuration)||0)):null;
  const activeRole=(activeConversation?.members||[]).find(m=>m.user_id===userId)?.role;if(activeConversation?.type==='channel'&&!['owner','admin'].includes(activeRole)){toast('النشر في هذه القناة مخصص للمشرفين');return}if(activeConversation?.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole)){toast('الإرسال متاح لمشرفي المجموعة فقط');return}
  if(!conversationId||!userId||(!content&&!file)||state.uploading)return;
  const pendingKey=conversationId+':'+userId;
@@ -1718,8 +1719,8 @@ async function sendMessage(){
  if(!editing){
   state.pendingMessageSends ||= new Map();
   const previous=state.pendingMessageSends.get(pendingKey);
-  pendingSend=previous&&previous.content===content&&previous.replyTo===replyTo&&previous.file===file
-   ?previous:{id:crypto.randomUUID(),conversationId,userId,content,replyTo,file,attachmentPath:null,attachmentType:null};
+  pendingSend=previous&&previous.content===content&&previous.replyTo===replyTo&&previous.file===file&&previous.attachmentDurationSeconds===voiceDurationSeconds
+   ?previous:{id:crypto.randomUUID(),conversationId,userId,content,replyTo,file,attachmentPath:null,attachmentType:null,attachmentDurationSeconds:voiceDurationSeconds};
   state.pendingMessageSends.set(pendingKey,pendingSend);
  }
  state.uploading=true;$('sendBtn').disabled=true;$('messageInput').disabled=false;
@@ -1742,7 +1743,7 @@ async function sendMessage(){
   }else{
    let attachment={path:pendingSend?.attachmentPath||null,type:pendingSend?.attachmentType||null};
    if(file&&!attachment.path){attachment=await uploadAttachment(file,conversationId,userId);pendingSend.attachmentPath=attachment.path;pendingSend.attachmentType=attachment.type}
-   const {data,error}=await supabaseClient.from('chat_messages').insert({id:pendingSend.id,conversation_id:conversationId,sender_id:userId,content,...(replyTo?{reply_to:replyTo}:{}),...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type}:{})}).select('*').single();
+   const {data,error}=await supabaseClient.from('chat_messages').insert({id:pendingSend.id,conversation_id:conversationId,sender_id:userId,content,...(replyTo?{reply_to:replyTo}:{}),...(attachment.path?{attachment_path:attachment.path,attachment_type:attachment.type,...(attachment.type?.startsWith('audio/')&&pendingSend.attachmentDurationSeconds>0?{attachment_duration_seconds:pendingSend.attachmentDurationSeconds}:{})}:{})}).select('*').single();
    if(error){
     const {data:verified,error:verifyError}=await supabaseClient.from('chat_messages').select('*').eq('id',pendingSend.id).eq('conversation_id',conversationId).eq('sender_id',userId).maybeSingle();
     if(verifyError||!verified)throw error;
