@@ -21,3 +21,12 @@ For every application release:
 - If service workers are unavailable, the version prompt still offers a normal page reload; offline clients cannot download a release.
 
 Both the page version and `version.json` must be updated together. A new release must be deployed before clients can discover it.
+
+
+## 2026.11.12.5 — تحسين مشغل الرسائل الصوتية
+
+- إظهار مدة الرسالة كاملة بعد تحميل بيانات الملف وقبل بدء التشغيل.
+- عرض الوقت المتبقي تنازليًا أثناء التشغيل وبعد الإيقاف المؤقت، وإعادة عرض المدة الكاملة عند نهاية الملف.
+- عدم إظهار `00:00` مضللة أثناء انتظار بيانات المدة.
+- مزامنة حالة زر التشغيل مع أحداث التشغيل والإيقاف والنهاية، وتحسين تمركز الأيقونة داخل الدائرة.
+- لا تغييرات على التسجيل أو التخزين أو قاعدة البيانات.

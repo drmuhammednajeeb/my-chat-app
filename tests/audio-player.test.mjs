@@ -49,13 +49,29 @@ test('time formatter handles empty and fractional durations', () => {
   assert.equal(audioPlayer.formatTime(61.9), '01:01');
 });
 
+test('voice timer shows the fixed total before playback and counts down while playing', () => {
+  assert.equal(audioPlayer.formatPlaybackTime(83, 0, false, false, true), '01:23');
+  assert.equal(audioPlayer.formatPlaybackTime(83, 17, true, false, true), '01:06');
+  assert.equal(audioPlayer.formatPlaybackTime(83, 83, true, true, true), '01:23');
+});
+
+test('voice timer does not display a false zero while audio metadata is unavailable', () => {
+  assert.equal(audioPlayer.formatPlaybackTime(NaN, 0, false, false, false), '--:--');
+  assert.equal(audioPlayer.formatPlaybackTime(0, 0, false, false, true), '00:00');
+});
+
 test('player source keeps native controls available when custom playback fails', async () => {
   const { readFile } = await import('node:fs/promises');
   const source = await readFile(new URL('../modules/audio-player.js', import.meta.url), 'utf8');
   const styles = await readFile(new URL('../modules/audio-player.css', import.meta.url), 'utf8');
   assert.ok(source.includes('coordinator.activate(audio);'));
+  assert.ok(source.includes('playButton.setAttribute("aria-pressed", playing ? "true" : "false")'));
+  assert.ok(source.includes('timerLabel.textContent = formatPlaybackTime'));
+  assert.ok(!source.includes('currentTime.textContent = formatTime(elapsed)'));
   assert.ok(source.includes('audio.controls = true;'));
   assert.ok(source.includes('showFallback(error)'));
   assert.ok(styles.includes('.voice-message-player.has-playback-error .voice-player-native-audio'));
+  assert.ok(styles.includes('.voice-player-toggle i{display:block;line-height:1'));
+  assert.ok(styles.includes('.voice-player-timer{justify-self:end'));
   assert.ok(!styles.includes('.message .bubble .voice-message-player audio{display:none}'));
 });
