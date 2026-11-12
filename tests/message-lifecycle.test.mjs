@@ -332,26 +332,26 @@ test('renderer and extracted message loader retain stale-result and render-compl
 test('fallback synchronization pages full batches without dropping loaded history', () => {
   const poll = extractFunction('pollMessagesFallback');
   assert.match(poll, /messagePollCursor/);
-  assert.match(poll, /and\\(created_at\\.eq\\./);
-  assert.match(poll, /id\\.gt\\./);
-  assert.match(poll, /edited_at\\.gt\\./);
-  assert.match(poll, /deleted_at\\.gt\\./);
-  assert.match(poll, /range\\(pollOffset,pollOffset\\+199\\)/);
-  assert.match(poll, /messagePollOffset=pollOffset\\+200/);
+  assert.match(poll, /and\(created_at\.eq\./);
+  assert.match(poll, /id\.gt\./);
+  assert.match(poll, /edited_at\.gt\./);
+  assert.match(poll, /deleted_at\.gt\./);
+  assert.match(poll, /range\(pollOffset,pollOffset\+199\)/);
+  assert.match(poll, /messagePollOffset=pollOffset\+200/);
   assert.match(poll, /messagePollLastCheckedAt=pollCutoffAt/);
-  assert.doesNotMatch(poll, /slice\\(-100\\)/);
-  assert.match(poll, /messageRequestId!==state\\.messageLoadVersion/);
+  assert.doesNotMatch(poll, /slice\(-100\)/);
+  assert.match(poll, /messageRequestId!==state\.messageLoadVersion/);
 });
 
 test('older-history rendering is transactional and releases only its own loading state', () => {
   const older = extractFunction('loadOlderMessages');
-  assert.match(older, /const originalMessages=state\\.messages\\.slice\\(\\)/);
-  assert.match(older, /const originalHasMore=state\\.hasMoreMessages/);
-  assert.match(older, /renderedHistoryIds\\.add\\(message\\.id\\)/);
-  assert.match(older, /state\\.hasMoreMessages=originalHasMore/);
-  assert.match(older, /state\\.messageIds\\.delete\\(id\\)/);
-  assert.match(older, /state\\.loadingOlderRequestId===requestId/);
-  assert.match(older, /state\\.loadingOlderMessages=false/);
+  assert.match(older, /const originalMessages=state\.messages\.slice\(\)/);
+  assert.match(older, /const originalHasMore=state\.hasMoreMessages/);
+  assert.match(older, /renderedHistoryIds\.add\(message\.id\)/);
+  assert.match(older, /state\.hasMoreMessages=originalHasMore/);
+  assert.match(older, /state\.messageIds\.delete\(id\)/);
+  assert.match(older, /state\.loadingOlderRequestId===requestId/);
+  assert.match(older, /state\.loadingOlderMessages=false/);
 });
 test('send attempts reuse a stable message ID and uploaded attachment on retry', () => {
   const send = extractFunction('sendMessage');
