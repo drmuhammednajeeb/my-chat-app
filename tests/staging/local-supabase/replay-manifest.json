@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 55,
-    "mappedSources": 52,
+    "sqlFiles": 56,
+    "mappedSources": 53,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -641,6 +641,16 @@
         "DAG-016"
       ],
       "parityNote": "After applying the test-only overlay, run read-only catalog assertions and rollback-only CRUD/RPC compatibility probes (chat list create/update/upsert/delete, star upsert/delete, secure message edit audit insert, and cross-user isolation). Runtime execution remains blocked pending a disposable Supabase replay. A separate local Auth/Storage API runtime probe validates file upload, upsert, signed read, private/shared visibility, cross-user path spoof denial, owner deletion, and public avatar delivery. It has not been executed. A separate disposable local Supabase workflow provisions PostgreSQL 17 and the managed Auth/Storage/Realtime services, replays the manifest's exact DAG order, then runs the runtime probes and always stops the temporary stack. It is not a hosted environment and does not authorize production deployment."
+    },
+    {
+      "nodeId": "chat.profile-status-video-media",
+      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "testSources": [
+        "database/changes/20261112000200_profile_status_video_media.sql",
+        "tests/profile-status-and-conversation-images.test.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": "Source-only schema extension. The private profile-status bucket remains private. This SQL has not been replayed locally or applied to production; production rollout requires separate database approval."
     }
   ],
   "duplicateSelection": [
