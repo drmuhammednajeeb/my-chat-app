@@ -38,16 +38,6 @@ function stripSqlComments(sql) {
   let quote = null;
   let dollar = null;
   while (index < sql.length) {
-    if (dollar) {
-      if (sql.startsWith(dollar, index)) {
-        output += dollar;
-        index += dollar.length;
-        dollar = null;
-      } else {
-        output += sql[index++];
-      }
-      continue;
-    }
     if (quote) {
       const char = sql[index];
       output += char;
@@ -60,18 +50,32 @@ function stripSqlComments(sql) {
       }
       continue;
     }
-    if (sql[index] === "'" || sql[index] === '"') {
-      quote = sql[index];
-      output += sql[index++];
-      continue;
-    }
-    if (sql[index] === '$') {
-      const match = sql.slice(index).match(/^\$[A-Za-z_][A-Za-z_0-9]*\$|^\$\$/);
-      if (match) {
-        dollar = match[0];
+    if (dollar) {
+      if (sql.startsWith(dollar, index)) {
         output += dollar;
         index += dollar.length;
+        dollar = null;
         continue;
+      }
+      if (sql[index] === "'" || sql[index] === '"') {
+        quote = sql[index];
+        output += sql[index++];
+        continue;
+      }
+    } else {
+      if (sql[index] === "'" || sql[index] === '"') {
+        quote = sql[index];
+        output += sql[index++];
+        continue;
+      }
+      if (sql[index] === '$') {
+        const match = sql.slice(index).match(/^\$[A-Za-z_][A-Za-z_0-9]*\$|^\$\$/);
+        if (match) {
+          dollar = match[0];
+          output += dollar;
+          index += dollar.length;
+          continue;
+        }
       }
     }
     if (sql.startsWith('--', index)) {
