@@ -189,3 +189,23 @@ test('commented legacy references inside dollar-quoted bodies are ignored', asyn
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('migration order blocks a public table reference whose definition appears later', async () => {
+  const root = await createRoot();
+  try {
+    await writeFile(
+      path.join(root, 'supabase/migrations/20261101000000_use_future.sql'),
+      'alter table public.future_table enable row level security;\n'
+    );
+    await writeFile(
+      path.join(root, 'supabase/migrations/20261102000000_create_future.sql'),
+      'create table public.future_table(id uuid);\n'
+    );
+    const report = await buildSqlAudit(root);
+    assert.equal(report.migrationOrderReview.forwardDependencies.length, 1);
+    assert.equal(report.migrationOrderReview.forwardDependencies[0].laterDefinition, 'supabase/migrations/20261102000000_create_future.sql');
+    assert.ok(report.findings.some(item => item.code === 'MIGRATION_FORWARD_DEPENDENCY' && item.severity === 'blocking'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
