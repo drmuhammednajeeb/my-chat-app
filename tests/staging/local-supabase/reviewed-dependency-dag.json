@@ -1144,11 +1144,12 @@
         "chat.profile-status-and-conversation-images",
         "platform.storage"
       ],
-      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "status": "PRODUCTION_APPLIED_LOCAL_REPLAY_NOT_EXECUTED",
       "testSource": [
         "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql",
         "tests/status-workspace.test.mjs"
-      ]
+      ],
+      "parityNote": "Applied and verified on Supabase production on 2026-11-12 under the user's explicit request. This is separate from the blocked disposable-local replay; no local replay or broader production replay is authorized."
     }
   ],
   "explicitEdges": [
