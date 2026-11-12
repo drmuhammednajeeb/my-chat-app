@@ -33,21 +33,20 @@ The overlay is followed by `rls-least-privilege.assert.sql`, which is read-only 
 
 This is a privilege-baseline defect, not proof that an unauthenticated request has already read or changed application rows. RLS still applies to ordinary row operations; however, `TRUNCATE`, `REFERENCES`, and `TRIGGER` are not row-policy operations, so they must not be granted to API roles.
 
-## Required runtime validation
+## Runtime validation result — passed
 
-After the dependency DAG is approved and a disposable local Supabase stack is available:
+The complete disposable-local Supabase workflow passed on commit `c97b36d3a603380cb80dd6cde2374ea1d3438731` (workflow run `43258867470`):
 
-1. Replay all canonical source SQL and synthetic fixtures in the reviewed order.
-2. Apply the test-only least-privilege overlay last.
-3. Run `rls-least-privilege.assert.sql`.
-4. Test actual PostgREST requests as anon, eligible authenticated, suspended authenticated, and a third unrelated authenticated identity.
-5. Verify allowed CRUD still works for each feature; verify forbidden cross-user/cross-conversation reads and writes fail.
-6. Verify direct sequence calls, direct trigger-function RPC calls, direct message-edit-history inserts, and direct writes to event/history/private-context tables fail.
-7. Verify future test-created public tables/functions/sequences receive no API grants until explicitly granted.
-8. Run Storage upload, replacement/upsert, download, and signed-URL tests for every bucket, including cross-user path substitution.
-9. Execute `node tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs` only with `LOCAL_SUPABASE_DB_URL` set to the disposable local endpoint; this runner has not been executed.
+- 83 SQL files executed in the reviewed DAG order.
+- The forward privilege migration and active-membership RLS migration applied successfully in the disposable stack.
+- Read-only catalog assertions and rollback-only authenticated CRUD/RPC compatibility tests passed after the forward migrations.
+- 24 reversed-pair concurrent direct-conversation requests converged on one conversation; 40 concurrent authenticated message writes persisted uniquely.
+- The actual loopback-only pg_cron probe executed a temporary job successfully and cleaned it up.
+- Storage API tests passed upload, signed reads, document sharing, avatar upsert, and cross-user uploader-folder spoof denial.
 
-No production DDL, ACL change, RLS change, or deployment is authorized by this test overlay. A separate production migration must be generated using the Supabase CLI after the local runtime evidence passes and every client RPC/table permission is reviewed.
+The same commit passed the SQL manifest audit (77/77 tests, workflow run `43258867403`). These results apply only to the disposable local Supabase environment; no production DDL or data was changed.
+
+No production DDL, ACL change, RLS change, or deployment is authorized by this local test evidence. The four forward migrations remain unapplied to production pending a separate approval and deployment plan.
 
 
 ## Manual runtime invocation (disposable local stack only)
@@ -66,7 +65,7 @@ node tests/staging/local-supabase/local-storage-rls-runtime.mjs
 
 The SQL runner applies the test-only overlay, checks catalog postconditions, and runs the rollback-only CRUD/RPC fixture. The separate forward migration narrows its scope to the `postgres` owner defaults and fails closed if `supabase_admin` begins owning public-schema objects; it does not attempt to alter Supabase-managed role defaults. The Storage runner uses the local Auth admin API to set random passwords on the two reserved synthetic `.test` users, signs in through the local Auth API, and exercises actual Storage HTTP endpoints. It removes only the uniquely named test objects and document row it creates. The direct conversation remains synthetic local data and is removed with the disposable database.
 
-Both runners refuse non-loopback targets. The Storage runner requires the local API port 54321; the SQL runner requires the local PostgreSQL port 54322. The workflow `.github/workflows/disposable-local-supabase-runtime.yml` automates this sequence on a fresh GitHub-hosted disposable runner: it initializes a separate temporary Supabase project, pins PostgreSQL 17 and Supabase CLI 3.0.0, starts only local services, replays the exact DAG order through loopback-only connections, runs the SQL and Storage probes, and stops the temporary stack even on failure. It has been committed to the engineering branch; the first runtime execution is pending. The repository's global bootstrap and deployment gates remain fail-closed.
+Both runners refuse non-loopback targets. The Storage runner requires the local API port 54321; the SQL runner requires the local PostgreSQL port 54322. The workflow `.github/workflows/disposable-local-supabase-runtime.yml` automates this sequence on a fresh GitHub-hosted disposable runner: it initializes a separate temporary Supabase project, pins PostgreSQL 17 and Supabase CLI 3.0.0, starts only local services, replays the exact DAG order through loopback-only connections, runs the SQL and Storage probes, and stops the temporary stack even on failure. It has been committed to the engineering branch; the disposable-local runtime workflow has passed (workflow run `43258867470`, 83 SQL files). The repository's global bootstrap and deployment gates remain fail-closed.
 
 
 ## Supabase-managed `supabase_admin` default ACL boundary
