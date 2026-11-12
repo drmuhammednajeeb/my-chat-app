@@ -290,6 +290,7 @@
           });
         } catch (firstError) {
           if (firstError && (firstError.name === "NotAllowedError" || firstError.name === "SecurityError")) throw firstError;
+          if (run !== generation || phase !== "requesting") return false;
           acquired = await mediaDevices.getUserMedia({ audio: true });
         }
       } catch (error) {
