@@ -13,10 +13,10 @@
     "migrationHistorySource": "Supabase migration metadata; metadata contains version/name only, not the original SQL body."
   },
   "sourceSets": {
-    "cliMigrationFiles": 10,
+    "cliMigrationFiles": 13,
     "historicalChangeFiles": 45,
-    "sqlSourceFiles": 55,
-    "duplicatePairs": 3,
+    "sqlSourceFiles": 58,
+    "duplicatePairs": 4,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
@@ -38,7 +38,8 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ],
-    "testOnlyFixtureCount": 19
+    "testOnlyFixtureCount": 19,
+    "canonicalizedProductionMigrations": 3
   },
   "rules": [
     "Do not execute database/changes by glob, alphabetical order, or filename timestamp.",
@@ -599,30 +600,31 @@
       "version": "20261112091557",
       "name": "profile_status_and_conversation_images",
       "sourcePaths": [
-        "database/changes/20261112000100_profile_status_and_conversation_images.sql"
+        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "byte-identical-source-copy; not clean-replay-validated",
+      "note": "Canonical Supabase migration file added on this isolated PR from database/changes/20261112000100_profile_status_and_conversation_images.sql. No SQL was executed."
     },
     {
       "version": "20261112091605",
       "name": "profile_status_video_media",
       "sourcePaths": [
-        "database/changes/20261112000200_profile_status_video_media.sql"
+        "supabase/migrations/20261112091605_profile_status_video_media.sql"
       ],
-      "mappingStatus": "SOURCE_IN_OPEN_PR_NOT_MAIN",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Source exists in open draft PR #138, not main."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "byte-identical-source-copy; not clean-replay-validated",
+      "note": "Canonical Supabase migration file added on this isolated PR from PR138:database/changes/20261112000200_profile_status_video_media.sql. No SQL was executed."
     },
     {
       "version": "20261112103237",
       "name": "allow_combined_profile_status_content_and_media",
       "sourcePaths": [
-        "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql"
+        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
       ],
-      "mappingStatus": "SOURCE_IN_OPEN_PR_NOT_MAIN",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Source exists in open draft PR #138, not main."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "byte-identical-source-copy; not clean-replay-validated",
+      "note": "Canonical Supabase migration file added on this isolated PR from PR138:database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql. No SQL was executed."
     }
   ],
   "sourceFiles": [
@@ -910,7 +912,7 @@
       "path": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
       "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
       "sourceType": "historical-change",
-      "duplicateOf": null,
+      "duplicateOf": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
       "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
       "note": "Historical source; not a canonical CLI migration stream."
     },
@@ -1065,6 +1067,30 @@
       "duplicateOf": null,
       "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
       "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
+    },
+    {
+      "path": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
+      "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
+      "sourceType": "cli-migration",
+      "duplicateOf": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
+      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
+      "note": "Copied byte-for-byte from database/changes/20261112000100_profile_status_and_conversation_images.sql; matches production migration version/name 20261112091557/profile_status_and_conversation_images; source parity is recorded, not replay authorization."
+    },
+    {
+      "path": "supabase/migrations/20261112091605_profile_status_video_media.sql",
+      "gitBlobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0",
+      "sourceType": "cli-migration",
+      "duplicateOf": null,
+      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
+      "note": "Copied byte-for-byte from PR138:database/changes/20261112000200_profile_status_video_media.sql; matches production migration version/name 20261112091605/profile_status_video_media; source parity is recorded, not replay authorization."
+    },
+    {
+      "path": "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql",
+      "gitBlobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
+      "sourceType": "cli-migration",
+      "duplicateOf": null,
+      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
+      "note": "Copied byte-for-byte from PR138:database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql; matches production migration version/name 20261112103237/allow_combined_profile_status_content_and_media; source parity is recorded, not replay authorization."
     }
   ],
   "unresolvedProductionEntries": [
@@ -1105,26 +1131,6 @@
       "mappingStatus": "UNVERIFIED_SOURCE_CANDIDATE",
       "confidence": "candidate-not-execution-proof",
       "note": "The source defines public invoker wrappers and private helpers, but the separate production hardening step is not independently represented or proven equivalent."
-    },
-    {
-      "version": "20261112091605",
-      "name": "profile_status_video_media",
-      "sourcePaths": [
-        "database/changes/20261112000200_profile_status_video_media.sql"
-      ],
-      "mappingStatus": "SOURCE_IN_OPEN_PR_NOT_MAIN",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Source exists in open draft PR #138, not main."
-    },
-    {
-      "version": "20261112103237",
-      "name": "allow_combined_profile_status_content_and_media",
-      "sourcePaths": [
-        "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql"
-      ],
-      "mappingStatus": "SOURCE_IN_OPEN_PR_NOT_MAIN",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Source exists in open draft PR #138, not main."
     }
   ],
   "knownReplayBlockers": [
@@ -1246,13 +1252,15 @@
           "path": "database/changes/20261112000200_profile_status_video_media.sql",
           "blobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0",
           "productionMigration": "20261112091605/profile_status_video_media",
-          "status": "SOURCE_IN_OPEN_PR_NOT_MAIN"
+          "status": "COPIED_TO_CANONICAL_PR139_SOURCE",
+          "canonicalPath": "supabase/migrations/20261112091605_profile_status_video_media.sql"
         },
         {
           "path": "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql",
           "blobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
           "productionMigration": "20261112103237/allow_combined_profile_status_content_and_media",
-          "status": "SOURCE_IN_OPEN_PR_NOT_MAIN"
+          "status": "COPIED_TO_CANONICAL_PR139_SOURCE",
+          "canonicalPath": "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
         }
       ]
     }
