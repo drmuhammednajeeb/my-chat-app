@@ -131,7 +131,7 @@ begin
   return result;
 end;
 $function$;
-REVOKE ALL ON FUNCTION app_private.get_team_dashboard_stats() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.get_team_dashboard_stats() FROM PUBLIC, anon, service_role;
 GRANT EXECUTE ON FUNCTION app_private.get_team_dashboard_stats() TO authenticated;
 
 CREATE OR REPLACE FUNCTION app_private.is_team_admin()
@@ -147,7 +147,7 @@ AS $function$
        where a.user_id = (select auth.uid())
      );
 $function$;
-REVOKE ALL ON FUNCTION app_private.is_team_admin() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.is_team_admin() FROM PUBLIC, anon, service_role;
 GRANT EXECUTE ON FUNCTION app_private.is_team_admin() TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.get_team_dashboard_stats()
@@ -158,7 +158,7 @@ CREATE OR REPLACE FUNCTION public.get_team_dashboard_stats()
 AS $function$
   select app_private.get_team_dashboard_stats();
 $function$;
-REVOKE ALL ON FUNCTION public.get_team_dashboard_stats() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.get_team_dashboard_stats() FROM PUBLIC, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.get_team_dashboard_stats() TO authenticated, service_role;
 
 DROP TRIGGER IF EXISTS enforce_group_member_limit ON public.conversation_members;
