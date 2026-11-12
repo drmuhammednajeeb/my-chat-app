@@ -48,6 +48,13 @@ test('conversation images use private storage and a manager-checked RPC', () => 
   assert.match(client, /canManageConversation\(conversation\)/);
 });
 
+test('security-definer conversation image mutation paths require active membership', () => {
+  const trigger = migration.match(/create or replace function app_private\\.validate_conversation_image_path\\(\\)[\\s\\S]*?\\$\\$;/)?.[0] || '';
+  const rpc = migration.match(/create or replace function public\\.set_conversation_image\\([\\s\\S]*?\\$\\$;/)?.[0] || '';
+  assert.match(trigger, /actor is null or not app_private\\.is_active_member\\(\\)/);
+  assert.match(rpc, /if not app_private\\.is_active_member\\(\\) then/);
+});
+
 test('client limits status and conversation image uploads and keeps status text/image exclusive', () => {
   assert.match(client, /MAX_IMAGE_BYTES = 3 \* 1024 \* 1024/);
   assert.match(client, /IMAGE_TYPES = new Set\(\['image\/jpeg', 'image\/png', 'image\/webp'\]\)/);
