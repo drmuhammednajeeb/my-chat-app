@@ -353,13 +353,13 @@
     },
     {
       "nodeId": "chat.profile-status-combined-content-media",
-      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "status": "PRODUCTION_APPLIED_LOCAL_REPLAY_NOT_EXECUTED",
       "testSources": [
         "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql",
         "tests/status-workspace.test.mjs"
       ],
       "blockedBy": [],
-      "parityNote": "Corrects the mutually exclusive content/media check and insert RLS predicate, and fixes UUID media-path regex escaping. Production application will be tracked separately from the disposable-local replay status."
+      "parityNote": "Applied and verified on Supabase production on 2026-11-12 under the user's explicit request. This is separate from the blocked disposable-local replay; no local replay or broader production replay is authorized."
     },
     {
       "nodeId": "chat.workspace-indexes",
