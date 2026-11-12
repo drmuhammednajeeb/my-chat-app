@@ -167,7 +167,7 @@
       if (run !== generation || completedGeneration === run) return;
       completedGeneration = run;
 
-      const cancelled = phase === "cancelling";
+      const cancelled = phase === "cancelling" && !oversize;
       const tooLarge = oversize;
       const shouldSend = sendRequested;
       const snapshot = activeSnapshot;
@@ -426,11 +426,15 @@
         settlePending(false);
         return true;
       }
+      const previousPhase = phase;
       sendRequested = false;
       phase = "cancelling";
       updateUI();
       if (recorder && recorder.state !== "inactive") {
         try { recorder.stop(); } catch (_) { reset(); settlePending(false); }
+      } else if (recorder && (previousPhase === "stopping" || previousPhase === "cancelling")) {
+        // stop() has already been requested; let its queued onstop event perform cleanup.
+        return true;
       } else {
         reset();
         settlePending(false);
