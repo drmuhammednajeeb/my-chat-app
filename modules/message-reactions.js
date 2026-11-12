@@ -126,7 +126,9 @@
     }
 
     function closePicker() {
+      if (hoverOpenTimer) clearTimeout(hoverOpenTimer);
       if (hoverCloseTimer) clearTimeout(hoverCloseTimer);
+      hoverOpenTimer = null;
       hoverCloseTimer = null;
       if (!activePicker) return;
       activePicker.trigger?.setAttribute("aria-expanded", "false");
@@ -136,10 +138,7 @@
 
     function openPicker(row, message, trigger) {
       if (!row || !message || message.deleted_at || !trigger || !isCurrent(message.conversation_id || state.active?.id, null)) return;
-      if (activePicker?.messageId === message.id) {
-        closePicker();
-        return;
-      }
+      if (activePicker?.messageId === message.id) return;
       closePicker();
       const picker = documentRef.createElement("div");
       picker.className = "message-reaction-picker";
@@ -190,6 +189,12 @@
         openPicker(row, message, trigger);
       });
       container.prepend(trigger);
+      const bubble = row.querySelector?.(".bubble");
+      bubble?.addEventListener?.("click", event => {
+        if (event.pointerType === "touch" || !event.detail
+          || event.target?.closest?.("button,a,video,audio,img,.reply-quote,.message-menu-wrap")) return;
+        openPicker(row, message, trigger);
+      });
 
       row.addEventListener?.("pointerenter", event => {
         if (event.pointerType && event.pointerType !== "mouse") return;
@@ -292,7 +297,11 @@
 
     async function load(conversationId, messages, requestId = null) {
       const ids = [...new Set((messages || []).filter(message => message?.id && !message.deleted_at).map(message => message.id))];
-      if (!conversationId || !ids.length) return true;
+      if (!conversationId) return true;
+      if (!ids.length) {
+        if (isCurrent(conversationId, requestId)) state.reactions = new Map();
+        return true;
+      }
       const startRevision = revisionByConversation.get(conversationId) || 0;
       try {
         const { data, error } = await supabaseClient.from("message_reactions")
