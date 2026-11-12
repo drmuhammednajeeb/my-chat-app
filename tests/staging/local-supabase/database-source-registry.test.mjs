@@ -1,115 +1,91 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
-const gitBlobSha = (buffer) => createHash('sha1')
-  .update(`blob ${buffer.length}\0`)
-  .update(buffer)
-  .digest('hex');
+const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\\0`).update(buffer).digest('hex');
 
-test('production migration source registry is explicit, complete, and fail-closed', async () => {
+test('production source registry maps all 62 ledger versions to one canonical migration each', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
-  assert.equal(registry.schemaVersion, 1);
-  assert.equal(registry.registryStatus, 'RECONCILIATION_INCOMPLETE');
+  assert.equal(registry.schemaVersion, 2);
+  assert.equal(registry.registryStatus, 'CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.sourceSets.sqlSourceFiles, 58);
-  assert.equal(registry.sourceFiles.length, 58);
-  assert.equal(registry.sourceSets.cliMigrationFiles, 17);
-  assert.equal(registry.sourceSets.historicalChangeFiles, 41);
-  assert.equal(registry.sourceSets.duplicatePairs, 4);
-  assert.equal(registry.sourceSets.canonicalizedProductionMigrations, 3);
-  assert.equal(registry.sourceSets.reconstructedProductionMigrations, 4);
-  assert.equal(registry.sourceSets.testOnlyFixtureCount, 19);
-  assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 19);
+  assert.equal(registry.sourceSets.productionLedgerMigrations, 62);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 62);
+  assert.equal(registry.sourceSets.archiveSqlFiles, 12);
+  assert.equal(registry.sourceSets.duplicatePairs, 0);
+  assert.equal(registry.sourceFiles.length, 62);
+  assert.equal(registry.sourceSets.testOnlyFixtureCount, 17);
+  assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 17);
 
   const versions = registry.productionMigrations.map(item => item.version);
-  assert.equal(new Set(versions).size, versions.length, 'production migration versions must be unique');
-  assert.deepEqual(versions, [...versions].sort(), 'production migrations must be ordered by production version');
+  assert.equal(new Set(versions).size, 62);
+  assert.deepEqual(versions, [...versions].sort());
+  const paths = registry.productionMigrations.map(item => item.path);
+  assert.equal(new Set(paths).size, 62);
+  assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
-  const sourcePaths = new Set(registry.sourceFiles.map(item => item.path));
-  assert.equal(sourcePaths.size, registry.sourceFiles.length, 'source file paths must be unique');
+  const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 62);
+  for (const migration of registry.productionMigrations) {
+    assert.match(migration.version, /^\\d{14}$/);
+    assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
+    const bytes = await readFile(path.join(root, migration.path));
+    assert.equal(blobSha(bytes), migration.gitBlobSha, 'canonical blob mismatch: ' + migration.path);
+    assert.ok(migration.mappingStatus);
+    assert.ok(migration.note);
+    for (const source of migration.originalSources) {
+      assert.ok(source.originalFileName);
+      assert.match(source.sourceGitBlobSha, /^[a-f0-9]{40}$/);
+      if (source.archivedPath) {
+        const archived = await readFile(path.join(root, source.archivedPath));
+        assert.equal(blobSha(archived), source.archiveGitBlobSha);
+      }
+    }
+  }
 
   for (const source of registry.sourceFiles) {
-    const bytes = await readFile(path.join(root, source.path));
-    assert.equal(gitBlobSha(bytes), source.gitBlobSha, 'Git blob provenance mismatch: ' + source.path);
-    assert.ok(['cli-migration', 'historical-change'].includes(source.sourceType));
-    assert.equal(source.executionPolicy, 'NOT_EXECUTABLE_FROM_REGISTRY');
-    if (source.duplicateOf) {
-      assert.ok(sourcePaths.has(source.duplicateOf), 'duplicate target missing: ' + source.duplicateOf);
-      const duplicate = registry.sourceFiles.find(item => item.path === source.duplicateOf);
-      assert.equal(source.gitBlobSha, duplicate.gitBlobSha, 'duplicate files must have identical Git blobs');
-    }
+    assert.ok(source.path.startsWith('supabase/migrations/'));
+    assert.equal(source.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
   }
-
-  const fixturePaths = new Set(registry.sourceSets.testOnlyFixturePaths);
-  for (const fixture of fixturePaths) await readFile(path.join(root, fixture));
-
-  const externalPaths = new Set(
-    registry.externalSources.flatMap(group => group.files.map(file => file.path))
-  );
-  for (const external of registry.externalSources) {
-    assert.equal(external.state, 'OPEN_DRAFT_NOT_MERGED');
-    assert.ok(external.headSha);
-    for (const file of external.files) {
-      assert.match(file.blobSha, /^[a-f0-9]{40}$/);
-      assert.equal(file.status, 'COPIED_TO_CANONICAL_PR139_SOURCE');
-      assert.ok(sourcePaths.has(file.canonicalPath), 'canonical source copy missing: ' + file.canonicalPath);
-    }
+  for (const fixture of registry.sourceSets.testOnlyFixturePaths) {
+    assert.ok(fixture.startsWith('tests/staging/local-supabase/fixtures/'));
+    await readFile(path.join(root, fixture));
   }
-
-  const allowedStatuses = new Set([
-    'SOURCE_NAME_MATCH',
-    'DUPLICATE_SOURCE_MATCH',
-    'SOURCE_CANDIDATE',
-    'COMPOUND_SOURCE_CANDIDATE',
-    'DUPLICATE_IDENTICAL_SOURCE',
-    'RECOVERED_FIXTURE_ONLY',
-    'MISSING_CANONICAL_SOURCE',
-    'UNVERIFIED_SOURCE_CANDIDATE',
-    'SOURCE_IN_OPEN_PR_NOT_MAIN',
-    'CANONICAL_MIGRATION_SOURCE_ADDED',
-    'RECONSTRUCTED_FROM_PRODUCTION_CATALOG',
-    'FOLDED_INTO_PRIOR_CANONICAL_MIGRATION'
-  ]);
-
-  for (const migration of registry.productionMigrations) {
-    assert.match(migration.version, /^\d{14}$/);
-    assert.ok(migration.name);
-    assert.ok(allowedStatuses.has(migration.mappingStatus), 'unrecognized mapping status: ' + migration.mappingStatus);
-    for (const sourcePath of migration.sourcePaths) {
-      assert.ok(
-        sourcePaths.has(sourcePath) || fixturePaths.has(sourcePath) || externalPaths.has(sourcePath),
-        'migration references an unregistered source path: ' + sourcePath
-      );
-    }
-    if (migration.mappingStatus === 'MISSING_CANONICAL_SOURCE') {
-      assert.equal(migration.sourcePaths.length, 0);
-      assert.ok(migration.note);
-    }
-  }
-
+  assert.equal(JSON.stringify(registry).includes('database/changes'), false);
+  assert.equal(registry.unresolvedProductionEntries.length, 0);
+  assert.ok(registry.reviewRequiredProductionEntries.length > 0);
   assert.equal(registry.safety.executionAuthorized, false);
   assert.equal(registry.safety.productionChangesAllowed, false);
   assert.equal(registry.safety.localReplayEnabled, false);
   assert.equal(registry.safety.mainModified, false);
-  assert.equal(registry.safety.pr138Merged, false);
-  assert.ok(registry.reviewRequiredProductionEntries.length > 0);
-  assert.ok(registry.knownReplayBlockers.some(item => item.id === 'DAG-014'));
-  assert.ok(registry.knownReplayBlockers.some(item => item.id === 'DAG-015'));
-  assert.ok(registry.knownReplayBlockers.some(item => item.id === 'DAG-016'));
+  assert.equal(registry.safety.productionModified, false);
+  assert.equal(registry.safety.sqlExecuted, false);
+  assert.equal(registry.safety.pr139Merged, false);
+  for (const id of ['DAG-014', 'DAG-015', 'DAG-016']) {
+    assert.ok(registry.knownReplayBlockers.some(item => item.id === id));
+  }
 });
 
-test('the registry never treats historical SQL or test fixtures as an executable migration stream', async () => {
-  const registry = JSON.parse(await readFile(registryPath, 'utf8'));
-  assert.equal(registry.productionMigrations.length, registry.productionDatabase.migrationCount);
-  assert.ok(registry.rules.some(rule => rule.includes('Do not execute database/changes by glob')));
-  assert.ok(registry.rules.some(rule => rule.includes('test fixtures')));
-  assert.ok(registry.rules.some(rule => rule.includes('No migration is replay-authorized')));
-  assert.ok(registry.sourceFiles.every(source => source.executionPolicy === 'NOT_EXECUTABLE_FROM_REGISTRY'));
+test('archive manifest is provenance-only and excluded from Supabase CLI discovery', async () => {
+  const [registry, archive] = await Promise.all([
+    readFile(registryPath, 'utf8').then(JSON.parse),
+    readFile(path.join(root, 'database/archive/manifest.json'), 'utf8').then(JSON.parse)
+  ]);
+  assert.equal(archive.executionPolicy, 'ARCHIVE_ONLY_NEVER_EXECUTE');
+  assert.equal(archive.sqlFiles.length, 12);
+  assert.equal(registry.archiveFiles.length, 12);
+  assert.deepEqual(new Set(registry.archiveFiles.map(item => item.path)), new Set(archive.sqlFiles.map(item => item.path)));
+  for (const file of registry.archiveFiles) {
+    assert.ok(file.path.startsWith('database/archive/'));
+    assert.equal(file.executionPolicy, 'ARCHIVE_ONLY_NEVER_EXECUTE');
+    const bytes = await readFile(path.join(root, file.path));
+    assert.equal(blobSha(bytes), file.gitBlobSha, 'archive blob mismatch: ' + file.path);
+  }
+  assert.equal(registry.safety.executionAuthorized, false);
 });

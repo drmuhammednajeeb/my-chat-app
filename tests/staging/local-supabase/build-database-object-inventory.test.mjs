@@ -9,7 +9,7 @@ import { buildObjectInventory } from './build-database-object-inventory.mjs';
 test('source inventory covers all known SQL files and remains read-only', async () => {
   const report = await buildObjectInventory();
   assert.equal(report.auditMode, 'READ_ONLY_SOURCE_INVENTORY');
-  assert.deepEqual(report.sourceCounts, { migrations: 20, historicalSql: 41, totalSqlFiles: 61, supabaseConfigPresent: false });
+  assert.deepEqual(report.sourceCounts, { migrations: 62, historicalSql: 0, archivedSql: 12, totalSqlFiles: 62, supabaseConfigPresent: false });
   assert.ok(report.inventoryTotals.createdTables > 0);
   assert.ok(report.inventoryTotals.columns > 0);
   assert.ok(report.inventoryTotals.foreignKeys > 0);
@@ -22,10 +22,9 @@ test('source inventory covers all known SQL files and remains read-only', async 
 test('inventory exposes unresolved legacy and missing RPC dependencies', async () => {
   const report = await buildObjectInventory();
   assert.equal(report.legacyMessages.tableDefinitionFoundInRepositorySql, false);
-  assert.ok(report.legacyMessages.referencedByMigrations.includes('supabase/migrations/202611060001_ultra_chat_pro_v2.sql'));
-  assert.ok(report.legacyMessages.referencedByMigrations.includes('supabase/migrations/202611060006_explicit_legacy_deny.sql'));
-  assert.equal(report.unresolvedInternalFunctions.includes('app_private.get_or_create_direct_conversation_impl'), false);
-  assert.deepEqual(report.unresolvedInternalFunctions, ['app_private.get_or_create_direct_conversation_impl']);
+  assert.ok(report.legacyMessages.referencedByMigrations.includes('supabase/migrations/20261106061954_ultra_chat_pro_v2.sql'));
+  assert.ok(report.legacyMessages.referencedByMigrations.includes('supabase/migrations/20261106062207_explicit_legacy_deny.sql'));
+  assert.deepEqual(report.unresolvedInternalFunctions, []);
   assert.equal(report.missingClientRpcs.includes('get_or_create_direct_conversation'), false);
 });
 
@@ -41,7 +40,7 @@ test('inventory identifies the application/database Forever membership format co
 test('inventory retains duplicate provenance and the known syntax hazard', async () => {
   const report = await buildObjectInventory();
   assert.equal(report.duplicateGroups.length, 0);
-  assert.ok(report.syntaxHazards.some(item => item.path === 'database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
+  assert.ok(report.archivedSyntaxHazards.some(item => item.path === 'database/archive/source-provenance/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
 });
 
 test('platform service dependencies are explicit', async () => {
@@ -56,23 +55,23 @@ test('platform service dependencies are explicit', async () => {
 
 test('all policy definitions after the membership rewrite enforce active membership', async () => {
   const report = await buildObjectInventory();
-  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 27);
+  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 17);
   assert.deepEqual(report.policyCoverage.laterPoliciesMissingActiveMemberGuard, []);
 });
 
 
 test('fixed identity literals are inventoried for synthetic test substitution', async () => {
   const report = await buildObjectInventory();
-  assert.ok(report.hardcodedIdentityReview.emailLiteralFiles.includes('database/changes/team_management_dashboard.sql'));
-  assert.ok(report.hardcodedIdentityReview.uuidLiteralFiles.includes('database/changes/20261107144109_private_membership_system_20261107.sql'));
-  assert.ok(report.hardcodedIdentityReview.membershipNumberLiteralFiles.includes('database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql'));
-  assert.ok(report.hardcodedIdentityReview.membershipNumberLiteralFiles.includes('database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql'));
+  assert.ok(report.hardcodedIdentityReview.emailLiteralFiles.includes('database/archive/source-provenance/team_management_dashboard.sql'));
+  assert.ok(report.hardcodedIdentityReview.uuidLiteralFiles.includes('supabase/migrations/20261107144109_private_membership_system_20261107.sql'));
+  assert.ok(report.hardcodedIdentityReview.membershipNumberLiteralFiles.includes('supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql'));
+  assert.ok(report.hardcodedIdentityReview.membershipNumberLiteralFiles.includes('supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql'));
 });
 
 
 test('application Storage buckets are compared with repository bucket declarations and policies', async () => {
   const report = await buildObjectInventory();
-  assert.deepEqual(report.storageCoverage.clientBuckets, ['avatars', 'channel-avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
+  assert.deepEqual(report.storageCoverage.clientBuckets, ['avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
   assert.deepEqual(report.storageCoverage.declaredBucketIds, ['avatars', 'channel-avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
   assert.deepEqual(report.storageCoverage.missingBucketDeclarations, []);
   assert.deepEqual(report.storageCoverage.storageObjectPolicyBuckets, ['avatars', 'channel-avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);

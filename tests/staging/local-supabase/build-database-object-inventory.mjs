@@ -186,10 +186,11 @@ function inspect(file) {
 }
 
 export async function buildObjectInventory(root = ROOT) {
-  const [migrations, historical] = await Promise.all([
-    walkSql(root, 'supabase/migrations', 'migration'), walkSql(root, 'database/changes', 'historical_change')
+  const [migrations, archived] = await Promise.all([
+    walkSql(root, 'supabase/migrations', 'migration'), walkSql(root, 'database/archive', 'archived_non_executable')
   ]);
-  const files = [...migrations, ...historical].map(inspect).sort((a, b) => a.path.localeCompare(b.path));
+  const files = migrations.map(inspect).sort((a, b) => a.path.localeCompare(b.path));
+  const archivedFiles = archived.map(inspect).sort((a, b) => a.path.localeCompare(b.path));
   const definitions = new Set(files.flatMap(file => file.functions.map(fn => fn.name)));
   const referenced = new Set(files.flatMap(file => file.internalFunctionsReferenced.map(name => 'app_private.' + name)));
   const relationDefinitions = new Set(files.flatMap(file => [...file.createdTables, ...file.alteredTables]));
@@ -207,7 +208,7 @@ export async function buildObjectInventory(root = ROOT) {
   const publicFunctionNames = new Set(files.flatMap(file => file.functions.filter(fn => fn.name.startsWith('public.')).map(fn => fn.name.slice(7))));
   const missingClientRpcs = clientRpcNames.filter(name => !publicFunctionNames.has(name));
   const finalPath = 'supabase/migrations/20261108075913_unify_forever_membership_number_format.sql';
-  const officialPath = 'database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql';
+  const officialPath = 'supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql';
   const finalSql = await readFile(path.join(root, finalPath), 'utf8').catch(() => '');
   const officialSql = await readFile(path.join(root, officialPath), 'utf8').catch(() => '');
   const finalTargets = matches(finalSql, /p\.proname\s+in\s*\(([\s\S]*?)\)/gi, m => m[1].match(/'([^']+)'/g)?.map(x => x.slice(1, -1)) ?? []).flat();
@@ -238,9 +239,9 @@ export async function buildObjectInventory(root = ROOT) {
   let supabaseConfigPresent = true;
   try { await stat(path.join(ROOT, 'supabase/config.toml')); } catch (error) { if (error.code === 'ENOENT') supabaseConfigPresent = false; else throw error; }
   const hardcodedIdentityReview = {
-    emailLiteralFiles: files.filter(file => file.hardcodedEmails.length > 0).map(file => file.path),
-    uuidLiteralFiles: files.filter(file => file.hardcodedUuids.length > 0).map(file => file.path),
-    membershipNumberLiteralFiles: files.filter(file => file.hardcodedMembershipNumbers.length > 0).map(file => file.path)
+    emailLiteralFiles: [...files, ...archivedFiles].filter(file => file.hardcodedEmails.length > 0).map(file => file.path),
+    uuidLiteralFiles: [...files, ...archivedFiles].filter(file => file.hardcodedUuids.length > 0).map(file => file.path),
+    membershipNumberLiteralFiles: [...files, ...archivedFiles].filter(file => file.hardcodedMembershipNumbers.length > 0).map(file => file.path)
   };
   const platformDependencies = {
     authSchema: files.some(file => file.relationsReferenced.some(name => name.startsWith('auth.'))),
@@ -252,7 +253,7 @@ export async function buildObjectInventory(root = ROOT) {
   return {
     schemaVersion: 1, auditMode: 'READ_ONLY_SOURCE_INVENTORY',
     scope: 'Repository SQL definitions and references only; not a live deployed database catalog.',
-    sourceCounts: { migrations: migrations.length, historicalSql: historical.length, totalSqlFiles: files.length, supabaseConfigPresent },
+    sourceCounts: { migrations: migrations.length, historicalSql: 0, archivedSql: archived.length, totalSqlFiles: files.length, supabaseConfigPresent },
     inventoryTotals: {
       createdTables: files.reduce((n, f) => n + f.createdTables.length, 0),
       columns: files.reduce((n, f) => n + f.tableDetails.reduce((count, table) => count + table.columns.length, 0), 0),
@@ -282,10 +283,11 @@ export async function buildObjectInventory(root = ROOT) {
       status: frontendRequires971Nine && officialInviteStillLegacy && finalCoversInviteImplementations && finalTargets.length === 6 ? 'SEQUENCED_FORMAT_TRANSITION' : 'REVIEW_REQUIRED'
     },
     duplicateGroups,
-    policyCoverage: { membershipRewriteSource: 'database/changes/20261107144109_private_membership_system_20261107.sql', policiesAfterMembershipBase, laterPoliciesMissingActiveMemberGuard },
+    policyCoverage: { membershipRewriteSource: 'supabase/migrations/20261107144109_private_membership_system_20261107.sql', policiesAfterMembershipBase, laterPoliciesMissingActiveMemberGuard },
     storageCoverage,
     hardcodedIdentityReview,
     syntaxHazards: files.flatMap(f => f.syntaxHazards.map(item => ({ path: f.path, ...item }))),
+    archivedSyntaxHazards: archivedFiles.flatMap(f => f.syntaxHazards.map(item => ({ path: f.path, ...item }))),
     files
   };
 }

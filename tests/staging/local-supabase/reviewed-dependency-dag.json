@@ -4,15 +4,16 @@
   "executionAuthorized": false,
   "scope": "Repository-source dependency graph; not a live catalog and not an executable SQL order.",
   "sourceSets": {
-    "cliMigrations": {
+    "canonicalMigrations": {
       "path": "supabase/migrations",
-      "count": 17
+      "count": 62
     },
-    "historicalChanges": {
-      "path": "database/changes",
-      "count": 45,
-      "note": "Not a canonical Supabase CLI sequence."
-    }
+    "nonExecutableArchive": {
+      "path": "database/archive",
+      "count": 12,
+      "execution": "NEVER_EXECUTE"
+    },
+    "duplicateActiveCopies": 0
   },
   "platformNodes": [
     {
@@ -58,15 +59,14 @@
     {
       "id": "legacy.messages",
       "source": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
-        "supabase/migrations/202611060006_explicit_legacy_deny.sql",
+        "supabase/migrations/20261106062207_explicit_legacy_deny.sql",
         "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql"
       ],
       "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
       "note": "Current client uses chat_messages and the two migrations only perform table-level policy/privilege operations. A minimal empty stub is permitted only in the disposable local replay fixture; it is not a model of the deployed legacy table.",
       "testSource": [
         "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
-        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+        "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
       ],
       "requires": [
         "test-fixture.local-platform-preflight"
@@ -75,7 +75,7 @@
     {
       "id": "core.base",
       "source": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql"
       ],
       "provides": [
         "profiles",
@@ -93,7 +93,7 @@
         "test-fixture.local-platform-preflight"
       ],
       "testSource": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql"
       ]
     },
     {
@@ -110,8 +110,7 @@
       ],
       "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
       "testSource": [
-        "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql",
-        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+        "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql"
       ],
       "provenance": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
       "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests.",
@@ -123,21 +122,21 @@
     {
       "id": "core.grants",
       "source": [
-        "supabase/migrations/202611060002_tighten_api_grants.sql",
-        "supabase/migrations/202611060003_minimum_table_privileges.sql"
+        "supabase/migrations/20261106062058_tighten_api_grants.sql",
+        "supabase/migrations/20261106062111_minimum_table_privileges.sql"
       ],
       "requires": [
         "core.base"
       ],
       "testSource": [
-        "supabase/migrations/202611060002_tighten_api_grants.sql",
-        "supabase/migrations/202611060003_minimum_table_privileges.sql"
+        "supabase/migrations/20261106062058_tighten_api_grants.sql",
+        "supabase/migrations/20261106062111_minimum_table_privileges.sql"
       ]
     },
     {
       "id": "core.creator",
       "source": [
-        "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
+        "supabase/migrations/20261106062150_fix_creator_membership_rls.sql"
       ],
       "provides": [
         "app_private.is_conversation_creator(uuid)"
@@ -146,7 +145,7 @@
         "core.base"
       ],
       "testSource": [
-        "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
+        "supabase/migrations/20261106062150_fix_creator_membership_rls.sql"
       ]
     },
     {
@@ -168,30 +167,23 @@
     },
     {
       "id": "team.admin",
-      "source": [
-        "database/changes/team_management_dashboard.sql",
-        "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
-      ],
+      "source": [],
       "provides": [
         "app_private.team_admins",
         "app_private.is_team_admin()",
         "app_private.enforce_group_member_limit()"
       ],
       "requires": [
-        "core.base",
-        "platform.auth",
-        "core.creator",
-        "test-fixture.admin-auth-seed"
+        "chat.pins"
       ],
-      "status": "TEST_COPY_ONLY_SYNTHETIC_ADMIN_EMAIL",
-      "testSource": [
-        "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
-      ]
+      "status": "SCHEMA_FOLDED_INTO_20261106130351",
+      "testSource": []
     },
     {
       "id": "chat.preferences",
       "source": [
-        "database/changes/user_specific_direct_chat_preferences.sql"
+        "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql",
+        "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql"
       ],
       "provides": [
         "user_chat_preferences"
@@ -200,13 +192,16 @@
         "core.base"
       ],
       "testSource": [
-        "database/changes/user_specific_direct_chat_preferences.sql"
+        "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql",
+        "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql"
       ]
     },
     {
       "id": "chat.pins",
       "source": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+        "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql",
+        "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql"
       ],
       "provides": [
         "message_pins",
@@ -214,32 +209,35 @@
       ],
       "requires": [
         "core.base",
-        "team.admin"
+        "platform.realtime"
       ],
       "testSource": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+        "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql",
+        "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql"
       ]
     },
     {
       "id": "chat.reactions",
       "source": [
-        "database/changes/message_reactions_and_whatsapp_typography.sql"
+        "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql"
       ],
       "provides": [
         "message_reactions"
       ],
       "requires": [
         "core.base",
-        "platform.realtime"
+        "platform.realtime",
+        "chat.channels-public"
       ],
       "testSource": [
-        "database/changes/message_reactions_and_whatsapp_typography.sql"
+        "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql"
       ]
     },
     {
       "id": "chat.groups",
       "source": [
-        "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
+        "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql"
       ],
       "provides": [
         "conversation_group_settings",
@@ -255,13 +253,13 @@
         "team.admin"
       ],
       "testSource": [
-        "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
+        "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql"
       ]
     },
     {
       "id": "chat.channels-public",
       "source": [
-        "database/changes/public_announcement_channels.sql"
+        "supabase/migrations/20261106125643_message_reactions_and_realtime.sql"
       ],
       "provides": [
         "channel conversation type",
@@ -273,13 +271,15 @@
         "core.creator"
       ],
       "testSource": [
-        "database/changes/public_announcement_channels.sql"
+        "supabase/migrations/20261106125643_message_reactions_and_realtime.sql"
       ]
     },
     {
       "id": "chat.channels-private",
       "source": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+        "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql",
+        "supabase/migrations/20261106132753_index_channel_invites_created_by.sql"
       ],
       "provides": [
         "channel_invites",
@@ -293,13 +293,15 @@
         "platform.pgcrypto"
       ],
       "testSource": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+        "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql",
+        "supabase/migrations/20261106132753_index_channel_invites_created_by.sql"
       ]
     },
     {
       "id": "chat.hardening",
       "source": [
-        "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
+        "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql"
       ],
       "requires": [
         "chat.pins",
@@ -308,7 +310,7 @@
         "chat.direct-conversation-rpc"
       ],
       "testSource": [
-        "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
+        "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql"
       ],
       "blockedBy": [
         "DAG-014",
@@ -318,16 +320,16 @@
     {
       "id": "chat.self",
       "source": [
-        "database/changes/20261107061012_self_message_conversation.sql",
-        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
+        "supabase/migrations/20261107061012_self_message_conversation.sql",
+        "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql"
       ],
       "requires": [
         "core.base",
         "chat.channels-public"
       ],
       "testSource": [
-        "database/changes/20261107061012_self_message_conversation.sql",
-        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
+        "supabase/migrations/20261107061012_self_message_conversation.sql",
+        "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql"
       ]
     },
     {
@@ -362,7 +364,7 @@
     {
       "id": "chat.workspaces",
       "source": [
-        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+        "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql"
       ],
       "provides": [
         "workspace tables",
@@ -375,14 +377,14 @@
         "platform.pgcrypto"
       ],
       "testSource": [
-        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+        "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql"
       ]
     },
     {
       "id": "chat.workspace-realtime",
       "source": [
-        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
-        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
+        "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql",
+        "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql"
       ],
       "requires": [
         "chat.workspaces",
@@ -391,40 +393,42 @@
         "chat.workspace-indexes"
       ],
       "testSource": [
-        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
-        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
+        "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql",
+        "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql"
       ]
     },
     {
       "id": "chat.expiry",
       "source": [
-        "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
+        "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql"
       ],
       "requires": [
         "chat.groups",
         "platform.realtime"
       ],
       "testSource": [
-        "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
+        "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql"
       ]
     },
     {
       "id": "chat.expiry-purge",
       "source": [
-        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+        "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql"
       ],
       "requires": [
         "chat.expiry",
         "platform.pg_cron"
       ],
       "testSource": [
-        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+        "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql"
       ]
     },
     {
       "id": "chat.avatar-storage",
       "source": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql",
+        "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql",
+        "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql"
       ],
       "requires": [
         "core.base",
@@ -432,25 +436,27 @@
         "platform.realtime"
       ],
       "testSource": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql",
+        "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql",
+        "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql"
       ]
     },
     {
       "id": "chat.preference-archive-rls",
       "source": [
-        "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
+        "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql"
       ],
       "requires": [
         "chat.preferences"
       ],
       "testSource": [
-        "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
+        "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql"
       ]
     },
     {
       "id": "chat.account-settings-message-edit",
       "source": [
-        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
+        "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql"
       ],
       "provides": [
         "user_settings",
@@ -464,25 +470,25 @@
         "team.admin"
       ],
       "testSource": [
-        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
+        "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql"
       ]
     },
     {
       "id": "chat.message-edit-hardening",
       "source": [
-        "database/changes/20261107124500_harden_message_edit_permissions.sql"
+        "supabase/migrations/20261107120149_harden_message_edit_permissions.sql"
       ],
       "requires": [
         "chat.account-settings-message-edit"
       ],
       "testSource": [
-        "database/changes/20261107124500_harden_message_edit_permissions.sql"
+        "supabase/migrations/20261107120149_harden_message_edit_permissions.sql"
       ]
     },
     {
       "id": "chat.group-settings-hardening",
       "source": [
-        "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
+        "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql"
       ],
       "requires": [
         "chat.groups",
@@ -490,39 +496,39 @@
         "chat.group-ownership-transfer"
       ],
       "testSource": [
-        "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
+        "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql"
       ]
     },
     {
       "id": "chat.team-admin-group-overrides",
       "source": [
-        "database/changes/20261107130534_include_team_admins_in_group_management.sql"
+        "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql"
       ],
       "requires": [
         "chat.group-settings-hardening",
         "team.admin"
       ],
       "testSource": [
-        "database/changes/20261107130534_include_team_admins_in_group_management.sql"
+        "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql"
       ]
     },
     {
       "id": "chat.scope-team-admin-overrides",
       "source": [
-        "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+        "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql"
       ],
       "requires": [
         "chat.team-admin-group-overrides",
         "team.admin"
       ],
       "testSource": [
-        "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+        "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql"
       ]
     },
     {
       "id": "chat.message-edit-indexes",
       "source": [
-        "database/changes/20261107131500_index_message_edit_history.sql"
+        "supabase/migrations/20261107120426_index_message_edit_history.sql"
       ],
       "requires": [
         "chat.account-settings-message-edit",
@@ -530,13 +536,13 @@
         "chat.restore-message-edit-guard"
       ],
       "testSource": [
-        "database/changes/20261107131500_index_message_edit_history.sql"
+        "supabase/migrations/20261107120426_index_message_edit_history.sql"
       ]
     },
     {
       "id": "membership.base",
       "source": [
-        "database/changes/20261107144109_private_membership_system_20261107.sql"
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql"
       ],
       "provides": [
         "member_invitations",
@@ -572,10 +578,11 @@
         "chat.remove-duplicate-favorite",
         "chat.workspace-indexes",
         "chat.media-upload-path-hardening",
-        "test-fixture.direct-chat-auth-seed"
+        "test-fixture.direct-chat-auth-seed",
+        "test-fixture.admin-seed"
       ],
       "testSource": [
-        "database/changes/20261107144109_private_membership_system_20261107.sql"
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql"
       ]
     },
     {
@@ -598,7 +605,7 @@
     {
       "id": "membership.official",
       "source": [
-        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+        "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
         "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql"
       ],
       "requires": [
@@ -637,81 +644,80 @@
     {
       "id": "membership.syntax-fix",
       "source": [
-        "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
-        "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+        "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ],
       "status": "TEST_COPY_ONLY",
       "requires": [
         "membership.official"
       ],
       "testSource": [
-        "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+        "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ]
     },
     {
       "id": "membership.wrappers",
       "source": [
-        "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
+        "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql"
       ],
       "requires": [
         "membership.base"
       ],
       "testSource": [
-        "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
+        "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql"
       ]
     },
     {
       "id": "membership.invitation-policies",
       "source": [
-        "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
+        "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql"
       ],
       "requires": [
         "membership.base"
       ],
       "testSource": [
-        "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
+        "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql"
       ]
     },
     {
       "id": "membership.invitation-indexes",
       "source": [
-        "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
+        "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql"
       ],
       "requires": [
         "membership.base"
       ],
       "testSource": [
-        "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
+        "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql"
       ]
     },
     {
       "id": "membership.auth-fix",
       "source": [
-        "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
+        "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
       ],
       "requires": [
         "membership.base"
       ],
       "testSource": [
-        "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
+        "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
       ]
     },
     {
       "id": "membership.retire-sequence",
       "source": [
-        "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
+        "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql"
       ],
       "requires": [
         "membership.official"
       ],
       "testSource": [
-        "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
+        "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql"
       ]
     },
     {
       "id": "membership.anchor",
       "source": [
-        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+        "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
         "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ],
       "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
@@ -725,26 +731,26 @@
     {
       "id": "membership.restore-rpc",
       "source": [
-        "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
+        "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
       ],
       "requires": [
         "membership.official"
       ],
       "testSource": [
-        "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
+        "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
       ]
     },
     {
       "id": "membership.chat-rls-fix",
       "source": [
-        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+        "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql"
       ],
       "requires": [
         "membership.official",
         "chat.groups"
       ],
       "testSource": [
-        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+        "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql"
       ]
     },
     {
@@ -762,45 +768,44 @@
     },
     {
       "id": "chat.voice",
-      "source": [
-        "database/changes/20261107080000_chat_voice_messages.sql"
-      ],
+      "source": [],
       "requires": [
         "core.base"
       ],
-      "testSource": [
-        "database/changes/20261107080000_chat_voice_messages.sql"
+      "testSource": [],
+      "archiveSource": [
+        "database/archive/pending-forward-reconciliation/20261107080000_chat_voice_messages.sql"
       ]
     },
     {
       "id": "core.profile-fks",
       "source": [
-        "supabase/migrations/202611060004_reference_profiles.sql"
+        "supabase/migrations/20261106062133_reference_profiles.sql"
       ],
       "requires": [
         "core.base"
       ],
       "testSource": [
-        "supabase/migrations/202611060004_reference_profiles.sql"
+        "supabase/migrations/20261106062133_reference_profiles.sql"
       ]
     },
     {
       "id": "chat.group-ownership-transfer",
       "source": [
-        "database/changes/20261107125616_secure_group_ownership_transfer.sql"
+        "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql"
       ],
       "requires": [
         "chat.groups",
         "team.admin"
       ],
       "testSource": [
-        "database/changes/20261107125616_secure_group_ownership_transfer.sql"
+        "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql"
       ]
     },
     {
       "id": "chat.personal-lists-realtime",
       "source": [
-        "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
+        "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql"
       ],
       "requires": [
         "chat.groups",
@@ -808,62 +813,61 @@
         "platform.realtime"
       ],
       "testSource": [
-        "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
+        "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql"
       ]
     },
     {
       "id": "chat.restore-message-edit-guard",
       "source": [
-        "database/changes/20261107130000_restore_message_edit_guard.sql"
+        "supabase/migrations/20261107120239_restore_message_edit_guard.sql"
       ],
       "requires": [
         "chat.message-edit-hardening"
       ],
       "testSource": [
-        "database/changes/20261107130000_restore_message_edit_guard.sql"
+        "supabase/migrations/20261107120239_restore_message_edit_guard.sql"
       ]
     },
     {
       "id": "chat.favorite-column",
       "source": [
-        "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
+        "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql"
       ],
       "requires": [
         "chat.groups"
       ],
       "testSource": [
-        "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
+        "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql"
       ]
     },
     {
       "id": "chat.remove-duplicate-favorite",
       "source": [
-        "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
+        "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql"
       ],
       "requires": [
         "chat.favorite-column",
         "chat.preferences"
       ],
       "testSource": [
-        "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
+        "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql"
       ]
     },
     {
       "id": "chat.workspace-indexes",
       "source": [
-        "database/changes/20261107134600_index_workspace_foreign_keys.sql"
+        "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql"
       ],
       "requires": [
         "chat.workspaces"
       ],
       "testSource": [
-        "database/changes/20261107134600_index_workspace_foreign_keys.sql"
+        "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql"
       ]
     },
     {
       "id": "chat.media-upload-path-hardening",
       "source": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
         "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql"
       ],
       "testSource": [
@@ -1071,9 +1075,7 @@
     },
     {
       "id": "chat.media-and-reactions",
-      "source": [
-        "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql"
-      ],
+      "source": [],
       "provides": [
         "video/document chat-media MIME support",
         "six client-supported message reaction types"
@@ -1084,8 +1086,9 @@
         "platform.storage",
         "chat.workspaces"
       ],
-      "testSource": [
-        "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql"
+      "testSource": [],
+      "archiveSource": [
+        "database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql"
       ]
     },
     {
@@ -1219,6 +1222,25 @@
         "DAG-014"
       ],
       "note": "Reconstructed exact current public wrapper definitions and ACLs from production catalog; original migration SQL was not retained."
+    },
+    {
+      "id": "test-fixture.admin-seed",
+      "source": [
+        "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql"
+      ],
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql"
+      ],
+      "status": "TEST_ONLY_SYNTHETIC_ADMIN_SEED",
+      "requires": [
+        "team.admin",
+        "test-fixture.admin-auth-seed"
+      ],
+      "provides": [
+        "synthetic team administrator row only"
+      ],
+      "blockedBy": [],
+      "note": "Uses only the reserved local test identity; no real administrator identity is inserted by canonical migrations."
     }
   ],
   "explicitEdges": [
@@ -1253,10 +1275,6 @@
     [
       "core.base",
       "chat.preferences"
-    ],
-    [
-      "team.admin",
-      "chat.pins"
     ],
     [
       "core.base",
@@ -1965,6 +1983,26 @@
     [
       "chat.harden-channel-rpc-wrappers",
       "membership.final-format"
+    ],
+    [
+      "chat.pins",
+      "team.admin"
+    ],
+    [
+      "team.admin",
+      "test-fixture.admin-seed"
+    ],
+    [
+      "test-fixture.admin-auth-seed",
+      "test-fixture.admin-seed"
+    ],
+    [
+      "test-fixture.admin-seed",
+      "membership.base"
+    ],
+    [
+      "chat.channels-public",
+      "chat.reactions"
     ]
   ],
   "blockers": [
@@ -1972,8 +2010,8 @@
       "id": "DAG-001",
       "severity": "RESOLVED_FOR_LOCAL_REPLAY",
       "evidence": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
-        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
+        "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
       ],
       "issue": "Resolved for disposable local replay only: include a minimal empty public.messages compatibility stub before the two legacy-referencing migrations. The stub is not production schema and must never be deployed."
     },
@@ -1992,7 +2030,7 @@
       "id": "DAG-003",
       "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
       "evidence": [
-        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+        "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
         "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
         "membership.js",
         "index.html"
@@ -2003,7 +2041,7 @@
       "id": "DAG-004",
       "severity": "RESOLVED_FOR_LOCAL_REPLAY",
       "evidence": [
-        "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+        "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ],
       "issue": "A test-only copy adds exactly the missing semicolon; CI verifies its byte-level diff and SHA-256. The canonical historical file remains unchanged and is not selected for replay."
     },
@@ -2011,8 +2049,8 @@
       "id": "DAG-005",
       "severity": "RESOLVED_BY_DEPENDENCY_DAG",
       "evidence": [
-        "database/changes/20261107144109_private_membership_system_20261107.sql",
-        "database/changes/team_management_dashboard.sql"
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql"
       ],
       "issue": "The DAG explicitly places team_management_dashboard before membership.base and the test-admin fixture is seeded before the team-admin SQL."
     },
@@ -2020,7 +2058,7 @@
       "id": "DAG-006",
       "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
       "evidence": [
-        "database/changes/20261107144109_private_membership_system_20261107.sql"
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql"
       ],
       "issue": "Static source review found three policy definitions timestamped after the membership rewrite; all three use a direct or indirect active-membership guard, with zero later unguarded policies detected. The DAG sequences all earlier feature policy sources before the rewrite. Runtime PostgreSQL RLS tests are still required."
     },
@@ -2028,8 +2066,8 @@
       "id": "DAG-007",
       "severity": "REVIEW_REQUIRED",
       "evidence": [
-        "database/changes/private_channels_with_secure_invites.sql",
-        "database/changes/20261107134500_conversation_workspaces_private_documents.sql",
+        "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+        "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
@@ -2039,7 +2077,7 @@
       "id": "DAG-008",
       "severity": "REVIEW_REQUIRED",
       "evidence": [
-        "database/changes/20261107130851_schedule_expired_group_message_purge.sql",
+        "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
@@ -2050,8 +2088,8 @@
       "id": "DAG-009",
       "severity": "RESOLVED_FOR_CLEAN_LOCAL_REPLAY",
       "evidence": [
-        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
-        "database/changes/team_management_dashboard.sql"
+        "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql"
       ],
       "issue": "The identity scan isolates one fixed email (team-admin seed) and two fixed membership-number statements; all are replaced only in synthetic test copies with reserved .test identity and a synthetic number. The only UUID literal is a ranking preference in membership base; the disposable database starts without that profile, and the synthetic admin profile is inserted after the backfill. No production user row is imported."
     },
@@ -2059,7 +2097,7 @@
       "id": "DAG-010",
       "severity": "REVIEW_REQUIRED",
       "evidence": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
       ],
       "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
@@ -2068,9 +2106,9 @@
       "id": "DAG-011",
       "severity": "RESOLVED_FOR_LOCAL_FIXTURES",
       "evidence": [
-        "database/changes/team_management_dashboard.sql",
-        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
-        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+        "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+        "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ],
       "issue": "Resolved for disposable local replay by reserved .test synthetic Auth/profile fixtures and test-only copies substituting a synthetic membership number. The canonical production seed SQL remains unchanged; actual Supabase Auth schema compatibility still needs local rehearsal."
     },
@@ -2079,7 +2117,7 @@
       "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
       "evidence": [
         "index.html",
-        "database/changes/20261107080000_chat_voice_messages.sql",
+        "database/archive/pending-forward-reconciliation/20261107080000_chat_voice_messages.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
       ],
       "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
@@ -2102,7 +2140,7 @@
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
-        "database/changes/20261107144109_private_membership_system_20261107.sql",
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
         "index.html",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
@@ -2128,32 +2166,7 @@
       "issue": "Read-only production catalog inspection found postgres-owned public-schema default ACLs granting all table/sequence privileges and function EXECUTE to anon/authenticated. Existing app tables consequently expose non-RLS privileges (including TRUNCATE, REFERENCES, TRIGGER and PostgreSQL 17+ MAINTAIN) and unnecessary direct DML. A loopback-only test overlay and read-only postconditions are prepared; neither has been executed. Production remains unchanged until local CRUD compatibility, RPC grants, and default-ACL behavior pass runtime tests."
     }
   ],
-  "duplicateProvenance": [
-    {
-      "logicalChange": "chat privilege hardening",
-      "canonicalTestSource": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-      "duplicate": "database/changes/chat_table_privilege_hardening.sql",
-      "sha256": "400e727c552cea4b32602f43be6eed6d722406847e3f0f4bd3a19ae37814cdf4"
-    },
-    {
-      "logicalChange": "unified notifications",
-      "canonicalTestSource": "supabase/migrations/20261107014128_unified_user_notifications.sql",
-      "duplicate": "database/changes/unified_notifications.sql",
-      "sha256": "9bec9867db333ddd5c7950fc8cdd0c04c76ca554e1117cf71d53e7b6b818fda8"
-    },
-    {
-      "logicalChange": "notification indexes",
-      "canonicalTestSource": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
-      "duplicate": "database/changes/index_user_notification_foreign_keys.sql",
-      "sha256": "c59daeb5b307f67ed8148611530d94f4330ac9fedbbe52df0e9c908a2b687ea2"
-    },
-    {
-      "logicalChange": "profile status base migration",
-      "canonicalTestSource": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
-      "duplicate": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
-      "sha256": "dff699a1dabbef75c1dc6089a2e998eb01ae89d404c0320d0520f9e6c45892e1"
-    }
-  ],
+  "duplicateProvenance": [],
   "safety": {
     "sqlExecutionEnabled": false,
     "supabaseStartupAuthorized": false,
@@ -2161,5 +2174,67 @@
     "productionDataAllowed": false,
     "canonicalSqlMutationAllowed": false,
     "costBearingResourcesAllowed": false
-  }
+  },
+  "archiveSources": [
+    {
+      "path": "database/archive/source-provenance/message_reactions_and_whatsapp_typography.sql",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/professional_message_controls_and_receipts.sql",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/private_channels_with_secure_invites.sql",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/user_specific_direct_chat_preferences.sql",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/20261107035500_user_avatars_storage.sql",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "classification": "pre-repair-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/public_announcement_channels.sql",
+      "classification": "unrecorded-production-baseline-source",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/team_management_dashboard.sql",
+      "classification": "unrecorded-production-baseline-source",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261107080000_chat_voice_messages.sql",
+      "classification": "production-storage-drift-not-in-ledger",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261112120000_reconcile_team_management_dashboard.sql",
+      "classification": "superseded-forward-reconciliation",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261112120001_reconcile_chat_media_voice_mime_types.sql",
+      "classification": "pending-forward-reconciliation",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql",
+      "classification": "unapplied-proposal",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    }
+  ]
 }

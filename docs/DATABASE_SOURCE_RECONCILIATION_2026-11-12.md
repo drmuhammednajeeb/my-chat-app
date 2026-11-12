@@ -1,90 +1,36 @@
-# Database migration source reconciliation — 2026-11-12
+# Database source reconciliation — 2026-11-12
 
-## Status
+## Result
 
-**RECONCILIATION INCOMPLETE — NO MIGRATION REPLAY AUTHORIZED**
+The production migration ledger contains 62 versions. The working branch contains exactly 62 canonical SQL files under `supabase/migrations/`, each named with its production version and migration name.
 
-This document and `supabase/migrations/source-registry.json` establish a read-only mapping between the current `main` SQL source tree and the live Supabase production migration metadata. They do not claim that all production SQL bodies have been recovered or that the repository can yet bootstrap a clean database.
+| Source class | Count | Execution status |
+|---|---:|---|
+| Canonical production migration files | 62 | Review required; not execution-authorized |
+| Archived SQL provenance / pending / unapplied | 12 | Never executable |
+| Duplicate active source copies | 0 | Removed from the active source layout |
+| Test-only SQL fixtures in replay plan | 17 | Disposable test-only inputs |
 
-- Repository baseline: `67c7e46d26037ad0cf94a44aaf3a507c6a5171b4`
-- Production project: `lvkeohpuucuklagvwpnq`
-- Production migration records: 62
-- SQL files in `supabase/migrations/`: 17
-- SQL files in `database/changes/`: 45
-- Duplicate source copies: 4 (including the canonicalized status-base copy)
-- Source files in the two production-oriented directories: 62
-- Production-applied status migrations copied into the canonical CLI directory: 3
-- Direct-conversation RPC versions recovered from production catalog: 2
-- Channel visibility/avatar/background and RPC wrapper versions reconstructed from production catalog: 2
+## Source reconstruction decisions
 
-## Why simply merging the folders is unsafe
+The ledger stores version/name metadata only. It does not preserve original SQL bodies. The registry therefore distinguishes recovered source bodies, compound-source splits, catalog reconstructions, syntax repair, and deliberate no-op versions; it does not claim original-body equivalence where that cannot be proved.
 
-The production migration ledger stores migration versions and names, not the original SQL bodies. Filename similarity is not proof that a source file's content is identical to what was applied. Several production migrations were applied as separate steps while the repository keeps the related SQL in compound historical files. A clean, deterministic migration stream therefore requires explicit source-boundary and content review, not a mass rename.
+- Public-channel baseline DDL is folded before the message-reaction DDL in `20261106125643`.
+- Team-admin schema, policies and group-capacity trigger are folded before message-pin policies in `20261106130351`; no real administrator identity is seeded.
+- Message-reaction, message-control, private-channel, direct-preference and avatar compound sources are split across their production version numbers.
+- The surviving direct-preference final-state source is assigned to `20261107032052`; `20261107032150` is a documented no-op.
+- The original malformed membership function source is retained in archive; canonical `20261107152733` has the missing statement terminator.
 
-## Current source layout
+## Non-executable archive
 
-| Directory | Role | Policy |
-|---|---|---|
-| `supabase/migrations/` | 10 existing CLI migration files | Existing stream; contains unresolved legacy dependencies and is not a complete bootstrap by itself |
-| `database/changes/` | 45 historical feature/change files | Historical source collection, not an executable CLI sequence |
-| `tests/staging/local-supabase/fixtures/` | Synthetic fixtures, compatibility stubs, overlays and recovered definitions | Test-only; never production migrations |
+`database/archive/` contains 12 SQL files: compound-source provenance, unrecorded production baseline sources, the original pre-repair membership source, a pending forward reconciliation for audio MIME configuration, a superseded team-admin reconciliation, and an unapplied chat-media proposal. Supabase CLI discovery is restricted to `supabase/migrations/`.
 
-Three original duplicate pairs were already identified by byte-for-byte SHA-256 evidence. The status base migration is now also copied into the canonical directory and its duplicate provenance is recorded. The reviewed canonical copy is the `supabase/migrations` version for chat privilege hardening, notifications, and notification indexes. The duplicate historical copies must remain preserved until the canonical migration history and replay tests are approved.
+## Safety and remaining work
 
-## Production mapping findings
-
-The machine-readable registry lists all 62 production migration records and the source path candidates or recovery records for each.
-
-The following production records have source-provenance limitations:
-
-- `atomic_direct_conversation_creation` and `hide_atomic_direct_rpc_implementation`: final function definitions and ACLs were recovered from the production catalog and added as a documented canonical reconstruction. The original two migration bodies were not retained; the second production version is represented by an intentional no-op after the final state is created in the first version. Runtime replay remains blocked.
-- `channel_visibility_avatar_group_background` and `harden_channel_rpc_wrappers`: both canonical migration files have now been reconstructed from the live production catalog (columns, functions, policies, buckets, wrappers and ACLs). Their original SQL bodies were not retained, so these are final-state reconstructions, not byte-for-byte historical sources.
-- `profile_status_and_conversation_images`, `profile_status_video_media`, and `allow_combined_profile_status_content_and_media`: the three production-applied SQL files are now copied byte-for-byte into `supabase/migrations/` under their exact production version IDs. The video and combined-content sources were recovered from PR #138 without merging its unrelated UI changes. These files are present only on PR #139 and have not been merged or replayed.
-- Other records mapped to compound historical files are candidates only. Their individual production migration boundaries have not been proven from the metadata ledger.
-
-The exact status of each record is in `source-registry.json`.
-
-## Existing replay design is intentionally blocked
-
-The repository's `replay-manifest.json` is `DESIGN_ONLY` / `BLOCKED`, and `reviewed-dependency-dag.json` has `executionAuthorized: false`. Remaining blockers include:
-
-1. Direct-conversation RPC runtime behavior, eligibility checks, ACL and concurrency validation (DAG-014/015).
-2. Public-schema default ACL / least-privilege overlay and authenticated CRUD compatibility (DAG-016).
-3. Auth, Storage, Realtime and extension readiness in disposable local Supabase.
-4. pgcrypto schema/function resolution and pg_cron runtime behavior.
-5. Membership migration application and runtime RLS checks.
-6. Chat media path ownership enforcement and storage RLS behavior.
-
-A passing static inventory test is not evidence of SQL execution or a successful clean bootstrap.
-
-## Canonicalization strategy
-
-The target is one authoritative forward migration stream under `supabase/migrations/`, with the following controlled transition:
-
-1. Recover and review the original SQL for every production migration not represented by a verified source.
-2. For each compound historical source, identify exact production migration boundaries. Split only where the SQL semantics and production ordering can be proven; do not duplicate an entire compound script under multiple migration versions.
-3. Assign each forward migration the exact production version/name from the live ledger where it represents an already-applied migration.
-4. Preserve original source blobs and SHA-256 provenance in the registry. Retain historical copies in an explicitly non-executable archive until parity is proven.
-5. Keep test fixtures and synthetic patches under `tests/staging/local-supabase/fixtures/`, with source hashes and patch manifests; never move them into production migrations.
-6. Build a fresh disposable database from the proposed canonical stream and run catalog parity, RLS negative tests, RPC ACL/concurrency tests, Storage/Realtime tests, and extension/cron checks.
-7. Only after a clean replay and exact catalog comparison, mark the registry `RECONCILED` and enable the documented local replay path.
-8. For the existing production database, do not replay historical migrations. Once source parity is proven, preserve the existing migration ledger and use forward-only migrations for subsequent changes.
-
-## Non-actions in this reconciliation commit
-
-- No production SQL was applied.
-- No database objects, data, policies, grants, buckets, or functions were changed.
-- No existing migration file was renamed, moved, deleted, or rewritten.
-- No Supabase local stack was started.
-- No PR was merged, and no deployment was triggered.
-- `main` remains unchanged.
-
-## Exit criteria
-
-This work is complete only when:
-- all 62 production migration records have verified authoritative SQL source and content provenance;
-- every source SQL file is classified as canonical, archived, duplicate, or test-only;
-- the canonical stream has one deterministic dependency order and no unresolved object references;
-- a disposable clean replay passes;
-- the replayed catalog matches production for application-owned objects and security properties;
-- the production migration ledger is preserved without destructive repair or reset.
+- No production SQL was executed.
+- No production schema or data was changed.
+- `main` was not modified.
+- PR #139 remains an isolated draft review surface.
+- A clean disposable replay and catalog parity check are still required.
+- Runtime blockers DAG-014, DAG-015 and DAG-016 remain open.
+- Production chat-media audio MIME configuration remains a separate pending reconciliation item, not silently inserted into the historical 62-version stream.

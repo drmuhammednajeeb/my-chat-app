@@ -46,3 +46,23 @@ test('synthetic admin fixtures use only reserved test identity and deterministic
   assert.equal(manifest.execution.productionAllowed, false);
   assert.equal(manifest.execution.cloudAllowed, false);
 });
+
+test('repaired canonical membership migration is derived from archived original syntax provenance', async () => {
+  const patch = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/patch-manifest.json'), 'utf8'));
+  const [source, copy, canonical] = await Promise.all([
+    readFile(path.join(root, patch.canonicalSource.path), 'utf8'),
+    readFile(path.join(root, patch.testCopy.path), 'utf8'),
+    readFile(path.join(root, 'supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql'), 'utf8')
+  ]);
+  assert.equal(patch.execution.enabled, false);
+  assert.equal(patch.execution.productionAllowed, false);
+  assert.equal(patch.execution.cloudAllowed, false);
+  assert.equal(sha256(source), patch.canonicalSource.sha256);
+  assert.equal(sha256(copy), patch.testCopy.sha256);
+  const count = source.split(patch.replacement.from).length - 1;
+  assert.equal(count, patch.replacement.expectedOccurrences);
+  const expected = source.replace(patch.replacement.from, patch.replacement.to);
+  assert.equal(expected, copy);
+  assert.match(canonical, /\\$function\\$;\\s*revoke all on function app_private\\.admin_create_official_member_invites_impl/i);
+  assert.equal(patch.canonicalSource.path.startsWith('database/archive/'), true);
+});

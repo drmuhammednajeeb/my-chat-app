@@ -1,130 +1,34 @@
 # Database object inventory and dependency review
 
-## Decision
+## Canonical source layout
 
-**Status: BLOCKED — source inventory and dependency design only.** This work reads repository files and application call sites. It does not connect to a database, execute SQL, create Supabase configuration, or modify canonical SQL.
+- `supabase/migrations/`: 62 SQL files, one for each version in the production migration ledger.
+- `database/archive/`: 12 SQL files retained as non-executable provenance, pending forward reconciliation, or unapplied proposals.
+- Duplicate active SQL copies: **0**.
+- Test-only SQL fixtures in the replay plan: **17**.
 
-## Why this matters
+The production migration ledger stores version/name metadata only; it does not retain the original SQL bodies. Recovered historical files, compound-source splits, and catalog reconstructions are therefore not claimed to be byte-identical to the original applied bodies unless independently proven.
 
-This review maps database objects to real application features: login/profile provisioning, conversations, messages, reactions, pins, receipts, notifications, channels, workspaces, attachments, and Forever membership administration. A migration is not safe merely because it is syntactically valid; all referenced tables, functions, platform services, and authorization assumptions must exist in the correct order.
+## Reconstructed boundaries
 
-## Source scope
+| Production version | Canonical treatment |
+|---|---|
+| `20261106102326` / `20261106102443` | Final direct-conversation RPC implementation recovered from read-only catalog inspection; the second version is an explicit no-op. |
+| `20261106125643` / `20261106125901` | Public-channel baseline and message-reaction foundation placed before the separate reaction user-FK index. |
+| `20261106130351` / `20261106130540` / `20261106130804` | Message controls, team-admin prerequisite and group-limit trigger, followed by receipt Realtime and the pinned-by index. |
+| `20261106132655` / `20261106132740` / `20261106132753` | Private channel/invite foundation, direct invite-table denial, and creator index. |
+| `20261107032052` / `20261107032150` | Final direct-chat preference state is in the first version; the second is a documented no-op because an independent earlier body did not survive. |
+| `20261107035217` / `20261107035243` / `20261107035443` | Avatar bucket, profile Realtime publication, and avatar object policies separated into versioned migrations. |
+| `20261107152733` | Canonical function statement terminator repaired; the malformed original remains in archive provenance. |
 
-- **supabase/migrations/**: 10 candidate CLI migrations.
-- **database/changes/**: 43 historical SQL changes, not a canonical CLI sequence.
-- **index.html** and **membership.js**: browser-side RPC and table usage cross-checked against SQL.
+Two unrecorded prerequisites were folded into existing ledger versions: public-channel baseline DDL before message reactions in `20261106125643`, and team-admin schema/policies/group-capacity trigger before message-pin policies in `20261106130351`. No real administrator identity is seeded.
 
-The generated **build-database-object-inventory.mjs** report records source SHA-256 hashes and extracts table definitions/references, table alterations, function signatures, sequences, indexes, triggers, policies, constraints, extension declarations, Storage bucket IDs, Realtime publication entries, and cron usage.
+## Archive policy
 
-**Limitation:** this is a static source inventory, not a catalog dump of a deployed database. It cannot prove which objects currently exist in production or whether a Supabase-managed service is initialized locally.
+The archive is not part of Supabase CLI discovery or replay. It contains original compound-source provenance, the malformed pre-repair source, unrecorded baseline sources, a pending audio MIME reconciliation, a superseded team-admin reconciliation, and an unapplied chat-media proposal.
 
+## Outstanding review gates
 
-## Static inventory result (CI verified)
+The canonical stream is assembled but not replay-authorized. Direct-conversation eligibility/concurrency (DAG-014 and DAG-015), least-privilege compatibility (DAG-016), managed Supabase prerequisites, RLS behavior, pgcrypto, pg_cron, and Storage path ownership still require disposable-local runtime evidence.
 
-The read-only CI inventory covers **53 SQL files** and extracted **27 table definitions, 186 column declarations, 69 foreign-key declarations, 82 function definitions, 61 indexes, 19 triggers, 107 policies, and 65 GRANT/REVOKE statements**. It also records three byte-identical duplicate groups. These are source-parser counts, not a live database catalog count; multi-statement/conditional DDL and dynamic SQL still require PostgreSQL catalog validation during the later local rehearsal.
-
-The test-only terminator patch is recorded in **fixtures/patch-manifest.json**. CI verified source SHA-256 `371e3b426ce5e2b47ba2cde669c2e32934baffae781ed684303a8e5cd5695088` and test-copy SHA-256 `fadf57b686cb4cfe1e6bb57c94a96a6859545cba4d1f650fe8dfc7a9c92d6b82`; the only byte-level change is the missing semicolon after the function body. The additional synthetic email and membership-number substitutions are recorded in **fixtures/synthetic-fixture-patches.json** with their own source and test-copy SHA-256 hashes. All canonical historical files remain unchanged.
-
-
-
-## Application Storage contract review
-
-The browser uses three buckets: **avatars**, **chat-media**, and **conversation-documents**. Repository SQL creates all three: avatars in the avatar-storage change, chat-media in the core chat migration, and conversation-documents in the workspace change. The source inventory confirms object policies for all three buckets; there is no missing bucket or missing chat-media policy.
-
-A security-hardening opportunity remains: the canonical chat-media INSERT policy checks conversation membership but does not bind the second path segment (the uploader folder in the browser's conversation-id / user-id / generated-object path) to `auth.uid()`. The app currently constructs that path correctly, but the database does not independently enforce that path ownership. A test-only replacement policy adds this check in the disposable replay before the membership rewrite. This is a candidate for local RLS testing, not an approved production change.
-
-
-## Supabase platform prerequisites
-
-The source inventory confirms dependencies on Supabase Auth (`auth.users`), Storage (`storage.buckets` and `storage.objects`), the `supabase_realtime` publication, `pgcrypto` (including the `extensions` schema references), and `pg_cron` for scheduled cleanup. The repository still has no `supabase/config.toml`. These platform components must be explicitly enabled/configured in the local-only Supabase project before replay; the inventory does not prove that the local extension versions or schemas are available.
-
-## RLS membership-gate source review
-
-The static inventory extracted **107 policy definitions**. The membership base change contains a dynamic rewrite that appends the active-membership predicate to authenticated policies present when it runs. The dependency graph therefore places the feature SQL that creates policies before the membership rewrite. The inventory found **3 policy definitions with source timestamps after that rewrite**; all 3 contain a direct or indirect active-membership guard, and the static report found **0 later policies without a recognized guard**. This is a source-level result only: PostgreSQL RLS behavior, role semantics, and the dynamic policy rewrite still require local integration tests before security can be declared verified.
-
-## Confirmed blockers
-
-The unresolved direct-conversation RPC source can be retrieved without changing the deployed database using the read-only procedure in [RECOVER_DIRECT_CONVERSATION_RPC.md](RECOVER_DIRECT_CONVERSATION_RPC.md). The local replay remains disabled until its authoritative definitions are recovered and reviewed.
-
-### 1. Legacy public.messages
-
-Two CLI migrations reference **public.messages**, but no repository SQL creates that table. The current browser client reads and writes **public.chat_messages**; no client-side access to the legacy messages table was found. Both legacy migrations only need the table to exist for table-level policy and privilege operations; they do not reference its columns. A minimal empty compatibility stub is therefore appropriate for disposable local replay only. It is not a reconstruction of the deployed legacy table and must never be deployed or used to replace production schema.
-
-### 2. Missing direct-conversation RPC implementation
-
-The browser calls **public.get_or_create_direct_conversation(p_other_user_id)**. The privilege-hardening migration also alters **app_private.get_or_create_direct_conversation_impl(uuid)**. Neither function is defined in the reviewed SQL source set. This is a hard bootstrap blocker and a potential application feature gap. Recover the authoritative function definition from the intended source or deployed schema before designing a compatibility fixture. Do not create a guessed implementation.
-
-### 3. Forever membership format conflict
-
-The browser-side **membership.js** and **index.html** validate **^971[0-9]{9}$**. The historical manual-verification SQL temporarily defines **admin_create_official_member_invites_impl(jsonb)** and **admin_set_member_official_number_impl(uuid,text)** using **^971001[0-9]{6}$**. The final CLI migration **20261108075913** explicitly includes both functions in its six-function allowlist and rewrites them to the nine-digit format, alongside the profile and invitation constraints.
-
-This is an intentional staged transition, not a missing-function defect. The test manifest must apply the final CLI migration after the historical membership SQL, assert that exactly six function definitions were updated, and verify that both admin RPCs accept only the final **971 + nine digits** format. Do not run app acceptance tests in the intermediate state.
-
-### 4. Confirmed SQL terminator defect
-
-**database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql** closes the function body with the dollar delimiter and starts REVOKE without the required semicolon. Preserve the historical file; any correction must be a test-only copy with its own SHA-256 and patch record.
-
-### 5. Missing team-admin prerequisite
-
-The membership base SQL calls **app_private.is_team_admin()** and reads **app_private.team_admins**. Those are provided by **database/changes/team_management_dashboard.sql**, so that change must precede the membership system. The privilege-hardening migration also depends on the team-admin and group-limit functions.
-
-### 6. Platform-managed dependencies
-
-Before any local SQL rehearsal, assert availability of:
-
-- Supabase Auth schema, **auth.users**, **auth.uid()**, and roles.
-- Supabase Storage schema, **storage.buckets**, **storage.objects**, and **storage.foldername(text)**.
-- **supabase_realtime** publication.
-- **pgcrypto** functions in the schema referenced by SQL (**extensions.digest**, **extensions.gen_random_bytes**).
-- **pg_cron** and its **cron.job**, **cron.schedule**, and **cron.unschedule** interfaces.
-
-No cloud project or credentials are required or permitted.
-
-### 7. Dynamic policy rewrite review
-
-The membership SQL dynamically rewrites all authenticated policies present at that point to add **app_private.is_active_member()**. Policies created later are not automatically rewritten. Review every later policy for the intended active-member requirement before claiming consistent membership enforcement.
-
-### 8. Historical data assumptions
-
-Historical SQL includes fixed identity/email assumptions and data updates. Do not replay those against real accounts. Use synthetic Auth users and test-only data transformations. No production data is to be copied.
-
-## Dependency design
-
-**reviewed-dependency-dag.json** records platform prerequisites, source nodes, known edges, unresolved references, duplicate provenance, and blockers. It is deliberately marked **BLOCKED** and **executionAuthorized: false**. It does not define an executable all-files order.
-
-Key dependency chains:
-
-1. Supabase Auth + Storage + Realtime + a minimal test-only legacy messages stub → core chat schema.
-2. Core schema → team-admin infrastructure, chat preferences, reactions, pins/receipts, channel support, and notifications.
-3. Team-admin + preferences + core schema → group management and workspaces.
-4. Public-channel schema + team-admin + pgcrypto → private-channel invitation functions.
-5. Team-admin + core schema → membership base → official membership validation → final-format migration, after resolving the format conflict.
-6. Group expiry schema + pg_cron → scheduled purge.
-
-The three duplicate pairs are recorded with one proposed canonical test source each. This is provenance only; no source is deleted or changed.
-
-
-## Synthetic team-admin and membership fixtures
-
-The historical team-admin seed and official-membership verification SQL contain fixed production identity assumptions. The disposable test plan now uses a reserved **admin@bizmindmakers.test** Auth identity and synthetic member number **971001000001**. The Auth row is seeded after the core schema but before the team-admin seed; the profile row is inserted after the membership base installs its profile guard. Test-only SQL copies substitute only the declared email/member-number literals, and the syntax-only copy adds only the missing semicolon. Each copy is checked byte-for-byte against its canonical source plus the declared replacement, with SHA-256 recorded by CI. Canonical SQL remains unchanged.
-
-The DAG sequences the membership policy rewrite after every pre-membership policy source. The graph test checks that each such source has a dependency path into the membership rewrite node, preventing a future file from silently bypassing the dynamic RLS hardening step.
-
-## Next safe steps
-
-1. Recover the authoritative direct-conversation RPC source and verify whether it exists in the intended schema without changing it.
-2. Prove the staged Forever membership-number format transition: historical 971001 + six digits, followed by the final migration updating all six functions and constraints to 971 + nine digits.
-3. Decide the legacy **public.messages** replay treatment based on actual historical compatibility needs.
-4. Review the dynamic membership-policy rewrite and all later policies.
-5. Build the explicit test-only allowlist and fixtures only after the blockers are resolved.
-6. Run PostgreSQL parse/apply rehearsal in a disposable local environment.
-7. Start Supabase Local only after rehearsal and loopback/network guards pass.
-
-## Safety invariants
-
-- No **main** changes, merge, pull request, or deployment.
-- No production database access or schema/data changes.
-- No cloud Supabase credentials or non-loopback targets.
-- No paid resources or cost-bearing infrastructure.
-- No canonical SQL mutation; test-only copies must carry source hashes and patch records.
-- Static audit success must never be described as SQL execution or backend E2E success.
+No SQL was executed against production during this reconciliation. The main branch remains unchanged.

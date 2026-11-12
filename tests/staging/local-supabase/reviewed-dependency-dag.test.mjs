@@ -93,8 +93,9 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   assert.equal(patchManifest.fixtures[0].path, 'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql');
   assert.ok(patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql') > patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
-  assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
-  assert.ok(dag.nodes.find(node => node.id === 'team.admin').testSource.some(source => source.includes('team_management_dashboard.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.includes('supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
+  assert.equal(dag.nodes.find(node => node.id === 'team.admin').source.length, 0);
+  assert.ok(dag.nodes.find(node => node.id === 'test-fixture.admin-seed').testSource.includes('tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-auth-seed').source.some(source => source.includes('synthetic-direct-chat-auth-before-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-profiles').source.some(source => source.includes('synthetic-direct-chat-profiles-after-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-runtime').source.some(source => source.includes('direct-conversation-eligibility-runtime.test.sql')));
@@ -165,9 +166,8 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 19);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 17);
   for (const fixture of [
-    'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
     'tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql',
@@ -206,6 +206,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   assert.equal(manifest.sourceCoverage.sqlFiles, inventory.files.length);
   assert.equal(manifest.sourceCoverage.mappedSources, inventory.files.length - duplicateCopies.size);
   assert.equal(manifest.sourceCoverage.mappedSourcesReplacedByFixtures, patchManifest.patches.length);
+  assert.equal(patchManifest.patches.length, 2);
   assert.equal(manifest.sourceCoverage.executedMappedSources, manifest.sourceCoverage.mappedSources - patchManifest.patches.length);
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, manifest.sourceCoverage.testOnlySqlFixtures);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, manifest.sourceCoverage.executedMappedSources + manifest.sourceCoverage.executedTestOnlySqlFixtures);
@@ -216,6 +217,10 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(selected.includes(file.path), 'candidate replay source missing: ' + file.path);
   }
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
+  const canonicalSourceCounts = new Map();
+  for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
+  assert.equal(canonicalSourceCounts.size, 62);
+  assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
 
@@ -307,10 +312,10 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
 });
 
 
-test('chat composer media allowlists and message reaction options remain aligned with their database constraints', async () => {
+test('chat composer media allowlists are checked against the archived proposal, not represented as applied production SQL', async () => {
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  const migration = await readFile(path.join(root, 'database/changes/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
-  const reactionSchema = await readFile(path.join(root, 'database/changes/message_reactions_and_whatsapp_typography.sql'), 'utf8');
+  const migration = await readFile(path.join(root, 'database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
+  const reactionSchema = await readFile(path.join(root, 'supabase/migrations/20261106125643_message_reactions_and_realtime.sql'), 'utf8');
   const reactionModule = await readFile(path.join(root, 'modules/message-reactions.js'), 'utf8');
   for (const mime of [
     'video/mp4',
@@ -323,6 +328,8 @@ test('chat composer media allowlists and message reaction options remain aligned
     assert.ok(html.includes(mime), 'chat file picker is missing ' + mime);
     assert.ok(migration.includes(mime), 'Storage allow-list is missing ' + mime);
   }
+  const archiveManifest = JSON.parse(await readFile(path.join(root, 'database/archive/manifest.json'), 'utf8'));
+  assert.ok(archiveManifest.sqlFiles.some(file => file.path === 'database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql' && file.classification === 'unapplied-proposal'));
   assert.ok(html.includes('modules/message-reactions.js'));
   assert.ok(html.includes('modules/message-reactions.css'));
   assert.match(reactionModule, /type: "like"/);

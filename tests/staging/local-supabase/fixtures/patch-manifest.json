@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "mode": "TEST_COPY_ONLY",
   "canonicalSource": {
-    "path": "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+    "path": "database/archive/source-provenance/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
     "gitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
     "sha256": "371e3b426ce5e2b47ba2cde669c2e32934baffae781ed684303a8e5cd5695088"
   },
@@ -21,5 +21,10 @@
     "sqlExecuted": false,
     "productionAllowed": false,
     "cloudAllowed": false
+  },
+  "replacement": {
+    "from": "$function$\n\nrevoke all on function app_private.admin_create_official_member_invites_impl(jsonb)",
+    "to": "$function$;\n\nrevoke all on function app_private.admin_create_official_member_invites_impl(jsonb)",
+    "expectedOccurrences": 1
   }
 }
