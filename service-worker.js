@@ -27,7 +27,8 @@ self.addEventListener("install", event => {
       new URL("./membership.js", base).href,
       new URL("./membership.css", base).href,
       new URL("./app.css", base).href,
-      new URL("./app-overrides.css", base).href
+      new URL("./app-overrides.css", base).href,
+      new URL("./modules/backup-restore.js", base).href
     ]);
     await self.skipWaiting();
   })());

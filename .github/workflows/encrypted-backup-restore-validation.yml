@@ -1,0 +1,31 @@
+name: Encrypted Backup Restore Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "modules/backup-restore.js"
+      - "scripts/check-backup-restore-integration.mjs"
+      - "index.html"
+      - "service-worker.js"
+  push:
+    branches:
+      - feat/native-encrypted-backup-restore-20261112
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Parse runtime module
+        run: node --check modules/backup-restore.js
+      - name: Parse integration regression test
+        run: node --check scripts/check-backup-restore-integration.mjs
+      - name: Run source integration checks
+        run: node scripts/check-backup-restore-integration.mjs
