@@ -29,6 +29,7 @@
 })();
 </script>
 <link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./modules/profile-status-and-conversation-images.css">
 
 
 
@@ -185,6 +186,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script src="./modules/message-loader.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -831,6 +833,7 @@ function renderConversations(section=state.sidebarView==='groups'?'groups':'dire
   action.setAttribute('aria-label',archived?'استعادة المحادثة':'أرشفة المحادثة');
   const row=document.createElement('button');row.type='button';
   row.className='conversation swipe-conversation'+(state.active?.id===c.id?' active':'')+(archived?' archived-row':'');
+  row.dataset.conversationId=c.id;
   const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at))&&(!pref.cleared_before||new Date(c.last_message.created_at)>new Date(pref.cleared_before)));
   row.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));
   const person=c.type==='direct'?otherMember(c):null;
@@ -1457,92 +1460,13 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
  }finally{state.renderingMessageIds.delete(m.id);recordPerf('message_render_item',performance.now()-messageRenderStarted)}
 }
 async function loadMessages(){
- const conversationId=state.active?.id;if(!conversationId)return false;
- const messageLoadStarted=performance.now(),syncStartedAt=new Date(Date.now()-60000).toISOString();
- const requestId=++state.messageLoadVersion,area=$('messages');
- const hadRenderedTimeline=state.messageIds.size>0,wasNearBottom=hadRenderedTimeline&&isMessagesNearBottom(area,120);
- state.isLoadingMessages=true;state.newMessageCount=0;updateNewMessagesIndicator();
- diagLog('fetch-start',{conversationId,requestId,mode:hadRenderedTimeline?'reconcile':'latest-only'});
- if(!hadRenderedTimeline)area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-spinner-gap"></i></div><p>جارٍ تحميل أحدث رسالة…</p></div>';
- try{
-  const messageFetchStarted=performance.now();
-  let messageQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId);
-  if(state.activeChatPreference?.cleared_before)messageQuery=messageQuery.gt('created_at',state.activeChatPreference.cleared_before);
-  const {data,error}=await messageQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(2);
-  recordPerf('message_fetch',performance.now()-messageFetchStarted,{success:!error,rows:data?.length||0});
-  if(error)throw error;
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  state.hasMoreMessages=(data||[]).length>1;
-  const fetchedRows=(data||[]).slice(0,1),fetchedIds=new Set(fetchedRows.map(m=>m.id));
-  state.messagePollLastCheckedAt=syncStartedAt;
-  state.messagePollCursor=(data||[])[0]?{conversationId,created_at:data[0].created_at,id:data[0].id}:null;
-  state.diagnostics.lastFetchAt=new Date().toLocaleTimeString('en-GB');
-  state.diagnostics.lastFetchCount=fetchedRows.length;state.diagnostics.lastFetchError=null;
-  diagLog('fetch-success',{count:fetchedRows.length,hasMore:state.hasMoreMessages,requestId});
-  const newestFetched=fetchedRows[0]||null,merged=new Map();
-  (state.messages||[]).filter(m=>m.conversation_id===conversationId).forEach(m=>{
-   const afterPersonalClear=!state.activeChatPreference?.cleared_before||new Date(m.created_at)>new Date(state.activeChatPreference.cleared_before);
-   const isNewerRealtime=newestFetched&&compareMessagesChronologically(m,newestFetched)>0;
-   const isOlderHistory=newestFetched&&compareMessagesChronologically(m,newestFetched)<0;
-   const arrivedDuringEmptyFetch=!newestFetched&&m.created_at>=syncStartedAt;
-   if(afterPersonalClear&&(fetchedIds.has(m.id)||isNewerRealtime||isOlderHistory||arrivedDuringEmptyFetch))merged.set(m.id,m);
-  });
-  fetchedRows.forEach(m=>merged.set(m.id,m));
-  let messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-  state.messages=messages;
-  const replyIds=[...new Set(fetchedRows.map(m=>m.reply_to).filter(Boolean))];
-  const replyTask=replyIds.length?supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds):Promise.resolve({data:[],error:null});
-  const metadataTasks=await Promise.allSettled([
-   replyTask,
-   loadMessageReactions(conversationId,fetchedRows,requestId),
-   loadMessagePins(conversationId,requestId),
-   loadPrivateReplyContexts(conversationId,fetchedRows,requestId)
-  ]);
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  const [replyResult,reactionResult,pinResult,privateReplyResult]=metadataTasks;
-  if(replyResult.status==='fulfilled'){
-   if(replyResult.value?.error)console.warn('Reply parent metadata unavailable:',replyResult.value.error.message);
-   else (replyResult.value?.data||[]).forEach(parent=>state.replyMessages.set(parent.id,parent));
-  }else console.warn('Reply parent metadata unavailable:',replyResult.reason?.message||replyResult.reason);
-  for(const [name,result] of [['reactions',reactionResult],['pins',pinResult],['private replies',privateReplyResult]]){
-   if(result.status==='rejected')console.warn('Optional '+name+' metadata unavailable:',result.reason?.message||result.reason);
-  }
-  const latest=new Map(messages.map(m=>[m.id,m]));
-  (state.messages||[]).filter(m=>m.conversation_id===conversationId).forEach(m=>latest.set(m.id,m));
-  messages=Array.from(latest.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-  state.messages=messages;
-  let allMessagesRendered=true;
-  if(!messages.length){
-   if(!hadRenderedTimeline)area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>';
-  }else{
-   if(!hadRenderedTimeline){area.replaceChildren();state.messageIds.clear()}
-   const messageRenderBatchStarted=performance.now();
-   for(const message of messages){
-    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-    if(state.messageIds.has(message.id))continue;
-    const rendered=await renderMessage(message,conversationId,requestId);
-    if(!rendered&&!state.messageIds.has(message.id))allMessagesRendered=false;
-   }
-   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-   if(!hadRenderedTimeline||wasNearBottom)area.scrollTop=area.scrollHeight;
-   recordPerf('message_render_batch',performance.now()-messageRenderBatchStarted,{rows:messages.length,rendered:state.messageIds.size});
-  }
-  state.isLoadingMessages=false;
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  if(allMessagesRendered)markConversationReceipt(conversationId,document.visibilityState==='visible',requestId).catch(error=>console.warn('Receipt update failed:',error));
-  recordPerf('message_load_total',performance.now()-messageLoadStarted,{success:true,rows:messages.length});
-  return true;
- }catch(error){
-  recordPerf('message_load_total',performance.now()-messageLoadStarted,{success:false});
-  console.error('Message loading failed:',error);
-  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
-   state.diagnostics.lastFetchError=String(error?.message||error);diagLog('fetch-error',{error:state.diagnostics.lastFetchError});
-   state.isLoadingMessages=false;
-   if(!state.messageIds.size)area.innerHTML='<div class="welcome"><h2>تعذر تحميل الرسائل</h2><p>تم إبقاء المحادثة مفتوحة. اضغط تحديث لإعادة المحاولة.</p></div>';
-   toast('تعذر استرجاع الرسائل من قاعدة البيانات');
-  }
-  return false;
- }
+ return window.BizmindMessageLoader.loadMessages({
+  state,$,supabaseClient,document,performance,
+  updateNewMessagesIndicator,diagLog,recordPerf,
+  compareMessagesChronologically,loadMessageReactions,
+  loadMessagePins,loadPrivateReplyContexts,renderMessage,
+  markConversationReceipt,toast
+ });
 }
 function compareMessagesChronologically(a,b){const timeDiff=new Date(a.created_at)-new Date(b.created_at);if(timeDiff)return timeDiff;const aid=String(a.id||''),bid=String(b.id||'');return aid<bid?-1:aid>bid?1:0}
 async function loadOlderMessages(){
@@ -2220,7 +2144,7 @@ function renderMyChannels(){
  const rows=(state.conversations||[]).filter(c=>c.type==='channel'&&((c.title||'')+' '+(c.description||'')).toLocaleLowerCase('ar').includes(q));
  if(!rows.length){const empty=document.createElement('div');empty.className='channel-empty';empty.textContent=q?'لا توجد قناة تطابق البحث.':'لا توجد قنوات في مساحتك بعد. أنشئ قناة خاصة أو افتح رابط دعوة للانضمام إلى قناة.';list.append(empty);return}
  rows.forEach(channel=>{
-  const card=document.createElement('article');card.className='channel-card';
+  const card=document.createElement('article');card.className='channel-card';card.dataset.conversationId=channel.id;
   const top=document.createElement('div');top.className='channel-card-top';
   const icon=document.createElement('div');icon.className='channel-card-icon';icon.innerHTML='<i class="ph ph-lock-key"></i>';
   const copy=document.createElement('div');copy.className='channel-card-copy';
@@ -2897,5 +2821,6 @@ function renderPrivateReplyQuote(messageId,context){const row=Array.from(documen
 
 </script>
 <script src="./membership.js"></script>
+<script src="./modules/profile-status-and-conversation-images.js" defer></script>
 <script src="./modules/backup-restore.js"></script>
 </body></html>
