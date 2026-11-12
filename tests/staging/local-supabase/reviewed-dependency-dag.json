@@ -1243,6 +1243,102 @@
       ],
       "blockedBy": [],
       "note": "Uses only the reserved local test identity; no real administrator identity is inserted by canonical migrations."
+    },
+    {
+      "id": "security.direct-conversation-eligibility-forward",
+      "source": [
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql"
+      ],
+      "provides": [
+        "forward RPC eligibility checks for caller and target",
+        "row locking across authoritative profile and Auth eligibility"
+      ],
+      "requires": [
+        "chat.direct-conversation-rpc",
+        "membership.final-format",
+        "chat.profile-status-combined-content-media"
+      ],
+      "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
+      "testSource": [
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "note": "New post-ledger migration; runtime eligibility, reversed-pair concurrency, and exact ACL evidence are required before approval."
+    },
+    {
+      "id": "security.chat-media-upload-ownership-forward",
+      "source": [
+        "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql"
+      ],
+      "provides": [
+        "chat-media uploader-folder ownership enforcement"
+      ],
+      "requires": [
+        "chat.media-upload-path-hardening",
+        "membership.final-format",
+        "chat.profile-status-combined-content-media"
+      ],
+      "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
+      "testSource": [
+        "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "blockedBy": [
+        "DAG-013"
+      ],
+      "note": "New post-ledger migration; upload, signed-URL read, and cross-user path-denial runtime checks are required."
+    },
+    {
+      "id": "security.public-default-privileges-forward",
+      "source": [
+        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql"
+      ],
+      "provides": [
+        "deny-by-default public-schema table, sequence and function privileges"
+      ],
+      "requires": [
+        "membership.final-format",
+        "chat.profile-status-combined-content-media"
+      ],
+      "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
+      "testSource": [
+        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "note": "New post-ledger migration; API-role table/sequence/function ACLs and legitimate CRUD/RPC compatibility must pass disposable-local runtime tests."
+    },
+    {
+      "id": "security.active-membership-rls-forward",
+      "source": [
+        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql"
+      ],
+      "provides": [
+        "restrictive active-membership RLS gates for public tables and Storage"
+      ],
+      "requires": [
+        "security.public-default-privileges-forward",
+        "chat.profile-status-combined-content-media"
+      ],
+      "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
+      "testSource": [
+        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "note": "New post-ledger migration; verify restrictive-policy composition and legitimate CRUD/RPC behavior under authenticated roles."
     }
   ],
   "explicitEdges": [
@@ -2017,6 +2113,46 @@
     [
       "chat.reactions",
       "chat.pins"
+    ],
+    [
+      "chat.profile-status-combined-content-media",
+      "security.direct-conversation-eligibility-forward"
+    ],
+    [
+      "chat.profile-status-combined-content-media",
+      "security.chat-media-upload-ownership-forward"
+    ],
+    [
+      "chat.profile-status-combined-content-media",
+      "security.public-default-privileges-forward"
+    ],
+    [
+      "chat.profile-status-combined-content-media",
+      "security.active-membership-rls-forward"
+    ],
+    [
+      "chat.direct-conversation-rpc",
+      "security.direct-conversation-eligibility-forward"
+    ],
+    [
+      "membership.final-format",
+      "security.direct-conversation-eligibility-forward"
+    ],
+    [
+      "chat.media-upload-path-hardening",
+      "security.chat-media-upload-ownership-forward"
+    ],
+    [
+      "membership.final-format",
+      "security.chat-media-upload-ownership-forward"
+    ],
+    [
+      "membership.final-format",
+      "security.public-default-privileges-forward"
+    ],
+    [
+      "security.public-default-privileges-forward",
+      "security.active-membership-rls-forward"
     ]
   ],
   "blockers": [
@@ -2187,7 +2323,9 @@
     "cloudConnectionsAllowed": false,
     "productionDataAllowed": false,
     "canonicalSqlMutationAllowed": false,
-    "costBearingResourcesAllowed": false
+    "costBearingResourcesAllowed": false,
+    "forwardReconciliationMigrations": 4,
+    "forwardMigrationExecutionAuthorized": false
   },
   "archiveSources": [
     {
@@ -2251,4 +2389,4 @@
       "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
     }
   ]
-}
+}\n
