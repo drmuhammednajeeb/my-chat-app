@@ -189,7 +189,7 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
   assert.match(subscribe, /event:'DELETE',schema:'public',table:'chat_messages'/);
   assert.match(subscribe, /handleMessageDeleteRealtime\(p,id\)/);
   assert.match(subscribe, /channelHasSubscribed&&s==='SUBSCRIBED'/);
-  assert.match(subscribe, /reconnected&&state\.active\?\.id===id\)loadMessages\(\)/);
+  assert.match(subscribe, /requestImmediateMessageReconciliation\(s==='SUBSCRIBED'\?'realtime-subscribed':'realtime-unavailable'\)/);
   assert.match(update, /renderMessage\(incoming,conversationId,state\.messageLoadVersion\)/);
   assert.doesNotMatch(update, /Deleted message refresh failed/);
 });
@@ -255,7 +255,7 @@ test('renderer rejects an obsolete request token before starting work', async ()
 test('poll cadence preserves connected, disconnected and background intervals', () => {
   const state = { realtimeStatus: 'SUBSCRIBED' }, document = { visibilityState: 'visible' };
   const delay = vm.runInNewContext('(' + extractFunction('messagePollingDelay') + ')', { state, document });
-  assert.equal(delay(), 30000);
+  assert.equal(delay(), 15000);
   state.realtimeStatus = 'CHANNEL_ERROR';
   assert.equal(delay(), 8000);
   document.visibilityState = 'hidden';
