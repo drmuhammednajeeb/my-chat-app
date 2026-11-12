@@ -23,6 +23,7 @@ test('production migration source registry is explicit, complete, and fail-close
   assert.equal(registry.sourceSets.cliMigrationFiles, 13);
   assert.equal(registry.sourceSets.historicalChangeFiles, 45);
   assert.equal(registry.sourceSets.duplicatePairs, 4);
+  assert.equal(registry.sourceSets.canonicalizedProductionMigrations, 3);
   assert.equal(registry.sourceSets.testOnlyFixtureCount, 19);
   assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 19);
 
