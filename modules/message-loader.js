@@ -243,10 +243,11 @@
           for (let offset = 0; offset < messages.length; offset += renderConcurrency) {
             if (!isCurrent()) { rollbackOwnedRender(); return false; }
             const batch = messages.slice(offset, offset + renderConcurrency);
-            const outcomes = await Promise.all(batch.map(message =>
+            const outcomes = await Promise.allSettled(batch.map(message =>
               renderMessage(message, conversationId, requestId)
             ));
-            outcomes.forEach((rendered, index) => {
+            outcomes.forEach((outcome, index) => {
+              const rendered = outcome.status === 'fulfilled' && outcome.value;
               if (!rendered && !state.messageIds.has(batch[index].id)) allMessagesRendered = false;
             });
           }
