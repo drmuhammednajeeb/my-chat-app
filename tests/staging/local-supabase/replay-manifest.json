@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 62,
-    "mappedSources": 62,
+    "sqlFiles": 66,
+    "mappedSources": 66,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 17,
@@ -28,9 +28,9 @@
       "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 60,
+    "executedMappedSources": 64,
     "executedTestOnlySqlFixtures": 17,
-    "executedSqlFiles": 77
+    "executedSqlFiles": 81
   },
   "execution": {
     "enabled": false,
@@ -698,6 +698,59 @@
         "DAG-016"
       ],
       "parityNote": null
+    },
+    {
+      "nodeId": "security.direct-conversation-eligibility-forward",
+      "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "security.chat-media-upload-ownership-forward",
+      "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "blockedBy": [
+        "DAG-013"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "security.public-default-privileges-forward",
+      "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "security.active-membership-rls-forward",
+      "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
     }
   ],
   "duplicateSelection": {
@@ -793,5 +846,36 @@
     "Candidate order is derived from the reviewed acyclic dependency graph.",
     "Test-only SQL copies and the chat-media upload-path hardening fixture are local-only; they are not production migrations.",
     "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved."
+  ],
+  "forwardReconciliationMigrations": [
+    {
+      "path": "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ]
+    },
+    {
+      "path": "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-013"
+      ]
+    },
+    {
+      "path": "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-016"
+      ]
+    },
+    {
+      "path": "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-016"
+      ]
+    }
   ]
-}
+}\n
