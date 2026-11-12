@@ -98,7 +98,7 @@ async function installSendHarness(page, { text = 'hello', attachment = false } =
     window.__runSend = new Function(
       'state', '$', 'toast', 'supabaseClient', 'withAuthTimeout', 'canEditMessage',
       'uploadAttachment', 'renderComposerContext', 'resizeComposer', 'publishTyping',
-      'loadMessages', 'renderMessage', 'renderConversations', 'console', 'crypto',
+      'loadMessages', 'renderMessage', 'renderConversations', 'console', 'crypto', 'voiceRecorder',
       'return (' + source + ');'
     )(
       state, $, message => backend.notices.push(message), supabaseClient,
@@ -106,7 +106,7 @@ async function installSendHarness(page, { text = 'hello', attachment = false } =
       async file => { backend.uploadCalls += 1; return { path: 'conversation-1/user-1/proof.pdf', type: file.type }; },
       () => {}, () => {}, () => {}, async () => true,
       async message => { state.messageIds.add(message.id); state.messages.push(message); return true; },
-      () => {}, console, testCrypto
+      () => {}, console, testCrypto, { isActive: () => false }
     );
   }, { source: sendSource, text, attachment });
   return page;
