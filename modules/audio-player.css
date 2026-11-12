@@ -1,35 +1,51 @@
-/* Custom voice-message player: isolated from recorder and native media controls. */
+/* Custom voice-message player with a native playback fallback. */
 .voice-message-player{
-  display:flex;align-items:center;gap:10px;width:min(330px,100%);max-width:100%;
-  min-width:0;padding:9px 10px;margin:5px 0;border:1px solid var(--line);
-  border-radius:13px;background:var(--panel2);color:var(--text);direction:rtl;
-  box-sizing:border-box;
+  display:flex;align-items:center;gap:11px;width:min(350px,100%);max-width:100%;
+  min-width:0;padding:10px 12px;margin:6px 0;border:1px solid var(--line);
+  border-radius:16px;background:linear-gradient(145deg,var(--panel2),var(--panel));
+  color:var(--text);direction:rtl;box-sizing:border-box;
+  box-shadow:0 2px 8px rgba(0,0,0,.045);
 }
 .voice-player-toggle{
-  width:36px;height:36px;min-width:36px;flex:none;display:grid;place-items:center;
-  border:0;border-radius:50%;background:var(--accent);color:#fff;font-size:17px;
-  cursor:pointer;touch-action:manipulation;
+  width:42px;height:42px;min-width:42px;flex:none;display:grid;place-items:center;
+  border:0;border-radius:50%;background:var(--accent);color:#fff;font-size:19px;
+  cursor:pointer;touch-action:manipulation;box-shadow:0 2px 7px rgba(0,0,0,.13);
+  transition:transform .15s ease,filter .15s ease,opacity .15s ease;
 }
+.voice-player-toggle:active{transform:scale(.94)}
+.voice-player-toggle:hover{filter:brightness(1.07)}
+.voice-player-toggle:disabled{opacity:.55;cursor:not-allowed}
 .voice-player-toggle:focus-visible,.voice-player-waveform:focus-visible{
   outline:2px solid var(--accent);outline-offset:3px;
 }
-.voice-player-timeline{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 8px;flex:1;min-width:0}
+.voice-player-timeline{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 9px;flex:1;min-width:0}
 .voice-player-waveform{
   grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:2px;
-  width:100%;height:31px;min-width:0;overflow:hidden;cursor:pointer;touch-action:pan-y;direction:ltr;
+  width:100%;height:34px;min-width:0;overflow:hidden;cursor:pointer;touch-action:pan-y;direction:ltr;
 }
 .voice-player-waveform-bar{
-  display:block;flex:1 1 0;min-width:2px;max-width:4px;border-radius:4px;
-  background:var(--muted);opacity:.52;transition:background-color .1s ease,opacity .1s ease;
+  display:block;flex:1 1 0;min-width:2px;max-width:4px;border-radius:5px;
+  background:var(--muted);opacity:.48;transition:background-color .12s ease,opacity .12s ease;
 }
 .voice-player-waveform-bar.is-played{background:var(--accent);opacity:1}
-.voice-player-time{font:600 10px/1.2 var(--chat-font,Arial,sans-serif);font-variant-numeric:tabular-nums;color:var(--muted);direction:ltr;white-space:nowrap}
+.voice-player-time{font:600 11px/1.2 var(--chat-font,Arial,sans-serif);font-variant-numeric:tabular-nums;color:var(--muted);direction:ltr;white-space:nowrap}
 .voice-player-duration{justify-self:end}
-.message .bubble .voice-message-player{white-space:normal;overflow-wrap:normal}
-.message .bubble .voice-message-player audio{display:none}
-@media(max-width:420px){
-  .voice-message-player{width:min(290px,100%);gap:8px;padding:8px}
-  .voice-player-toggle{width:34px;height:34px;min-width:34px}
-  .voice-player-waveform{height:28px;gap:1px}
+.voice-player-native-audio{
+  position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
 }
-@media(prefers-reduced-motion:reduce){.voice-player-waveform-bar{transition:none}}
+.voice-player-fallback-message{display:none;flex-basis:100%;font-size:11px;line-height:1.5;color:var(--muted)}
+.voice-player-fallback-message[hidden]{display:none}
+.voice-message-player.has-playback-error{flex-wrap:wrap;border-color:var(--danger,var(--line))}
+.voice-message-player.has-playback-error .voice-player-native-audio{
+  position:static;display:block;order:3;flex:1 0 100%;width:100%;height:38px;
+  opacity:1;overflow:visible;clip:auto;clip-path:none;white-space:normal;
+}
+.voice-message-player.has-playback-error .voice-player-fallback-message{display:block;order:2}
+.message .bubble .voice-message-player{white-space:normal;overflow-wrap:normal}
+@media(max-width:420px){
+  .voice-message-player{width:min(310px,100%);gap:9px;padding:9px 10px}
+  .voice-player-toggle{width:39px;height:39px;min-width:39px}
+  .voice-player-waveform{height:31px;gap:1px}
+}
+@media(prefers-reduced-motion:reduce){.voice-player-toggle,.voice-player-waveform-bar{transition:none}}
