@@ -3,7 +3,7 @@
  * Never cache Supabase/API requests, authenticated data, or user messages.
  */
 const CACHE_PREFIX = "ultra-chat-pro";
-const CACHE_VERSION = "v25";
+const CACHE_VERSION = "v26";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const CDN_CACHE = `${CACHE_PREFIX}-cdn-${CACHE_VERSION}`;
 const CDN_ORIGINS = new Set([
@@ -29,14 +29,21 @@ self.addEventListener("install", event => {
       new URL("./app.css", base).href,
       new URL("./app-overrides.css", base).href,
       new URL("./modules/backup-restore.js", base).href,
+      new URL("./modules/audio-player.js", base).href,
+      new URL("./modules/audio-player.css", base).href,
+      new URL("./modules/app-updater.js", base).href,
+      new URL("./modules/app-updater.css", base).href,
       new URL("./modules/voice-recorder.js", base).href,
       new URL("./modules/voice-recorder.css", base).href,
       new URL("./modules/message-loader.js", base).href,
       new URL("./modules/profile-status-and-conversation-images.js", base).href,
       new URL("./modules/profile-status-and-conversation-images.css", base).href
     ]);
-    await self.skipWaiting();
   })());
+});
+
+self.addEventListener("message", event => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
