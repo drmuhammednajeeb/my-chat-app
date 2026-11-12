@@ -2757,6 +2757,6 @@ async function loadPrivateReplyContexts(id,messages,requestId=null){
 function renderPrivateReplyQuote(messageId,context){const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId),bubble=row?.querySelector('.bubble');if(!bubble||bubble.querySelector('.private-reply-quote'))return;const quote=document.createElement('div'),who=document.createElement('strong'),preview=document.createElement('span');quote.className='reply-quote private-reply-quote';who.textContent='رد خاص من مجموعة';preview.textContent=context?.quoted_content||'رسالة مقتبسة';quote.append(who,preview);const meta=bubble.querySelector('.meta');if(meta)bubble.insertBefore(quote,meta);else bubble.append(quote)}
 
 </script>
-<script src="./modules/backup-restore.js"></script>
 <script src="./membership.js"></script>
+<script src="./modules/backup-restore.js"></script>
 </body></html>
