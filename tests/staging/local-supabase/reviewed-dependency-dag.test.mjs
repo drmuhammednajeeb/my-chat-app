@@ -228,7 +228,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   const canonicalSourceCounts = new Map();
   for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
-  assert.equal(canonicalSourceCounts.size, 62);
+  assert.equal(canonicalSourceCounts.size, 66);
   assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
@@ -358,4 +358,26 @@ test('chat composer media allowlists are checked against the archived proposal, 
     assert.ok(migration.includes(mime), 'conversation-documents allow-list is missing ' + mime);
   }
   assert.ok(html.includes("attachment_type?.startsWith('video/')"));
+});
+
+
+test('four forward hardening migrations remain outside the production ledger and retain explicit blockers', async () => {
+  const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  assert.equal(registry.productionMigrations.length, 62);
+  assert.equal(registry.forwardMigrations.length, 4);
+  const expected = new Map([
+    ['20261112160000_harden_direct_conversation_eligibility.sql', ['DAG-014', 'DAG-015']],
+    ['20261112160001_harden_chat_media_upload_ownership.sql', ['DAG-013']],
+    ['20261112160002_revoke_unsafe_public_default_privileges.sql', ['DAG-016']],
+    ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']]
+  ]);
+  for (const [name, blockers] of expected) {
+    const path = 'supabase/migrations/' + name;
+    const node = dag.nodes.find(item => item.source?.includes(path));
+    assert.ok(node, 'forward migration missing from DAG: ' + name);
+    assert.deepEqual(node.blockedBy, blockers);
+    assert.equal(registry.forwardMigrations.some(item => item.path === path && item.status === 'FORWARD_RECONCILIATION_NOT_APPLIED'), true);
+  }
+  assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
 });
