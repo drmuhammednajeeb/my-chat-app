@@ -33,3 +33,67 @@
 @media(max-width:760px){.bz-status-strip{padding-inline:10px}.bz-feature-modal{padding:10px}.bz-feature-dialog{max-height:92dvh}}
 
 .channel-card-icon.has-conversation-image img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+
+/* Dedicated status workspace — completely separate from the chat timeline. */
+#chat:not(.status-mode)>#statusPage{display:none!important}
+#chat.status-mode{min-width:0;min-height:0;overflow:hidden}
+#chat.status-mode>:not(#statusPage){display:none!important}
+#chat.status-mode>#statusPage{
+  display:flex;flex:1 1 auto;min-width:0;min-height:0;overflow:auto;
+  flex-direction:column;gap:22px;padding:clamp(16px,3vw,32px);
+  background:var(--bg);color:var(--text);overscroll-behavior:contain;
+}
+.status-sidebar-mode .searchbox,.status-sidebar-mode #workspaceInboxTabs,
+.status-sidebar-mode #chatFilters,.status-sidebar-mode #directoryFilters,
+.status-sidebar-mode #sidebarSectionHead,.status-sidebar-mode #customListsPanel,
+.status-sidebar-mode #conversationList,.status-sidebar-mode #directorySummary,
+.status-sidebar-mode #directoryList,.status-sidebar-mode #loadMoreUsers{display:none!important}
+.bz-status-page-head{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:clamp(17px,3vw,28px);border:1px solid var(--line);
+  border-radius:20px;background:var(--panel);box-shadow:var(--shadow);
+}
+.bz-status-eyebrow{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--accent)}
+.bz-status-page-head h1{margin:7px 0 4px;font-size:clamp(23px,3vw,32px);font-weight:900}
+.bz-status-page-head p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.bz-status-publish{
+  flex:0 0 auto;min-height:44px;padding:10px 17px;border:0;border-radius:12px;
+  background:var(--accent);color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer;
+}
+.bz-status-publish:hover{filter:brightness(1.08)}
+.bz-status-section{display:grid;gap:12px;min-width:0}
+.bz-status-section h2{margin:0;font-size:16px;font-weight:850}
+.bz-status-own-card{min-width:0}
+.bz-status-feed{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:11px}
+.bz-status-feed-card{
+  display:flex;align-items:center;gap:12px;min-width:0;min-height:82px;
+  padding:13px;border:1px solid var(--line);border-radius:15px;
+  background:var(--panel);color:var(--text);text-align:start;cursor:pointer;
+  transition:border-color .15s ease,transform .15s ease,background .15s ease;
+}
+.bz-status-feed-card:hover{border-color:var(--accent);transform:translateY(-1px);background:var(--panel2)}
+.bz-status-feed-avatar{
+  display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;
+  overflow:hidden;border:2px solid var(--accent);border-radius:50%;
+  background:var(--panel2);font-weight:900;
+}
+.bz-status-feed-avatar img{width:100%;height:100%;object-fit:cover}
+.bz-status-feed-copy{display:grid;gap:4px;flex:1;min-width:0}
+.bz-status-feed-copy strong{font-size:13px;font-weight:850}
+.bz-status-feed-copy small{overflow:hidden;color:var(--muted);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.bz-status-feed-copy .bz-status-feed-meta{font-size:10px;opacity:.85}
+.bz-status-feed-arrow{flex:0 0 auto;color:var(--accent);font-size:25px}
+.bz-status-empty-own,.bz-status-empty{
+  display:block;width:100%;padding:18px;border:1px dashed var(--line);border-radius:14px;
+  background:var(--panel);color:var(--muted);font:inherit;font-size:12px;text-align:center;
+}
+.bz-status-empty-own{cursor:pointer}
+.bz-status-content video{display:block;width:100%;max-height:65dvh;background:#000;object-fit:contain}
+.bz-image-preview video{display:block;width:100%;max-height:300px;background:#000;object-fit:contain}
+@media(max-width:760px){
+  #chat.status-mode>#statusPage{gap:16px;padding:12px}
+  .bz-status-page-head{align-items:stretch;flex-direction:column}
+  .bz-status-publish{width:100%}
+  .bz-status-feed{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.bz-status-feed-card{transition:none}}
