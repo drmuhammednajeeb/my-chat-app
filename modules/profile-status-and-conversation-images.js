@@ -11,6 +11,7 @@
   let statusesByUser = new Map();
   let statusRequestVersion = 0;
   let statusChannel = null;
+  let conversationImageChannel = null;
   let statusExpiryTimer = null;
   let statusPreviewUrl = null;
   let statusViewerUserId = null;
@@ -479,6 +480,25 @@
     };
   }
 
+  function subscribeConversationImageRealtime() {
+    if (!currentUserId() || conversationImageChannel) return;
+    conversationImageChannel = supabaseClient.channel('conversation-images:' + currentUserId())
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations' }, payload => {
+        const updated = payload?.new;
+        if (!updated?.id) return;
+        const conversation = state.conversations.find(item => item.id === updated.id);
+        if (!conversation || conversation.image_path === updated.image_path) return;
+        conversation.image_path = updated.image_path || null;
+        if (state.active?.id === updated.id) {
+          state.active.image_path = updated.image_path || null;
+          renderChatAvatar(state.active);
+        }
+        renderConversations();
+        if (state.sidebarView === 'channels') renderMyChannels();
+      })
+      .subscribe(status => { if (status !== 'SUBSCRIBED') console.warn('Conversation image realtime:', status); });
+  }
+
   function subscribeStatusRealtime() {
     if (!currentUserId() || statusChannel) return;
     statusChannel = supabaseClient.channel('profile-statuses:' + currentUserId())
@@ -509,6 +529,7 @@
     const result = await originalEnterApp.apply(this, arguments);
     if (result) {
       subscribeStatusRealtime();
+      subscribeConversationImageRealtime();
       await loadProfileStatuses();
       refreshConversationListImages();
     }
@@ -520,11 +541,13 @@
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     if (session?.user) {
-      setTimeout(() => { subscribeStatusRealtime(); loadProfileStatuses(); }, 0);
+      setTimeout(() => { subscribeStatusRealtime(); subscribeConversationImageRealtime(); loadProfileStatuses(); }, 0);
     } else {
       statusRows = []; statusesByUser = new Map(); statusRequestVersion++;
       if (statusChannel) supabaseClient.removeChannel(statusChannel);
+      if (conversationImageChannel) supabaseClient.removeChannel(conversationImageChannel);
       statusChannel = null;
+      conversationImageChannel = null;
       byId('profileStatusStrip')?.remove();
     }
   });
