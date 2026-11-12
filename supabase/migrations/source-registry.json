@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
   "generatedAt": "2026-11-12",
   "repository": {
@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 62,
+    "canonicalCliMigrationFiles": 66,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 17,
@@ -38,7 +38,8 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql"
-    ]
+    ],
+    "forwardReconciliationMigrations": 4
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -48,7 +49,8 @@
     "Compound historical sources are split across their exact production version filenames; uncertain original boundaries are explicitly labeled reconstructed.",
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
-    "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass."
+    "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
+    "The 66-file CLI stream contains 62 historical production-ledger migrations plus 4 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
   ],
   "productionMigrations": [
     {
@@ -1749,5 +1751,62 @@
     "localReplayEnabled": false,
     "productionChangesAllowed": false,
     "pr139Merged": false
+  },
+  "forwardMigrations": [
+    {
+      "version": "20261112160000",
+      "name": "harden_direct_conversation_eligibility",
+      "path": "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+      "gitBlobSha": "8056b359084e48e4c3ab3534b78821d5ddfb1373",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Require both direct-conversation participants to satisfy active membership, verified membership-number, valid-format and confirmed-email checks while preserving pair-lock reuse.",
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ]
+    },
+    {
+      "version": "20261112160001",
+      "name": "harden_chat_media_upload_ownership",
+      "path": "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
+      "gitBlobSha": "df784e2a8eed8b2f2caa1f0fd695ec9b78474ac4",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Bind chat-media upload path segment 2 to auth.uid() in addition to conversation membership.",
+      "blockedBy": [
+        "DAG-013"
+      ]
+    },
+    {
+      "version": "20261112160002",
+      "name": "revoke_unsafe_public_default_privileges",
+      "path": "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+      "gitBlobSha": "fdab32b404b6e1876313d1cecccf05c2088d82d8",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Remove unsafe default and direct API-role privileges while preserving reviewed application CRUD and RPC contracts.",
+      "blockedBy": [
+        "DAG-016"
+      ]
+    },
+    {
+      "version": "20261112160003",
+      "name": "enforce_active_membership_rls",
+      "path": "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+      "gitBlobSha": "f39ce0f57748691eecb5371382d9754d22a9b444",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Add restrictive active-membership gates to RLS-enabled public tables and Storage objects.",
+      "blockedBy": [
+        "DAG-016"
+      ]
+    }
+  ],
+  "forwardMigrationPolicy": {
+    "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
+    "productionLedgerCount": 62,
+    "pendingForwardCount": 4,
+    "executionAuthorized": false
   }
-}
+}\n
