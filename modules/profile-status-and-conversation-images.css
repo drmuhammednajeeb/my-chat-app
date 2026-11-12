@@ -31,3 +31,5 @@
 .conv-avatar.has-conversation-image img,#chatAvatar.has-conversation-image img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
 #chatAvatar{cursor:pointer}
 @media(max-width:760px){.bz-status-strip{padding-inline:10px}.bz-feature-modal{padding:10px}.bz-feature-dialog{max-height:92dvh}}
+
+.channel-card-icon.has-conversation-image img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
