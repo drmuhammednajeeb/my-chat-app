@@ -2150,6 +2150,7 @@ const voiceRecorder=window.BizmindVoiceRecorder.create({
  getContext:()=>({active:state.active,user:state.user,groupSettings:state.groupSettings,uploading:state.uploading,attachment:state.attachment}),
  elements:{composer:$('voiceRecordBtn').closest('.composer'),recordButton:$('voiceRecordBtn'),controls:$('voiceRecordingControls'),pauseButton:$('voicePauseBtn'),trashButton:$('voiceTrashBtn'),time:$('voiceRecordingTime'),status:$('voiceRecordingStatus'),sendButton:$('sendBtn')},
  toast,
+ isSecureContext:()=>window.isSecureContext,
  onStateChange:phase=>{if(phase==='idle')resizeComposer()},
  onRecordingReady:({file,duration})=>{
   state.attachment=file;state.voiceDuration=duration;
