@@ -1,0 +1,35 @@
+.bz-status-strip{display:flex;align-items:flex-start;gap:9px;padding:9px 12px 11px;overflow-x:auto;overscroll-behavior-x:contain;border-bottom:1px solid var(--line,#e7eaf0);scrollbar-width:thin}
+.bz-status-user{flex:0 0 58px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;border:0;background:transparent;color:var(--text,#182235);padding:0;cursor:pointer}
+.bz-status-user small{max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:var(--muted,#778195)}
+.bz-status-ring{width:46px;height:46px;border-radius:50%;padding:2px;display:grid;place-items:center;border:2px solid var(--line,#cbd2df);background:var(--surface,#fff)}
+.bz-status-ring.has-status{border-color:#13a47a}
+.bz-status-ring img,.bz-status-ring>span{width:100%;height:100%;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:var(--surface-2,#eef2f7);font-weight:800}
+.bz-status-add{align-self:center;flex:0 0 auto;border:1px dashed var(--accent,#3688d8);border-radius:18px;background:transparent;color:var(--accent,#3688d8);padding:7px 11px;font:inherit;font-size:11px;cursor:pointer}
+.bz-feature-modal{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(8,15,28,.68);backdrop-filter:blur(5px)}
+.bz-feature-modal.open{display:flex}
+.bz-feature-dialog{width:min(100%,440px);max-height:min(88dvh,760px);overflow:auto;border:1px solid var(--line,#dce2ec);border-radius:18px;background:var(--panel,#fff);color:var(--text,#182235);box-shadow:0 24px 80px rgba(0,0,0,.28)}
+.bz-feature-dialog>header{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:14px 17px;border-bottom:1px solid var(--line,#e7eaf0);background:var(--panel,#fff)}
+.bz-feature-close{width:34px;height:34px;border:0;border-radius:50%;background:var(--surface-2,#eef2f7);color:inherit;font-size:22px;cursor:pointer}
+.bz-feature-body{display:grid;gap:13px;padding:17px}
+.bz-feature-hint,.bz-feature-message{margin:0;color:var(--muted,#778195);font-size:12px;line-height:1.7}
+.bz-feature-body textarea{width:100%;min-height:105px;resize:vertical;padding:12px;border:1px solid var(--line,#dce2ec);border-radius:12px;background:var(--surface,#fff);color:inherit;font:inherit}
+.bz-file-pick{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border:1px dashed var(--line,#cbd2df);border-radius:12px;cursor:pointer;font-size:13px}
+.bz-file-pick input{max-width:190px}
+.bz-image-preview{max-height:280px;overflow:hidden;border-radius:12px;background:var(--surface-2,#eef2f7)}
+.bz-image-preview img{display:block;width:100%;max-height:280px;object-fit:contain}
+.bz-feature-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bz-feature-actions button{border:0;border-radius:10px;padding:9px 14px;font:inherit;font-size:12px;cursor:pointer}
+.bz-primary{background:var(--accent,#287fc4);color:#fff}
+.bz-secondary{background:var(--surface-2,#eef2f7);color:inherit}
+.bz-danger{background:#b42318;color:#fff}
+.bz-feature-actions button:disabled{opacity:.55;cursor:not-allowed}
+.bz-status-viewer .bz-feature-dialog{width:min(100%,520px)}
+.bz-status-viewer-heading{font-size:12px;color:var(--muted,#778195)}
+.bz-status-content{min-height:170px;display:grid;place-items:center;border-radius:14px;overflow:hidden;background:var(--surface-2,#eef2f7)}
+.bz-status-content p{margin:0;padding:28px;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;font-size:20px;line-height:1.8}
+.bz-status-content img{display:block;width:100%;max-height:58dvh;object-fit:contain}
+.conv-avatar.has-conversation-image img,#chatAvatar.has-conversation-image img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+#chatAvatar{cursor:pointer}
+@media(max-width:760px){.bz-status-strip{padding-inline:10px}.bz-feature-modal{padding:10px}.bz-feature-dialog{max-height:92dvh}}
+
+.channel-card-icon.has-conversation-image img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
