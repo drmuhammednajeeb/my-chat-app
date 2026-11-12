@@ -2003,6 +2003,10 @@
     [
       "chat.channels-public",
       "chat.reactions"
+    ],
+    [
+      "platform.realtime",
+      "chat.pins"
     ]
   ],
   "blockers": [

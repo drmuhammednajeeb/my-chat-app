@@ -63,6 +63,6 @@ test('repaired canonical membership migration is derived from archived original 
   assert.equal(count, patch.replacement.expectedOccurrences);
   const expected = source.replace(patch.replacement.from, patch.replacement.to);
   assert.equal(expected, copy);
-  assert.match(canonical, /\\$function\\$;\\s*revoke all on function app_private\\.admin_create_official_member_invites_impl/i);
+  assert.match(canonical, /\$function\$;\s*revoke all on function app_private\.admin_create_official_member_invites_impl/i);
   assert.equal(patch.canonicalSource.path.startsWith('database/archive/'), true);
 });

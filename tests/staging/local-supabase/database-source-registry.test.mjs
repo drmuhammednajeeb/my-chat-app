@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
-const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\\0`).update(buffer).digest('hex');
+const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
 test('production source registry maps all 62 ledger versions to one canonical migration each', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
@@ -33,7 +33,7 @@ test('production source registry maps all 62 ledger versions to one canonical mi
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
   assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 62);
   for (const migration of registry.productionMigrations) {
-    assert.match(migration.version, /^\\d{14}$/);
+    assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
     const bytes = await readFile(path.join(root, migration.path));
     assert.equal(blobSha(bytes), migration.gitBlobSha, 'canonical blob mismatch: ' + migration.path);

@@ -11,7 +11,7 @@ const read = name => readFile(path.join(fixtureDir, name), 'utf8');
 test('synthetic Auth identities are seeded before membership triggers without bypassing them', async () => {
   const [authSeed, membershipBase, dagText] = await Promise.all([
     read('synthetic-direct-chat-auth-before-membership.sql'),
-    readFile(path.join(root, 'database/changes/20261107144109_private_membership_system_20261107.sql'), 'utf8'),
+    readFile(path.join(root, 'supabase/migrations/20261107144109_private_membership_system_20261107.sql'), 'utf8'),
     readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8')
   ]);
   const dag = JSON.parse(dagText);
