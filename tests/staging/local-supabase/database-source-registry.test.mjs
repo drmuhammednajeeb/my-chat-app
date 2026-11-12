@@ -55,7 +55,7 @@ test('production registry preserves 62 ledger versions and separately maps four 
   }
 
   for (const migration of registry.forwardMigrations) {
-    assert.match(migration.version, /^\\d{14}$/);
+    assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
     assert.equal(migration.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     assert.equal(migration.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
