@@ -1,5 +1,6 @@
 // Integrated release audit: includes all standalone feature modules and their policy coverage.
 // Keep this contract aligned with the active release's private media buckets.
+// The audit only inventories repository source; it never connects to a database.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildObjectInventory } from './build-database-object-inventory.mjs';
