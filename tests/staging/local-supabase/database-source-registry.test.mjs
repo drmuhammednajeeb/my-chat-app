@@ -9,14 +9,19 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
 const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
-test('production source registry maps all 62 ledger versions to one canonical migration each', async () => {
+test('production registry preserves 62 ledger versions and separately maps four forward migrations', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
-  assert.equal(registry.schemaVersion, 2);
+  assert.equal(registry.schemaVersion, 3);
   assert.equal(registry.registryStatus, 'CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 62);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 62);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 66);
+  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 4);
+  assert.equal(registry.forwardMigrations.length, 4);
+  assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 62);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 4);
+  assert.equal(registry.forwardMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
   assert.equal(registry.sourceFiles.length, 62);
@@ -31,7 +36,7 @@ test('production source registry maps all 62 ledger versions to one canonical mi
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 62);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 66);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
@@ -47,6 +52,17 @@ test('production source registry maps all 62 ledger versions to one canonical mi
         assert.equal(blobSha(archived), source.archiveGitBlobSha);
       }
     }
+  }
+
+  for (const migration of registry.forwardMigrations) {
+    assert.match(migration.version, /^\\d{14}$/);
+    assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
+    assert.equal(migration.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
+    assert.equal(migration.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
+    assert.ok(migration.blockedBy.length > 0);
+    const bytes = await readFile(path.join(root, migration.path));
+    assert.equal(blobSha(bytes), migration.gitBlobSha, 'forward migration blob mismatch: ' + migration.path);
+    assert.equal(registry.productionMigrations.some(item => item.version === migration.version), false);
   }
 
   for (const source of registry.sourceFiles) {
@@ -75,7 +91,7 @@ test('production source registry maps all 62 ledger versions to one canonical mi
 test('every canonical migration closes every explicit transaction block', async () => {
   const directory = path.join(root, 'supabase/migrations');
   const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
-  assert.equal(files.length, 62);
+  assert.equal(files.length, 66);
   for (const name of files) {
     const source = await readFile(path.join(directory, name), 'utf8');
     const begins = (source.match(/^\\s*BEGIN\\s*;\\s*$/gim) ?? []).length;
