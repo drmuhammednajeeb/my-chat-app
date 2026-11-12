@@ -153,7 +153,7 @@ function inspect(file) {
   const policyDetails = matches(sql, /\bcreate\s+policy\s+"?([^"\r\n]+?)"?\s+on\s+((?:[a-z_]\w*\.)?[a-z_]\w*)\b([\s\S]*?);/gi, m => {
     const statement = m[3].replace(/\s+/g, ' ').trim();
     const direct = /\bapp_private\.is_active_member\s*\(/i.test(statement);
-    const indirect = /\bapp_private\.(?:is_conversation_member|can_manage_conversation|is_team_admin)\s*\(/i.test(statement);
+    const indirect = /\bapp_private\.(?:is_conversation_member|can_manage_conversation|is_team_admin|can_access_channel_avatar)\s*\(/i.test(statement);
     const denyAll = /\busing\s*\(\s*false\s*\)/i.test(statement) || /\bwith\s+check\s*\(\s*false\s*\)/i.test(statement);
     const selfScoped = /\bauth\.uid\s*\(\s*\)/i.test(statement) || /\bowner_id\s*=/i.test(statement) || /\buser_id\s*=/i.test(statement);
     return { name: m[1].trim(), table: m[2].toLowerCase(), statement, guardClass: denyAll ? 'DENY_ALL' : direct ? 'DIRECT_ACTIVE_MEMBER' : indirect ? 'INDIRECT_ACTIVE_MEMBER' : selfScoped ? 'SELF_SCOPE_ONLY' : 'NO_RECOGNIZED_GUARD' };
