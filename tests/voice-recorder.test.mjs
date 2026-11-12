@@ -169,3 +169,14 @@ test('a recorder failure resets the controller and releases the microphone', asy
 test('the maximum attachment size remains 12 MiB', () => {
   assert.equal(MAX_BYTES, 12 * 1024 * 1024);
 });
+test('cancelling after stop was requested prevents the queued stop event from attaching audio', async () => {
+  const env = setup();
+  assert.equal(await env.controller.start(), true);
+  const pendingSend = env.controller.send();
+  assert.equal(env.controller.getPhase(), 'stopping');
+  assert.equal(env.controller.cancel(), true);
+  assert.equal(await pendingSend, false);
+  assert.equal(env.controller.isActive(), false);
+  assert.equal(env.events.some(item => item[0] === 'ready'), false);
+  assert.equal(env.events.some(item => item[0] === 'send'), false);
+});
