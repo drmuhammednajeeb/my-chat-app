@@ -59,7 +59,10 @@ test('production registry preserves 62 ledger versions and separately maps four 
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
     assert.equal(migration.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     assert.equal(migration.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
-    assert.ok(migration.blockedBy.length > 0);
+    assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+    assert.equal(migration.localRuntimeRunId, 43258867470);
+    if (migration.version === '20261112160000' || migration.version === '20261112160001') assert.deepEqual(migration.blockedBy, []);
+    else assert.deepEqual(migration.blockedBy, ['DAG-016']);
     const bytes = await readFile(path.join(root, migration.path));
     assert.equal(blobSha(bytes), migration.gitBlobSha, 'forward migration blob mismatch: ' + migration.path);
     assert.equal(registry.productionMigrations.some(item => item.version === migration.version), false);
