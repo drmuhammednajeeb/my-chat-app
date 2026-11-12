@@ -46,7 +46,7 @@ async function newPage() {
 }
 
 async function installSendHarness(page, { text = 'hello', attachment = false, audioDuration = 0 } = {}) {
-  await page.evaluate(({ source, text, attachment }) => {
+  await page.evaluate(({ source, text, attachment, audioDuration }) => {
     const state = window.__state = {
       voiceRecorder: null,
       active: { id: 'conversation-1', type: 'direct', members: [] },
@@ -109,7 +109,7 @@ async function installSendHarness(page, { text = 'hello', attachment = false, au
       async message => { state.messageIds.add(message.id); state.messages.push(message); return true; },
       () => {}, console, testCrypto, { isActive: () => false }
     );
-  }, { source: sendSource, text, attachment });
+  }, { source: sendSource, text, attachment, audioDuration });
   return page;
 }
 
