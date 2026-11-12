@@ -50,8 +50,8 @@ test('emoji reactions are completely absent from conversation runtime and styles
   assert.doesNotMatch(source, /reaction|message_reactions|إضافة تفاعل/i);
   assert.doesNotMatch(appCss, /reaction-bar|reaction-btn|reactions-open/i);
   assert.doesNotMatch(overrides, /reaction-bar|reaction-btn|reactions-open/i);
-  assert.match(source, /\\.message-menu-trigger/);
-  assert.match(overrides, /\\.message-menu-trigger\\{opacity:1;pointer-events:auto\\}/);
+  assert.match(source, /\.message-menu-trigger/);
+  assert.match(overrides, /\.message-menu-trigger\{opacity:1;pointer-events:auto\}/);
 });
 
 test('stickers are sent through the existing message pipeline and rendered as validated sticker content', () => {
