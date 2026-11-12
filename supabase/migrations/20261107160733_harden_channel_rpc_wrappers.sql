@@ -1,0 +1,5 @@
+-- Historical production migration: harden_channel_rpc_wrappers (2026-11-07 16:07:33 UTC).
+-- The final invoker wrappers, private SECURITY DEFINER implementations, and ACLs are
+-- reconstructed in 20261107160647_channel_visibility_avatar_group_background.sql.
+-- The production migration ledger already contains version 20261107160733.
+-- Intentionally no-op in a fresh replay; do not apply this file to production.
