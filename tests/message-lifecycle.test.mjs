@@ -46,11 +46,21 @@ function extractFunction(name) {
   throw new Error('Unbalanced function body: ' + name);
 }
 
-test('emoji reactions are completely absent from conversation runtime and styles', () => {
-  assert.doesNotMatch(source, /reaction|message_reactions|إضافة تفاعل/i);
-  assert.doesNotMatch(appCss, /reaction-bar|reaction-btn|reactions-open/i);
-  assert.doesNotMatch(overrides, /reaction-bar|reaction-btn|reactions-open/i);
-  assert.match(source, /\.message-menu-trigger/);
+test('message reactions are restored through an isolated realtime module and cached assets', async () => {
+  const reactionSource = await readFile(new URL('../modules/message-reactions.js', import.meta.url), 'utf8');
+  const reactionStyles = await readFile(new URL('../modules/message-reactions.css', import.meta.url), 'utf8');
+  const serviceWorker = await readFile(new URL('../service-worker.js', import.meta.url), 'utf8');
+  assert.match(source, /modules\/message-reactions\.js/);
+  assert.match(source, /messageReactions\.attach\(row,m,bubble\.querySelector\('\.message-menu-wrap'\)\)/);
+  assert.match(source, /messageReactions\.render\(row,m\)/);
+  assert.match(source, /messageReactions\.handleRealtime\(p,id\)/);
+  assert.match(reactionSource, /from\("message_reactions"\)/);
+  assert.match(reactionSource, /onConflict: "message_id,user_id"/);
+  assert.match(reactionSource, /applyRealtimeEvent/);
+  assert.match(reactionStyles, /\.message-reaction-picker/);
+  assert.match(reactionStyles, /\.message-reactions/);
+  assert.match(serviceWorker, /modules\/message-reactions\.js/);
+  assert.match(serviceWorker, /modules\/message-reactions\.css/);
   assert.match(overrides, /\.message-menu-trigger\{opacity:1;pointer-events:auto\}/);
 });
 
