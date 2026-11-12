@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const loaderSource = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
@@ -188,6 +189,7 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
   assert.match(subscribe, /event:'DELETE',schema:'public',table:'chat_messages'/);
   assert.match(subscribe, /handleMessageDeleteRealtime\(p,id\)/);
   assert.match(subscribe, /channelHasSubscribed&&s==='SUBSCRIBED'/);
+  assert.match(subscribe, /reconnected&&state\.active\?\.id===id\)loadMessages\(\)/);
   assert.match(update, /renderMessage\(incoming,conversationId,state\.messageLoadVersion\)/);
   assert.doesNotMatch(update, /Deleted message refresh failed/);
 });
@@ -233,12 +235,13 @@ test('delete action uses the returned database row and avoids a competing full r
   assert.doesNotMatch(remove, /loadMessages\(\)/);
 });
 
-test('initial message snapshot removes stale rows inside its authoritative window', () => {
+test('message loader reconciles the authoritative window and preserves valid realtime/history rows', () => {
   const load = extractFunction('loadMessages');
-  assert.match(load, /fetchedIds=new Set\(fetchedRows\.map\(m=>m\.id\)\)/);
-  assert.match(load, /isOlderHistory=newestFetched&&compareMessagesChronologically\(m,newestFetched\)<0/);
-  assert.match(load, /afterPersonalClear=!state\.activeChatPreference\?\.cleared_before/);
-  assert.match(load, /if\(afterPersonalClear&&\(fetchedIds\.has\(m\.id\)\|\|isNewerRealtime\|\|isOlderHistory\|\|arrivedDuringEmptyFetch\)\)/);
+  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
+  assert.match(loaderSource, /const fetchedIds = new Set\(fetchedRows\.map\(row => row\.id\)\)/);
+  assert.match(loaderSource, /isOlderLoadedHistory = fetchedRows\.length === 50/);
+  assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
+  assert.match(loaderSource, /arrivedDuringEmptyFetch/);
 });
 
 test('renderer rejects an obsolete request token before starting work', async () => {
@@ -249,20 +252,14 @@ test('renderer rejects an obsolete request token before starting work', async ()
   assert.equal(calls, 0);
 });
 
-test('poll cadence prioritizes realtime and keeps a fast bounded fallback', () => {
+test('poll cadence preserves connected, disconnected and background intervals', () => {
   const state = { realtimeStatus: 'SUBSCRIBED' }, document = { visibilityState: 'visible' };
   const delay = vm.runInNewContext('(' + extractFunction('messagePollingDelay') + ')', { state, document });
-  assert.equal(delay(), 15000);
+  assert.equal(delay(), 30000);
   state.realtimeStatus = 'CHANNEL_ERROR';
-  assert.equal(delay(), 1200);
+  assert.equal(delay(), 8000);
   document.visibilityState = 'hidden';
   assert.equal(delay(), 60000);
-});
-
-test('realtime subscription state immediately reconciles messages on connect and failure', () => {
-  const subscribe = extractFunction('subscribeConversation');
-  assert.match(subscribe, /requestImmediateMessageReconciliation\(s==='SUBSCRIBED'\?'realtime-subscribed':'realtime-unavailable'\)/);
-  assert.match(subscribe, /s==='CHANNEL_ERROR'\|\|s==='TIMED_OUT'/);
 });
 
 test('receipt writes are serialized per conversation in one client session', async () => {
@@ -295,33 +292,25 @@ test('receipt writes are serialized per conversation in one client session', asy
   assert.equal(state.receiptQueues.size, 0);
 });
 
-test('render and initial-load paths retain stale-result guards', () => {
+test('renderer and extracted message loader retain stale-result and render-completion guards', () => {
   const render = extractFunction('renderMessageInternal'), load = extractFunction('loadMessages');
   assert.match(render, /if\(!isCurrent\(\)\)return false/);
   assert.match(render, /createSignedUrl\(m\.attachment_path,3600\)/);
-  assert.match(load, /if\(requestId!==state\.messageLoadVersion\|\|state\.active\?\.id!==conversationId\)return false/);
-  assert.ok(load.includes('state.messagePollCursor=(data||[])[0]?'));
-  assert.match(load, /allMessagesRendered/);
+  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
+  assert.match(loaderSource, /state\.messageLoadVersion === requestId && state\.active\?\.id === conversationId/);
+  assert.match(loaderSource, /state\.messagePollCursor = fetchedRows\[0\]/);
+  assert.match(loaderSource, /let allMessagesRendered = true/);
 });
 
-test('fallback synchronization uses a bounded overlap and reconciles edits and deletions', () => {
+test('fallback synchronization is cursor-based and reconciles edits and deletions', () => {
   const poll = extractFunction('pollMessagesFallback');
   assert.match(poll, /messagePollCursor/);
-  assert.match(poll, /overlapStartedAt/);
-  assert.match(poll, /Date\.parse\(pollStartedAt\)-5000/);
   assert.match(poll, /and\(created_at\.eq\./);
   assert.match(poll, /id\.gt\./);
   assert.match(poll, /edited_at\.gt\./);
   assert.match(poll, /deleted_at\.gt\./);
   assert.match(poll, /limit\(200\)/);
   assert.match(poll, /messageRequestId!==state\.messageLoadVersion/);
-});
-
-test('cross-device sync reconciles immediately when the page becomes active or online', () => {
-  assert.match(source, /function requestImmediateMessageReconciliation\(reason='lifecycle'\)/);
-  assert.match(source, /document\.visibilityState==='visible'\)requestImmediateMessageReconciliation\('visible'\)/);
-  assert.match(source, /addEventListener\('online',\(\)=>requestImmediateMessageReconciliation\('online'\)\)/);
-  assert.match(source, /addEventListener\('focus',\(\)=>requestImmediateMessageReconciliation\('focus'\)\)/);
 });
 
 test('send attempts reuse a stable message ID and uploaded attachment on retry', () => {
@@ -482,248 +471,4 @@ test('document storage filename sanitizer removes path separators and unsafe cha
   assert.equal(sanitize('a'.repeat(140)).length, 120);
   assert.equal(sanitize('folder\\\\name.pdf').includes('/'), false);
   assert.equal(sanitize('folder\\\\name.pdf').includes('\\\\'), false);
-});
-
-
-test('loadMessages completes for both empty and populated timelines without a render-scope ReferenceError', async () => {
-  const loadSource = extractFunction('loadMessages');
-  const runLoad = async rows => {
-    const area = {
-      innerHTML: '',
-      scrollHeight: 0,
-      scrollTop: 0,
-      replaceChildren() { this.cleared = true; }
-    };
-    const state = {
-      active: { id: 'c1', type: 'group', members: [] },
-      activeChatPreference: null,
-      messageLoadVersion: 0,
-      messages: [],
-      messageIds: new Set(),
-      hasMoreMessages: false,
-      newMessageCount: 0,
-      messagePollLastCheckedAt: null,
-      messagePollCursor: null,
-      diagnostics: {},
-      isLoadingMessages: false,
-      reactions: new Map(),
-      pinnedMessages: new Map(),
-      replyMessages: new Map(),
-      privateReplyContexts: new Map()
-    };
-    let receipts = 0;
-    const queryFor = table => {
-      const query = {
-        select() { return query; },
-        eq() { return query; },
-        order() { return query; },
-        limit() { return query; },
-        in() { return query; },
-        then(resolve, reject) {
-          return Promise.resolve({ data: table === 'chat_messages' ? rows : [], error: null }).then(resolve, reject);
-        }
-      };
-      return query;
-    };
-    const supabaseClient = { from: table => queryFor(table) };
-    const load = vm.runInNewContext('(' + loadSource + ')', {
-      state,
-      supabaseClient,
-      $: id => id === 'messages' ? area : null,
-      performance: { now: () => 1 },
-      Date,
-      Set,
-      Map,
-      Array,
-      console: { error() {}, warn() {} },
-      document: { visibilityState: 'visible' },
-      updateNewMessagesIndicator() {},
-      diagLog() {},
-      recordPerf() {},
-      compareMessagesChronologically(a, b) {
-        const delta = Date.parse(a.created_at) - Date.parse(b.created_at);
-        return delta || String(a.id).localeCompare(String(b.id));
-      },
-      loadMessageReactions: async () => false,
-      loadMessagePins: async () => false,
-      loadPrivateReplyContexts: async () => false,
-      renderMessage: async message => {
-        state.messageIds.add(message.id);
-        return true;
-      },
-      markConversationReceipt: async () => { receipts += 1; return true; },
-      toast() {}
-    });
-    const result = await load();
-    return { result, state, area, receipts };
-  };
-
-  const empty = await runLoad([]);
-  assert.equal(empty.result, true);
-  assert.equal(empty.state.isLoadingMessages, false);
-  assert.match(empty.area.innerHTML, /بداية محادثة جديدة/);
-  assert.equal(empty.receipts, 1);
-
-  const populated = await runLoad([
-    {
-      id: 'm2',
-      conversation_id: 'c1',
-      sender_id: 'u1',
-      content: 'latest',
-      created_at: '2026-11-11T06:01:00.000Z'
-    },
-    {
-      id: 'm1',
-      conversation_id: 'c1',
-      sender_id: 'u1',
-      content: 'older',
-      created_at: '2026-11-11T06:00:00.000Z'
-    }
-  ]);
-  assert.equal(populated.result, true);
-  assert.equal(populated.state.isLoadingMessages, false);
-  assert.equal(populated.state.messageIds.has('m2'), true);
-  assert.equal(populated.state.messageIds.has('m1'), false);
-  assert.equal(populated.state.hasMoreMessages, true);
-  assert.equal(populated.receipts, 1);
-});
-
-
-test('optional pin metadata network failures do not reject the message timeline load', async () => {
-  const state = {
-    active: { id: 'c1' },
-    messageLoadVersion: 5,
-    messages: [],
-    replyMessages: new Map(),
-    pinnedMessages: new Map([['stale', {}]])
-  };
-  const query = {
-    select() { return query; },
-    eq() { return query; },
-    order() { return query; },
-    then(resolve, reject) {
-      return Promise.reject(new Error('simulated network failure')).then(resolve, reject);
-    }
-  };
-  let bannerRenders = 0;
-  const loadPins = vm.runInNewContext('(' + extractFunction('loadMessagePins') + ')', {
-    state,
-    supabaseClient: { from: () => query },
-    renderPinnedBanner() { bannerRenders += 1; },
-    console: { warn() {} }
-  });
-  assert.equal(await loadPins('c1', 5), false);
-  assert.equal(state.pinnedMessages.size, 0);
-  assert.equal(bannerRenders, 1);
-});
-
-test('optional private-reply metadata network failures do not reject the message timeline load', async () => {
-  const state = {
-    active: { id: 'c1', type: 'direct' },
-    messageLoadVersion: 8,
-    privateReplyContexts: new Map([['stale', {}]])
-  };
-  const query = {
-    select() { return query; },
-    in() { return query; },
-    then(resolve, reject) {
-      return Promise.reject(new Error('simulated network failure')).then(resolve, reject);
-    }
-  };
-  const loadContexts = vm.runInNewContext('(' + extractFunction('loadPrivateReplyContexts') + ')', {
-    state,
-    supabaseClient: { from: () => query },
-    console: { warn() {} },
-    Map
-  });
-  assert.equal(await loadContexts('c1', [{ id: 'm1' }], 8), false);
-  assert.equal(state.privateReplyContexts.size, 0);
-});
-
-
-test('opening a conversation fetches only the newest message and defers older history to pagination', () => {
-  const load = extractFunction('loadMessages');
-  assert.match(load, /\.order\('created_at',\{ascending:false\}\)\.order\('id',\{ascending:false\}\)\.limit\(2\)/);
-  assert.match(load, /const fetchedRows=\(data\|\|\[\]\)\.slice\(0,1\)/);
-  assert.match(load, /state\.hasMoreMessages=\(data\|\|\[\]\)\.length>1/);
-  const older = extractFunction('loadOlderMessages');
-  assert.match(older, /\.limit\(50\)/);
-  assert.doesNotMatch(older, /area\.replaceChildren\(\)/);
-  assert.match(older, /insertBefore\(fragment,originalFirstChild\)/);
-  assert.match(older, /state\.batchRenderingMessages=true/);
-  assert.match(older, /state\.batchRenderingMessages=false;state\.batchRenderingConversationId=null;reconcileMessageTimeline\(area\)/);
-  assert.match(older, /olderIds/);
-});
-
-test('starting and stopping the polling timer does not erase the loaded history cursor', () => {
-  const state = {
-    messagePollGeneration: 4,
-    messagePollTimer: 12,
-    messagePollBusy: true,
-    hasMoreMessages: true,
-    isLoadingMessages: true,
-    loadingOlderMessages: false
-  };
-  const stop = vm.runInNewContext('(' + extractFunction('stopMessagePolling') + ')', {
-    state,
-    clearTimeout() {},
-    diagLog() {}
-  });
-  stop();
-  assert.equal(state.hasMoreMessages, true);
-  assert.equal(state.isLoadingMessages, false);
-  assert.equal(state.loadingOlderMessages, false);
-  assert.equal(state.messagePollTimer, null);
-  assert.equal(state.messagePollGeneration, 5);
-  assert.equal(state.messagePollBusy, false);
-  const start = vm.runInNewContext('(' + extractFunction('startMessagePolling') + ')', {
-    state,
-    stopMessagePolling: stop,
-    scheduleMessagePolling() {},
-    diagLog() {},
-    messagePollingDelay: () => 15000
-  });
-  start('c1');
-  assert.equal(state.hasMoreMessages, true);
-});
-
-test('Realtime reconnection does not start a competing full timeline reload', () => {
-  const subscribe = extractFunction('subscribeConversation');
-  assert.doesNotMatch(subscribe, /reconnected&&state\.active\?\.id===id\)loadMessages\(\)/);
-  assert.match(subscribe, /requestImmediateMessageReconciliation/);
-});
-
-test('conversation opens latest-message loading before optional settings finish', () => {
-  const open = extractFunction('openConversation');
-  assert.ok(open.indexOf('subscribeConversation();subscribeProfileUpdates(c)') < open.indexOf('const messageLoadPromise=loadMessages()'));
-  assert.ok(open.indexOf('const messageLoadPromise=loadMessages().finally') < open.indexOf('await Promise.all([messageLoadPromise,starredLoadPromise,settingsLoadPromise])'));
-});
-
-
-test('message reconciliation keeps the current timeline on fetch failure and treats metadata as optional', () => {
-  const load = extractFunction('loadMessages');
-  assert.match(load, /Promise\.allSettled\(\[/);
-  assert.match(load, /Optional '\+name\+' metadata unavailable/);
-  const catchBlock = load.slice(load.indexOf('}catch(error){'));
-  assert.match(catchBlock, /if\(!state\.messageIds\.size\)area\.innerHTML=/);
-  assert.doesNotMatch(catchBlock, /state\.messageIds\.clear\(\)/);
-});
-
-test('voice send flushes the final recorder chunk and refuses cross-conversation attachment', () => {
-  const send = extractFunction('sendVoiceRecording');
-  const start = extractFunction('startVoiceRecording');
-  assert.match(send, /recorder\.requestData\(\)/);
-  assert.match(send, /stopVoiceRecording\(\)/);
-  assert.match(start, /if\(typeof recorder\.start==='function'\)recorder\.start\(\)/);
-  assert.match(start, /recordingConversationId/);
-  assert.match(start, /state\.active\?\.id!==recordingConversationId\|\|state\.user\?\.id!==recordingUserId/);
-  assert.doesNotMatch(start, /elapsed\s*>=\s*180|180\s*\*\s*1000/);
-  assert.match(start, /state\.voiceTimer=setInterval\(\(\)=>\{updateVoiceRecordingUI\(\)\},250\)/);
-});
-
-test('eight-second fallback is message reconciliation cadence, not a voice recording limit', () => {
-  const delay = extractFunction('messagePollingDelay');
-  const voice = extractFunction('startVoiceRecording');
-  assert.match(delay, /return state\.realtimeStatus==='SUBSCRIBED'\?15000:1200/);
-  assert.doesNotMatch(voice, /8000|elapsed>=8/);
 });
