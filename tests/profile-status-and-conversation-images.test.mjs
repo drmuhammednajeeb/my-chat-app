@@ -56,6 +56,12 @@ test('client limits status and conversation image uploads and keeps status text/
   assert.match(client, /upsert: false/);
 });
 
+test('conversation image changes are published and reconciled for all active members', () => {
+  assert.match(migration, /tablename = 'conversations'[\\s\\S]*?alter publication supabase_realtime add table public\\.conversations/);
+  assert.match(client, /table: 'conversations'[\\s\\S]*?conversation\\.image_path = updated\\.image_path/);
+  assert.match(client, /subscribeConversationImageRealtime\\(\)/);
+});
+
 test('status list refreshes on realtime changes and app visibility restoration', () => {
   assert.match(client, /table: 'profile_statuses'/);
   assert.match(client, /setInterval\(\(\) => \{[\s\S]*?loadProfileStatuses\(\)/);
