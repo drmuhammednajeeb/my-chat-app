@@ -55,7 +55,7 @@ alter table public.profile_statuses enable row level security;
 drop policy if exists "Authenticated users read active profile statuses" on public.profile_statuses;
 create policy "Authenticated users read active profile statuses"
 on public.profile_statuses for select to authenticated
-using (expires_at > now());
+using (expires_at > now() and (select app_private.is_active_member()));
 
 drop policy if exists "Users create own profile statuses" on public.profile_statuses;
 create policy "Users create own profile statuses"
@@ -67,12 +67,13 @@ with check (
     (content is not null and image_path is null)
     or (content is null and image_path is not null)
   )
+  and (select app_private.is_active_member())
 );
 
 drop policy if exists "Users delete own profile statuses" on public.profile_statuses;
 create policy "Users delete own profile statuses"
 on public.profile_statuses for delete to authenticated
-using (user_id = (select auth.uid()));
+using (user_id = (select auth.uid()) and (select app_private.is_active_member()));
 
 revoke all on public.profile_statuses from public, anon;
 grant select, insert, delete on public.profile_statuses to authenticated;
@@ -88,6 +89,7 @@ on storage.objects for insert to authenticated
 with check (
   bucket_id = 'profile-status-media'
   and (storage.foldername(name))[1] = (select auth.uid())::text
+  and (select app_private.is_active_member())
 );
 
 drop policy if exists "Read active profile status media" on storage.objects;
@@ -101,6 +103,7 @@ using (
       and s.user_id::text = (storage.foldername(storage.objects.name))[1]
       and s.expires_at > now()
   )
+  and (select app_private.is_active_member())
 );
 
 drop policy if exists "Users delete own profile status media" on storage.objects;
@@ -109,6 +112,7 @@ on storage.objects for delete to authenticated
 using (
   bucket_id = 'profile-status-media'
   and (storage.foldername(name))[1] = (select auth.uid())::text
+  and (select app_private.is_active_member())
 );
 
 alter table public.conversations
@@ -127,6 +131,7 @@ with check (
   and (storage.foldername(name))[1] ~* '^[0-9a-f-]{36}$'
   and (storage.foldername(name))[2] = (select auth.uid())::text
   and app_private.can_manage_conversation(((storage.foldername(name))[1])::uuid)
+  and (select app_private.is_active_member())
 );
 
 drop policy if exists "Conversation members read conversation avatars" on storage.objects;
@@ -134,6 +139,7 @@ create policy "Conversation members read conversation avatars"
 on storage.objects for select to authenticated
 using (
   bucket_id = 'conversation-avatars'
+  and (select app_private.is_active_member())
   and (
     app_private.is_conversation_member(((storage.foldername(name))[1])::uuid)
     or exists (
@@ -152,6 +158,7 @@ using (
   bucket_id = 'conversation-avatars'
   and (storage.foldername(name))[1] ~* '^[0-9a-f-]{36}$'
   and app_private.can_manage_conversation(((storage.foldername(name))[1])::uuid)
+  and (select app_private.is_active_member())
 );
 
 create or replace function app_private.validate_conversation_image_path()
