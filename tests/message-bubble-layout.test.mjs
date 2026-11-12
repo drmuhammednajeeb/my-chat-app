@@ -11,10 +11,13 @@ test('message time and delivery status are rendered inside the text flow', () =>
   assert.ok(styles.includes('#messages .message-content>.meta'));
   assert.ok(styles.includes('#messages .message-content>.message-status'));
   assert.ok(styles.includes('float:left'));
+  assert.ok(styles.includes('color:rgba(255,255,255,.6)'));
+  assert.ok(styles.includes('font-size:11px'));
 });
 
 test('message menu is hidden by default and does not sit over message text', () => {
   assert.ok(styles.includes('opacity:0;pointer-events:none'));
+  assert.ok(styles.includes('background:transparent;color:var(--muted)'));
   assert.ok(styles.includes('#messages>.message:hover .message-menu-trigger'));
   assert.ok(styles.includes('#messages>.message.mine .message-menu-wrap{left:-20px;right:auto}'));
   assert.ok(styles.includes('#messages>.message:not(.mine) .message-menu-wrap{right:-20px;left:auto}'));
