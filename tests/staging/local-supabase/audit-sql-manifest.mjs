@@ -172,8 +172,8 @@ function inspectDollarQuoteTerminators(sql) {
     }
     const after = skipSqlTrivia(sql, closing + token.length);
     const following = sql.slice(after).match(/^[A-Za-z_]+/)?.[0]?.toUpperCase() ?? 'END_OF_FILE';
-    const functionTail = /^(?:LANGUAGE|TRANSFORM|WINDOW|IMMUTABLE|STABLE|VOLATILE|STRICT|CALLED|RETURNS|SECURITY|PARALLEL|LEAKPROOF|NOT|SET|COST|ROWS|SUPPORT)\\b/.test(following);
-    const nextStatement = /^(?:CREATE|ALTER|DROP|GRANT|REVOKE|INSERT|UPDATE|DELETE|SELECT|BEGIN|COMMIT|ROLLBACK|DO|TRUNCATE)\\b/.test(following);
+        const functionTail = /^(?:LANGUAGE|TRANSFORM|WINDOW|IMMUTABLE|STABLE|VOLATILE|STRICT|CALLED|RETURNS|SECURITY|PARALLEL|LEAKPROOF|NOT|SET|COST|ROWS|SUPPORT)\b/.test(following);
+        const nextStatement = /^(?:CREATE|ALTER|DROP|GRANT|REVOKE|INSERT|UPDATE|DELETE|SELECT|BEGIN|COMMIT|ROLLBACK|DO|TRUNCATE)\b/.test(following);
     if (sql[after] !== ';' && !functionTail && (nextStatement || following === 'END_OF_FILE')) {
       issues.push({ line: sql.slice(0, closing).split('\n').length, reason: 'missing_statement_terminator', followingStatement: following.toLowerCase() });
     }
