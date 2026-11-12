@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 60,
-    "mappedSources": 56,
+    "sqlFiles": 62,
+    "mappedSources": 58,
     "identicalDuplicateCopiesExcluded": 4,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -30,9 +30,9 @@
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
-    "executedMappedSources": 52,
+    "executedMappedSources": 54,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 71
+    "executedSqlFiles": 73
   },
   "execution": {
     "enabled": false,
@@ -568,6 +568,28 @@
       ],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "chat.channel-visibility-avatar-background",
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
+      "testSources": [
+        "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql"
+      ],
+      "blockedBy": [
+        "DAG-014"
+      ],
+      "parityNote": "Reconstructed from the current production catalog; original migration SQL was not retained. Disposable replay remains blocked."
+    },
+    {
+      "nodeId": "chat.harden-channel-rpc-wrappers",
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
+      "testSources": [
+        "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql"
+      ],
+      "blockedBy": [
+        "DAG-014"
+      ],
+      "parityNote": "Reconstructed exact current public wrapper definitions and ACLs from production catalog; original migration SQL was not retained."
     },
     {
       "nodeId": "membership.final-format",
