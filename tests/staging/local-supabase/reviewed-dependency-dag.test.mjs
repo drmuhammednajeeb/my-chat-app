@@ -244,6 +244,20 @@ test('direct conversation RPC recovery instructions are read-only', async () => 
   assert.doesNotMatch(doc, /^\s*(insert|update|delete|create|alter|drop)\s+/im);
 });
 
+test('forward direct-conversation hardening is followed by runtime and concurrency probes', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
+  assert.match(runner, /security\\.direct-conversation-eligibility-forward/);
+  assert.match(runner, /post-forward-eligibility-runtime/);
+  assert.match(runner, /post-forward-concurrency/);
+});
+
+test('forward default-privilege migration leaves Supabase-managed role defaults untouched and fails closed on owned objects', async () => {
+  const sql = await readFile(path.join(root, 'supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql'), 'utf8');
+  assert.doesNotMatch(sql, /alter default privileges for role supabase_admin/i);
+  assert.match(sql, /supabase_admin owns public-schema objects/);
+  assert.match(sql, /alter default privileges for role postgres/i);
+});
+
 test('local pg_cron runtime probe is loopback-only and cleans up its unique job', async () => {
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-pg-cron-runtime.mjs'), 'utf8');
   for (const fragment of [
