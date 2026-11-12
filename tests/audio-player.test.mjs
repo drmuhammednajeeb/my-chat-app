@@ -55,7 +55,9 @@ test('voice timer shows the fixed total before playback and counts down while pl
   assert.equal(audioPlayer.formatPlaybackTime(83, 83, true, true, true), '01:23');
 });
 
-test('voice timer does not display a false zero while audio metadata is unavailable', () => {
+test('voice timer uses persisted duration before browser audio metadata is ready', () => {
+  assert.equal(audioPlayer.formatPlaybackTime(NaN, 0, false, false, false, 83), '01:23');
+  assert.equal(audioPlayer.formatPlaybackTime(83, 17, true, false, false, 83), '01:06');
   assert.equal(audioPlayer.formatPlaybackTime(NaN, 0, false, false, false), '--:--');
   assert.equal(audioPlayer.formatPlaybackTime(0, 0, false, false, true), '00:00');
 });
@@ -71,7 +73,10 @@ test('player source keeps native controls available when custom playback fails',
   assert.ok(source.includes('audio.controls = true;'));
   assert.ok(source.includes('showFallback(error)'));
   assert.ok(styles.includes('.voice-message-player.has-playback-error .voice-player-native-audio'));
-  assert.ok(styles.includes('.voice-player-toggle i{display:block;line-height:1'));
+  assert.ok(styles.includes('.voice-player-glyph-play'));
+  assert.ok(styles.includes('.voice-player-glyph-pause'));
+  assert.ok(!source.includes('ph-play-fill'));
+  assert.ok(!source.includes('ph-pause-fill'));
   assert.ok(styles.includes('.voice-player-timer{justify-self:end'));
   assert.ok(!styles.includes('.message .bubble .voice-message-player audio{display:none}'));
 });
