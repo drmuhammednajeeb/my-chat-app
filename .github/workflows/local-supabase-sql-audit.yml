@@ -31,6 +31,7 @@ jobs:
         run: |
           node --test \
             tests/staging/local-supabase/audit-sql-manifest.test.mjs \
+            tests/staging/local-supabase/database-source-registry.test.mjs \
             tests/staging/local-supabase/bootstrap-guard.test.mjs \
             tests/staging/local-supabase/build-database-object-inventory.test.mjs \
             tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs \
