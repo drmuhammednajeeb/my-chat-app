@@ -1309,8 +1309,7 @@
       ],
       "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
       "testSource": [
-        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
-        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs"
+        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql"
       ],
       "blockedBy": [
         "DAG-016"
