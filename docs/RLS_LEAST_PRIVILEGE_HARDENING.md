@@ -67,3 +67,15 @@ node tests/staging/local-supabase/local-storage-rls-runtime.mjs
 The SQL runner applies the test-only overlay, checks catalog postconditions, and runs the rollback-only CRUD/RPC fixture. The separate forward migration narrows its scope to the `postgres` owner defaults and fails closed if `supabase_admin` begins owning public-schema objects; it does not attempt to alter Supabase-managed role defaults. The Storage runner uses the local Auth admin API to set random passwords on the two reserved synthetic `.test` users, signs in through the local Auth API, and exercises actual Storage HTTP endpoints. It removes only the uniquely named test objects and document row it creates. The direct conversation remains synthetic local data and is removed with the disposable database.
 
 Both runners refuse non-loopback targets. The Storage runner requires the local API port 54321; the SQL runner requires the local PostgreSQL port 54322. The workflow `.github/workflows/disposable-local-supabase-runtime.yml` automates this sequence on a fresh GitHub-hosted disposable runner: it initializes a separate temporary Supabase project, pins PostgreSQL 17 and Supabase CLI 3.0.0, starts only local services, replays the exact DAG order through loopback-only connections, runs the SQL and Storage probes, and stops the temporary stack even on failure. It has been committed to the engineering branch; the first runtime execution is pending. The repository's global bootstrap and deployment gates remain fail-closed.
+
+
+## Supabase-managed `supabase_admin` default ACL boundary
+
+A direct read-only production catalog query on 2026-11-12 confirmed that the `supabase_admin` default ACLs in `public` still grant API-role privileges for tables, sequences, and functions. The same query confirmed:
+
+- `postgres` is not a member of `supabase_admin` (`pg_has_role('postgres','supabase_admin','MEMBER') = false`).
+- `supabase_admin` is a managed superuser role; the application migration role is not authorized to alter its default privileges.
+- No current `public` relation or function is owned by `supabase_admin`.
+- The forward migration hardens defaults for `postgres` and fails closed if a public relation or function becomes owned by `supabase_admin`; it does not attempt to grant role membership or mutate managed-role ACLs.
+
+This is an external platform configuration residual, not an application-object exposure observed in the current catalog. It must be reviewed with the Supabase project administrator/support before any claim that every future platform-created public object inherits a deny-by-default ACL. Do not attempt to work around the role boundary by granting membership to `postgres` or escalating privileges in an application migration.
