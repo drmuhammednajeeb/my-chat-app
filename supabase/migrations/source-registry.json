@@ -19,7 +19,7 @@
     "canonicalCliMigrationFiles": 66,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 17,
+    "testOnlyFixtureCount": 19,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -27,17 +27,19 @@
       "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql",
       "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
       "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+      "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql",
+      "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
       "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
       "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
       "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
       "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
       "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
       "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+      "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql",
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql"
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
     "forwardReconciliationMigrations": 4
   },
