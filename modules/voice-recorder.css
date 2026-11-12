@@ -1,0 +1,20 @@
+/* Isolated voice-recorder UI */
+.voice-record-btn{width:40px;height:40px;flex:none;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:20px;display:grid;place-items:center;cursor:pointer}
+.voice-record-btn:disabled{opacity:.45;cursor:not-allowed}
+.voice-record-btn.recording{background:#fee2e2;color:#b91c1c}
+.voice-recording-controls{display:flex;align-items:center;gap:clamp(8px,2vw,14px);flex:1;min-width:0;direction:rtl;padding:0 4px}
+.voice-recording-controls.hidden{display:none!important}
+.voice-control-btn{width:38px;height:38px;min-width:38px;flex:none;border:1px solid #354b61;border-radius:50%;display:grid;place-items:center;font-size:18px;cursor:pointer;transition:background .15s ease,transform .15s ease}
+.voice-control-btn:active{transform:scale(.94)}
+.voice-control-btn:disabled{opacity:.4;cursor:not-allowed}
+.voice-pause-btn{background:#26384b;color:#e6edf4}
+.voice-trash-btn{background:#2b2028;color:#ff737d;border-color:#55303a}
+.voice-recording-time{min-width:54px;color:#f1f5f9;font-family:"Cairo",sans-serif;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
+.voice-recording-meta{display:flex;align-items:center;gap:8px;flex:1;min-width:0;color:#a9bac9;font-family:"Cairo",sans-serif;font-size:11px;font-weight:700}
+.voice-recording-status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.voice-recording-dot{width:8px;height:8px;flex:none;border-radius:50%;background:#ff5b66;box-shadow:0 0 0 3px #ff5b6620}
+.composer.voice-recording-active{gap:8px;padding:7px 9px;min-height:58px;background:#101b2a;border:1px solid #26394b;border-radius:18px}
+.composer.voice-recording-active #voiceRecordBtn,.composer.voice-recording-active #stickerBtn,.composer.voice-recording-active #attachBtn,.composer.voice-recording-active #messageInput{display:none}
+.composer.voice-recording-active #sendBtn{width:46px;height:46px;min-width:46px;border:0;border-radius:50%;background:#00a884;color:#06231d;font-size:21px;box-shadow:0 5px 16px #00a88435}
+.composer.voice-recording-active #sendBtn:disabled{opacity:.45}
+@media(max-width:520px){.voice-recording-controls{gap:6px}.voice-control-btn{width:34px;height:34px;min-width:34px}.voice-recording-time{min-width:46px;font-size:13px}.composer.voice-recording-active{gap:5px;padding:6px}}
