@@ -13,9 +13,9 @@
     "migrationHistorySource": "Supabase migration metadata; metadata contains version/name only, not the original SQL body."
   },
   "sourceSets": {
-    "cliMigrationFiles": 13,
+    "cliMigrationFiles": 15,
     "historicalChangeFiles": 45,
-    "sqlSourceFiles": 58,
+    "sqlSourceFiles": 60,
     "duplicatePairs": 4,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
@@ -39,7 +39,8 @@
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ],
     "testOnlyFixtureCount": 19,
-    "canonicalizedProductionMigrations": 3
+    "canonicalizedProductionMigrations": 3,
+    "reconstructedProductionMigrations": 2
   },
   "rules": [
     "Do not execute database/changes by glob, alphabetical order, or filename timestamp.",
@@ -107,21 +108,21 @@
       "version": "20261106102326",
       "name": "atomic_direct_conversation_creation",
       "sourcePaths": [
-        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+        "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql"
       ],
-      "mappingStatus": "RECOVERED_FIXTURE_ONLY",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The fixture contains the inspected current production function definitions and ACL provenance; it does not recover the original migration body or two historical steps."
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "confidence": "final-state catalog recovery; not original migration-body equivalence",
+      "note": "Final pg_get_functiondef bodies and ACLs were recovered from the production catalog fixture; original migration body is unavailable."
     },
     {
       "version": "20261106102443",
       "name": "hide_atomic_direct_rpc_implementation",
       "sourcePaths": [
-        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+        "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql"
       ],
-      "mappingStatus": "RECOVERED_FIXTURE_ONLY",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Same recovered final-state fixture; original migration boundary is not recovered."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "confidence": "final-state catalog recovery; not original migration-body equivalence",
+      "note": "Historical version preserved as no-op; final implementation and ACLs are created by the preceding canonical recovery migration."
     },
     {
       "version": "20261106125643",
@@ -1091,29 +1092,25 @@
       "duplicateOf": null,
       "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
       "note": "Copied byte-for-byte from PR138:database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql; matches production migration version/name 20261112103237/allow_combined_profile_status_content_and_media; source parity is recorded, not replay authorization."
+    },
+    {
+      "path": "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql",
+      "gitBlobSha": "50bf9bf93de916f0083656a14e5ac9a9d926bae6",
+      "sourceType": "cli-migration",
+      "duplicateOf": null,
+      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
+      "note": "Recovered final function definitions and ACLs from the read-only production catalog fixture; not the original migration body."
+    },
+    {
+      "path": "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql",
+      "gitBlobSha": "42b3b7215f559655c98c8f9c124594d36e31f6eb",
+      "sourceType": "cli-migration",
+      "duplicateOf": null,
+      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
+      "note": "Historical version preserved as an intentional no-op because the final implementation is folded into the preceding canonical recovery migration."
     }
   ],
   "unresolvedProductionEntries": [
-    {
-      "version": "20261106102326",
-      "name": "atomic_direct_conversation_creation",
-      "sourcePaths": [
-        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
-      ],
-      "mappingStatus": "RECOVERED_FIXTURE_ONLY",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The fixture contains the inspected current production function definitions and ACL provenance; it does not recover the original migration body or two historical steps."
-    },
-    {
-      "version": "20261106102443",
-      "name": "hide_atomic_direct_rpc_implementation",
-      "sourcePaths": [
-        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
-      ],
-      "mappingStatus": "RECOVERED_FIXTURE_ONLY",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Same recovered final-state fixture; original migration boundary is not recovered."
-    },
     {
       "version": "20261107160647",
       "name": "channel_visibility_avatar_group_background",
