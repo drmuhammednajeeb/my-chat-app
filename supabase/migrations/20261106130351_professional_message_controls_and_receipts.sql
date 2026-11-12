@@ -1,3 +1,31 @@
+-- Recovered prerequisite for team-scoped authorization.
+-- The original team-admin bootstrap SQL was outside the production migration ledger.
+-- Create the protected table and its initial helper before later group migrations use it.
+CREATE TABLE IF NOT EXISTS app_private.team_admins (
+  user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE app_private.team_admins ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE app_private.team_admins FROM PUBLIC, anon, authenticated, service_role;
+DROP POLICY IF EXISTS "Deny direct team admin table access" ON app_private.team_admins;
+CREATE POLICY "Deny direct team admin table access"
+ON app_private.team_admins FOR ALL TO authenticated USING (false) WITH CHECK (false);
+
+CREATE OR REPLACE FUNCTION app_private.is_team_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM app_private.team_admins
+    WHERE user_id = (SELECT auth.uid())
+  );
+$function$;
+REVOKE ALL ON FUNCTION app_private.is_team_admin() FROM PUBLIC, anon, service_role;
+GRANT EXECUTE ON FUNCTION app_private.is_team_admin() TO authenticated;
+
 -- Professional chat: reply integrity, pins, delivery receipts.
 alter table public.conversation_members
   add column if not exists last_delivered_at timestamptz;
