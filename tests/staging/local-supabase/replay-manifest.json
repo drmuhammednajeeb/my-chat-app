@@ -230,16 +230,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "chat.profile-status-and-conversation-images",
-      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
-      "testSources": [
-        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
-        "tests/profile-status-and-conversation-images.test.mjs"
-      ],
-      "blockedBy": [],
-      "parityNote": "Production-applied migration source copied byte-for-byte into canonical CLI directory. Do not reapply to production; local replay remains blocked pending runtime validation."
-    },
-    {
       "nodeId": "chat.pins",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -274,15 +264,6 @@
       ],
       "blockedBy": [],
       "parityNote": null
-    },
-    {
-      "nodeId": "chat.profile-status-video-media",
-      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
-      "testSources": [
-        "supabase/migrations/20261112091605_profile_status_video_media.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
     },
     {
       "nodeId": "chat.hardening",
@@ -349,15 +330,6 @@
       ],
       "blockedBy": [],
       "parityNote": null
-    },
-    {
-      "nodeId": "chat.profile-status-combined-content-media",
-      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
-      "testSources": [
-        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
     },
     {
       "nodeId": "chat.workspace-indexes",
@@ -619,6 +591,16 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.profile-status-and-conversation-images",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
+        "tests/profile-status-and-conversation-images.test.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": "Production-applied migration source copied byte-for-byte into canonical CLI directory. Do not reapply to production; local replay remains blocked pending runtime validation."
+    },
+    {
       "nodeId": "test-fixture.direct-chat-runtime",
       "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
       "testSources": [
@@ -629,6 +611,15 @@
         "DAG-015"
       ],
       "parityNote": "Disposable-local runtime script only. Requires the full approved replay; no CI or production SQL execution. Two-session reversed-pair concurrency remains separately blocked."
+    },
+    {
+      "nodeId": "chat.profile-status-video-media",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112091605_profile_status_video_media.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
     },
     {
       "nodeId": "test-fixture.direct-chat-concurrency",
@@ -642,6 +633,15 @@
         "DAG-015"
       ],
       "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production. A static regression test verifies the concurrency runner establishes the two reserved synthetic users as eligible after the rollback-only matrix; those changes are confined to the disposable database."
+    },
+    {
+      "nodeId": "chat.profile-status-combined-content-media",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
     },
     {
       "nodeId": "security.least-privilege-overlay",
