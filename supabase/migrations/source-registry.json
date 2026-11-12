@@ -1072,7 +1072,7 @@
       "path": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
       "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
       "sourceType": "cli-migration",
-      "duplicateOf": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
+      "duplicateOf": null,
       "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
       "note": "Copied byte-for-byte from database/changes/20261112000100_profile_status_and_conversation_images.sql; matches production migration version/name 20261112091557/profile_status_and_conversation_images; source parity is recorded, not replay authorization."
     },
