@@ -208,9 +208,10 @@ test('hard-delete realtime handler removes the row and all local message indexes
     replyMessages: new Map([['m1', {}]]),
     conversations: []
   };
+  const messageReactions = { removeMessage() {} };
   const document = { querySelectorAll: selector => selector === '.message' ? [row] : [] };
   const handler = vm.runInNewContext('(' + extractFunction('handleMessageDeleteRealtime') + ')', {
-    state, document, $: () => area, reconcileMessageTimeline: () => {}
+    state, document, messageReactions: { removeMessage() {} }, $: () => area, reconcileMessageTimeline: () => {}
   });
   assert.equal(handler({ old: { id: 'm1' } }, 'c1'), true);
   assert.deepEqual(state.messages.map(message => message.id), ['m2']);
@@ -239,7 +240,7 @@ test('hard-deleting the final message restores the empty-conversation state', ()
   };
   const area = { innerHTML: '' };
   const handler = vm.runInNewContext('(' + extractFunction('handleMessageDeleteRealtime') + ')', {
-    state, document: { querySelectorAll: () => [] }, $: () => area,
+    state, document: { querySelectorAll: () => [] }, messageReactions: { removeMessage() {} }, $: () => area,
     reconcileMessageTimeline() {}
   });
   assert.equal(handler({ old: { id: 'm1' } }, 'c1'), true);
@@ -390,6 +391,7 @@ test('failed older-history batch restores the original transcript and pagination
     state, document, supabaseClient, $: () => area, console,
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
     loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
+    messageReactions: { load: async () => true },
     reconcileMessageTimeline() {}, toast: message => toastMessages.push(message),
     renderMessage: async message => {
       renderCount += 1;
