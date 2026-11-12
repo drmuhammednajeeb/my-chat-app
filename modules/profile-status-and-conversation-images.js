@@ -4,7 +4,8 @@
   const STATUS_BUCKET = 'profile-status-media';
   const CONVERSATION_BUCKET = 'conversation-avatars';
   const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-  const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+  const VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
+  const MAX_STATUS_MEDIA_BYTES = 25 * 1024 * 1024;
   const SIGNED_URL_TTL_SECONDS = 3600;
   const signedImageCache = new Map();
   let statusRows = [];
@@ -54,16 +55,16 @@
     const body = modal.querySelector('.bz-feature-body');
     if (!body.dataset.ready) {
       body.dataset.ready = '1';
-      body.innerHTML = '<p class="bz-feature-hint">اختر كتابة حالة أو نشر صورة. تختفي الحالة تلقائياً بعد 24 ساعة.</p><textarea id="profileStatusText" maxlength="280" rows="4" placeholder="بماذا تفكر؟"></textarea><label class="bz-file-pick">اختيار صورة <input id="profileStatusImage" type="file" accept="image/jpeg,image/png,image/webp"></label><div id="profileStatusPreview" class="bz-image-preview" hidden></div><div class="bz-feature-actions"><button id="profileStatusCancel" type="button" class="bz-secondary">إلغاء</button><button id="profileStatusPublish" type="button" class="bz-primary">نشر الحالة</button></div><p id="profileStatusMessage" class="bz-feature-message" role="status"></p>';
+      body.innerHTML = '<p class="bz-feature-hint">انشر نصاً أو صورة أو مقطع فيديو. تختفي الحالة تلقائياً بعد 24 ساعة. الحد الأقصى للوسائط 25 ميجابايت.</p><textarea id="profileStatusText" maxlength="280" rows="4" placeholder="بماذا تفكر؟"></textarea><label class="bz-file-pick">اختيار صورة أو فيديو <input id="profileStatusImage" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"></label><div id="profileStatusPreview" class="bz-image-preview" hidden></div><div class="bz-feature-actions"><button id="profileStatusCancel" type="button" class="bz-secondary">إلغاء</button><button id="profileStatusPublish" type="button" class="bz-primary">نشر الحالة</button></div><p id="profileStatusMessage" class="bz-feature-message" role="status"></p>';
       const text = byId('profileStatusText');
       const image = byId('profileStatusImage');
-      text.addEventListener('input', () => { if (text.value.trim()) image.disabled = true; else image.disabled = false; });
+      text.addEventListener('input', () => { image.disabled = !!text.value.trim(); });
       image.addEventListener('change', () => {
         const file = image.files?.[0];
         if (!file) { clearStatusPreview(); text.disabled = false; return; }
-        if (!IMAGE_TYPES.has(file.type) || file.size > MAX_IMAGE_BYTES) {
+        if ((!IMAGE_TYPES.has(file.type) && !VIDEO_TYPES.has(file.type)) || file.size > MAX_STATUS_MEDIA_BYTES) {
           image.value = '';
-          toast('اختر JPG أو PNG أو WebP بحجم لا يتجاوز 3 ميجابايت');
+          toast('اختر صورة JPG أو PNG أو WebP أو فيديو MP4 أو WebM أو MOV بحجم لا يتجاوز 25 ميجابايت');
           return;
         }
         text.value = '';
@@ -87,10 +88,11 @@
     clearStatusPreview();
     statusPreviewUrl = URL.createObjectURL(file);
     const preview = byId('profileStatusPreview');
-    const image = document.createElement('img');
-    image.src = statusPreviewUrl;
-    image.alt = 'معاينة الحالة';
-    preview.replaceChildren(image);
+    const media = file.type.startsWith('video/') ? document.createElement('video') : document.createElement('img');
+    media.src = statusPreviewUrl;
+    if (media.tagName === 'VIDEO') { media.controls = true; media.muted = true; media.playsInline = true; }
+    else media.alt = 'معاينة الحالة';
+    preview.replaceChildren(media);
     preview.hidden = false;
   }
 
@@ -107,9 +109,9 @@
     if (!userId) return toast('سجّل الدخول أولاً');
     const text = byId('profileStatusText').value.trim();
     const file = byId('profileStatusImage').files?.[0] || null;
-    if ((!text && !file) || (text && file)) return toast('اختر كتابة الحالة أو صورة فقط');
+    if ((!text && !file) || (text && file)) return toast('اختر كتابة الحالة أو وسائط فقط');
     if (text.length > 280) return toast('الحد الأقصى للحالة النصية 280 حرفاً');
-    if (file && (!IMAGE_TYPES.has(file.type) || file.size > MAX_IMAGE_BYTES)) return toast('الصورة غير مدعومة أو أكبر من 3 ميجابايت');
+    if (file && ((!IMAGE_TYPES.has(file.type) && !VIDEO_TYPES.has(file.type)) || file.size > MAX_STATUS_MEDIA_BYTES)) return toast('الوسائط غير مدعومة أو أكبر من 25 ميجابايت');
     const button = byId('profileStatusPublish');
     const message = byId('profileStatusMessage');
     button.disabled = true;
@@ -117,18 +119,30 @@
     const statusId = crypto.randomUUID();
     let path = null;
     try {
+      let mediaType = null;
       if (file) {
-        const prepared = await prepareAvatarImage(file);
-        const extension = prepared.type === 'image/png' ? 'png' : prepared.type === 'image/jpeg' ? 'jpg' : 'webp';
+        let blob = file;
+        let contentType = file.type;
+        let extension = file.type === 'video/mp4' ? 'mp4' : file.type === 'video/webm' ? 'webm' : file.type === 'video/quicktime' ? 'mov' : '';
+        if (file.type.startsWith('image/')) {
+          const prepared = await prepareAvatarImage(file);
+          blob = prepared.blob;
+          contentType = prepared.type;
+          extension = contentType === 'image/png' ? 'png' : contentType === 'image/jpeg' ? 'jpg' : 'webp';
+          mediaType = 'image';
+        } else {
+          mediaType = 'video';
+        }
+        if (!extension) throw new Error('نوع الوسائط غير مدعوم');
         path = userId + '/' + statusId + '.' + extension;
-        const upload = await supabaseClient.storage.from(STATUS_BUCKET).upload(path, prepared.blob, {
-          contentType: prepared.type, cacheControl: '60', upsert: false
+        const upload = await supabaseClient.storage.from(STATUS_BUCKET).upload(path, blob, {
+          contentType, cacheControl: '60', upsert: false
         });
         if (upload.error) throw upload.error;
       }
       const { data, error } = await supabaseClient.from('profile_statuses').insert({
-        id: statusId, user_id: userId, content: text || null, image_path: path
-      }).select('id,user_id,content,image_path,created_at,expires_at').single();
+        id: statusId, user_id: userId, content: text || null, image_path: path, media_type: mediaType
+      }).select('id,user_id,content,image_path,media_type,created_at,expires_at').single();
       if (error) throw error;
       if (!data) throw new Error('لم يتم استلام الحالة بعد الحفظ');
       clearStatusComposer();
@@ -161,7 +175,7 @@
     const request = ++statusRequestVersion;
     const now = new Date().toISOString();
     const { data, error } = await supabaseClient.from('profile_statuses')
-      .select('id,user_id,content,image_path,created_at,expires_at,profiles(id,username,display_name,avatar_url)')
+      .select('id,user_id,content,image_path,media_type,created_at,expires_at,profiles(id,username,display_name,avatar_url)')
       .gt('expires_at', now)
       .order('created_at', { ascending: false })
       .limit(250);
@@ -172,64 +186,136 @@
     }
     statusRows = data || [];
     statusesByUser = groupStatuses(statusRows);
-    renderStatusStrip();
+    renderStatusPage();
   }
 
-  function renderStatusStrip() {
-    const profile = document.querySelector('.profile');
-    if (!profile || !currentUserId()) return;
-    let strip = byId('profileStatusStrip');
-    if (!strip) {
-      strip = document.createElement('div');
-      strip.id = 'profileStatusStrip';
-      strip.className = 'bz-status-strip';
-      profile.insertAdjacentElement('afterend', strip);
-    }
-    strip.replaceChildren();
-    const own = statusesByUser.get(currentUserId()) || [];
-    strip.append(makeStatusButton(state.profile, own, true));
-    const add = document.createElement('button');
-    add.type = 'button';
-    add.className = 'bz-status-add';
-    add.textContent = '+ إضافة حالة';
-    add.onclick = () => { clearStatusComposer(); openModal(getStatusModal()); };
-    strip.append(add);
-    const otherUsers = [...statusesByUser.keys()].filter(id => id !== currentUserId());
-    otherUsers.sort((a, b) => {
-      const aa = statusesByUser.get(a)?.at(-1)?.created_at || '';
-      const bb = statusesByUser.get(b)?.at(-1)?.created_at || '';
-      return new Date(bb) - new Date(aa);
-    });
-    otherUsers.forEach(id => {
-      const rows = statusesByUser.get(id) || [];
-      const profileRow = rows[0]?.profiles || {};
-      strip.append(makeStatusButton(profileRow, rows, false));
-    });
+  function ensureStatusPage() {
+    const chat = byId('chat');
+    if (!chat) return null;
+    let page = byId('statusPage');
+    if (page) return page;
+    page = document.createElement('section');
+    page.id = 'statusPage';
+    page.className = 'status-page';
+    page.setAttribute('aria-label', 'الحالة والتحديثات المؤقتة');
+    const header = document.createElement('header');
+    header.className = 'bz-status-page-head';
+    const titleWrap = document.createElement('div');
+    const eyebrow = document.createElement('span');
+    eyebrow.className = 'bz-status-eyebrow';
+    eyebrow.textContent = 'BIZMINDMAKERS · UPDATES';
+    const title = document.createElement('h1');
+    title.textContent = 'الحالة';
+    const subtitle = document.createElement('p');
+    subtitle.textContent = 'شارك تحديثاتك النصية والمرئية مع أعضاء المنصة. تختفي تلقائياً بعد 24 ساعة.';
+    titleWrap.append(eyebrow, title, subtitle);
+    const publish = document.createElement('button');
+    publish.id = 'statusPagePublish';
+    publish.type = 'button';
+    publish.className = 'bz-status-publish';
+    publish.textContent = '+ إضافة حالة';
+    publish.addEventListener('click', () => { clearStatusComposer(); openModal(getStatusModal()); });
+    header.append(titleWrap, publish);
+
+    const ownSection = document.createElement('section');
+    ownSection.className = 'bz-status-section';
+    const ownHeading = document.createElement('h2');
+    ownHeading.textContent = 'حالتك';
+    const ownCard = document.createElement('div');
+    ownCard.id = 'statusOwnCard';
+    ownCard.className = 'bz-status-own-card';
+    ownSection.append(ownHeading, ownCard);
+
+    const feedSection = document.createElement('section');
+    feedSection.className = 'bz-status-section';
+    const feedHeading = document.createElement('h2');
+    feedHeading.textContent = 'آخر الحالات';
+    const feed = document.createElement('div');
+    feed.id = 'statusFeed';
+    feed.className = 'bz-status-feed';
+    feed.setAttribute('aria-live', 'polite');
+    feedSection.append(feedHeading, feed);
+    page.append(header, ownSection, feedSection);
+    chat.prepend(page);
+    return page;
   }
 
-  function makeStatusButton(profile, rows, own) {
+  function createStatusCard(profile, rows, own = false) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'bz-status-user';
-    button.title = own ? 'مشاهدة حالتي' : 'مشاهدة حالة ' + safeText(profile?.display_name, 'المستخدم');
-    const ring = document.createElement('span');
-    ring.className = 'bz-status-ring' + (rows.length ? ' has-status' : '');
+    button.className = 'bz-status-feed-card' + (own ? ' is-own' : '');
+    const avatar = document.createElement('span');
+    avatar.className = 'bz-status-feed-avatar';
     if (profile?.avatar_url && /^https:\/\//i.test(profile.avatar_url)) {
       const image = document.createElement('img');
       image.src = profile.avatar_url;
       image.alt = '';
       image.loading = 'lazy';
-      ring.append(image);
+      avatar.append(image);
     } else {
       const fallback = document.createElement('span');
       fallback.textContent = initials(profile?.display_name || profile?.username);
-      ring.append(fallback);
+      avatar.append(fallback);
     }
-    const name = document.createElement('small');
-    name.textContent = own ? 'حالتي' : safeText(profile?.display_name || profile?.username, 'مستخدم');
-    button.append(ring, name);
-    button.onclick = () => rows.length ? openStatusViewer(rows[0]?.user_id || profile?.id || currentUserId()) : openModal(getStatusModal());
+    const copy = document.createElement('span');
+    copy.className = 'bz-status-feed-copy';
+    const name = document.createElement('strong');
+    name.textContent = own ? 'أنت' : safeText(profile?.display_name || profile?.username, 'مستخدم');
+    const latest = rows[rows.length - 1];
+    const summary = document.createElement('small');
+    summary.textContent = latest?.content || (latest?.media_type === 'video' ? 'مقطع فيديو' : 'صورة');
+    const meta = document.createElement('small');
+    meta.className = 'bz-status-feed-meta';
+    meta.textContent = rows.length + ' تحديث · ' + (latest?.created_at ? new Date(latest.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : '');
+    copy.append(name, summary, meta);
+    const arrow = document.createElement('span');
+    arrow.className = 'bz-status-feed-arrow';
+    arrow.textContent = '‹';
+    button.append(avatar, copy, arrow);
+    button.addEventListener('click', () => openStatusViewer(rows[0]?.user_id || profile?.id || currentUserId()));
     return button;
+  }
+
+  function renderStatusPage() {
+    if (!currentUserId()) return;
+    const page = ensureStatusPage();
+    if (!page) return;
+    const ownCard = byId('statusOwnCard');
+    const feed = byId('statusFeed');
+    if (!ownCard || !feed) return;
+    ownCard.replaceChildren();
+    feed.replaceChildren();
+    const own = statusesByUser.get(currentUserId()) || [];
+    if (own.length) ownCard.append(createStatusCard(state.profile, own, true));
+    else {
+      const emptyOwn = document.createElement('button');
+      emptyOwn.type = 'button';
+      emptyOwn.className = 'bz-status-empty-own';
+      emptyOwn.textContent = 'لم تنشر حالة بعد — شارك أول تحديث';
+      emptyOwn.addEventListener('click', () => { clearStatusComposer(); openModal(getStatusModal()); });
+      ownCard.append(emptyOwn);
+    }
+    const otherUsers = [...statusesByUser.keys()].filter(id => id !== currentUserId());
+    otherUsers.sort((a, b) => new Date(statusesByUser.get(b)?.at(-1)?.created_at || 0) - new Date(statusesByUser.get(a)?.at(-1)?.created_at || 0));
+    otherUsers.forEach(id => {
+      const rows = statusesByUser.get(id) || [];
+      feed.append(createStatusCard(rows[0]?.profiles || {}, rows, false));
+    });
+    if (!otherUsers.length) {
+      const empty = document.createElement('p');
+      empty.className = 'bz-status-empty';
+      empty.textContent = 'لا توجد حالات منشورة حالياً من بقية الأعضاء.';
+      feed.append(empty);
+    }
+    page.setAttribute('aria-busy', 'false');
+  }
+
+  function openStatusPage() {
+    const page = ensureStatusPage();
+    if (!page) return;
+    page.setAttribute('aria-busy', 'true');
+    renderStatusPage();
+    void loadProfileStatuses();
   }
 
   async function openStatusViewer(userId) {
@@ -261,14 +347,20 @@
       const { data, error } = await supabaseClient.storage.from(STATUS_BUCKET).createSignedUrl(row.image_path, 60);
       if (renderVersion !== statusViewerRenderVersion) return;
       if (error || !data?.signedUrl) {
-        toast('انتهت صلاحية الصورة أو تعذر تحميلها');
+        toast('انتهت صلاحية الوسائط أو تعذر تحميلها');
         await loadProfileStatuses();
         return;
       }
-      const image = document.createElement('img');
-      image.src = data.signedUrl;
-      image.alt = 'حالة شخصية';
-      content.append(image);
+      const media = row.media_type === 'video' ? document.createElement('video') : document.createElement('img');
+      media.src = data.signedUrl;
+      if (media.tagName === 'VIDEO') {
+        media.controls = true;
+        media.playsInline = true;
+        media.preload = 'metadata';
+      } else {
+        media.alt = 'حالة شخصية';
+      }
+      content.append(media);
     } else {
       const paragraph = document.createElement('p');
       paragraph.textContent = row.content || '';
@@ -507,13 +599,12 @@
   }
 
   function initStatusSurface() {
-    const profile = document.querySelector('.profile');
-    if (profile && !byId('profileStatusStrip')) {
-      const strip = document.createElement('div');
-      strip.id = 'profileStatusStrip'; strip.className = 'bz-status-strip';
-      profile.insertAdjacentElement('afterend', strip);
-    }
+    ensureStatusPage();
     setupConversationImageControls();
+    byId('statusTab')?.addEventListener('click', () => {
+      if (typeof setSidebarView === 'function') setSidebarView('status');
+      if (window.innerWidth <= 760) byId('sidebar')?.classList.add('closed');
+    });
     document.addEventListener('keydown', event => {
       if (event.key !== 'Escape') return;
       const opened = [...document.querySelectorAll('.bz-feature-modal.open')].at(-1);
@@ -541,6 +632,12 @@
     return result;
   };
 
+  window.BizmindProfileStatus = Object.freeze({
+    openPage: openStatusPage,
+    refresh: loadProfileStatuses,
+    openComposer: () => { clearStatusComposer(); openModal(getStatusModal()); }
+  });
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initStatusSurface, { once: true });
   else initStatusSurface();
 
@@ -554,6 +651,7 @@
       statusChannel = null;
       conversationImageChannel = null;
       byId('profileStatusStrip')?.remove();
+      byId('statusPage')?.classList.add('hidden');
     }
   });
 })();
