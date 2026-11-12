@@ -300,7 +300,7 @@ test('browser: same-ID render requests serialize and retry using the newest in-m
 
 test('isolated voice recorder completes two consecutive browser record/send cycles', async () => {
   const page = await newPage();
-  await page.setContent(\`<!doctype html><html><body>
+  await page.setContent('<!doctype html><html><body>
     <div class="composer">
       <button id="voiceRecordBtn" type="button"></button>
       <button id="stickerBtn" type="button"></button>
@@ -315,7 +315,7 @@ test('isolated voice recorder completes two consecutive browser record/send cycl
       <button id="sendBtn" type="button"></button>
     </div>
     <div id="attachmentPreview"></div>
-  </body></html>\`);
+  </body></html>');
   await page.addScriptTag({ content: voiceModuleSource });
   await page.evaluate(() => {
     window.__voiceEvents = [];
