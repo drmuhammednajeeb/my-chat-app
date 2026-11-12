@@ -179,6 +179,31 @@ test('initial transcript rendering overlaps bounded attachment work and reconcil
   assert.equal(h.state.batchRenderingConversationId, undefined);
 });
 
+test('parallel render failures wait for the whole batch before restoring the previous transcript', async () => {
+  const rows = ['m3', 'm2', 'm1'].map((id, index) => ({
+    id, conversation_id: 'conversation-1',
+    created_at: new Date(Date.UTC(2026, 0, index + 1)).toISOString()
+  }));
+  const h = harness({ rows });
+  const completed = [];
+  h.deps.renderMessage = async message => {
+    await new Promise(resolve => setTimeout(resolve, 6));
+    completed.push(message.id);
+    if (message.id === 'm1') throw new Error('simulated render rejection');
+    const node = new Element('article');
+    node.className = 'message';
+    node.dataset.messageId = message.id;
+    h.area.append(node);
+    h.state.messageIds.add(message.id);
+    return true;
+  };
+  assert.equal(await loadMessages(h.deps), false);
+  assert.deepEqual(completed.sort(), ['m1', 'm2', 'm3']);
+  assert.equal(h.area.children[0], h.oldNode);
+  assert.deepEqual(h.area.children.filter(node => node.className === 'message').map(node => node.dataset.messageId), ['old']);
+  assert.equal(h.state.batchRenderingMessages, undefined);
+});
+
 test('source declares render completion before the empty/populated branch', async () => {
   const declaration = source.indexOf('let allMessagesRendered = true;');
   const emptyBranch = source.indexOf('if (!messages.length)');
