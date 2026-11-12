@@ -56,3 +56,14 @@ test('time formatter handles empty and fractional durations', () => {
   assert.equal(audioPlayer.formatTime(0), '00:00');
   assert.equal(audioPlayer.formatTime(61.9), '01:01');
 });
+
+test('player implementation attempts native playback and exposes controls when custom playback fails', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const source = await readFile(new URL('../modules/audio-player.js', import.meta.url), 'utf8');
+  const styles = await readFile(new URL('../modules/audio-player.css', import.meta.url), 'utf8');
+  assert.match(source, /coordinator\\.activate\\(audio\\);[\\s\\S]*?await audio\\.play\\(\\)/);
+  assert.match(source, /audio\\.controls = true/);
+  assert.match(source, /showFallback\\(error\\)/);
+  assert.match(styles, /\\.voice-message-player\\.has-playback-error \\.voice-player-native-audio/);
+  assert.doesNotMatch(styles, /\\.message \\.bubble \\.voice-message-player audio\\{display:none\\}/);
+});
