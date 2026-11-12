@@ -4,6 +4,7 @@
  */
 (function (root) {
   'use strict';
+  const logger = root.console || { warn() {}, error() {} };
 
   function makeStatus(documentRef, title, description, loading) {
     const box = documentRef.createElement('div');
@@ -52,7 +53,8 @@
 
   function loadMessages(deps) {
     const state = deps?.state;
-    if (!state?.active?.id) return Promise.resolve(false);
+    const requestedConversationId = state?.active?.id;
+    if (!requestedConversationId) return Promise.resolve(false);
     const requestId = (Number(state.messageLoadVersion) || 0) + 1;
     state.messageLoadVersion = requestId;
 
@@ -61,14 +63,17 @@
     const previous = state.messageLoadPromise;
     const operation = Promise.resolve(previous)
       .catch(() => false)
-      .then(() => runLoadMessages(deps, requestId));
+      .then(() => {
+        if (state.messageLoadVersion !== requestId || state.active?.id !== requestedConversationId) return false;
+        return runLoadMessages(deps, requestId, requestedConversationId);
+      });
     state.messageLoadPromise = operation;
     return operation.finally(() => {
       if (state.messageLoadPromise === operation) state.messageLoadPromise = null;
     });
   }
 
-  async function runLoadMessages(deps, requestId) {
+  async function runLoadMessages(deps, requestId, requestedConversationId) {
     const {
       state, $, supabaseClient, document: documentRef,
       updateNewMessagesIndicator = () => {},
@@ -84,7 +89,7 @@
       performance: performanceRef = root.performance
     } = deps || {};
 
-    const conversationId = state?.active?.id;
+    const conversationId = requestedConversationId;
     if (!conversationId || typeof renderMessage !== 'function' || typeof compare !== 'function') return false;
 
     const startedAt = performanceRef.now();
@@ -178,7 +183,7 @@
             (parentsResult?.data || []).forEach(parent => nextReplyMessages.set(parent.id, parent));
           }
         } catch (error) {
-          console.warn('Optional reply-parent lookup failed:', error?.message || error);
+          logger.warn('Optional reply-parent lookup failed:', error?.message || error);
         }
       }
       if (!isCurrent()) return false;
@@ -294,7 +299,7 @@
       return true;
     } catch (error) {
       recordPerf('message_load_total', performanceRef.now() - startedAt, { success: false });
-      console.error('Message loading failed:', error);
+      logger.error('Message loading failed:', error);
       rollbackOwnedRender();
       if (isCurrent()) {
         state.isLoadingMessages = false;
