@@ -727,9 +727,7 @@
       "nodeId": "security.active-membership-rls-forward",
       "status": "FORWARD_RECONCILIATION_NOT_EXECUTED",
       "testSources": [
-        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
-        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
-        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql"
+        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql"
       ],
       "blockedBy": [
         "DAG-016"

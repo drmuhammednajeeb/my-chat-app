@@ -244,6 +244,17 @@ test('direct conversation RPC recovery instructions are read-only', async () => 
   assert.doesNotMatch(doc, /^\s*(insert|update|delete|create|alter|drop)\s+/im);
 });
 
+test('forward RLS postconditions run after migrations without duplicate SQL selection', async () => {
+  const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const selectedSql = manifest.candidateNodeOrder.flatMap(node => (node.testSources ?? []).filter(source => source.endsWith('.sql')));
+  assert.equal(selectedSql.length, new Set(selectedSql).size);
+  const migrationIndex = manifest.candidateNodeOrder.findIndex(node => node.nodeId === 'security.active-membership-rls-forward');
+  const assertionIndex = manifest.candidateNodeOrder.findIndex(node => node.nodeId === 'test-fixture.forward-hardening-postconditions');
+  assert.ok(migrationIndex >= 0 && assertionIndex > migrationIndex);
+  assert.ok(dag.nodes.find(node => node.id === 'test-fixture.forward-hardening-postconditions').requires.includes('security.active-membership-rls-forward'));
+});
+
 test('forward direct-conversation hardening is followed by runtime and concurrency probes', async () => {
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
   assert.match(runner, /security\.direct-conversation-eligibility-forward/);
