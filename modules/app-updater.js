@@ -1,7 +1,8 @@
 (function (root, factory) {
   const api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
-  root.BizmindAppUpdater = api;
+  root.BizmindAppUpdater = api.create();
+  root.BizmindAppUpdater.compareVersions = api.compareVersions;
 })(typeof globalThis !== "undefined" ? globalThis : window, function () {
   "use strict";
 
@@ -161,11 +162,11 @@
             if (!worker) return;
             worker.addEventListener("statechange", () => {
               if (worker.state === "installed" && win.navigator.serviceWorker.controller) {
-                showUpdate(latestRelease || { version: "تحديث جديد" });
+                void checkLatest().then(release => showUpdate(release || { version: "تحديث جديد" }));
               }
             });
           });
-          if (registration.waiting) showUpdate(latestRelease || { version: "تحديث جديد" });
+          if (registration.waiting) void checkLatest().then(release => showUpdate(release || { version: "تحديث جديد" }));
           win.navigator.serviceWorker.addEventListener("controllerchange", () => {
             if (reloadAfterControllerChange) win.location.reload();
           });
