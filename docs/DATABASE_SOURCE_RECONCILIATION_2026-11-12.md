@@ -25,10 +25,10 @@ The production ledger stores version/name metadata only. It does not preserve or
 
 ## Disposable-local runtime evidence
 
-Latest complete validation on commit `c97b36d3a603380cb80dd6cde2374ea1d3438731`:
+Latest complete validation on commit `ae991c046f7f3d328c31d2d9fae5e07ec9084f2a`:
 
-- SQL manifest audit: **77/77 tests passed** (workflow run `43258867403`).
-- Disposable local Supabase replay: **83/83 SQL files passed** (workflow run `43258867470`).
+- SQL manifest audit: **77/77 tests passed** (workflow run `43260183019`).
+- Disposable local Supabase replay: **83/83 SQL files passed** (workflow run `43260183037`).
 - Supabase Auth, Storage, Realtime schemas and roles passed preflight.
 - pgcrypto schema and function resolution passed.
 - Temporary pg_cron scheduler probe executed successfully.
