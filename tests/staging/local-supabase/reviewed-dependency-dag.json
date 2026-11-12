@@ -975,7 +975,8 @@
       "requires": [
         "test-fixture.direct-chat-runtime",
         "membership.final-format",
-        "chat.direct-conversation-rpc-eligibility-guard"
+        "chat.direct-conversation-rpc-eligibility-guard",
+        "test-fixture.forward-direct-conversation-eligibility"
       ],
       "testSource": [
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
@@ -1339,6 +1340,47 @@
         "DAG-016"
       ],
       "note": "New post-ledger migration; verify restrictive-policy composition and legitimate CRUD/RPC behavior under authenticated roles."
+    },
+    {
+      "id": "test-fixture.forward-direct-conversation-eligibility",
+      "source": [
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "provides": [
+        "post-forward PostgreSQL assertions for direct-conversation eligibility and RPC ACL"
+      ],
+      "requires": [
+        "security.direct-conversation-eligibility-forward"
+      ],
+      "status": "TEST_ONLY_POST_FORWARD_DIRECT_CONVERSATION_ASSERTIONS_NOT_EXECUTED",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "note": "Rollback-only runtime assertions run after the new eligibility migration, then the 24-session reversed-pair and 40-message concurrency probe runs."
+    },
+    {
+      "id": "test-fixture.forward-hardening-postconditions",
+      "source": [
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+      ],
+      "provides": [
+        "post-forward catalog privilege, restrictive RLS, Storage ownership, and CRUD/RPC compatibility assertions"
+      ],
+      "requires": [
+        "security.active-membership-rls-forward"
+      ],
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_NOT_EXECUTED",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "note": "Read-only catalog assertions plus rollback-only authenticated CRUD/RPC checks after both forward privilege migrations."
     }
   ],
   "explicitEdges": [
@@ -2153,6 +2195,18 @@
     [
       "security.public-default-privileges-forward",
       "security.active-membership-rls-forward"
+    ],
+    [
+      "security.direct-conversation-eligibility-forward",
+      "test-fixture.forward-direct-conversation-eligibility"
+    ],
+    [
+      "test-fixture.forward-direct-conversation-eligibility",
+      "test-fixture.direct-chat-concurrency"
+    ],
+    [
+      "security.active-membership-rls-forward",
+      "test-fixture.forward-hardening-postconditions"
     ]
   ],
   "blockers": [
