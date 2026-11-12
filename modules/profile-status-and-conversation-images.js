@@ -313,6 +313,7 @@
   function openStatusPage() {
     const page = ensureStatusPage();
     if (!page) return;
+    page.classList.remove('hidden');
     page.setAttribute('aria-busy', 'true');
     renderStatusPage();
     void loadProfileStatuses();
@@ -601,10 +602,7 @@
   function initStatusSurface() {
     ensureStatusPage();
     setupConversationImageControls();
-    byId('statusTab')?.addEventListener('click', () => {
-      if (typeof setSidebarView === 'function') setSidebarView('status');
-      if (window.innerWidth <= 760) byId('sidebar')?.classList.add('closed');
-    });
+
     document.addEventListener('keydown', event => {
       if (event.key !== 'Escape') return;
       const opened = [...document.querySelectorAll('.bz-feature-modal.open')].at(-1);
@@ -651,7 +649,6 @@
       statusChannel = null;
       conversationImageChannel = null;
       byId('profileStatusStrip')?.remove();
-      byId('statusPage')?.classList.add('hidden');
     }
   });
 })();
