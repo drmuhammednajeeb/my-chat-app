@@ -39,7 +39,7 @@ The following four records still have source-provenance limitations:
 - `atomic_direct_conversation_creation` and `hide_atomic_direct_rpc_implementation`: final function definitions and ACLs were recovered from the production catalog and added as a documented canonical reconstruction. The original two migration bodies were not retained; the second production version is represented by an intentional no-op after the final state is created in the first version. Runtime replay remains blocked.
 - `channel_visibility_avatar_group_background`: no authoritative source file was identified in `main`.
 - `harden_channel_rpc_wrappers`: a candidate source defines wrappers, but the distinct production hardening step is not independently verified.
-- `profile_status_video_media` and `allow_combined_profile_status_content_and_media`: the source files are in open draft PR #138, not in `main`. They must be brought into the canonical source stream through an explicitly reviewed change; do not merge the unrelated UI PR merely to recover SQL.
+- `profile_status_and_conversation_images`, `profile_status_video_media`, and `allow_combined_profile_status_content_and_media`: the three production-applied SQL files are now copied byte-for-byte into `supabase/migrations/` under their exact production version IDs. The video and combined-content sources were recovered from PR #138 without merging its unrelated UI changes. These files are present only on PR #139 and have not been merged or replayed.
 - Other records mapped to compound historical files are candidates only. Their individual production migration boundaries have not been proven from the metadata ledger.
 
 The exact status of each record is in `source-registry.json`.
