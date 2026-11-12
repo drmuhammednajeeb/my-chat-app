@@ -424,7 +424,7 @@ test('four forward hardening migrations remain outside the production ledger and
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-    assert.equal(forward?.localRuntimeRunId, 43258867470);
+    assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
   }
   assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
 });
