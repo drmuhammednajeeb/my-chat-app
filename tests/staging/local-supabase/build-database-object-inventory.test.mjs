@@ -40,7 +40,7 @@ test('inventory identifies the application/database Forever membership format co
 
 test('inventory retains duplicate provenance and the known syntax hazard', async () => {
   const report = await buildObjectInventory();
-  assert.equal(report.duplicateGroups.length, 3);
+  assert.equal(report.duplicateGroups.length, 4);
   assert.ok(report.syntaxHazards.some(item => item.path === 'database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
 });
 
