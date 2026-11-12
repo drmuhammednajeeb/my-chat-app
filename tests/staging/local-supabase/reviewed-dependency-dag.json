@@ -62,8 +62,8 @@
         "supabase/migrations/20261106062207_explicit_legacy_deny.sql",
         "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql"
       ],
-      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
-      "note": "Current client uses chat_messages and the two migrations only perform table-level policy/privilege operations. A minimal empty stub is permitted only in the disposable local replay fixture; it is not a model of the deployed legacy table.",
+      "status": "TEST_ONLY_SCHEMA_BASELINE_MATCHED_PRODUCTION_CATALOG",
+      "note": "Empty schema-only compatibility fixture matched to the live production catalog: bigint identity primary key, sender/receiver/content/image_url/created_at columns, RLS enabled, service_role table ACL, and pre-hardening identity-sequence grants. No production rows are copied; test-only local replay only.",
       "testSource": [
         "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
         "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
@@ -2195,12 +2195,12 @@
   "blockers": [
     {
       "id": "DAG-001",
-      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY_AND_CATALOG_SCHEMA_MATCH",
       "evidence": [
         "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
         "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
       ],
-      "issue": "Resolved for disposable local replay only: include a minimal empty public.messages compatibility stub before the two legacy-referencing migrations. The stub is not production schema and must never be deployed."
+      "issue": "Resolved for disposable local replay: the empty compatibility fixture now matches the read-only production catalog schema (identity bigint primary key, five legacy payload/time fields, RLS state, table ACL and pre-hardening sequence ACL). No production rows are copied and the fixture is never deployed."
     },
     {
       "id": "DAG-002",

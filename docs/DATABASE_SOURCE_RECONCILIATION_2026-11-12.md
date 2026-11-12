@@ -54,3 +54,7 @@ These tests ran on a disposable local Supabase stack only. They do not represent
 - `main` was not modified.
 - PR #139 remains unmerged; the branch is ready for final human review.
 - Production execution remains unauthorized until the external residuals and forward-migration deployment plan are accepted.
+
+## Legacy messages baseline fixture
+
+The disposable-local `public.messages` compatibility fixture now matches the read-only production catalog: bigint identity primary key, sender/receiver/content/image_url/created_at columns, RLS enabled, service_role table grants and the pre-hardening identity-sequence grants. The fixture is empty, test-only and never deployed.

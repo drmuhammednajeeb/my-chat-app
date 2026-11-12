@@ -58,13 +58,13 @@
     },
     {
       "nodeId": "legacy.messages",
-      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
+      "status": "TEST_ONLY_SCHEMA_BASELINE_MATCHED_PRODUCTION_CATALOG",
       "testSources": [
         "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
         "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
       ],
       "blockedBy": [],
-      "parityNote": null
+      "parityNote": "Schema-only fixture matches the read-only production catalog metadata; data remains empty and production is untouched."
     },
     {
       "nodeId": "core.base",
