@@ -18,58 +18,6 @@
     "sqlSourceFiles": 55,
     "duplicatePairs": 3,
     "testOnlyFixturePaths": [
-      "database/changes/20261107035500_user_avatars_storage.sql",
-      "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql",
-      "database/changes/20261107061012_self_message_conversation.sql",
-      "database/changes/20261107061103_ensure_self_chat_rpc.sql",
-      "database/changes/20261107080000_chat_voice_messages.sql",
-      "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql",
-      "database/changes/20261107124500_harden_message_edit_permissions.sql",
-      "database/changes/20261107125149_group_management_custom_lists_20261107.sql",
-      "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql",
-      "database/changes/20261107125616_secure_group_ownership_transfer.sql",
-      "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql",
-      "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql",
-      "database/changes/20261107130000_restore_message_edit_guard.sql",
-      "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql",
-      "database/changes/20261107130534_include_team_admins_in_group_management.sql",
-      "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql",
-      "database/changes/20261107130851_schedule_expired_group_message_purge.sql",
-      "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql",
-      "database/changes/20261107131500_index_message_edit_history.sql",
-      "database/changes/20261107134500_conversation_workspaces_private_documents.sql",
-      "database/changes/20261107134600_index_workspace_foreign_keys.sql",
-      "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
-      "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql",
-      "database/changes/20261107144109_private_membership_system_20261107.sql",
-      "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql",
-      "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql",
-      "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql",
-      "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql",
-      "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql",
-      "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql",
-      "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql",
-      "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql",
-      "database/changes/20261112000100_profile_status_and_conversation_images.sql",
-      "database/changes/message_reactions_and_whatsapp_typography.sql",
-      "database/changes/private_channels_with_secure_invites.sql",
-      "database/changes/professional_message_controls_and_receipts.sql",
-      "database/changes/public_announcement_channels.sql",
-      "database/changes/user_specific_direct_chat_preferences.sql",
-      "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
-      "supabase/migrations/202611060002_tighten_api_grants.sql",
-      "supabase/migrations/202611060003_minimum_table_privileges.sql",
-      "supabase/migrations/202611060004_reference_profiles.sql",
-      "supabase/migrations/202611060005_fix_creator_membership_rls.sql",
-      "supabase/migrations/202611060006_explicit_legacy_deny.sql",
-      "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-      "supabase/migrations/20261107014128_unified_user_notifications.sql",
-      "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
-      "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
-      "tests/profile-status-and-conversation-images.test.mjs",
-      "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
-      "tests/staging/local-supabase/direct-conversation-concurrency.test.mjs",
-      "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -88,13 +36,9 @@
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql",
-      "tests/staging/local-supabase/local-pg-cron-runtime.mjs",
-      "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs",
-      "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
-      "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
-      "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
-    ]
+      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+    ],
+    "testOnlyFixtureCount": 19
   },
   "rules": [
     "Do not execute database/changes by glob, alphabetical order, or filename timestamp.",
@@ -1290,5 +1234,27 @@
     "localReplayEnabled": false,
     "mainModified": false,
     "pr138Merged": false
-  }
+  },
+  "externalSources": [
+    {
+      "pullRequest": 138,
+      "branch": "refactor/rebuild-status-workspace",
+      "headSha": "b1cd63e04a59565ce511544701744bdc3417c4f6",
+      "state": "OPEN_DRAFT_NOT_MERGED",
+      "files": [
+        {
+          "path": "database/changes/20261112000200_profile_status_video_media.sql",
+          "blobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0",
+          "productionMigration": "20261112091605/profile_status_video_media",
+          "status": "SOURCE_IN_OPEN_PR_NOT_MAIN"
+        },
+        {
+          "path": "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql",
+          "blobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
+          "productionMigration": "20261112103237/allow_combined_profile_status_content_and_media",
+          "status": "SOURCE_IN_OPEN_PR_NOT_MAIN"
+        }
+      ]
+    }
+  ]
 }
