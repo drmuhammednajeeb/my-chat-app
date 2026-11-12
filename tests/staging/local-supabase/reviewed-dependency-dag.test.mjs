@@ -246,7 +246,7 @@ test('direct conversation RPC recovery instructions are read-only', async () => 
 
 test('forward direct-conversation hardening is followed by runtime and concurrency probes', async () => {
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
-  assert.match(runner, /security\\.direct-conversation-eligibility-forward/);
+  assert.match(runner, /security\.direct-conversation-eligibility-forward/);
   assert.match(runner, /post-forward-eligibility-runtime/);
   assert.match(runner, /post-forward-concurrency/);
 });
