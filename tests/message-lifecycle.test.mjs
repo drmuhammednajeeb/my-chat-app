@@ -391,7 +391,8 @@ test('failed older-history batch restores the original transcript and pagination
     }
   });
   assert.equal(await loadOlder(), false);
-  assert.deepEqual(state.messages.map(message => message.id), ['m3']);
+  assert.equal(state.messages.length, 1);
+  assert.equal(state.messages[0].id, 'm3');
   assert.deepEqual([...state.messageIds], ['m3']);
   assert.deepEqual(area.querySelectorAll('.message').map(node => node.dataset.messageId), ['m3']);
   assert.equal(state.hasMoreMessages, true);
