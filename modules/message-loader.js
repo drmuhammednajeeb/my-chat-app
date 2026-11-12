@@ -50,7 +50,25 @@
     return Array.from(merged.values()).sort(compare).slice(-100);
   }
 
-  async function loadMessages(deps) {
+  function loadMessages(deps) {
+    const state = deps?.state;
+    if (!state?.active?.id) return Promise.resolve(false);
+    const requestId = (Number(state.messageLoadVersion) || 0) + 1;
+    state.messageLoadVersion = requestId;
+
+    // Serialize commits to the same timeline. A newer request invalidates the
+    // active request immediately, then starts only after its rollback completes.
+    const previous = state.messageLoadPromise;
+    const operation = Promise.resolve(previous)
+      .catch(() => false)
+      .then(() => runLoadMessages(deps, requestId));
+    state.messageLoadPromise = operation;
+    return operation.finally(() => {
+      if (state.messageLoadPromise === operation) state.messageLoadPromise = null;
+    });
+  }
+
+  async function runLoadMessages(deps, requestId) {
     const {
       state, $, supabaseClient, document: documentRef,
       updateNewMessagesIndicator = () => {},
@@ -71,8 +89,6 @@
 
     const startedAt = performanceRef.now();
     const syncStartedAt = new Date(Date.now() - 60000).toISOString();
-    const requestId = (Number(state.messageLoadVersion) || 0) + 1;
-    state.messageLoadVersion = requestId;
     state.diagnostics ||= {};
     state.messageIds ||= new Set();
     state.messages ||= [];
@@ -87,6 +103,22 @@
     const originalMessages = state.messages;
     const originalIds = new Set(state.messageIds);
     const originalReplyMessages = state.replyMessages;
+    const originalTimelineId = state.messageTimelineConversationId;
+
+    const rollbackOwnedRender = () => {
+      if (state.active?.id !== conversationId || state.messageTimelineRenderOwner !== requestId) return false;
+      area.replaceChildren(...(sameConversationTimeline ? originalNodes : [
+        makeStatus(documentRef, 'تعذر عرض الرسائل', 'اضغط تحديث لإعادة المحاولة.', false)
+      ]));
+      state.messages = originalMessages;
+      state.messageIds.clear();
+      originalIds.forEach(id => state.messageIds.add(id));
+      state.replyMessages = originalReplyMessages;
+      state.messageTimelineConversationId = originalTimelineId;
+      state.messageTimelineRenderOwner = null;
+      state.isLoadingMessages = false;
+      return true;
+    };
 
     state.isLoadingMessages = true;
     if (!sameConversationTimeline) {
@@ -181,6 +213,7 @@
       const anchorTop = anchor?.getBoundingClientRect?.().top ?? 0;
 
       // Commit the new model and rebuild only after the authoritative fetch succeeded.
+      state.messageTimelineRenderOwner = requestId;
       state.messages = messages;
       state.replyMessages = nextReplyMessages;
       area.replaceChildren();
@@ -196,11 +229,11 @@
       } else {
         const renderStartedAt = performanceRef.now();
         for (const message of messages) {
-          if (!isCurrent()) return false;
+          if (!isCurrent()) { rollbackOwnedRender(); return false; }
           const rendered = await renderMessage(message, conversationId, requestId);
           if (!rendered && !state.messageIds.has(message.id)) allMessagesRendered = false;
         }
-        if (!isCurrent()) return false;
+        if (!isCurrent()) { rollbackOwnedRender(); return false; }
 
         if (allMessagesRendered) {
           if (wasNearBottom || !sameConversationTimeline) {
@@ -220,17 +253,7 @@
       if (!allMessagesRendered) {
         // Roll back the entire DOM/model commit; a partial timeline is not a valid state.
         if (isCurrent()) {
-          area.replaceChildren(...(sameConversationTimeline ? originalNodes : [
-            makeStatus(documentRef, 'تعذر عرض الرسائل', 'اضغط تحديث لإعادة المحاولة.', false)
-          ]));
-          state.messages = originalMessages;
-          state.messageIds.clear();
-          originalIds.forEach(id => state.messageIds.add(id));
-          state.replyMessages = originalReplyMessages;
-          state.messageTimelineConversationId = sameConversationTimeline
-            ? conversationId
-            : null;
-          state.isLoadingMessages = false;
+          rollbackOwnedRender();
           state.diagnostics.lastFetchError = 'message_render_incomplete';
           diagLog('render-rollback', { conversationId, requestId });
           toast('تعذر إكمال عرض الرسائل؛ احتفظنا بالعرض السابق دون فقد البيانات.');
@@ -238,8 +261,9 @@
         return false;
       }
 
-      if (!isCurrent()) return false;
+      if (!isCurrent()) { rollbackOwnedRender(); return false; }
       state.messageTimelineConversationId = conversationId;
+      state.messageTimelineRenderOwner = null;
       state.hasMoreMessages = fetchedRows.length === 50;
       state.messagePollLastCheckedAt = syncStartedAt;
       state.messagePollCursor = fetchedRows[0]
@@ -271,6 +295,7 @@
     } catch (error) {
       recordPerf('message_load_total', performanceRef.now() - startedAt, { success: false });
       console.error('Message loading failed:', error);
+      rollbackOwnedRender();
       if (isCurrent()) {
         state.isLoadingMessages = false;
         state.diagnostics.lastFetchError = String(error?.message || error);
