@@ -1625,80 +1625,94 @@
   "knownReplayBlockers": [
     {
       "id": "DAG-003",
-      "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
-      "issue": "The historical-to-final membership format transition is represented and the final migration allowlist is tested for all six function targets, including both admin RPC implementations. A PostgreSQL local apply test must still prove the replacement and resulting constraints.",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "The full disposable replay applied the historical-to-final membership transition. The Forever membership-number workflow passed, and post-forward direct-conversation eligibility checks verified active membership, verified membership number, final format, and confirmed Auth email. Production remains unchanged.",
       "evidence": [
         "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
         "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
         "membership.js",
-        "index.html"
-      ]
+        "index.html",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-006",
-      "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
-      "issue": "Static source review found three policy definitions timestamped after the membership rewrite; all three use a direct or indirect active-membership guard, with zero later unguarded policies detected. The DAG sequences all earlier feature policy sources before the rewrite. Runtime PostgreSQL RLS tests are still required.",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Post-forward active-membership restrictive RLS assertions and rollback-only authenticated CRUD/RPC compatibility tests passed in disposable local Supabase. No unguarded application policy was observed in the runtime assertions.",
       "evidence": [
-        "supabase/migrations/20261107144109_private_membership_system_20261107.sql"
-      ]
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-007",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "Verify pgcrypto extension schema and extensions.digest / extensions.gen_random_bytes resolution locally.",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Disposable-local preflight and postflight verified pgcrypto is installed in extensions and extensions.digest(bytea,text) plus extensions.gen_random_bytes(integer) resolve.",
       "evidence": [
         "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
         "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
-      ]
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-008",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "pg_cron availability and the expected purge-job definition now have read-only local pre/postflight assertions. A separate loopback-only probe runner is prepared to prove actual scheduler execution using a temporary SELECT 1 job with scoped cleanup. Neither the probe nor the scheduler has been run; this blocker remains until disposable-local runtime evidence exists.",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "The reviewed purge-job definition was verified and the loopback-only disposable pg_cron probe executed a temporary SELECT 1 job successfully with scoped cleanup.",
       "evidence": [
         "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql",
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
-      ]
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-010",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL.",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Disposable-local preflight verified Auth, Storage, Realtime schemas, auth.users, auth.uid(), storage objects, Realtime publication, and required API roles; local Auth and Storage API probes passed.",
       "evidence": [
         "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
-        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
-      ]
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-013",
-      "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
-      "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160001 passed disposable-local replay. Storage API probes passed valid chat-media upload, member signed-read, cross-user uploader-folder spoof denial, private-document share controls, and avatar owner-upsert checks. Production still uses the pre-migration policy until the forward migration is separately approved and applied.",
       "evidence": [
         "index.html",
         "database/archive/pending-forward-reconciliation/20261107080000_chat_voice_messages.sql",
-        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
-      ]
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
+        "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     },
     {
       "id": "DAG-014",
-      "severity": "BLOCKER",
-      "issue": "The direct-conversation RPC source is restored and rollback-only PostgreSQL assertions plus a two-session reversed-pair runner are prepared. Runtime execution is still required in a disposable local Supabase environment to prove unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exactly-one concurrent creation, exact ACL enforcement, and active-membership gating. Do not enable replay until those runtime tests pass.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160000 and post-forward SQL assertions passed in disposable local Supabase. Twenty-four reversed-pair concurrent requests converged on one direct conversation; 40 authenticated message writes persisted uniquely. Production RPC remains unchanged until the forward migration is separately approved and applied.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
-        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
-      ]
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     },
     {
       "id": "DAG-015",
-      "severity": "BLOCKER",
-      "issue": "The recovered production RPC lacked caller and target eligibility checks. A separate test-only overlay now checks both participants against active membership, verified membership number, final number format, and confirmed Auth email while locking authoritative rows. The overlay and negative-case PostgreSQL assertions are prepared, but runtime validation, concurrency, and exact ACL behavior remain blocked; no production migration is authorized.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160000 passed caller/target eligibility, active membership, verified-number, final-format, confirmed-email, and RPC ACL assertions in disposable local Supabase. The production RPC remains unchanged until the forward migration is separately approved and applied.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
@@ -1707,20 +1721,27 @@
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
-        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
-      ]
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     },
     {
       "id": "DAG-016",
-      "severity": "BLOCKER",
-      "issue": "Read-only production catalog inspection found postgres-owned public-schema default ACLs granting all table/sequence privileges and function EXECUTE to anon/authenticated. Existing app tables consequently expose non-RLS privileges (including TRUNCATE, REFERENCES, TRIGGER and PostgreSQL 17+ MAINTAIN) and unnecessary direct DML. A loopback-only test overlay and read-only postconditions are prepared; neither has been executed. Production remains unchanged until local CRUD compatibility, RPC grants, and default-ACL behavior pass runtime tests.",
+      "severity": "EXTERNAL_PLATFORM_CONFIGURATION_REVIEW_REQUIRED",
+      "issue": "Forward migrations 20261112160002 and 20261112160003 passed disposable-local least-privilege, restrictive active-membership RLS, and rollback-only CRUD/RPC tests. Production postgres-owned defaults are addressed by the migration. Supabase-managed supabase_admin defaults remain broad and cannot be changed by postgres because it is not a member of that superuser role; read-only production inspection found zero public relations/functions owned by supabase_admin. Keep production deployment gated on Supabase-level review of this external default-ACL residual.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "docs/RLS_LEAST_PRIVILEGE_HARDENING.md",
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
-        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
-      ]
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
+        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_SUPABASE_MANAGED_ROLE_RESIDUAL_REMAINS"
     }
   ],
   "externalSources": [
@@ -1763,10 +1784,11 @@
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Require both direct-conversation participants to satisfy active membership, verified membership-number, valid-format and confirmed-email checks while preserving pair-lock reuse.",
-      "blockedBy": [
-        "DAG-014",
-        "DAG-015"
-      ]
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43258867470,
+      "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "productionApplied": false
     },
     {
       "version": "20261112160001",
@@ -1776,9 +1798,11 @@
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Bind chat-media upload path segment 2 to auth.uid() in addition to conversation membership.",
-      "blockedBy": [
-        "DAG-013"
-      ]
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43258867470,
+      "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "productionApplied": false
     },
     {
       "version": "20261112160002",
@@ -1790,7 +1814,11 @@
       "purpose": "Remove unsafe default and direct API-role privileges while preserving reviewed application CRUD and RPC contracts.",
       "blockedBy": [
         "DAG-016"
-      ]
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43258867470,
+      "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "productionApplied": false
     },
     {
       "version": "20261112160003",
@@ -1802,13 +1830,53 @@
       "purpose": "Add restrictive active-membership gates to RLS-enabled public tables and Storage objects.",
       "blockedBy": [
         "DAG-016"
-      ]
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43258867470,
+      "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
     "pendingForwardCount": 4,
-    "executionAuthorized": false
+    "executionAuthorized": false,
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeRunId": 43258867470,
+    "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+    "productionApplied": false
+  },
+  "validationEvidence": {
+    "runtime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 43258867470,
+      "commit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "completedAt": "2026-11-12T16:29:16Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 83,
+      "checks": [
+        "Supabase Auth, Storage, Realtime schemas and required roles passed read-only preflight",
+        "pgcrypto extension schema and digest/gen_random_bytes resolution passed",
+        "pg_cron purge-job definition verified and temporary scheduler job executed successfully",
+        "24 reversed-pair concurrent direct-conversation requests converged on one conversation",
+        "40 concurrent authenticated message writes persisted uniquely",
+        "post-forward direct-conversation eligibility and RPC ACL assertions passed",
+        "post-forward least-privilege, active-membership RLS, and CRUD/RPC assertions passed",
+        "Storage upload, signed reads, document sharing, avatar upsert, and cross-user path-denial probes passed",
+        "full reviewed disposable replay completed"
+      ]
+    },
+    "audit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 43258867403,
+      "commit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "completedAt": "2026-11-12T16:27:43Z",
+      "tests": 77,
+      "passed": 77,
+      "failed": 0
+    }
   }
 }
