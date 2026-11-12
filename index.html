@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.12.5"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.12.6"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -31,6 +31,7 @@
 <link rel="stylesheet" href="./app.css">
 <link rel="stylesheet" href="./modules/voice-recorder.css">
 <link rel="stylesheet" href="./modules/audio-player.css">
+<link rel="stylesheet" href="./modules/message-reactions.css">
 <link rel="stylesheet" href="./modules/profile-status-and-conversation-images.css">
 
 
@@ -190,6 +191,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="./modules/message-loader.js"></script>
+<script src="./modules/message-reactions.js"></script>
 <script src="./modules/voice-recorder.js"></script>
 <script src="./modules/audio-player.js"></script>
 <script src="./modules/app-updater.js"></script>
@@ -287,7 +289,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
@@ -319,6 +321,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
 const toast=(msg)=>{const n=document.createElement('div');n.textContent=msg;n.style.cssText='position:fixed;z-index:20;bottom:28px;left:50%;transform:translateX(-50%);background:#253c50;border:1px solid #426078;color:white;padding:11px 17px;border-radius:12px;font-size:12px;box-shadow:var(--shadow)';document.body.append(n);setTimeout(()=>n.remove(),3200)};
+const messageReactions=window.BizmindMessageReactions.create({state,supabaseClient,document,toast});
 
 
 function notificationIcon(type){
@@ -1015,7 +1018,7 @@ async function openConversation(c){
  const conversationOpenStarted=performance.now();
  if(voiceRecorder.isActive()){voiceRecorder.cancel();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
+ state.active=c;messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
  applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
  state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.messagePollOffset=0;state.messagePollOffsetConversationId=c.id;state.newMessageCount=0;updateNewMessagesIndicator();
  $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
@@ -1179,7 +1182,8 @@ async function jumpToMessage(id){
   }
   await Promise.all([
    loadMessagePins(conversationId,requestId),
-   loadPrivateReplyContexts(conversationId,rows,requestId)
+   loadPrivateReplyContexts(conversationId,rows,requestId),
+   messageReactions.load(conversationId,rows,requestId)
   ]);
   if(!isCurrent())return;
   const area=$('messages');area.replaceChildren();state.messageIds.clear();state.renderingMessageIds.clear();
@@ -1339,7 +1343,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
  top=Math.max(pad,Math.min(top,window.innerHeight-box.height-pad));
  menu.style.left=Math.round(left)+'px';menu.style.top=Math.round(top)+'px';trigger.setAttribute('aria-expanded','true');
 };menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
-  row.append(bubble);renderMessagePinMark(row,m);bindMessageGestures(row,m);
+  row.append(bubble);messageReactions.attach(row,m,bubble.querySelector('.message-menu-wrap'));messageReactions.render(row,m);renderMessagePinMark(row,m);bindMessageGestures(row,m);
   if(!isCurrent())return false;
   const latestMessage=(state.messages||[]).find(item=>item.id===m.id);if(!latestMessage||latestMessage!==m)return false;
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
@@ -1359,6 +1363,7 @@ async function loadMessages(){
   state,$,supabaseClient,document,performance,
   updateNewMessagesIndicator,diagLog,recordPerf,
   compareMessagesChronologically,
+  loadMessageReactions:(id,messages,requestId)=>messageReactions.load(id,messages,requestId),
   loadMessagePins,loadPrivateReplyContexts,renderMessage,
   markConversationReceipt,toast
  });
@@ -1389,9 +1394,10 @@ async function loadOlderMessages(){
   olderIds=new Set(older.map(message=>message.id));
   const replyIds=[...new Set(older.map(m=>m.reply_to).filter(id=>id&&!state.messages.some(x=>x.id===id)))];
   const replyTask=replyIds.length?supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds):Promise.resolve({data:[],error:null});
-  const [, , replyResult]=await Promise.all([
+  const [, , , replyResult]=await Promise.all([
    loadMessagePins(conversationId,requestId),
    loadPrivateReplyContexts(conversationId,older,requestId),
+   messageReactions.load(conversationId,older,requestId),
    replyTask
   ]);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
@@ -1579,6 +1585,7 @@ function handleMessageUpdateRealtime(payload,conversationId){
  if(incoming.deleted_at&&index>=0&&state.messages[index].deleted_at===incoming.deleted_at&&existingRow?.querySelector('.bubble.deleted'))return;
  if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);
  if(incoming.deleted_at){
+  messageReactions.removeMessage(incoming.id);
   state.pinnedMessages?.delete(incoming.id);
   const deletedRow=existingRow;
   if(deletedRow)deletedRow.remove();
@@ -1620,6 +1627,7 @@ function handleMessageDeleteRealtime(payload,conversationId){
  if(existing&&existing.conversation_id!==conversationId)return false;
  state.messages=(state.messages||[]).filter(message=>message.id!==deletedId);
  state.messageIds?.delete(deletedId);
+  messageReactions.removeMessage(deletedId);
   state.pinnedMessages?.delete(deletedId);
  state.replyMessages?.delete(deletedId);
  const row=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===deletedId);
@@ -1639,6 +1647,9 @@ function subscribeConversation(){
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id,state.messageLoadVersion).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom(),state.messageLoadVersion)})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>handleMessageUpdateRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'chat_messages'},p=>handleMessageDeleteRealtime(p,id))
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>messageReactions.handleRealtime(p,id))
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>messageReactions.handleRealtime(p,id))
+  .on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions'},p=>messageReactions.handleRealtime(p,id))
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_pins',filter:'conversation_id=eq.'+id},p=>handlePinRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'message_pins'},p=>handlePinRealtime(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversation_members',filter:'conversation_id=eq.'+id},p=>handleMembershipRealtime(p,id))

@@ -307,9 +307,11 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
 });
 
 
-test('chat composer media allowlists remain aligned while emoji reactions are absent from the client', async () => {
+test('chat composer media allowlists and message reaction options remain aligned with their database constraints', async () => {
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   const migration = await readFile(path.join(root, 'database/changes/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
+  const reactionSchema = await readFile(path.join(root, 'database/changes/message_reactions_and_whatsapp_typography.sql'), 'utf8');
+  const reactionModule = await readFile(path.join(root, 'modules/message-reactions.js'), 'utf8');
   for (const mime of [
     'video/mp4',
     'video/webm',
@@ -321,7 +323,13 @@ test('chat composer media allowlists remain aligned while emoji reactions are ab
     assert.ok(html.includes(mime), 'chat file picker is missing ' + mime);
     assert.ok(migration.includes(mime), 'Storage allow-list is missing ' + mime);
   }
-  assert.doesNotMatch(html, /reaction|message_reactions|إضافة تفاعل/i);
+  assert.ok(html.includes('modules/message-reactions.js'));
+  assert.ok(html.includes('modules/message-reactions.css'));
+  assert.match(reactionModule, /type: "like"/);
+  assert.match(reactionModule, /type: "heart"/);
+  assert.ok(reactionSchema.includes("'like'"));
+  assert.ok(reactionSchema.includes("'heart'"));
+  assert.doesNotMatch(reactionModule, /type: "(wow|pray|fire|celebrate)"/);
   for (const mime of [
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

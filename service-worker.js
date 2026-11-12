@@ -3,7 +3,7 @@
  * Never cache Supabase/API requests, authenticated data, or user messages.
  */
 const CACHE_PREFIX = "ultra-chat-pro";
-const CACHE_VERSION = "v30";
+const CACHE_VERSION = "v31";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const CDN_CACHE = `${CACHE_PREFIX}-cdn-${CACHE_VERSION}`;
 const CDN_ORIGINS = new Set([
@@ -36,6 +36,8 @@ self.addEventListener("install", event => {
       new URL("./modules/voice-recorder.js", base).href,
       new URL("./modules/voice-recorder.css", base).href,
       new URL("./modules/message-loader.js", base).href,
+      new URL("./modules/message-reactions.js", base).href,
+      new URL("./modules/message-reactions.css", base).href,
       new URL("./modules/profile-status-and-conversation-images.js", base).href,
       new URL("./modules/profile-status-and-conversation-images.css", base).href
     ]);
