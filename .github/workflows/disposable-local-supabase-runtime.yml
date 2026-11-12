@@ -1,8 +1,13 @@
 name: Disposable local Supabase runtime verification
 
 on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
+      - "database/unify-migration-sources-20261112"
       - "engineering/stability-css-extraction-20261109"
   workflow_dispatch:
 
@@ -16,7 +21,7 @@ concurrency:
 jobs:
   local-supabase-runtime:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
       - name: Check out reviewed source
         uses: actions/checkout@v4
