@@ -132,15 +132,21 @@ test('archive manifest is provenance-only and excluded from Supabase CLI discove
 
 
 
+
 test('public conversation-image SECURITY DEFINER RPC is intentional and enforces actor, membership, manager, and path checks', async () => {
   const sql = await readFile(path.join(root, 'supabase/migrations/20261112091557_profile_status_and_conversation_images.sql'), 'utf8');
-  assert.match(sql, /create or replace function public\.set_conversation_image\(/i);
-  assert.match(sql, /security definer[\s\S]*?set search_path\s*(?:to|=)\s*''/i);
-  assert.match(sql, /actor uuid := \(select auth\.uid\(\)\)/i);
-  assert.match(sql, /app_private\.is_active_member\(\)/i);
-  assert.match(sql, /app_private\.can_manage_conversation\(p_conversation_id\)/i);
-  assert.match(sql, /expected_prefix := p_conversation_id::text \|\| '\/' \|\| actor::text \|\| '\/'/i);
-  assert.match(sql, /bucket_id = 'conversation-avatars'/i);
+  const start = sql.toLowerCase().indexOf('create or replace function public.set_conversation_image(');
+  assert.ok(start >= 0, 'public.set_conversation_image source is missing');
+  const end = sql.indexOf('$function$;', start);
+  assert.ok(end > start, 'public.set_conversation_image body terminator is missing');
+  const functionSql = sql.slice(start, end + '$function$;'.length);
+  assert.match(functionSql, /security definer/i);
+  assert.match(functionSql, /set search_path\s*(?:to|=)\s*''/i);
+  assert.match(functionSql, /actor uuid := \(select auth\.uid\(\)\)/i);
+  assert.match(functionSql, /app_private\.is_active_member\(\)/i);
+  assert.match(functionSql, /app_private\.can_manage_conversation\(p_conversation_id\)/i);
+  assert.match(functionSql, /expected_prefix := p_conversation_id::text \|\| '\/' \|\| actor::text \|\| '\/'/i);
+  assert.match(functionSql, /bucket_id = 'conversation-avatars'/i);
   assert.match(sql, /revoke all on function public\.set_conversation_image\(uuid,text\) from public, anon/i);
   assert.match(sql, /grant execute on function public\.set_conversation_image\(uuid,text\) to authenticated/i);
 });
