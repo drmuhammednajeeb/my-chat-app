@@ -206,6 +206,18 @@ for (const node of manifest.candidateNodeOrder) {
       path.join(ROOT, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs')
     ], { ...env, LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, node.nodeId);
   }
+  if (node.nodeId === 'security.direct-conversation-eligibility-forward') {
+    const identityArgs = syntheticAuthIds
+      ? Object.entries(syntheticAuthIds).map(([key, id]) => '--set=' + key + '_id=' + id)
+      : [];
+    run('psql', [
+      '--no-psqlrc', '--set=ON_ERROR_STOP=1', ...identityArgs,
+      '--file', path.join(ROOT, 'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'), raw
+    ], env, node.nodeId + ':post-forward-eligibility-runtime');
+    run(process.execPath, [
+      path.join(ROOT, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs')
+    ], { ...env, LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, node.nodeId + ':post-forward-concurrency');
+  }
   if (node.nodeId === 'test-fixture.local-pg-cron-runtime') {
     run(process.execPath, [
       path.join(ROOT, 'tests/staging/local-supabase/local-pg-cron-runtime.mjs')
