@@ -257,7 +257,7 @@ test('poll cadence preserves connected, disconnected and background intervals', 
   const delay = vm.runInNewContext('(' + extractFunction('messagePollingDelay') + ')', { state, document });
   assert.equal(delay(), 15000);
   state.realtimeStatus = 'CHANNEL_ERROR';
-  assert.equal(delay(), 8000);
+  assert.equal(delay(), 1200);
   document.visibilityState = 'hidden';
   assert.equal(delay(), 60000);
 });
