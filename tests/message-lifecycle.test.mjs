@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const loaderSource = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
@@ -234,12 +235,13 @@ test('delete action uses the returned database row and avoids a competing full r
   assert.doesNotMatch(remove, /loadMessages\(\)/);
 });
 
-test('initial message snapshot removes stale rows inside its authoritative window', () => {
+test('message loader reconciles the authoritative window and preserves valid realtime/history rows', () => {
   const load = extractFunction('loadMessages');
-  assert.match(load, /fetchedIds=new Set\(fetchedRows\.map\(m=>m\.id\)\)/);
-  assert.match(load, /isOlderHistory=fetchedRows\.length===50/);
-  assert.match(load, /afterPersonalClear=!state\.activeChatPreference\?\.cleared_before/);
-  assert.match(load, /if\(afterPersonalClear&&\(fetchedIds\.has\(m\.id\)\|\|isNewerRealtime\|\|isOlderHistory\|\|arrivedDuringEmptyFetch\)\)/);
+  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
+  assert.match(loaderSource, /const fetchedIds = new Set\(fetchedRows\.map\(row => row\.id\)\)/);
+  assert.match(loaderSource, /isOlderLoadedHistory = fetchedRows\.length === 50/);
+  assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
+  assert.match(loaderSource, /arrivedDuringEmptyFetch/);
 });
 
 test('renderer rejects an obsolete request token before starting work', async () => {
@@ -290,13 +292,14 @@ test('receipt writes are serialized per conversation in one client session', asy
   assert.equal(state.receiptQueues.size, 0);
 });
 
-test('render and initial-load paths retain stale-result guards', () => {
+test('renderer and extracted message loader retain stale-result and render-completion guards', () => {
   const render = extractFunction('renderMessageInternal'), load = extractFunction('loadMessages');
   assert.match(render, /if\(!isCurrent\(\)\)return false/);
   assert.match(render, /createSignedUrl\(m\.attachment_path,3600\)/);
-  assert.match(load, /if\(requestId!==state\.messageLoadVersion\|\|state\.active\?\.id!==conversationId\)return false/);
-  assert.ok(load.includes('state.messagePollCursor=(data||[])[0]?'));
-  assert.match(load, /allMessagesRendered/);
+  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
+  assert.match(loaderSource, /state\.messageLoadVersion === requestId && state\.active\?\.id === conversationId/);
+  assert.match(loaderSource, /state\.messagePollCursor = fetchedRows\[0\]/);
+  assert.match(loaderSource, /let allMessagesRendered = true/);
 });
 
 test('fallback synchronization is cursor-based and reconciles edits and deletions', () => {
