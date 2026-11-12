@@ -180,7 +180,7 @@
       doc.addEventListener("visibilitychange", () => {
         if (doc.visibilityState === "visible") checkLatest();
       });
-      win.setInterval(checkLatest, 30 * 60 * 1000);
+      win.setInterval(checkLatest, 5 * 60 * 1000);
       return registration;
     }
 
