@@ -182,7 +182,7 @@ function inspect(file) {
     createdTables: [...new Set(createdTables)].sort(), tableDetails: tableDetails.tables, foreignKeys: tableDetails.foreignKeys, alteredTables: [...new Set(alteredTables)].sort(), sourceTimestamp,
     functions, sequences: [...new Set(sequences)].sort(), indexes, triggers, policies, policyDetails,
     constraints: [...new Set(constraints)].sort(), grants, relationsReferenced, internalFunctionsReferenced,
-    extensionCreates, storageBucketIds, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, hardcodedEmails, hardcodedUuids, hardcodedMembershipNumbers, cronUsage, syntaxHazards };
+    extensionCreates, storageBucketIds, storageObjectPolicyBuckets, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, hardcodedEmails, hardcodedUuids, hardcodedMembershipNumbers, cronUsage, syntaxHazards };
 }
 
 export async function buildObjectInventory(root = ROOT) {
