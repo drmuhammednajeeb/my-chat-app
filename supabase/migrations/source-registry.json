@@ -1786,8 +1786,8 @@
       "purpose": "Require both direct-conversation participants to satisfy active membership, verified membership-number, valid-format and confirmed-email checks while preserving pair-lock reuse.",
       "blockedBy": [],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43258867470,
-      "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
     },
     {
@@ -1800,8 +1800,8 @@
       "purpose": "Bind chat-media upload path segment 2 to auth.uid() in addition to conversation membership.",
       "blockedBy": [],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43258867470,
-      "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
     },
     {
@@ -1816,8 +1816,8 @@
         "DAG-016"
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43258867470,
-      "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
     },
     {
@@ -1832,8 +1832,8 @@
         "DAG-016"
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43258867470,
-      "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
     }
   ],
@@ -1843,37 +1843,36 @@
     "pendingForwardCount": 4,
     "executionAuthorized": false,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43258867470,
-    "localRuntimeCommit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
+    "localRuntimeRunId": 43260183037,
+    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
     "productionApplied": false
   },
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 43258867470,
-      "commit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
-      "completedAt": "2026-11-12T16:29:16Z",
+      "workflowRunId": 43260183037,
+      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "completedAt": "2026-11-12T16:37:17Z",
       "localOnly": true,
       "sqlFilesExecuted": 83,
       "checks": [
-        "Supabase Auth, Storage, Realtime schemas and required roles passed read-only preflight",
-        "pgcrypto extension schema and digest/gen_random_bytes resolution passed",
-        "pg_cron purge-job definition verified and temporary scheduler job executed successfully",
-        "24 reversed-pair concurrent direct-conversation requests converged on one conversation",
+        "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
+        "pgcrypto schema and function resolution passed",
+        "temporary pg_cron scheduler job executed successfully",
+        "24 reversed-pair concurrent requests converged on one direct conversation",
         "40 concurrent authenticated message writes persisted uniquely",
-        "post-forward direct-conversation eligibility and RPC ACL assertions passed",
-        "post-forward least-privilege, active-membership RLS, and CRUD/RPC assertions passed",
-        "Storage upload, signed reads, document sharing, avatar upsert, and cross-user path-denial probes passed",
+        "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
+        "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
         "full reviewed disposable replay completed"
       ]
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 43258867403,
-      "commit": "c97b36d3a603380cb80dd6cde2374ea1d3438731",
-      "completedAt": "2026-11-12T16:27:43Z",
+      "workflowRunId": 43260183019,
+      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "completedAt": "2026-11-12T16:35:00Z",
       "tests": 77,
       "passed": 77,
       "failed": 0
