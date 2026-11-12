@@ -57,13 +57,6 @@
 .chat-header-menu .direct-chat-control{height:auto;border:0;border-radius:8px;background:transparent;justify-content:flex-start}
 .chat-header-menu .install-app-btn{width:100%;min-width:0;padding:9px 11px}
 .chat-header-menu .install-app-label{display:inline}
-.message-menu-wrap{position:absolute;z-index:8;top:4px;width:20px;height:20px;display:flex;align-items:flex-start}
-#messages>.message.mine .message-menu-wrap{left:-20px;right:auto}
-#messages>.message:not(.mine) .message-menu-wrap{right:-20px;left:auto}
-.message-menu-trigger{width:27px;height:27px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:#ffffffd9;color:#53636c;opacity:0;pointer-events:none;transition:opacity .16s,background .16s;box-shadow:0 1px 3px #0b141a18}
-.message:hover .message-menu-trigger,.message-menu-trigger:focus-visible,.message-menu-trigger[aria-expanded="true"]{opacity:1;pointer-events:auto}
-.message-menu-trigger:hover,.message-menu-trigger[aria-expanded="true"]{background:#e8f1ee;color:#008f72}
-.message-menu-trigger i{font-size:17px}
 .message-options-menu{position:absolute;top:30px;left:0;z-index:40;min-width:154px;padding:5px;background:#fff;border:1px solid #e7ebed;border-radius:11px;box-shadow:0 8px 28px #0b141a24;display:flex;flex-direction:column;gap:2px}
 .message-options-menu.hidden{display:none!important}
 .message-menu-option{width:100%;min-height:36px;display:flex;align-items:center;gap:10px;padding:7px 10px;border:0;border-radius:7px;background:transparent;color:#26343b;text-align:right;font-size:12px}
@@ -265,7 +258,9 @@ html.dark .new-messages-jump{background:#153c36;color:#b8f3d6;border-color:#276b
 .sticker-composer-btn{color:var(--accent)}
 @media(max-width:420px){.chat-sticker-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.chat-sticker-option{font-size:26px}}
 /* Message menu: discreet chevron on desktop hover, reachable on touch and keyboard. */
-.message-menu-wrap{position:absolute;z-index:8;top:4px;left:5px;display:flex;align-items:flex-start}
+.message-menu-wrap{position:absolute;z-index:8;top:4px;width:20px;height:20px;display:flex;align-items:flex-start}
+#messages>.message.mine .message-menu-wrap{left:-20px;right:auto}
+#messages>.message:not(.mine) .message-menu-wrap{right:-20px;left:auto}
 .message-menu-trigger{
   width:20px;height:20px;min-width:20px;padding:0;border:0;border-radius:0;
   display:grid;place-items:center;background:transparent;color:var(--muted);
