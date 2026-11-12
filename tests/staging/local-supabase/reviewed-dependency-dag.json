@@ -10,7 +10,7 @@
     },
     "historicalChanges": {
       "path": "database/changes",
-      "count": 46,
+      "count": 47,
       "note": "Not a canonical Supabase CLI sequence."
     }
   },
@@ -1128,6 +1128,27 @@
         "database/changes/20261112000200_profile_status_video_media.sql",
         "tests/status-workspace.test.mjs"
       ]
+    },
+    {
+      "id": "chat.profile-status-combined-content-media",
+      "source": [
+        "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql"
+      ],
+      "provides": [
+        "profile_statuses accepts text-only, media-only, and combined text plus image/video",
+        "insert RLS predicate aligns with the combined publication model",
+        "UUID-based media path regex matches file extensions correctly"
+      ],
+      "requires": [
+        "chat.profile-status-video-media",
+        "chat.profile-status-and-conversation-images",
+        "platform.storage"
+      ],
+      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "testSource": [
+        "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql",
+        "tests/status-workspace.test.mjs"
+      ]
     }
   ],
   "explicitEdges": [
@@ -1822,6 +1843,18 @@
     [
       "platform.storage",
       "chat.profile-status-video-media"
+    ],
+    [
+      "chat.profile-status-video-media",
+      "chat.profile-status-combined-content-media"
+    ],
+    [
+      "chat.profile-status-and-conversation-images",
+      "chat.profile-status-combined-content-media"
+    ],
+    [
+      "platform.storage",
+      "chat.profile-status-combined-content-media"
     ]
   ],
   "blockers": [
