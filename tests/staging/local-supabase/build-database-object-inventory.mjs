@@ -217,7 +217,7 @@ export async function buildObjectInventory(root = ROOT) {
   const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
   const clientStorageBuckets = [...new Set(matches(appHtml + '\n' + profileMediaJs, /storage\.from\(\s*['"]([^'"]+)['"]/gi, m => m[1]))].sort();
   const declaredStorageBuckets = [...new Set(files.flatMap(file => file.storageBucketIds))].sort();
-  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => matches(file.sql, /create\s+policy\s+[\s\S]*?\s+on\s+storage\.objects\b([\s\S]*?);/gi, policy => matches(policy[1], /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, m => m[1])).flat()))].sort();
+  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => matches(file.sql, /create\s+policy\b[\s\S]*?\bon\s+storage\.objects\b[\s\S]*?;/gi, policy => matches(policy[0], /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, m => m[1])).flat()))].sort();
   const chatMediaUploadPolicy = files.flatMap(file => file.policyDetails).find(policy => policy.table === 'storage.objects' && policy.name === 'Conversation members upload chat media');
   const storageCoverage = {
     chatMediaUploadPathOwnershipGuard: Boolean(chatMediaUploadPolicy && /storage\.foldername\(name\)\)\s*\[\s*2\s*\].*auth\.uid\s*\(/i.test(chatMediaUploadPolicy.statement)),
