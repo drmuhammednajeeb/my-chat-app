@@ -159,6 +159,8 @@ function inspect(file) {
     return { name: m[1].trim(), table: m[2].toLowerCase(), statement, guardClass: denyAll ? 'DENY_ALL' : direct ? 'DIRECT_ACTIVE_MEMBER' : indirect ? 'INDIRECT_ACTIVE_MEMBER' : selfScoped ? 'SELF_SCOPE_ONLY' : 'NO_RECOGNIZED_GUARD' };
   });
   const policies = policyDetails.map(({ name, table }) => ({ name, table }));
+  const storageObjectPolicyBuckets = matches(sql, /\bcreate\s+policy\b[\s\S]*?\bon\s+storage\.objects\b[\s\S]*?;/gi,
+    policy => matches(policy[0], /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, bucket => bucket[1])).flat();
   const constraints = matches(sql, /\badd\s+constraint\s+([a-z_]\w*)/gi, m => m[1].toLowerCase());
   const relationsReferenced = [...new Set(matches(sql, /\b(?:from|join|update|into|references)\s+((?:public|app_private|auth|storage|cron|extensions)\s*\.\s*[a-z_]\w*)/gi, m => m[1].replace(/\s+/g, '').toLowerCase()))].sort();
   const internalFunctionsReferenced = [...new Set([...sql.matchAll(/\bapp_private\s*\.\s*([a-z_]\w*)\s*\(/gi)]
@@ -180,7 +182,7 @@ function inspect(file) {
     createdTables: [...new Set(createdTables)].sort(), tableDetails: tableDetails.tables, foreignKeys: tableDetails.foreignKeys, alteredTables: [...new Set(alteredTables)].sort(), sourceTimestamp,
     functions, sequences: [...new Set(sequences)].sort(), indexes, triggers, policies, policyDetails,
     constraints: [...new Set(constraints)].sort(), grants, relationsReferenced, internalFunctionsReferenced,
-    extensionCreates, storageBucketIds, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, hardcodedEmails, hardcodedUuids, hardcodedMembershipNumbers, cronUsage, syntaxHazards };
+    extensionCreates, storageBucketIds, storageObjectPolicyBuckets, publicationTables: [...new Set(publicationTables)].sort(), legacyMessagesReferences, hardcodedEmails, hardcodedUuids, hardcodedMembershipNumbers, cronUsage, syntaxHazards };
 }
 
 export async function buildObjectInventory(root = ROOT) {
@@ -196,7 +198,10 @@ export async function buildObjectInventory(root = ROOT) {
   for (const file of files) { const list = hashGroups.get(file.sha256) ?? []; list.push(file.path); hashGroups.set(file.sha256, list); }
   const duplicateGroups = [...hashGroups.entries()].filter(([, paths]) => paths.length > 1)
     .map(([sha256, paths]) => ({ sha256, paths: paths.sort() })).sort((a, b) => a.paths[0].localeCompare(b.paths[0]));
-  const appHtml = await readFile(path.join(root, 'index.html'), 'utf8').catch(() => '');
+  const [appHtml, profileMediaJs] = await Promise.all([
+    readFile(path.join(root, 'index.html'), 'utf8').catch(() => ''),
+    readFile(path.join(root, 'modules/profile-status-and-conversation-images.js'), 'utf8').catch(() => '')
+  ]);
   const membershipJs = await readFile(path.join(root, 'membership.js'), 'utf8').catch(() => '');
   const clientRpcNames = [...new Set(matches(appHtml, /\.rpc\(\s*['"]([a-z_]\w*)['"]/gi, m => m[1]))].sort();
   const publicFunctionNames = new Set(files.flatMap(file => file.functions.filter(fn => fn.name.startsWith('public.')).map(fn => fn.name.slice(7))));
@@ -212,9 +217,15 @@ export async function buildObjectInventory(root = ROOT) {
   const membershipBaseTimestamp = 20261107144109;
   const policiesAfterMembershipBase = files.filter(file => file.sourceTimestamp && Number(file.sourceTimestamp) > membershipBaseTimestamp).flatMap(file => file.policyDetails.map(policy => ({ path: file.path, ...policy })));
   const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
-  const clientStorageBuckets = [...new Set(matches(appHtml, /storage\.from\(\s*['"]([^'"]+)['"]/gi, m => m[1]))].sort();
+  const clientSource = appHtml + '\n' + profileMediaJs;
+  const bucketConstants = new Map(matches(clientSource,
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(['"])([^'"]+)\2/g,
+    m => [m[1], m[3]]));
+  const clientStorageBuckets = [...new Set(matches(clientSource,
+    /storage\.from\(\s*(?:['"]([^'"]+)['"]|([A-Za-z_$][\w$]*))\s*\)/gi,
+    m => m[1] ?? bucketConstants.get(m[2])).filter(Boolean))].sort();
   const declaredStorageBuckets = [...new Set(files.flatMap(file => file.storageBucketIds))].sort();
-  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => file.policyDetails.filter(policy => policy.table === 'storage.objects').flatMap(policy => matches(policy.statement, /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, m => m[1]))) )].sort();
+  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => file.storageObjectPolicyBuckets))].sort();
   const chatMediaUploadPolicy = files.flatMap(file => file.policyDetails).find(policy => policy.table === 'storage.objects' && policy.name === 'Conversation members upload chat media');
   const storageCoverage = {
     chatMediaUploadPathOwnershipGuard: Boolean(chatMediaUploadPolicy && /storage\.foldername\(name\)\)\s*\[\s*2\s*\].*auth\.uid\s*\(/i.test(chatMediaUploadPolicy.statement)),

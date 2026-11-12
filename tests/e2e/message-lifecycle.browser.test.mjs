@@ -294,3 +294,131 @@ test('browser: same-ID render requests serialize and retry using the newest in-m
     assert.equal(result.pending, 0);
   } finally { await page.close(); }
 });
+
+
+
+test('voice recording finalizes the last MediaRecorder chunk before dispatching send', async () => {
+  const page = await newPage();
+  await page.setContent(`<!doctype html><html><body>
+    <button id="voiceRecordBtn"></button><button id="voiceCancelBtn"></button>
+    <div id="voiceRecordingControls" class="hidden"><span id="voiceRecordingTime"></span><button id="voicePauseBtn"></button><span id="voiceRecordingStatus"></span></div>
+    <button id="sendBtn"></button><div id="attachmentPreview"></div>
+  </body></html>`);
+  const startSource = extractFunction('startVoiceRecording');
+  const sendSource = extractFunction('sendVoiceRecording');
+  const stopSource = extractFunction('stopVoiceRecording');
+  await page.evaluate(({ startSource, sendSource, stopSource }) => {
+    const state = window.__voiceState = {
+      active: { id: 'conversation-a', type: 'direct', members: [] },
+      user: { id: 'user-a' }, uploading: false, attachment: null,
+      voiceRecorder: null, voiceChunks: [], voiceElapsedMs: 0,
+      voiceSegmentStartedAt: null, voicePaused: false,
+      voiceSendOnStop: false, cancelVoiceOnStop: false
+    };
+    const nodes = Object.fromEntries([
+      'voiceRecordBtn','voiceCancelBtn','voiceRecordingControls',
+      'voiceRecordingTime','voicePauseBtn','voiceRecordingStatus',
+      'sendBtn','attachmentPreview'
+    ].map(id => [id, document.getElementById(id)]));
+    window.__voiceSent = [];
+    window.__voiceRecorderEvents = [];
+    Object.defineProperty(window, 'isSecureContext', { configurable: true, value: true });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia: async () => ({ getTracks: () => [{ stop() {} }] }) }
+    });
+    class FakeMediaRecorder {
+      static isTypeSupported(type) { return type === 'audio/webm;codecs=opus'; }
+      constructor(_stream, options) { this.mimeType = options?.mimeType || 'audio/webm'; this.state = 'inactive'; }
+      start() { this.state = 'recording'; window.__voiceRecorderEvents.push('start'); }
+      requestData() {
+        window.__voiceRecorderEvents.push('requestData');
+        this.ondataavailable?.({ data: new Blob(['final-chunk'], { type: this.mimeType }) });
+      }
+      stop() {
+        this.state = 'inactive';
+        window.__voiceRecorderEvents.push('stop');
+        this.ondataavailable?.({ data: new Blob(['stop-chunk'], { type: this.mimeType }) });
+        this.onstop?.();
+      }
+    }
+    Object.defineProperty(window, 'MediaRecorder', { configurable: true, writable: true, value: FakeMediaRecorder });
+    const $ = id => nodes[id];
+    const directStop = new Function('state', stopSource + '; return stopVoiceRecording;')(state);
+    const helpers = {
+      clearVoiceTimer() {},
+      cleanupVoiceCapture() {
+        state.voiceRecorder = null; state.voiceChunks = [];
+        state.voiceStream = null; state.voiceStartedAt = null;
+        state.voiceElapsedMs = 0; state.voiceSegmentStartedAt = null;
+        state.voicePaused = false;
+      },
+      setVoiceComposerActive(active) { nodes.voiceRecordingControls.classList.toggle('hidden', !active); },
+      updateVoiceRecordingUI() {},
+      currentVoiceElapsedMs: () => 1250,
+      formatVoiceDuration: seconds => String(seconds),
+      showAttachmentPreview(file, label) {
+        nodes.attachmentPreview.textContent = label;
+        window.__voicePreview = { name: file.name, type: file.type, size: file.size };
+      },
+      resizeComposer() {},
+      toast(message) { window.__voiceToast = message; },
+      sendMessage() {
+        window.__voiceSent.push({
+          file: state.attachment?.name,
+          type: state.attachment?.type,
+          recorderCleared: state.voiceRecorder === null
+        });
+        // Model the production sendMessage success path: it clears the
+        // attachment only after persistence succeeds, enabling the next recording.
+        state.attachment = null;
+        state.voiceDuration = 0;
+        nodes.attachmentPreview.replaceChildren();
+      }
+    };
+    const start = new Function(
+      'state','$','navigator','window','MediaRecorder','console','Date','Blob','File',
+      'setInterval','clearInterval','stopVoiceRecording','clearVoiceTimer','cleanupVoiceCapture',
+      'setVoiceComposerActive','updateVoiceRecordingUI','currentVoiceElapsedMs','formatVoiceDuration',
+      'showAttachmentPreview','resizeComposer','toast','sendMessage',
+      startSource + '; return startVoiceRecording;'
+    )(
+      state,$,navigator,window,FakeMediaRecorder,console,Date,Blob,File,
+      setInterval,clearInterval,directStop,helpers.clearVoiceTimer,helpers.cleanupVoiceCapture,
+      helpers.setVoiceComposerActive,helpers.updateVoiceRecordingUI,helpers.currentVoiceElapsedMs,
+      helpers.formatVoiceDuration,helpers.showAttachmentPreview,helpers.resizeComposer,
+      helpers.toast,helpers.sendMessage
+    );
+    const send = new Function('state','$','stopVoiceRecording',sendSource + '; return sendVoiceRecording;')(
+      state,$,directStop
+    );
+    window.__startVoice = start;
+    window.__sendVoice = send;
+  }, { startSource, sendSource, stopSource });
+  // Exercise two complete record/send cycles in the same page and session.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await page.evaluate(() => window.__startVoice());
+    await page.evaluate(() => window.__sendVoice());
+    await page.waitForTimeout(20);
+  }
+  const result = await page.evaluate(() => ({
+    events: window.__voiceRecorderEvents,
+    sent: window.__voiceSent,
+    preview: window.__voicePreview,
+    toast: window.__voiceToast,
+    recorderCleared: window.__voiceState.voiceRecorder === null,
+    chunksCleared: window.__voiceState.voiceChunks.length === 0
+  }));
+  assert.deepEqual(result.events, [
+    'start','requestData','stop',
+    'start','requestData','stop'
+  ], 'Two consecutive voice record/send cycles did not complete: ' + JSON.stringify(result));
+  assert.equal(result.sent.length, 2, 'Both voice recordings must reach the send pipeline');
+  assert.ok(result.sent.every(item => item.recorderCleared), 'Recorder state must be reset after each send');
+  assert.equal(result.sent[0].type, 'audio/webm');
+  assert.equal(result.sent[1].type, 'audio/webm');
+  assert.equal(result.recorderCleared, true);
+  assert.equal(result.chunksCleared, true);
+  assert.equal(result.preview.type, 'audio/webm');
+  await page.close();
+});

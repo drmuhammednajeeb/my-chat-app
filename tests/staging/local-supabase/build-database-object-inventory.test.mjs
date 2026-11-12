@@ -1,3 +1,7 @@
+// Integrated release audit: includes all standalone feature modules and their policy coverage.
+// Keep this contract aligned with the active release's private media buckets.
+// The audit only inventories repository source; it never connects to a database.
+// This test suite is part of the integrated release gate.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildObjectInventory } from './build-database-object-inventory.mjs';
@@ -5,7 +9,7 @@ import { buildObjectInventory } from './build-database-object-inventory.mjs';
 test('source inventory covers all known SQL files and remains read-only', async () => {
   const report = await buildObjectInventory();
   assert.equal(report.auditMode, 'READ_ONLY_SOURCE_INVENTORY');
-  assert.deepEqual(report.sourceCounts, { migrations: 10, historicalSql: 44, totalSqlFiles: 54, supabaseConfigPresent: false });
+  assert.deepEqual(report.sourceCounts, { migrations: 10, historicalSql: 45, totalSqlFiles: 55, supabaseConfigPresent: false });
   assert.ok(report.inventoryTotals.createdTables > 0);
   assert.ok(report.inventoryTotals.columns > 0);
   assert.ok(report.inventoryTotals.foreignKeys > 0);
@@ -52,7 +56,7 @@ test('platform service dependencies are explicit', async () => {
 
 test('all policy definitions after the membership rewrite enforce active membership', async () => {
   const report = await buildObjectInventory();
-  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 3);
+  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 12);
   assert.deepEqual(report.policyCoverage.laterPoliciesMissingActiveMemberGuard, []);
 });
 
@@ -68,10 +72,10 @@ test('fixed identity literals are inventoried for synthetic test substitution', 
 
 test('application Storage buckets are compared with repository bucket declarations and policies', async () => {
   const report = await buildObjectInventory();
-  assert.deepEqual(report.storageCoverage.clientBuckets, ['avatars', 'chat-media', 'conversation-documents']);
-  assert.deepEqual(report.storageCoverage.declaredBucketIds, ['avatars', 'chat-media', 'conversation-documents']);
+  assert.deepEqual(report.storageCoverage.clientBuckets, ['avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
+  assert.deepEqual(report.storageCoverage.declaredBucketIds, ['avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
   assert.deepEqual(report.storageCoverage.missingBucketDeclarations, []);
-  assert.deepEqual(report.storageCoverage.storageObjectPolicyBuckets, ['avatars', 'chat-media', 'conversation-documents']);
+  assert.deepEqual(report.storageCoverage.storageObjectPolicyBuckets, ['avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
   assert.deepEqual(report.storageCoverage.clientBucketsWithoutStoragePolicies, []);
   assert.equal(report.storageCoverage.chatMediaUploadPathOwnershipGuard, false);
 });
