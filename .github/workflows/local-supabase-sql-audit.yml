@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: local-sql-audit-\${{ github.ref }}
+  group: local-sql-audit-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
