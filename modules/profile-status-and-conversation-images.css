@@ -56,6 +56,8 @@
 .bz-status-eyebrow{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--accent)}
 .bz-status-page-head h1{margin:7px 0 4px;font-size:clamp(23px,3vw,32px);font-weight:900}
 .bz-status-page-head p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.bz-status-head-actions{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.bz-status-back{min-height:42px;padding:9px 13px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);color:var(--text);font:inherit;font-size:12px;font-weight:750;cursor:pointer}
 .bz-status-publish{
   flex:0 0 auto;min-height:44px;padding:10px 17px;border:0;border-radius:12px;
   background:var(--accent);color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer;
@@ -93,7 +95,8 @@
 @media(max-width:760px){
   #chat.status-mode>#statusPage{gap:16px;padding:12px}
   .bz-status-page-head{align-items:stretch;flex-direction:column}
-  .bz-status-publish{width:100%}
+  .bz-status-head-actions{width:100%;flex-direction:column}
+  .bz-status-back,.bz-status-publish{width:100%}
   .bz-status-feed{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){.bz-status-feed-card{transition:none}}
