@@ -156,3 +156,38 @@ test('source declares render completion before the empty/populated branch', asyn
   const emptyBranch = source.indexOf('if (!messages.length)');
   assert.ok(declaration >= 0 && emptyBranch > declaration);
 });
+
+
+test('overlapping loads serialize and roll back a superseded partial render before the next commit', async () => {
+  const rows = [
+    { id: 'm2', conversation_id: 'conversation-1', created_at: '2026-01-02T00:00:00Z' },
+    { id: 'm1', conversation_id: 'conversation-1', created_at: '2026-01-01T00:00:00Z' }
+  ];
+  let releaseFirst, startedFirst;
+  const gate = new Promise(resolve => { releaseFirst = resolve; });
+  const started = new Promise(resolve => { startedFirst = resolve; });
+  const h = harness({ rows });
+  let renderCalls = 0;
+  h.deps.renderMessage = async message => {
+    renderCalls += 1;
+    if (renderCalls === 1) {
+      const partial = new Element('article'); partial.className = 'message'; partial.dataset.messageId = message.id;
+      h.area.append(partial); h.state.messageIds.add(message.id);
+      startedFirst();
+      await gate;
+      return true;
+    }
+    const node = new Element('article'); node.className = 'message'; node.dataset.messageId = message.id;
+    h.area.append(node); h.state.messageIds.add(message.id);
+    return true;
+  };
+  const first = loadMessages(h.deps);
+  await started;
+  const second = loadMessages(h.deps);
+  releaseFirst();
+  assert.equal(await first, false);
+  assert.equal(await second, true);
+  assert.deepEqual(h.area.children.filter(node => node.className === 'message').map(node => node.dataset.messageId), ['m1', 'm2']);
+  assert.equal(h.state.messageIds.size, 2);
+  assert.equal(h.state.isLoadingMessages, false);
+});
