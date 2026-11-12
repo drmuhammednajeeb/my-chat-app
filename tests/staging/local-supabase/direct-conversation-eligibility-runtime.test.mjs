@@ -113,7 +113,7 @@ test('runtime fixture remains design-only and cannot authorize local/cloud execu
     path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-runtime');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED');
+  assert.equal(node.status, 'TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_PASSED_LOCAL');
   assert.ok(node.blockedBy.includes('DAG-014'));
   assert.ok(node.blockedBy.includes('DAG-015'));
   assert.ok(node.requires.includes('membership.final-format'));
@@ -158,7 +158,7 @@ test('multi-session concurrency and message stress runner is restricted to dispo
   const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-concurrency');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_NOT_EXECUTED');
+  assert.equal(node.status, 'TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_PASSED');
   assert.ok(node.blockedBy.includes('DAG-014'));
   assert.ok(node.blockedBy.includes('DAG-015'));
   assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.direct-chat-runtime' && to === node.id));

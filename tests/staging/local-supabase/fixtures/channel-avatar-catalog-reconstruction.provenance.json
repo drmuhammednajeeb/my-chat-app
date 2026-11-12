@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "classification": "TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION",
+  "capturedAt": "2026-11-11",
+  "sourceProjectRef": "lvkeohpuucuklagvwpnq",
+  "sourceDatabase": "Supabase PostgreSQL 17.11",
+  "sourceMigrationLedgerRecords": [
+    {
+      "version": "20261107160647",
+      "name": "channel_visibility_avatar_group_background",
+      "originalSqlAvailable": false
+    }
+  ],
+  "scope": {
+    "includes": [
+      "storage.buckets row for channel-avatars",
+      "app_private.can_access_channel_avatar(uuid) definition and reviewed execute ACL",
+      "four storage.objects policies for channel avatar SELECT/INSERT/UPDATE/DELETE"
+    ],
+    "excludes": [
+      "channel visibility policy/column changes not represented in this subset",
+      "group background schema and behavior",
+      "any claim of original historical migration recovery"
+    ]
+  },
+  "extraction": {
+    "method": "Read-only catalog inspection via storage.buckets, pg_policies, pg_proc, pg_get_functiondef, and aclexplode",
+    "functionSignature": "app_private.can_access_channel_avatar(uuid)",
+    "policyNames": [
+      "Channel members read channel avatars",
+      "Channel admins upload channel avatars",
+      "Channel admins update channel avatars",
+      "Channel admins delete channel avatars"
+    ],
+    "bucket": {
+      "id": "channel-avatars",
+      "public": false,
+      "file_size_limit": 3145728,
+      "allowed_mime_types": [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ]
+    },
+    "functionAcl": {
+      "execute": [
+        "authenticated",
+        "postgres"
+      ],
+      "public": false,
+      "anon": false
+    },
+    "functionSecurity": {
+      "securityDefiner": true,
+      "searchPath": ""
+    }
+  },
+  "safety": {
+    "testOnly": true,
+    "productionSqlExecuted": false,
+    "productionSchemaChanged": false,
+    "historicalSourceRecovered": false,
+    "canonicalBaselineAccepted": false
+  }
+}

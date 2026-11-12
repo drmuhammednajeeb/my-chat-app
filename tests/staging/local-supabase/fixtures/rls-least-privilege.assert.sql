@@ -125,6 +125,50 @@ begin
     raise exception 'Unsafe default privileges remain for public objects';
   end if;
 
+
+  if exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname in ('public', 'app_private')
+      and p.prorettype = 'trigger'::regtype
+      and (
+        has_function_privilege('anon', p.oid, 'EXECUTE')
+        or has_function_privilege('authenticated', p.oid, 'EXECUTE')
+        or exists (
+          select 1
+          from aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+          where a.grantee = 0 and a.privilege_type = 'EXECUTE'
+        )
+      )
+  ) then
+    raise exception 'A trigger implementation function remains executable by PUBLIC or API roles';
+  end if;
+
+
+  -- The application migration owner is postgres. Do not try to mutate the
+  -- platform-owned supabase_admin default ACL from the postgres migration role.
+  -- Confirm every current public application object remains owned by postgres.
+  if exists (
+    select 1
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind in ('r','p','S')
+      and c.relowner <> 'postgres'::regrole
+  ) then
+    raise exception 'A public application table/sequence is not owned by the approved postgres migration role';
+  end if;
+  if exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proowner <> 'postgres'::regrole
+  ) then
+    raise exception 'A public application function is not owned by the approved postgres migration role';
+  end if;
+
   -- Private application schema: helper functions may be callable by authenticated,
   -- but its tables must never be directly exposed to API roles.
   if has_schema_privilege('anon','app_private','USAGE') then

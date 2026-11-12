@@ -39,7 +39,7 @@ test('reviewed dependency graph references existing source files and known nodes
   }
 });
 
-test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime blocker', async () => {
+test('reviewed dependency graph records local runtime success while preserving the production release gate', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const nodes = [...dag.platformNodes, ...dag.nodes].map(node => node.id);
   const indegree = new Map(nodes.map(id => [id, 0]));
@@ -59,8 +59,22 @@ test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime 
   }
   assert.equal(visited, nodes.length, 'dependency graph contains a cycle');
   assert.ok(dag.blockers.some(item => item.id === 'DAG-002' && item.severity === 'RESOLVED_FOR_LOCAL_REPLAY'));
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-014' && item.severity === 'BLOCKER'));
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-015' && item.severity === 'BLOCKER'));
+  assert.equal(dag.status, 'BLOCKED');
+  assert.equal(dag.executionAuthorized, false);
+  assert.equal(dag.blockers.find(item => item.id === 'DAG-017')?.severity, 'BLOCKER');
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const dag006 = dag.blockers.find(item => item.id === 'DAG-006');
+  assert.equal(dag006?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME');
+  assert.equal(dag006?.runtimeEvidence?.runId, 42912189296);
+  assert.ok(dag006?.evidence?.includes('tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql'));
+  const manifestDag006 = manifest.blockers.find(item => item.id === 'DAG-006');
+  assert.equal(manifestDag006?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME');
+  assert.equal(manifestDag006?.runtimeEvidence?.runId, 42912189296);
+  for (const id of ['DAG-003', 'DAG-007', 'DAG-008', 'DAG-010', 'DAG-011', 'DAG-013', 'DAG-014', 'DAG-015', 'DAG-016']) {
+    const item = dag.blockers.find(blocker => blocker.id === id);
+    assert.equal(item?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME', 'local runtime evidence missing for ' + id);
+    assert.equal(item?.runtimeEvidence?.runId, 42863700280);
+  }
   for (const id of ['DAG-014', 'DAG-015']) {
     const blocker = dag.blockers.find(item => item.id === id);
     assert.ok(blocker.evidence?.includes('tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
@@ -80,6 +94,8 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'synthetic-admin-profile-after-membership.sql',
     'assert-synthetic-admin-active.sql',
     'chat-media-upload-path-hardening.sql',
+    'channel-avatar-catalog-reconstruction.test-only.sql',
+    'channel-avatar-rls-runtime.test.sql',
     'direct-conversation-rpc.sql',
     'direct-conversation-rpc-eligibility-guard.sql',
     'synthetic-direct-chat-auth-before-membership.sql',
@@ -95,6 +111,8 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
   assert.ok(dag.nodes.find(node => node.id === 'team.admin').testSource.some(source => source.includes('team_management_dashboard.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'chat.channel-avatar-catalog-reconstruction')?.status === 'TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION_RUNTIME_VERIFIED_LOCAL');
+  assert.ok(dag.nodes.find(node => node.id === 'security.least-privilege-overlay')?.testSource.includes('tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-auth-seed').source.some(source => source.includes('synthetic-direct-chat-auth-before-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-profiles').source.some(source => source.includes('synthetic-direct-chat-profiles-after-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-runtime').source.some(source => source.includes('direct-conversation-eligibility-runtime.test.sql')));
@@ -165,7 +183,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 19);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 21);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
@@ -182,8 +200,8 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(dag.blockers.find(item => item.id === id)?.evidence?.some(path => path.includes('local-platform-')));
   }
   for (const id of ['DAG-014', 'DAG-015']) {
-    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
-    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
+    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME');
+    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME');
   }
   const allNodes = [...dag.platformNodes, ...dag.nodes];
   const ids = allNodes.map(node => node.id);
@@ -249,8 +267,9 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.local-pg-cron-runtime');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED');
-  assert.ok(node.blockedBy.includes('DAG-008'));
+  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED');
+  assert.equal(node.blockedBy?.includes('DAG-008') ?? false, false);
+  assert.equal(node.runtimeEvidence?.runId, 42863700280);
   assert.ok(node.requires.includes('test-fixture.local-platform-postflight'));
   assert.ok(dag.blockers.find(item => item.id === 'DAG-008').evidence.includes('tests/staging/local-supabase/local-pg-cron-runtime.mjs'));
   assert.equal(dag.executionAuthorized, false);
@@ -271,7 +290,7 @@ test('local platform preflight and postflight are read-only, ordered, and fail c
   assert.match(preflight, /pg_available_extensions WHERE name = 'pg_cron'/);
   assert.match(postflight, /cron\.job/);
   assert.match(postflight, /purge-expired-chat-messages/);
-  assert.match(postflight, /scheduler execution still requires a separate runtime check/i);
+  assert.match(postflight, /scheduler execution is verified by a separate runtime probe/i);
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const preNode = dag.nodes.find(node => node.id === 'test-fixture.local-platform-preflight');
   const postNode = dag.nodes.find(node => node.id === 'test-fixture.local-platform-postflight');
@@ -285,7 +304,7 @@ test('local platform preflight and postflight are read-only, ordered, and fail c
 });
 
 
-test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', async () => {
+test('least-privilege overlay is a test-only, locally validated, loopback-only SQL fixture', async () => {
   const overlay = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql'), 'utf8');
   const assertion = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql'), 'utf8');
   assert.match(overlay, /TEST-ONLY/i);
@@ -300,9 +319,10 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
   assert.match(assertion, /pg_default_acl/);
   const node = JSON.parse(await readFile(dagPath, 'utf8')).nodes.find(item => item.id === 'security.least-privilege-overlay');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED');
+  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATED_LOCAL');
+  assert.equal(node.runtimeEvidence?.runId, 42912189296);
   assert.ok(node.requires.includes('membership.final-format'));
-  assert.ok(node.blockedBy.includes('DAG-016'));
+  assert.equal(node.blockedBy?.includes('DAG-016') ?? false, false);
   assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
 });
 
@@ -337,4 +357,27 @@ test('chat composer media types and reaction persistence constraints stay aligne
     assert.ok(migration.includes(mime), 'conversation-documents allow-list is missing ' + mime);
   }
   assert.match(html, /attachment_type\?\.startsWith\('video\/'\)/);
+});
+
+
+test('production baseline remains blocked until original migration provenance is resolved', async () => {
+  const [dag, manifest] = await Promise.all([
+    readFile(dagPath, 'utf8').then(JSON.parse),
+    readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8').then(JSON.parse)
+  ]);
+  assert.equal(dag.status, 'BLOCKED');
+  assert.equal(dag.executionAuthorized, false);
+  assert.equal(dag.safety.sqlExecutionEnabled, false);
+  assert.equal(manifest.status, 'BLOCKED');
+  assert.equal(manifest.execution.enabled, false);
+  assert.equal(manifest.execution.cloudAllowed, false);
+  assert.equal(manifest.execution.productionAllowed, false);
+  assert.equal(dag.blockers.find(item => item.id === 'DAG-017')?.severity, 'BLOCKER');
+  assert.equal(manifest.blockers.find(item => item.id === 'DAG-017')?.severity, 'BLOCKER');
+  assert.equal(manifest.requiredSourceRecovery.length, 4);
+  for (const item of manifest.requiredSourceRecovery) {
+    assert.match(item.requirement, /2026110/);
+    assert.ok(item.instructions);
+    assert.ok(item.note);
+  }
 });

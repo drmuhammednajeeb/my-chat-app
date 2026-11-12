@@ -7,7 +7,7 @@
     "mappedSources": 51,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 19,
+    "testOnlySqlFixtures": 21,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
@@ -27,12 +27,14 @@
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql",
+      "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql",
+      "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
     "executedMappedSources": 47,
-    "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 66
+    "executedTestOnlySqlFixtures": 21,
+    "executedSqlFiles": 68
   },
   "execution": {
     "enabled": false,
@@ -46,12 +48,17 @@
   "candidateNodeOrder": [
     {
       "nodeId": "test-fixture.local-platform-preflight",
-      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_NOT_EXECUTED",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Run only after the disposable local stack starts and before application SQL replay. It performs catalog reads and raises on missing prerequisites; it never installs extensions or mutates data."
+      "parityNote": "Passed in the disposable local Supabase runtime workflow before application SQL replay. Read-only assertions only; no extension or data mutation.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "nodeId": "legacy.messages",
@@ -61,11 +68,10 @@
         "supabase/migrations/202611060006_explicit_legacy_deny.sql"
       ],
       "blockedBy": [],
-      "parityNote": null
+      "parityNote": "Current client uses chat_messages and the two migrations only perform table-level policy/privilege operations. A minimal empty stub is permitted only in the disposable local replay fixture; it is not a model of the deployed legacy table."
     },
     {
       "nodeId": "core.base",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
       ],
@@ -74,7 +80,6 @@
     },
     {
       "nodeId": "core.grants",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/202611060002_tighten_api_grants.sql",
         "supabase/migrations/202611060003_minimum_table_privileges.sql"
@@ -84,7 +89,6 @@
     },
     {
       "nodeId": "core.creator",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
       ],
@@ -93,7 +97,6 @@
     },
     {
       "nodeId": "chat.preferences",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/user_specific_direct_chat_preferences.sql"
       ],
@@ -102,7 +105,6 @@
     },
     {
       "nodeId": "chat.reactions",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/message_reactions_and_whatsapp_typography.sql"
       ],
@@ -111,7 +113,6 @@
     },
     {
       "nodeId": "chat.notifications",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/20261107014128_unified_user_notifications.sql"
       ],
@@ -120,7 +121,6 @@
     },
     {
       "nodeId": "chat.avatar-storage",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107035500_user_avatars_storage.sql"
       ],
@@ -138,7 +138,6 @@
     },
     {
       "nodeId": "core.profile-fks",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/202611060004_reference_profiles.sql"
       ],
@@ -147,16 +146,20 @@
     },
     {
       "nodeId": "chat.media-upload-path-hardening",
-      "status": "TEST_ONLY_SECURITY_HARDENING_CANDIDATE",
+      "status": "TEST_ONLY_SECURITY_HARDENING_VALIDATED_LOCAL_STORAGE_API",
       "testSources": [
         "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Replaces the canonical chat-media INSERT policy in the disposable replay to bind folder segment 2 to auth.uid(). Do not deploy without separate review."
+      "parityNote": "The test-only replacement policy passed the disposable local Storage API probe, including valid chat-media upload and cross-user uploader-folder spoof denial. The canonical production policy remains unchanged; no deployment is authorized.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "nodeId": "chat.voice",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107080000_chat_voice_messages.sql"
       ],
@@ -165,14 +168,19 @@
     },
     {
       "nodeId": "chat.direct-conversation-rpc",
-      "status": "TEST_ONLY_RESTORED_PRODUCTION_SOURCE",
+      "status": "TEST_ONLY_RESTORED_CATALOG_SOURCE_RUNTIME_VERIFIED_LOCAL",
       "testSources": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
       ],
       "blockedBy": [
         "DAG-015"
       ],
-      "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests."
+      "parityNote": "Current function definitions and ACLs were extracted read-only from the production catalog and preserved with provenance. The test-only eligibility overlay and runtime matrix passed in disposable local Supabase. The original historical migration body is still missing; no production SQL was executed.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "nodeId": "test-fixture.direct-chat-auth-seed",
@@ -185,7 +193,6 @@
     },
     {
       "nodeId": "chat.channels-public",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/public_announcement_channels.sql"
       ],
@@ -194,7 +201,6 @@
     },
     {
       "nodeId": "chat.preference-archive-rls",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
       ],
@@ -203,7 +209,6 @@
     },
     {
       "nodeId": "chat.notification-indexes",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql"
       ],
@@ -221,7 +226,6 @@
     },
     {
       "nodeId": "chat.self",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107061012_self_message_conversation.sql",
         "database/changes/20261107061103_ensure_self_chat_rpc.sql"
@@ -231,7 +235,6 @@
     },
     {
       "nodeId": "chat.pins",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/professional_message_controls_and_receipts.sql"
       ],
@@ -240,7 +243,6 @@
     },
     {
       "nodeId": "chat.groups",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
       ],
@@ -249,7 +251,6 @@
     },
     {
       "nodeId": "chat.channels-private",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/private_channels_with_secure_invites.sql"
       ],
@@ -258,7 +259,6 @@
     },
     {
       "nodeId": "chat.account-settings-message-edit",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
       ],
@@ -267,7 +267,6 @@
     },
     {
       "nodeId": "chat.hardening",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
       ],
@@ -279,7 +278,6 @@
     },
     {
       "nodeId": "chat.workspaces",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
       ],
@@ -288,7 +286,6 @@
     },
     {
       "nodeId": "chat.expiry",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
       ],
@@ -297,7 +294,6 @@
     },
     {
       "nodeId": "chat.group-ownership-transfer",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107125616_secure_group_ownership_transfer.sql"
       ],
@@ -306,7 +302,6 @@
     },
     {
       "nodeId": "chat.personal-lists-realtime",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
       ],
@@ -315,7 +310,6 @@
     },
     {
       "nodeId": "chat.favorite-column",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
       ],
@@ -324,7 +318,6 @@
     },
     {
       "nodeId": "chat.message-edit-hardening",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107124500_harden_message_edit_permissions.sql"
       ],
@@ -333,7 +326,6 @@
     },
     {
       "nodeId": "chat.workspace-indexes",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107134600_index_workspace_foreign_keys.sql"
       ],
@@ -342,7 +334,6 @@
     },
     {
       "nodeId": "chat.media-and-reactions",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql"
       ],
@@ -351,7 +342,6 @@
     },
     {
       "nodeId": "chat.expiry-purge",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
       ],
@@ -360,7 +350,6 @@
     },
     {
       "nodeId": "chat.group-settings-hardening",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
       ],
@@ -369,7 +358,6 @@
     },
     {
       "nodeId": "chat.remove-duplicate-favorite",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
       ],
@@ -378,7 +366,6 @@
     },
     {
       "nodeId": "chat.restore-message-edit-guard",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107130000_restore_message_edit_guard.sql"
       ],
@@ -387,7 +374,6 @@
     },
     {
       "nodeId": "chat.workspace-realtime",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
         "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
@@ -397,16 +383,20 @@
     },
     {
       "nodeId": "test-fixture.local-platform-postflight",
-      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_POSTFLIGHT_NOT_EXECUTED",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_POSTFLIGHT_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Run only after the relevant disposable-local replay nodes. Confirms extension placement and job definition, not actual scheduler execution."
+      "parityNote": "Passed after the relevant disposable-local replay. Extension placement and expected purge-job definition verified; scheduler execution was separately verified by the temporary local probe.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "nodeId": "chat.team-admin-group-overrides",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107130534_include_team_admins_in_group_management.sql"
       ],
@@ -415,7 +405,6 @@
     },
     {
       "nodeId": "chat.message-edit-indexes",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107131500_index_message_edit_history.sql"
       ],
@@ -424,18 +413,20 @@
     },
     {
       "nodeId": "test-fixture.local-pg-cron-runtime",
-      "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED",
+      "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED",
       "testSources": [
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
       ],
-      "blockedBy": [
-        "DAG-008"
-      ],
-      "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@loopback:54322/postgres. Schedules a unique SELECT 1 probe, waits up to 90 seconds for succeeded status, then unschedules and removes only its own job-run details. Never run against cloud or production."
+      "blockedBy": [],
+      "parityNote": "Passed in the disposable local workflow: unique temporary SELECT 1 job succeeded and was unscheduled; only its own job-run details were cleaned. Loopback-only; no cloud or production target.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "nodeId": "chat.scope-team-admin-overrides",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
       ],
@@ -444,7 +435,6 @@
     },
     {
       "nodeId": "membership.base",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107144109_private_membership_system_20261107.sql"
       ],
@@ -453,7 +443,6 @@
     },
     {
       "nodeId": "membership.wrappers",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
       ],
@@ -462,7 +451,6 @@
     },
     {
       "nodeId": "membership.invitation-policies",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
       ],
@@ -471,7 +459,6 @@
     },
     {
       "nodeId": "membership.invitation-indexes",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
       ],
@@ -480,7 +467,6 @@
     },
     {
       "nodeId": "membership.auth-fix",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
       ],
@@ -525,7 +511,6 @@
     },
     {
       "nodeId": "membership.retire-sequence",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
       ],
@@ -543,7 +528,6 @@
     },
     {
       "nodeId": "membership.restore-rpc",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
       ],
@@ -552,7 +536,6 @@
     },
     {
       "nodeId": "membership.chat-rls-fix",
-      "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
       ],
@@ -579,7 +562,7 @@
     },
     {
       "nodeId": "chat.direct-conversation-rpc-eligibility-guard",
-      "status": "TEST_ONLY_GUARD_IMPLEMENTED_RUNTIME_VALIDATION_BLOCKED",
+      "status": "TEST_ONLY_GUARD_RUNTIME_VERIFIED_LOCAL",
       "testSources": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs"
@@ -588,11 +571,25 @@
         "DAG-014",
         "DAG-015"
       ],
-      "parityNote": null
+      "parityNote": "The test-only caller/target eligibility guard passed disposable-local PostgreSQL runtime assertions and concurrency. It is not a production migration; the original historical source remains missing.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
+    },
+    {
+      "nodeId": "chat.channel-avatar-catalog-reconstruction",
+      "status": "TEST_ONLY_PARTIAL_CATALOG_DERIVED_RECONSTRUCTION_RUNTIME_VERIFIED_LOCAL",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/channel-avatar-catalog-reconstruction.test-only.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Partial catalog-derived test-only subset; runtime verified in disposable local Supabase. Not original historical migration source."
     },
     {
       "nodeId": "test-fixture.direct-chat-runtime",
-      "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
+      "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_PASSED_LOCAL",
       "testSources": [
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql"
       ],
@@ -600,11 +597,16 @@
         "DAG-014",
         "DAG-015"
       ],
-      "parityNote": "Disposable-local runtime script only. Requires the full approved replay; no CI or production SQL execution. Two-session reversed-pair concurrency remains separately blocked."
+      "parityNote": "Passed in disposable local PostgreSQL runtime: eligibility rejection boundaries, valid creation/reuse, and exact RPC ACL assertions.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "nodeId": "test-fixture.direct-chat-concurrency",
-      "status": "TEST_ONLY_LOCAL_TWO_SESSION_CONCURRENCY_HARNESS_NOT_EXECUTED",
+      "status": "TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_PASSED",
       "testSources": [
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
         "tests/staging/local-supabase/direct-conversation-concurrency.test.mjs"
@@ -613,11 +615,16 @@
         "DAG-014",
         "DAG-015"
       ],
-      "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production. A static regression test verifies the concurrency runner establishes the two reserved synthetic users as eligible after the rollback-only matrix; those changes are confined to the disposable database."
+      "parityNote": "Passed in disposable local runtime: 24 reversed-pair concurrent requests converged on one conversation and 40 authenticated message writes persisted uniquely; cleanup was scoped to synthetic test data.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "nodeId": "security.least-privilege-overlay",
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATED_LOCAL",
       "testSources": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
@@ -625,12 +632,16 @@
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
-        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
+        "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs",
+        "tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql"
       ],
-      "blockedBy": [
-        "DAG-016"
-      ],
-      "parityNote": "After applying the test-only overlay, run read-only catalog assertions and rollback-only CRUD/RPC compatibility probes (chat list create/update/upsert/delete, star upsert/delete, secure message edit audit insert, and cross-user isolation). Runtime execution remains blocked pending a disposable Supabase replay. A separate local Auth/Storage API runtime probe validates file upload, upsert, signed read, private/shared visibility, cross-user path spoof denial, owner deletion, and public avatar delivery. It has not been executed. A separate disposable local Supabase workflow provisions PostgreSQL 17 and the managed Auth/Storage/Realtime services, replays the manifest's exact DAG order, then runs the runtime probes and always stops the temporary stack. It is not a hosted environment and does not authorize production deployment."
+      "blockedBy": [],
+      "parityNote": "Disposable-local least-privilege, CRUD, Storage, and DAG-006 channel-avatar RLS runtime passed; no production grants or policies changed.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     }
   ],
   "duplicateSelection": [
@@ -666,69 +677,141 @@
     },
     {
       "id": "DAG-003",
-      "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
-      "issue": "The historical-to-final membership format transition is represented and the final migration allowlist is tested for all six function targets, including both admin RPC implementations. A PostgreSQL local apply test must still prove the replacement and resulting constraints."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The final membership-format migration executed successfully in disposable local PostgreSQL. Its own DO block verified that all six target function definitions contained the legacy format before replacement and raised unless exactly six were updated; the final profile constraints were installed. The synthetic-admin postcondition then verified an active, verified member under the resulting format. No production migration was run.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-006",
-      "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
-      "issue": "Static source review found three policy definitions timestamped after the membership rewrite; all three use a direct or indirect active-membership guard, with zero later unguarded policies detected. The DAG sequences all earlier feature policy sources before the rewrite. Runtime PostgreSQL RLS tests are still required."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "Resolved for disposable local runtime: the catalog-derived channel-avatar helper and policy passed rollback-only PostgreSQL RLS assertions for active public-channel readers, private-channel members/non-members, and suspended users. Existing least-privilege assertions cover direct active-member predicates on the remaining authenticated policies. This is local-only evidence; it does not recover the missing historical migration or authorize production changes.",
+      "runtimeEvidence": {
+        "runId": 42912189296,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42912189296",
+        "scope": "disposable local Supabase/PostgreSQL 17 only; channel-avatar RLS active/public/private/non-member/suspended matrix and least-privilege/Storage runtime passed; temporary stack cleanup passed"
+      }
     },
     {
       "id": "DAG-007",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "Verify pgcrypto extension schema and extensions.digest / extensions.gen_random_bytes resolution locally."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "pgcrypto is installed in schema extensions and extensions.digest/extensions.gen_random_bytes resolution passed local preflight/postflight.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-008",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "pg_cron availability and the expected purge-job definition now have read-only local pre/postflight assertions. A separate loopback-only probe runner is prepared to prove actual scheduler execution using a temporary SELECT 1 job with scoped cleanup. Neither the probe nor the scheduler has been run; this blocker remains until disposable-local runtime evidence exists.",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "pg_cron availability and the expected purge-job definition passed local preflight/postflight. A disposable SELECT 1 probe job executed successfully and was removed with scoped cleanup. This proves the local scheduler executes; it does not claim the production purge job itself was run.",
       "evidence": [
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
-      ]
+      ],
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-010",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The disposable local platform preflight passed for Supabase Auth, Storage, Realtime, required roles, pgcrypto, and pg_cron.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-013",
-      "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
-      "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The test-only chat-media policy bound uploader path segment 2 to auth.uid(). Storage API runtime passed, including valid upload, member signed read, cross-user uploader-folder spoof denial, private document visibility, owner-only delete, avatar upsert, and public avatar delivery. The live production policy remains unchanged.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-014",
-      "severity": "BLOCKER",
-      "issue": "The direct-conversation RPC source is restored and rollback-only PostgreSQL assertions plus a two-session reversed-pair runner are prepared. Runtime execution is still required in a disposable local Supabase environment to prove unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exactly-one concurrent creation, exact ACL enforcement, and active-membership gating. Do not enable replay until those runtime tests pass.",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "Disposable-local PostgreSQL eligibility assertions passed: unauthenticated/null/self/missing-profile and ineligible participant cases were rejected; valid create/reuse and exact RPC ACL checks passed. The reversed-pair concurrency probe converged 24 concurrent requests on one direct conversation, and 40 concurrent authenticated message writes persisted uniquely. The original historical migration source remains absent and production is not authorized.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
-      ]
+      ],
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-015",
-      "severity": "BLOCKER",
-      "issue": "The recovered production RPC lacked caller and target eligibility checks. A separate test-only overlay now checks both participants against active membership, verified membership number, final number format, and confirmed Auth email while locking authoritative rows. The overlay and negative-case PostgreSQL assertions are prepared, but runtime validation, concurrency, and exact ACL behavior remain blocked; no production migration is authorized.",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The test-only caller/target eligibility guard passed local PostgreSQL runtime tests for active status, verified membership number, final format, and confirmed Auth email, including negative cases and concurrent creation. This is local validation only; the guard has not been applied to production.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
-      ]
+      ],
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
     },
     {
       "id": "DAG-016",
+      "severity": "RESOLVED_FOR_DISPOSABLE_LOCAL_RUNTIME",
+      "issue": "The local-only least-privilege overlay and read-only assertions passed. The run verified postgres-owned default ACL reduction, table/sequence/function privileges, trigger-function EXECUTE restrictions, public-object ownership, restrictive active-member policies, rollback-only CRUD/upsert compatibility, membership-trigger behavior, and Storage API RLS. Production grants and policies remain unchanged.",
+      "runtimeEvidence": {
+        "runId": 42863700280,
+        "url": "https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/42863700280",
+        "scope": "disposable local Supabase/PostgreSQL 17 only"
+      }
+    },
+    {
+      "id": "DAG-017",
       "severity": "BLOCKER",
-      "issue": "Least-privilege overlay is prepared for disposable local replay only. Must prove API role table/sequence/function privileges, active-member policy coverage, and unchanged legitimate CRUD/RPC behavior before any production migration is designed."
+      "issue": "The original SQL bodies for three remote ledger records are absent from the repository: 20261107032150 tighten_direct_chat_preference_scope, 20261107160647 channel_visibility_avatar_group_background, and 20261107160733 harden_channel_rpc_wrappers. Two additional direct-conversation RPC records (20261106102326 and 20261106102443) are represented only by current catalog-recovered test fixtures, not their original historical migration bodies. Catalog state snapshots preserve the deployed state but do not prove historical intent or exact migration deltas. Do not approve a canonical production baseline until the original sources are recovered or the catalog-only reconstruction is explicitly reviewed and accepted.",
+      "evidence": [
+        "docs/MIGRATION_LEDGER_RECONCILIATION_2026-11-10.md",
+        "docs/CATALOG_STATE_RECOVERY_2026-11-10.md",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json"
+      ],
+      "recoveryInstructions": "Recover original SQL from Git history, release artifacts, or verified deployment records. If unavailable, obtain explicit review/acceptance of a catalog-derived replacement baseline and record that it is a new migration design, not historical source recovery."
     }
   ],
   "requiredSourceRecovery": [
     {
-      "requirement": "Authoritative definition and dependencies for app_private.get_or_create_direct_conversation_impl(uuid) and public.get_or_create_direct_conversation(uuid).",
-      "instructions": "docs/RECOVER_DIRECT_CONVERSATION_RPC.md",
-      "note": "Read-only source extraction only; no deployed database changes."
+      "requirement": "Original historical migration bodies for remote versions 20261106102326 atomic_direct_conversation_creation and 20261106102443 hide_atomic_direct_rpc_implementation.",
+      "instructions": "Recover from Git history, release artifacts, or verified deployment records. docs/RECOVER_DIRECT_CONVERSATION_RPC.md preserves current catalog definitions only.",
+      "note": "The current catalog-derived fixture is not the original migration body and must remain test-only."
+    },
+    {
+      "requirement": "Original SQL source for remote version 20261107032150 tighten_direct_chat_preference_scope.",
+      "instructions": "Search Git history and release artifacts; compare with docs/CATALOG_STATE_RECOVERY_2026-11-10.md.",
+      "note": "The base user-specific preference source exists, but the exact historical delta is not recoverable from the current repository tree."
+    },
+    {
+      "requirement": "Original SQL source for remote version 20261107160647 channel_visibility_avatar_group_background.",
+      "instructions": "Search Git history and release artifacts; compare with docs/CATALOG_STATE_RECOVERY_2026-11-10.md.",
+      "note": "Current deployed columns/policies are captured read-only; historical DDL and intent remain unknown."
+    },
+    {
+      "requirement": "Original SQL source for remote version 20261107160733 harden_channel_rpc_wrappers.",
+      "instructions": "Search Git history and release artifacts; compare with docs/CATALOG_STATE_RECOVERY_2026-11-10.md.",
+      "note": "Current deployed wrapper definitions and ACLs are captured read-only; historical changes remain unknown."
     }
   ],
   "safetyNotes": [

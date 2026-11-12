@@ -25,6 +25,15 @@ BEGIN
     RAISE EXCEPTION 'Direct conversation RPC returned NULL';
   END IF;
 
+  -- Existing membership trigger must continue to run after its direct EXECUTE ACL is revoked.
+  UPDATE public.conversation_members
+     SET last_read_at = now()
+   WHERE conversation_id = v_conversation AND user_id = v_user_a;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'Owner read-state update or membership trigger failed after overlay';
+  END IF;
+
   -- Real message INSERT path, including SECURITY DEFINER triggers.
   INSERT INTO public.chat_messages(conversation_id,sender_id,content)
   VALUES(v_conversation,v_user_a,'RLS runtime CRUD probe')

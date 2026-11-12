@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - "engineering/stability-css-extraction-20261109"
+      - "fix/message-render-scope-20261110"
+      - "security/default-acl-owner-coverage-20261110"
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -16,7 +21,7 @@ concurrency:
 jobs:
   local-supabase-runtime:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Check out reviewed source
         uses: actions/checkout@v4

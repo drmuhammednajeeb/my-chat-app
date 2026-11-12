@@ -38,6 +38,6 @@ BEGIN
     RAISE EXCEPTION 'Expected exactly one reviewed expired-message purge job; observed %', v_job_count;
   END IF;
 
-  RAISE NOTICE 'PASS: pgcrypto placement and pg_cron installation/job definition verified; scheduler execution still requires a separate runtime check';
+  RAISE NOTICE 'PASS: pgcrypto placement and pg_cron installation/job definition verified; scheduler execution is verified by a separate runtime probe';
 END
 $platform_postflight$;

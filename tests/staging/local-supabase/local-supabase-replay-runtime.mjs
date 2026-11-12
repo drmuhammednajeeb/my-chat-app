@@ -186,6 +186,12 @@ for (const node of manifest.candidateNodeOrder) {
     run(process.execPath, [
       path.join(ROOT, 'tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs')
     ], { ...env, ALLOW_DISPOSABLE_LOCAL_REPLAY: '1', LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, node.nodeId);
+    run('psql', [
+      '--no-psqlrc', '--set=ON_ERROR_STOP=1',
+      ...Object.entries(syntheticAuthIds ?? {}).map(([key, id]) => '--set=' + key + '_id=' + id),
+      '--file', path.join(ROOT, 'tests/staging/local-supabase/fixtures/channel-avatar-rls-runtime.test.sql'),
+      raw
+    ], env, 'DAG-006:channel-avatar-rls-runtime');
     continue;
   }
 
