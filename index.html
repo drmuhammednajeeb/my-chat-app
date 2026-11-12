@@ -1088,15 +1088,6 @@ function showMessageDetailModal(title,contentNode){
  header.append(heading,close);panel.append(header,body);overlay.append(panel);document.body.append(overlay);
  document.addEventListener('keydown',onKey);close.focus();
 }
-async function showReactionMembers(message,option,matching){
- const ids=[...new Set((matching||[]).map(item=>item.user_id).filter(Boolean))];if(!ids.length)return;
- try{
-  const {data,error}=await supabaseClient.from('profiles').select('id,display_name,username').in('id',ids);if(error)throw error;
-  const list=document.createElement('div');list.className='message-detail-list';
-  (data||[]).forEach(profile=>{const item=document.createElement('div');item.className='message-detail-person';const name=document.createElement('strong');name.textContent=profile.display_name||profile.username||'عضو';const handle=document.createElement('span');handle.textContent=profile.username?'@'+profile.username:'';item.append(name,handle);list.append(item)});
-  showMessageDetailModal(option.emoji+' '+option.label+' · '+ids.length,list);
- }catch(error){console.error('Reaction members load failed:',error);toast('تعذر تحميل قائمة المتفاعلين')}
-}
 async function openMessageEditHistory(message){
  if(!message?.edited_at||!(message.sender_id===state.user?.id||state.isTeamAdmin)){toast('لا تملك صلاحية الاطلاع على سجل التعديلات');return}
  try{
