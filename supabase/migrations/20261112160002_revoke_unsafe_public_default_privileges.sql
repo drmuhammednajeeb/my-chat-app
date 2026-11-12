@@ -14,16 +14,27 @@ alter default privileges for role postgres in schema public
 alter default privileges for role postgres in schema public
   revoke all on functions from public, anon, authenticated;
 
--- Supabase-managed object creation must follow the same deny-by-default rule.
-do $supabase_admin_defaults$
-begin
-  if exists (select 1 from pg_roles where rolname = 'supabase_admin') then
-    execute 'alter default privileges for role supabase_admin in schema public revoke all on tables from public, anon, authenticated';
-    execute 'alter default privileges for role supabase_admin in schema public revoke all on sequences from public, anon, authenticated';
-    execute 'alter default privileges for role supabase_admin in schema public revoke all on functions from public, anon, authenticated';
-  end if;
-end;
-$supabase_admin_defaults$;
+-- supabase_admin is a Supabase-managed role. The current migration role (postgres)
+-- is not a member of it, so PostgreSQL correctly refuses ALTER DEFAULT PRIVILEGES
+-- for that owner. The read-only production catalog review confirmed that this role
+-- currently owns no public-schema application objects. Fail closed if that changes;
+-- do not attempt privilege escalation or mutate managed-role catalogs.
+DO $managed_role_boundary$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    JOIN pg_roles r ON r.oid = c.relowner
+    WHERE n.nspname = 'public'
+      AND r.rolname = 'supabase_admin'
+      AND c.relkind IN ('r','p','S','v','m','f')
+  ) THEN
+    RAISE EXCEPTION 'supabase_admin owns public-schema objects; platform-owner ACL review is required before this migration can proceed';
+  END IF;
+  RAISE NOTICE 'supabase_admin default ACLs remain platform-managed; no public objects are owned by this role';
+END;
+$managed_role_boundary$;
 
 -- Remove API access from anon at the table/sequence layer. RLS remains an independent
 -- mandatory boundary; this also prevents non-RLS privileges such as TRUNCATE.
