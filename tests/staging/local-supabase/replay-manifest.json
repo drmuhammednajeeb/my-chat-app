@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 58,
-    "mappedSources": 54,
+    "sqlFiles": 60,
+    "mappedSources": 56,
     "identicalDuplicateCopiesExcluded": 4,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -30,9 +30,9 @@
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
-    "executedMappedSources": 50,
+    "executedMappedSources": 52,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 69
+    "executedSqlFiles": 71
   },
   "execution": {
     "enabled": false,
@@ -165,14 +165,15 @@
     },
     {
       "nodeId": "chat.direct-conversation-rpc",
-      "status": "TEST_ONLY_RESTORED_PRODUCTION_SOURCE",
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
       "testSources": [
+        "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
       ],
       "blockedBy": [
         "DAG-015"
       ],
-      "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests."
+      "parityNote": "Final pg_get_functiondef bodies and inspected ACLs recovered from production; original migration body unavailable. Test fixture remains as a test-only parity reference. Do not apply to production."
     },
     {
       "nodeId": "test-fixture.direct-chat-auth-seed",
@@ -182,15 +183,6 @@
       ],
       "blockedBy": [],
       "parityNote": "Must run before membership.base installs auth.users invitation/profile triggers; all identities use reserved .test emails and synthetic IDs."
-    },
-    {
-      "nodeId": "chat.channels-public",
-      "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/public_announcement_channels.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
     },
     {
       "nodeId": "chat.preference-archive-rls",
@@ -220,14 +212,13 @@
       "parityNote": null
     },
     {
-      "nodeId": "chat.self",
-      "status": "SOURCE_REVIEWED",
+      "nodeId": "chat.hide-atomic-direct-rpc-implementation",
+      "status": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
       "testSources": [
-        "database/changes/20261107061012_self_message_conversation.sql",
-        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
+        "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql"
       ],
       "blockedBy": [],
-      "parityNote": null
+      "parityNote": "No-op migration version retained; final state is created by the preceding recovered migration."
     },
     {
       "nodeId": "chat.pins",
@@ -248,19 +239,19 @@
       "parityNote": null
     },
     {
-      "nodeId": "chat.channels-private",
+      "nodeId": "chat.account-settings-message-edit",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
       ],
       "blockedBy": [],
       "parityNote": null
     },
     {
-      "nodeId": "chat.account-settings-message-edit",
+      "nodeId": "chat.channels-public",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
+        "database/changes/public_announcement_channels.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -327,6 +318,25 @@
       "status": "SOURCE_REVIEWED",
       "testSources": [
         "database/changes/20261107124500_harden_message_edit_permissions.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.channels-private",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/private_channels_with_secure_invites.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.self",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "database/changes/20261107061012_self_message_conversation.sql",
+        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
       ],
       "blockedBy": [],
       "parityNote": null
