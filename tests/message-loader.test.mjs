@@ -44,7 +44,7 @@ function harness({ rows = [], error = null, render = null, metadata = {}, before
     active: { id: 'conversation-1' },
     messageLoadVersion: 0,
     messageTimelineConversationId: 'conversation-1',
-    messages: [{ id: 'old', conversation_id: 'conversation-1', created_at: '2026-01-01T00:00:00Z' }],
+    messages: [{ id: 'old', conversation_id: 'conversation-1', created_at: '2025-12-31T00:00:00Z' }],
     messageIds: new Set(['old']),
     replyMessages: new Map(),
     diagnostics: {},
