@@ -10,7 +10,7 @@
     },
     "historicalChanges": {
       "path": "database/changes",
-      "count": 45,
+      "count": 46,
       "note": "Not a canonical Supabase CLI sequence."
     }
   },
@@ -1108,6 +1108,26 @@
         "database/changes/20261112000100_profile_status_and_conversation_images.sql",
         "tests/profile-status-and-conversation-images.test.mjs"
       ]
+    },
+    {
+      "id": "chat.profile-status-video-media",
+      "source": [
+        "database/changes/20261112000200_profile_status_video_media.sql"
+      ],
+      "provides": [
+        "public.profile_statuses.media_type",
+        "private status video media MIME support up to 25 MiB",
+        "strict image/video path and media-type consistency"
+      ],
+      "requires": [
+        "chat.profile-status-and-conversation-images",
+        "platform.storage"
+      ],
+      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "testSource": [
+        "database/changes/20261112000200_profile_status_video_media.sql",
+        "tests/status-workspace.test.mjs"
+      ]
     }
   ],
   "explicitEdges": [
@@ -1794,6 +1814,14 @@
     [
       "platform.realtime",
       "chat.profile-status-and-conversation-images"
+    ],
+    [
+      "chat.profile-status-and-conversation-images",
+      "chat.profile-status-video-media"
+    ],
+    [
+      "platform.storage",
+      "chat.profile-status-video-media"
     ]
   ],
   "blockers": [
