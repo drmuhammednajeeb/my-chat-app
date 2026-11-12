@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8');
+const voiceModuleSource = await readFile(new URL('../../modules/voice-recorder.js', import.meta.url), 'utf8');
 
 function extractFunction(name) {
   const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
@@ -297,128 +298,117 @@ test('browser: same-ID render requests serialize and retry using the newest in-m
 
 
 
-test('voice recording finalizes the last MediaRecorder chunk before dispatching send', async () => {
+test('isolated voice recorder completes two consecutive browser record/send cycles', async () => {
   const page = await newPage();
-  await page.setContent(`<!doctype html><html><body>
-    <button id="voiceRecordBtn"></button><button id="voiceCancelBtn"></button>
-    <div id="voiceRecordingControls" class="hidden"><span id="voiceRecordingTime"></span><button id="voicePauseBtn"></button><span id="voiceRecordingStatus"></span></div>
-    <button id="sendBtn"></button><div id="attachmentPreview"></div>
-  </body></html>`);
-  const startSource = extractFunction('startVoiceRecording');
-  const sendSource = extractFunction('sendVoiceRecording');
-  const stopSource = extractFunction('stopVoiceRecording');
-  await page.evaluate(({ startSource, sendSource, stopSource }) => {
-    const state = window.__voiceState = {
-      active: { id: 'conversation-a', type: 'direct', members: [] },
-      user: { id: 'user-a' }, uploading: false, attachment: null,
-      voiceRecorder: null, voiceChunks: [], voiceElapsedMs: 0,
-      voiceSegmentStartedAt: null, voicePaused: false,
-      voiceSendOnStop: false, cancelVoiceOnStop: false
-    };
-    const nodes = Object.fromEntries([
-      'voiceRecordBtn','voiceCancelBtn','voiceRecordingControls',
-      'voiceRecordingTime','voicePauseBtn','voiceRecordingStatus',
-      'sendBtn','attachmentPreview'
-    ].map(id => [id, document.getElementById(id)]));
+  await page.setContent(\`<!doctype html><html><body>
+    <div class="composer">
+      <button id="voiceRecordBtn" type="button"></button>
+      <button id="stickerBtn" type="button"></button>
+      <button id="attachBtn" type="button"></button>
+      <textarea id="messageInput"></textarea>
+      <div id="voiceRecordingControls" class="hidden">
+        <button id="voicePauseBtn" type="button"></button>
+        <strong id="voiceRecordingTime"></strong>
+        <span id="voiceRecordingStatus"></span>
+        <button id="voiceTrashBtn" type="button"></button>
+      </div>
+      <button id="sendBtn" type="button"></button>
+    </div>
+    <div id="attachmentPreview"></div>
+  </body></html>\`);
+  await page.addScriptTag({ content: voiceModuleSource });
+  await page.evaluate(() => {
+    window.__voiceEvents = [];
     window.__voiceSent = [];
-    window.__voiceRecorderEvents = [];
-    Object.defineProperty(window, 'isSecureContext', { configurable: true, value: true });
-    Object.defineProperty(navigator, 'mediaDevices', {
-      configurable: true,
-      value: { getUserMedia: async () => ({ getTracks: () => [{ stop() {} }] }) }
-    });
+    window.__voiceTracks = [];
+    window.__voiceContext = {
+      active: { id: 'conversation-a', type: 'direct', members: [] },
+      user: { id: 'user-a' },
+      uploading: false,
+      attachment: null,
+      groupSettings: null
+    };
     class FakeMediaRecorder {
       static isTypeSupported(type) { return type === 'audio/webm;codecs=opus'; }
-      constructor(_stream, options) { this.mimeType = options?.mimeType || 'audio/webm'; this.state = 'inactive'; }
-      start() { this.state = 'recording'; window.__voiceRecorderEvents.push('start'); }
+      constructor(_stream, options) {
+        this.mimeType = options?.mimeType || 'audio/webm';
+        this.state = 'inactive';
+      }
+      start(timeslice) {
+        this.timeslice = timeslice;
+        this.state = 'recording';
+        window.__voiceEvents.push('start');
+      }
       requestData() {
-        window.__voiceRecorderEvents.push('requestData');
-        this.ondataavailable?.({ data: new Blob(['final-chunk'], { type: this.mimeType }) });
+        window.__voiceEvents.push('requestData');
+        this.ondataavailable?.({ data: new Blob(['final-chunk'], { type: 'audio/webm' }) });
       }
       stop() {
         this.state = 'inactive';
-        window.__voiceRecorderEvents.push('stop');
-        this.ondataavailable?.({ data: new Blob(['stop-chunk'], { type: this.mimeType }) });
-        this.onstop?.();
-      }
-    }
-    Object.defineProperty(window, 'MediaRecorder', { configurable: true, writable: true, value: FakeMediaRecorder });
-    const $ = id => nodes[id];
-    const directStop = new Function('state', stopSource + '; return stopVoiceRecording;')(state);
-    const helpers = {
-      clearVoiceTimer() {},
-      cleanupVoiceCapture() {
-        state.voiceRecorder = null; state.voiceChunks = [];
-        state.voiceStream = null; state.voiceStartedAt = null;
-        state.voiceElapsedMs = 0; state.voiceSegmentStartedAt = null;
-        state.voicePaused = false;
-      },
-      setVoiceComposerActive(active) { nodes.voiceRecordingControls.classList.toggle('hidden', !active); },
-      updateVoiceRecordingUI() {},
-      currentVoiceElapsedMs: () => 1250,
-      formatVoiceDuration: seconds => String(seconds),
-      showAttachmentPreview(file, label) {
-        nodes.attachmentPreview.textContent = label;
-        window.__voicePreview = { name: file.name, type: file.type, size: file.size };
-      },
-      resizeComposer() {},
-      toast(message) { window.__voiceToast = message; },
-      sendMessage() {
-        window.__voiceSent.push({
-          file: state.attachment?.name,
-          type: state.attachment?.type,
-          recorderCleared: state.voiceRecorder === null
+        window.__voiceEvents.push('stop');
+        queueMicrotask(() => {
+          this.ondataavailable?.({ data: new Blob(['stop-chunk'], { type: 'audio/webm' }) });
+          this.onstop?.();
         });
-        // Model the production sendMessage success path: it clears the
-        // attachment only after persistence succeeds, enabling the next recording.
-        state.attachment = null;
-        state.voiceDuration = 0;
-        nodes.attachmentPreview.replaceChildren();
       }
-    };
-    const start = new Function(
-      'state','$','navigator','window','MediaRecorder','console','Date','Blob','File',
-      'setInterval','clearInterval','stopVoiceRecording','clearVoiceTimer','cleanupVoiceCapture',
-      'setVoiceComposerActive','updateVoiceRecordingUI','currentVoiceElapsedMs','formatVoiceDuration',
-      'showAttachmentPreview','resizeComposer','toast','sendMessage',
-      startSource + '; return startVoiceRecording;'
-    )(
-      state,$,navigator,window,FakeMediaRecorder,console,Date,Blob,File,
-      setInterval,clearInterval,directStop,helpers.clearVoiceTimer,helpers.cleanupVoiceCapture,
-      helpers.setVoiceComposerActive,helpers.updateVoiceRecordingUI,helpers.currentVoiceElapsedMs,
-      helpers.formatVoiceDuration,helpers.showAttachmentPreview,helpers.resizeComposer,
-      helpers.toast,helpers.sendMessage
-    );
-    const send = new Function('state','$','stopVoiceRecording',sendSource + '; return sendVoiceRecording;')(
-      state,$,directStop
-    );
-    window.__startVoice = start;
-    window.__sendVoice = send;
-  }, { startSource, sendSource, stopSource });
-  // Exercise two complete record/send cycles in the same page and session.
+      pause() { this.state = 'paused'; }
+      resume() { this.state = 'recording'; }
+    }
+    window.__voiceController = window.BizmindVoiceRecorder.create({
+      getContext: () => window.__voiceContext,
+      mediaDevices: {
+        async getUserMedia() {
+          const track = { stopped: false, stop() { this.stopped = true; } };
+          window.__voiceTracks.push(track);
+          return { getTracks: () => [track] };
+        }
+      },
+      MediaRecorder: FakeMediaRecorder,
+      isSecureContext: true,
+      setInterval: () => 1,
+      clearInterval: () => {},
+      toast: message => { window.__voiceToast = message; },
+      onRecordingReady: ({ file, duration }) => {
+        window.__voiceContext.attachment = file;
+        window.__voicePreview = { name: file.name, type: file.type, size: file.size, duration };
+      },
+      send: async () => {
+        const file = window.__voiceContext.attachment;
+        window.__voiceSent.push({ name: file?.name, type: file?.type });
+        window.__voiceContext.attachment = null;
+      },
+      elements: {
+        composer: document.querySelector('.composer'),
+        recordButton: document.getElementById('voiceRecordBtn'),
+        controls: document.getElementById('voiceRecordingControls'),
+        pauseButton: document.getElementById('voicePauseBtn'),
+        trashButton: document.getElementById('voiceTrashBtn'),
+        time: document.getElementById('voiceRecordingTime'),
+        status: document.getElementById('voiceRecordingStatus'),
+        sendButton: document.getElementById('sendBtn')
+      }
+    });
+  });
+
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    await page.evaluate(() => window.__startVoice());
-    await page.evaluate(() => window.__sendVoice());
-    await page.waitForTimeout(20);
+    assert.equal(await page.evaluate(() => window.__voiceController.start()), true);
+    assert.equal(await page.evaluate(() => window.__voiceController.send()), true);
   }
   const result = await page.evaluate(() => ({
-    events: window.__voiceRecorderEvents,
+    events: window.__voiceEvents,
     sent: window.__voiceSent,
     preview: window.__voicePreview,
-    toast: window.__voiceToast,
-    recorderCleared: window.__voiceState.voiceRecorder === null,
-    chunksCleared: window.__voiceState.voiceChunks.length === 0
+    tracksStopped: window.__voiceTracks.every(track => track.stopped),
+    active: window.__voiceController.isActive()
   }));
   assert.deepEqual(result.events, [
     'start','requestData','stop',
     'start','requestData','stop'
-  ], 'Two consecutive voice record/send cycles did not complete: ' + JSON.stringify(result));
-  assert.equal(result.sent.length, 2, 'Both voice recordings must reach the send pipeline');
-  assert.ok(result.sent.every(item => item.recorderCleared), 'Recorder state must be reset after each send');
-  assert.equal(result.sent[0].type, 'audio/webm');
-  assert.equal(result.sent[1].type, 'audio/webm');
-  assert.equal(result.recorderCleared, true);
-  assert.equal(result.chunksCleared, true);
+  ]);
+  assert.equal(result.sent.length, 2);
+  assert.ok(result.sent.every(item => item.type === 'audio/webm'));
   assert.equal(result.preview.type, 'audio/webm');
+  assert.equal(result.tracksStopped, true);
+  assert.equal(result.active, false);
   await page.close();
 });
