@@ -9,10 +9,11 @@ This document and `supabase/migrations/source-registry.json` establish a read-on
 - Repository baseline: `67c7e46d26037ad0cf94a44aaf3a507c6a5171b4`
 - Production project: `lvkeohpuucuklagvwpnq`
 - Production migration records: 62
-- SQL files in `supabase/migrations/`: 10
+- SQL files in `supabase/migrations/`: 13
 - SQL files in `database/changes/`: 45
-- Duplicate source copies: 3
-- Source files in the two production-oriented directories: 55
+- Duplicate source copies: 4 (including the canonicalized status-base copy)
+- Source files in the two production-oriented directories: 58
+- Production-applied status migrations copied into the canonical CLI directory: 3
 
 ## Why simply merging the folders is unsafe
 
@@ -26,13 +27,13 @@ The production migration ledger stores migration versions and names, not the ori
 | `database/changes/` | 45 historical feature/change files | Historical source collection, not an executable CLI sequence |
 | `tests/staging/local-supabase/fixtures/` | Synthetic fixtures, compatibility stubs, overlays and recovered definitions | Test-only; never production migrations |
 
-Three duplicate pairs are already identified by byte-for-byte SHA-256 evidence. The reviewed canonical copy is the `supabase/migrations` version for chat privilege hardening, notifications, and notification indexes. The duplicate historical copies must remain preserved until the canonical migration history and replay tests are approved.
+Three original duplicate pairs were already identified by byte-for-byte SHA-256 evidence. The status base migration is now also copied into the canonical directory and its duplicate provenance is recorded. The reviewed canonical copy is the `supabase/migrations` version for chat privilege hardening, notifications, and notification indexes. The duplicate historical copies must remain preserved until the canonical migration history and replay tests are approved.
 
 ## Production mapping findings
 
 The machine-readable registry lists all 62 production migration records and the source path candidates for each.
 
-The following records are not yet backed by a verified canonical source:
+The following four records are not yet backed by a verified canonical source:
 
 - `atomic_direct_conversation_creation` and `hide_atomic_direct_rpc_implementation`: only a test fixture containing the inspected final production function definitions and ACLs was recovered. It is not the original pair of migration bodies, and the later test-only eligibility overlay remains unvalidated.
 - `channel_visibility_avatar_group_background`: no authoritative source file was identified in `main`.
