@@ -108,7 +108,7 @@ test('dollar-quoted statement terminator audit ignores valid bodies and detects 
   try {
     await writeFile(
       path.join(root, 'supabase/migrations/20261101000000_valid.sql'),
-      'create function app_private.valid() returns void language plpgsql as $$ begin null; end; $$;\n'
+      'create function app_private.valid() returns void as $ begin null; end; $ language plpgsql;\n'
     );
     await writeFile(
       path.join(root, 'database/changes/bad.sql'),
