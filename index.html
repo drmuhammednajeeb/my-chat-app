@@ -1017,7 +1017,7 @@ async function openConversation(c){
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
  state.active=c;state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
  applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
- state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.newMessageCount=0;updateNewMessagesIndicator();
+ state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.messagePollOffset=0;state.messagePollOffsetConversationId=c.id;state.newMessageCount=0;updateNewMessagesIndicator();
  $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
  state.pinnedMessages=new Map();state.replyMessages=new Map();state.privateReplyContexts=new Map();
  state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();
@@ -1368,12 +1368,16 @@ async function loadOlderMessages(){
  const conversationId=state.active?.id,area=$('messages');
  if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
  const oldest=state.messages[0];if(!oldest?.created_at||!oldest?.id)return false;
+ const originalMessages=state.messages.slice(),originalMessageIds=new Set(state.messageIds),originalHasMore=state.hasMoreMessages;
+ const originalMessageIdSet=new Set(originalMessages.map(message=>message.id));
+ const originalTop=area.scrollTop;
  state.loadingOlderMessages=true;const requestId=state.messageLoadVersion;state.loadingOlderRequestId=requestId;
  const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
  const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
  const oldTop=area.scrollTop;
  const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
  const originalFirstChild=loader.nextSibling;
+ let olderIds=new Set(),renderedHistoryIds=new Set();
  try{
   const cursorFilter='created_at.lt.'+oldest.created_at+',and(created_at.eq.'+oldest.created_at+',id.lt.'+oldest.id+')';
   let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(cursorFilter);
@@ -1382,8 +1386,8 @@ async function loadOlderMessages(){
   if(error)throw error;
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   const older=(data||[]).slice().reverse();
-  state.hasMoreMessages=older.length===50;
   if(!older.length){state.hasMoreMessages=false;return false}
+  olderIds=new Set(older.map(message=>message.id));
   const replyIds=[...new Set(older.map(m=>m.reply_to).filter(id=>id&&!state.messages.some(x=>x.id===id)))];
   const replyTask=replyIds.length?supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds):Promise.resolve({data:[],error:null});
   const [, , replyResult]=await Promise.all([
@@ -1396,17 +1400,19 @@ async function loadOlderMessages(){
   else (replyResult?.data||[]).forEach(parent=>state.replyMessages.set(parent.id,parent));
   const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
+  state.hasMoreMessages=older.length===50;
   state.isLoadingMessages=true;state.batchRenderingMessages=true;state.batchRenderingConversationId=conversationId;area.style.overflowAnchor='none';
-  const beforeRenderNodes=new Set(Array.from(area.childNodes)),olderIds=new Set(older.map(message=>message.id));
+  const beforeRenderNodes=new Set(Array.from(area.childNodes)),olderRenderIds=new Set();
   for(const message of older){
    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
    if(state.messageIds.has(message.id))continue;
    const rendered=await renderMessage(message,conversationId,requestId);
    if(!rendered&&!state.messageIds.has(message.id))throw new Error('Older message rendering did not complete');
+   if(state.messageIds.has(message.id)&&!originalMessageIdSet.has(message.id))renderedHistoryIds.add(message.id);
   }
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area);
-  const addedSet=new Set(Array.from(area.querySelectorAll('.message')).filter(node=>olderIds.has(node.dataset.messageId)));
+  const addedSet=new Set(Array.from(area.querySelectorAll('.message')).filter(node=>olderIds.has(node.dataset.messageId)&&!beforeRenderNodes.has(node)));
   addedSet.forEach(node=>{const previous=node.previousElementSibling;if(previous?.classList.contains('day-divider')&&!beforeRenderNodes.has(previous))addedSet.add(previous)});
   const addedNodes=Array.from(area.childNodes).filter(node=>addedSet.has(node));
   const fragment=document.createDocumentFragment();addedNodes.forEach(node=>fragment.append(node));
@@ -1420,11 +1426,27 @@ async function loadOlderMessages(){
  }catch(error){
   console.error('Older message loading failed:',error);
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
-   toast('تعذر تحميل الرسائل الأقدم');state.isLoadingMessages=false;area.style.overflowAnchor='';
+   const restored=new Map(originalMessages.map(message=>[message.id,message]));
+   for(const message of state.messages||[]){
+    if(originalMessageIdSet.has(message.id)||!olderIds.has(message.id))restored.set(message.id,message);
+   }
+   state.messages=Array.from(restored.values()).sort((a,b)=>compareMessagesChronologically(a,b));
+   renderedHistoryIds.forEach(id=>{
+    Array.from(area.querySelectorAll('.message')).filter(node=>node.dataset.messageId===id).forEach(node=>node.remove());
+    state.messageIds.delete(id);
+   });
+   state.hasMoreMessages=originalHasMore;
+   state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
+   state.isLoadingMessages=false;area.style.overflowAnchor='';
+   reconcileMessageTimeline(area);
+   toast('تعذر تحميل الرسائل الأقدم؛ احتفظنا بالمحادثة الحالية دون فقد الرسائل.');
   }
   return false;
  }finally{
-  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area)}state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.isLoadingMessages=false;area.style.overflowAnchor=''}
+  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
+   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area)}
+   state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.isLoadingMessages=false;area.style.overflowAnchor='';
+  }
   loader.remove();
  }
 }
@@ -1474,6 +1496,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
  if(state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
  const messageRequestId=state.messageLoadVersion,pollStartedAt=state.messagePollLastCheckedAt||new Date(Date.now()-60000).toISOString(),pollCutoffAt=new Date().toISOString();
  const cursor=state.messagePollCursor?.conversationId===conversationId?state.messagePollCursor:null;
+ const pollOffset=state.messagePollOffsetConversationId===conversationId?Math.max(0,Number(state.messagePollOffset)||0):0;
  state.messagePollBusy=true;state.diagnostics.lastPollAt=new Date().toLocaleTimeString('en-GB');
  try{
   const overlapStartedAt=new Date(Date.parse(pollStartedAt)-5000).toISOString();
@@ -1482,7 +1505,7 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
    :'created_at.gt.'+overlapStartedAt+',edited_at.gt.'+pollStartedAt+',deleted_at.gt.'+pollStartedAt;
   let pollQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(syncFilter);
   if(state.activeChatPreference?.cleared_before)pollQuery=pollQuery.gt('created_at',state.activeChatPreference.cleared_before);
-  const {data,error}=await pollQuery.order('created_at',{ascending:true}).order('id',{ascending:true}).limit(200);
+  const {data,error}=await pollQuery.order('created_at',{ascending:true}).order('id',{ascending:true}).range(pollOffset,pollOffset+199);
   if(error)throw error;
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
   const current=new Map((state.messages||[]).filter(m=>m.conversation_id===conversationId).map(m=>[m.id,m]));
@@ -1512,11 +1535,15 @@ async function pollMessagesFallback(conversationId,generation=state.messagePollG
    if(!nextCursor||compareMessagesChronologically(message,nextCursor)>0)nextCursor={conversationId,created_at:message.created_at,id:message.id};
   }
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
-  state.messages=Array.from(current.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
+  state.messages=Array.from(current.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   if(nextCursor)state.messagePollCursor=nextCursor;
   if(added)await markConversationReceipt(conversationId,document.visibilityState==='visible'&&isMessagesNearBottom(),messageRequestId);
   if(generation!==state.messagePollGeneration||state.active?.id!==conversationId||messageRequestId!==state.messageLoadVersion)return;
-  if(!needsRetry)state.messagePollLastCheckedAt=pollCutoffAt;
+  if(!needsRetry){
+   state.messagePollOffsetConversationId=conversationId;
+   if(fetched.length===200)state.messagePollOffset=pollOffset+200;
+   else{state.messagePollOffset=0;state.messagePollLastCheckedAt=pollCutoffAt}
+  }else{state.messagePollOffsetConversationId=conversationId;state.messagePollOffset=pollOffset}
   const activeRole=(state.active?.members||[]).find(m=>m.user_id===state.user?.id)?.role;
   const channelReadOnly=state.active?.type==='channel'&&!['owner','admin'].includes(activeRole);
   const groupReadOnly=state.active?.type==='group'&&!!state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(activeRole);
