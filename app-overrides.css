@@ -296,7 +296,7 @@ html.dark .new-messages-jump{background:#153c36;color:#b8f3d6;border-color:#276b
 }
 #messages>.message.mine .bubble{border-radius:8px 8px 2px 8px}
 #messages .message-content{
-  display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;
+  display:flow-root;box-sizing:border-box;width:100%;max-width:100%;min-width:0;
   margin:0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;
   direction:auto;unicode-bidi:plaintext;
 }
