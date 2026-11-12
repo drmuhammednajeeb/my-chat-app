@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import audioPlayer from '../modules/audio-player.js';
 
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const loaderSource = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
@@ -73,6 +74,31 @@ test('voice recording is isolated in its own module and legacy capture code is a
   assert.match(voiceSource, /currentRecorder\.onstop/);
   assert.match(voiceSource, /snapshotIsCurrent/);
 });
+test('voice messages use the custom player with one shared exclusive playback coordinator', () => {
+  assert.match(source, /<link rel="stylesheet" href="\.\/modules\/audio-player\.css">/);
+  assert.match(source, /<script src="\.\/modules\/audio-player\.js"><\/script>/);
+  assert.match(source, /const voiceMessagePlayer=window\.BizmindAudioPlayer\.create\(\)/);
+  assert.match(source, /voiceMessagePlayer\.createPlayer\(/);
+  assert.doesNotMatch(source, /audio\.controls=true/);
+
+  const coordinator = audioPlayer.createPlaybackCoordinator();
+  const events = [];
+  const first = { pause() { events.push('first'); } };
+  const second = { pause() { events.push('second'); } };
+  coordinator.activate(first);
+  coordinator.activate(second);
+  assert.deepEqual(events, ['first']);
+  assert.equal(coordinator.getActive(), second);
+  coordinator.release(first);
+  assert.equal(coordinator.getActive(), second);
+});
+
+test('message bubbles enforce stable flex direction, intrinsic width and safe text wrapping', () => {
+  assert.match(overrides, /#messages>\.message\{[\s\S]*?flex-direction:column/);
+  assert.match(overrides, /#messages \.bubble\{[\s\S]*?min-width:0/);
+  assert.match(overrides, /#messages \.message-content\{[\s\S]*?overflow-wrap:anywhere/);
+});
+
 
 test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring', () => {
   assert.match(overrides, /#chat \.messages\{overflow-anchor:none\}/);
