@@ -68,8 +68,8 @@ test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime 
   }
   assert.equal(visited, nodes.length, 'dependency graph contains a cycle');
   assert.ok(dag.blockers.some(item => item.id === 'DAG-002' && item.severity === 'RESOLVED_FOR_LOCAL_REPLAY'));
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-014' && item.severity === 'BLOCKER'));
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-015' && item.severity === 'BLOCKER'));
+  assert.ok(dag.blockers.some(item => item.id === 'DAG-014' && item.severity === 'PRODUCTION_DEPLOYMENT_PENDING' && item.status === 'LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION'));
+  assert.ok(dag.blockers.some(item => item.id === 'DAG-015' && item.severity === 'PRODUCTION_DEPLOYMENT_PENDING' && item.status === 'LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION'));
   for (const id of ['DAG-014', 'DAG-015']) {
     const blocker = dag.blockers.find(item => item.id === id);
     assert.ok(blocker.evidence?.includes('tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
@@ -193,8 +193,8 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(dag.blockers.find(item => item.id === id)?.evidence?.some(path => path.includes('local-platform-')));
   }
   for (const id of ['DAG-014', 'DAG-015']) {
-    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
-    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
+    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'PRODUCTION_DEPLOYMENT_PENDING');
+    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'PRODUCTION_DEPLOYMENT_PENDING');
   }
   const allNodes = [...dag.platformNodes, ...dag.nodes];
   const ids = allNodes.map(node => node.id);
@@ -291,8 +291,8 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.local-pg-cron-runtime');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED');
-  assert.ok(node.blockedBy.includes('DAG-008'));
+  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED');
+  assert.deepEqual(node.blockedBy, []);
   assert.ok(node.requires.includes('test-fixture.local-platform-postflight'));
   assert.ok(dag.blockers.find(item => item.id === 'DAG-008').evidence.includes('tests/staging/local-supabase/local-pg-cron-runtime.mjs'));
   assert.equal(dag.executionAuthorized, false);
@@ -327,7 +327,7 @@ test('local platform preflight and postflight are read-only, ordered, and fail c
 });
 
 
-test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', async () => {
+test('least-privilege overlay is a final, locally validated, loopback-only SQL fixture', async () => {
   const overlay = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql'), 'utf8');
   const assertion = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql'), 'utf8');
   assert.match(overlay, /TEST-ONLY/i);
@@ -342,7 +342,7 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
   assert.match(assertion, /pg_default_acl/);
   const node = JSON.parse(await readFile(dagPath, 'utf8')).nodes.find(item => item.id === 'security.least-privilege-overlay');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED');
+  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED');
   assert.ok(node.requires.includes('membership.final-format'));
   assert.ok(node.blockedBy.includes('DAG-016'));
   assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
@@ -389,14 +389,14 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('four forward hardening migrations remain outside the production ledger and retain explicit blockers', async () => {
+test('four forward hardening migrations remain outside the production ledger and record disposable-local runtime evidence', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.forwardMigrations.length, 4);
   const expected = new Map([
-    ['20261112160000_harden_direct_conversation_eligibility.sql', ['DAG-014', 'DAG-015']],
-    ['20261112160001_harden_chat_media_upload_ownership.sql', ['DAG-013']],
+    ['20261112160000_harden_direct_conversation_eligibility.sql', []],
+    ['20261112160001_harden_chat_media_upload_ownership.sql', []],
     ['20261112160002_revoke_unsafe_public_default_privileges.sql', ['DAG-016']],
     ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']]
   ]);
@@ -405,7 +405,10 @@ test('four forward hardening migrations remain outside the production ledger and
     const node = dag.nodes.find(item => item.source?.includes(path));
     assert.ok(node, 'forward migration missing from DAG: ' + name);
     assert.deepEqual(node.blockedBy, blockers);
-    assert.equal(registry.forwardMigrations.some(item => item.path === path && item.status === 'FORWARD_RECONCILIATION_NOT_APPLIED'), true);
+    const forward = registry.forwardMigrations.find(item => item.path === path);
+    assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
+    assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+    assert.equal(forward?.localRuntimeRunId, 43258867470);
   }
   assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
 });
