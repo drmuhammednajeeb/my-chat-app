@@ -228,7 +228,7 @@
     const name = document.createElement('small');
     name.textContent = own ? 'حالتي' : safeText(profile?.display_name || profile?.username, 'مستخدم');
     button.append(ring, name);
-    button.onclick = () => rows.length ? openStatusViewer(profile?.id || currentUserId()) : openModal(getStatusModal());
+    button.onclick = () => rows.length ? openStatusViewer(rows[0]?.user_id || profile?.id || currentUserId()) : openModal(getStatusModal());
     return button;
   }
 
