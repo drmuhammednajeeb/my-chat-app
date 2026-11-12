@@ -85,6 +85,17 @@ test('every canonical migration closes every explicit transaction block', async 
   }
 });
 
+test('private-channel deny policy is created once by its own production version', async () => {
+  const [base, deny] = await Promise.all([
+    readFile(path.join(root, 'supabase/migrations/20261106132655_private_channels_with_secure_invites.sql'), 'utf8'),
+    readFile(path.join(root, 'supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql'), 'utf8')
+  ]);
+  assert.doesNotMatch(base, /No direct access to channel invites|REVOKE ALL ON TABLE app_private\\.channel_invites/i);
+  assert.match(deny, /DROP POLICY IF EXISTS "No direct access to channel invites"/i);
+  assert.match(deny, /CREATE POLICY "No direct access to channel invites"/i);
+  assert.match(deny, /REVOKE ALL ON TABLE app_private\\.channel_invites FROM PUBLIC, anon, authenticated/i);
+});
+
 test('archive manifest is provenance-only and excluded from Supabase CLI discovery', async () => {
   const [registry, archive] = await Promise.all([
     readFile(registryPath, 'utf8').then(JSON.parse),
