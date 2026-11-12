@@ -175,3 +175,17 @@ test('a missing terminator inside a Supabase migration is a blocking finding', a
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('commented legacy references inside dollar-quoted bodies are ignored', async () => {
+  const root = await createRoot();
+  try {
+    await writeFile(
+      path.join(root, 'supabase/migrations/20261101000000_function.sql'),
+      'create function app_private.comment_only() returns void language plpgsql as $$\nbegin\n  -- legacy relation mention: public.messages\n  return;\nend;\n$$;\n'
+    );
+    const report = await buildSqlAudit(root);
+    assert.equal(report.legacyBlockers.length, 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
