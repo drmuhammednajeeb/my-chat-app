@@ -29,6 +29,13 @@ BEGIN
     WHERE n.nspname = 'public'
       AND r.rolname = 'supabase_admin'
       AND c.relkind IN ('r','p','S','v','m','f')
+  ) OR EXISTS (
+    SELECT 1
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    JOIN pg_roles r ON r.oid = p.proowner
+    WHERE n.nspname = 'public'
+      AND r.rolname = 'supabase_admin'
   ) THEN
     RAISE EXCEPTION 'supabase_admin owns public-schema objects; platform-owner ACL review is required before this migration can proceed';
   END IF;
