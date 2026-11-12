@@ -215,9 +215,9 @@ export async function buildObjectInventory(root = ROOT) {
   const membershipBaseTimestamp = 20261107144109;
   const policiesAfterMembershipBase = files.filter(file => file.sourceTimestamp && Number(file.sourceTimestamp) > membershipBaseTimestamp).flatMap(file => file.policyDetails.map(policy => ({ path: file.path, ...policy })));
   const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
-  const clientStorageBuckets = [...new Set(matches(appHtml, /storage\.from\(\s*['"]([^'"]+)['"]/gi, m => m[1]))].sort();
+  const clientStorageBuckets = [...new Set(matches(appHtml + '\n' + profileMediaJs, /storage\.from\(\s*['"]([^'"]+)['"]/gi, m => m[1]))].sort();
   const declaredStorageBuckets = [...new Set(files.flatMap(file => file.storageBucketIds))].sort();
-  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => file.policyDetails.filter(policy => policy.table === 'storage.objects').flatMap(policy => matches(policy.statement, /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, m => m[1]))) )].sort();
+  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => matches(file.sql, /create\s+policy\s+[\s\S]*?\s+on\s+storage\.objects\b([\s\S]*?);/gi, policy => matches(policy[1], /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, m => m[1])).flat()))].sort();
   const chatMediaUploadPolicy = files.flatMap(file => file.policyDetails).find(policy => policy.table === 'storage.objects' && policy.name === 'Conversation members upload chat media');
   const storageCoverage = {
     chatMediaUploadPathOwnershipGuard: Boolean(chatMediaUploadPolicy && /storage\.foldername\(name\)\)\s*\[\s*2\s*\].*auth\.uid\s*\(/i.test(chatMediaUploadPolicy.statement)),
