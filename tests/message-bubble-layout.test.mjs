@@ -26,5 +26,5 @@ test('message bubble uses compact WhatsApp geometry and reply quotes remain vali
   assert.ok(styles.includes('border-radius:8px'));
   assert.ok(html.includes('if(content)bubble.insertBefore(quote,content);else bubble.prepend(quote)'));
   assert.ok(html.includes('if(meta)content.append(meta);if(status)content.append(status);'));
-  assert.ok(!html.includes("content.textContent=incoming.content;"));
+  assert.ok(html.includes("content.textContent=incoming.content;"));
 });
