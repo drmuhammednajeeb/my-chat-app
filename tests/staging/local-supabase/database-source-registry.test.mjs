@@ -18,11 +18,11 @@ test('production migration source registry is explicit, complete, and fail-close
   assert.equal(registry.registryStatus, 'RECONCILIATION_INCOMPLETE');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.sourceSets.sqlSourceFiles, 55);
-  assert.equal(registry.sourceFiles.length, 55);
-  assert.equal(registry.sourceSets.cliMigrationFiles, 10);
+  assert.equal(registry.sourceSets.sqlSourceFiles, 58);
+  assert.equal(registry.sourceFiles.length, 58);
+  assert.equal(registry.sourceSets.cliMigrationFiles, 13);
   assert.equal(registry.sourceSets.historicalChangeFiles, 45);
-  assert.equal(registry.sourceSets.duplicatePairs, 3);
+  assert.equal(registry.sourceSets.duplicatePairs, 4);
   assert.equal(registry.sourceSets.testOnlyFixtureCount, 19);
   assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 19);
 
@@ -56,7 +56,8 @@ test('production migration source registry is explicit, complete, and fail-close
     assert.ok(external.headSha);
     for (const file of external.files) {
       assert.match(file.blobSha, /^[a-f0-9]{40}$/);
-      assert.equal(file.status, 'SOURCE_IN_OPEN_PR_NOT_MAIN');
+      assert.equal(file.status, 'COPIED_TO_CANONICAL_PR139_SOURCE');
+      assert.ok(sourcePaths.has(file.canonicalPath), 'canonical source copy missing: ' + file.canonicalPath);
     }
   }
 
@@ -69,7 +70,8 @@ test('production migration source registry is explicit, complete, and fail-close
     'RECOVERED_FIXTURE_ONLY',
     'MISSING_CANONICAL_SOURCE',
     'UNVERIFIED_SOURCE_CANDIDATE',
-    'SOURCE_IN_OPEN_PR_NOT_MAIN'
+    'SOURCE_IN_OPEN_PR_NOT_MAIN',
+    'CANONICAL_MIGRATION_SOURCE_ADDED'
   ]);
 
   for (const migration of registry.productionMigrations) {
