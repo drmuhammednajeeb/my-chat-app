@@ -9,11 +9,12 @@ This document and `supabase/migrations/source-registry.json` establish a read-on
 - Repository baseline: `67c7e46d26037ad0cf94a44aaf3a507c6a5171b4`
 - Production project: `lvkeohpuucuklagvwpnq`
 - Production migration records: 62
-- SQL files in `supabase/migrations/`: 13
+- SQL files in `supabase/migrations/`: 15
 - SQL files in `database/changes/`: 45
 - Duplicate source copies: 4 (including the canonicalized status-base copy)
-- Source files in the two production-oriented directories: 58
+- Source files in the two production-oriented directories: 60
 - Production-applied status migrations copied into the canonical CLI directory: 3
+- Direct-conversation RPC versions recovered from production catalog: 2
 
 ## Why simply merging the folders is unsafe
 
@@ -31,11 +32,11 @@ Three original duplicate pairs were already identified by byte-for-byte SHA-256 
 
 ## Production mapping findings
 
-The machine-readable registry lists all 62 production migration records and the source path candidates for each.
+The machine-readable registry lists all 62 production migration records and the source path candidates or recovery records for each.
 
-The following four records are not yet backed by a verified canonical source:
+The following four records still have source-provenance limitations:
 
-- `atomic_direct_conversation_creation` and `hide_atomic_direct_rpc_implementation`: only a test fixture containing the inspected final production function definitions and ACLs was recovered. It is not the original pair of migration bodies, and the later test-only eligibility overlay remains unvalidated.
+- `atomic_direct_conversation_creation` and `hide_atomic_direct_rpc_implementation`: final function definitions and ACLs were recovered from the production catalog and added as a documented canonical reconstruction. The original two migration bodies were not retained; the second production version is represented by an intentional no-op after the final state is created in the first version. Runtime replay remains blocked.
 - `channel_visibility_avatar_group_background`: no authoritative source file was identified in `main`.
 - `harden_channel_rpc_wrappers`: a candidate source defines wrappers, but the distinct production hardening step is not independently verified.
 - `profile_status_video_media` and `allow_combined_profile_status_content_and_media`: the source files are in open draft PR #138, not in `main`. They must be brought into the canonical source stream through an explicitly reviewed change; do not merge the unrelated UI PR merely to recover SQL.
