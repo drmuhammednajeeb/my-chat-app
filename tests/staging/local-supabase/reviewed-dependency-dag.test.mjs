@@ -39,6 +39,15 @@ test('reviewed dependency graph references existing source files and known nodes
   }
 });
 
+test('professional message controls run after public-channel schema and reaction index prerequisites', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const pins = dag.nodes.find(node => node.id === 'chat.pins');
+  assert.ok(pins.requires.includes('chat.channels-public'));
+  assert.ok(pins.requires.includes('chat.reactions'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'chat.channels-public' && to === 'chat.pins'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'chat.reactions' && to === 'chat.pins'));
+});
+
 test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime blocker', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const nodes = [...dag.platformNodes, ...dag.nodes].map(node => node.id);

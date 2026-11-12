@@ -209,7 +209,9 @@
       ],
       "requires": [
         "core.base",
-        "platform.realtime"
+        "platform.realtime",
+        "chat.channels-public",
+        "chat.reactions"
       ],
       "testSource": [
         "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
@@ -2006,6 +2008,14 @@
     ],
     [
       "platform.realtime",
+      "chat.pins"
+    ],
+    [
+      "chat.channels-public",
+      "chat.pins"
+    ],
+    [
+      "chat.reactions",
       "chat.pins"
     ]
   ],
