@@ -469,3 +469,16 @@ test('document storage filename sanitizer removes path separators and unsafe cha
   assert.equal(sanitize('folder\\\\name.pdf').includes('/'), false);
   assert.equal(sanitize('folder\\\\name.pdf').includes('\\\\'), false);
 });
+
+
+test('loadMessages keeps render-completion state in function scope for empty and populated conversations', () => {
+  const load = extractFunction('loadMessages');
+  const declaration = load.indexOf('let allMessagesRendered=true;');
+  const emptyBranch = load.indexOf('if(!messages.length)');
+  const populatedBranch = load.indexOf('else{', emptyBranch);
+  const postBranchRead = load.indexOf('if(allMessagesRendered&&', populatedBranch);
+  assert.ok(declaration >= 0, 'render completion state must be declared');
+  assert.ok(declaration < emptyBranch, 'render completion state must be declared before the empty/populated branch');
+  assert.ok(populatedBranch > emptyBranch && postBranchRead > populatedBranch);
+  assert.equal((load.match(/let allMessagesRendered=true;/g) || []).length, 1);
+});
