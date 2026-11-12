@@ -343,6 +343,64 @@ test('fallback synchronization pages full batches without dropping loaded histor
   assert.match(poll, /messageRequestId!==state\.messageLoadVersion/);
 });
 
+test('failed older-history batch restores the original transcript and pagination state', async () => {
+  const existing = { className: 'message', dataset: { messageId: 'm3' }, getBoundingClientRect: () => ({ top: 10, bottom: 30 }) };
+  const area = {
+    children: [existing], scrollTop: 40, style: {},
+    get childNodes() { return this.children; },
+    getBoundingClientRect: () => ({ top: 0 }),
+    querySelectorAll(selector) { return selector === '.message' ? this.children.filter(node => node.className === 'message') : []; },
+    prepend(node) { this.children.unshift(node); node.parent = this; },
+    insertBefore(node, reference) { const index = this.children.indexOf(reference); this.children.splice(index < 0 ? this.children.length : index, 0, ...node.children); },
+  };
+  const state = {
+    active: { id: 'c1' }, messageLoadVersion: 4, loadingOlderMessages: false,
+    hasMoreMessages: true, messages: [{ id: 'm3', conversation_id: 'c1', created_at: '2026-01-03T00:00:00Z' }],
+    messageIds: new Set(['m3']), replyMessages: new Map(), pinnedMessages: new Map()
+  };
+  const rows = [
+    { id: 'm2', conversation_id: 'c1', created_at: '2026-01-02T00:00:00Z' },
+    { id: 'm1', conversation_id: 'c1', created_at: '2026-01-01T00:00:00Z' }
+  ];
+  const supabaseClient = { from: () => ({
+    select() { return this; }, eq() { return this; }, or() { return this; },
+    order() { return this; }, limit() { return Promise.resolve({ data: rows, error: null }); }
+  }) };
+  const document = {
+    createElement: () => ({
+      className: '', textContent: '', parent: null,
+      get nextSibling() { const i = this.parent.children.indexOf(this); return this.parent.children[i + 1] || null; },
+      remove() { if (this.parent) this.parent.children = this.parent.children.filter(node => node !== this); }
+    }),
+    createDocumentFragment: () => ({ children: [], append(node) { this.children.push(node); } })
+  };
+  const toastMessages = [];
+  let renderCount = 0;
+  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
+    state, document, supabaseClient, $: () => area, console,
+    compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
+    loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
+    reconcileMessageTimeline() {}, toast: message => toastMessages.push(message),
+    renderMessage: async message => {
+      renderCount += 1;
+      if (renderCount === 1) {
+        const node = { className: 'message', dataset: { messageId: message.id }, parent: area, remove() { area.children = area.children.filter(item => item !== this); } };
+        area.children.push(node); state.messageIds.add(message.id); return true;
+      }
+      return false;
+    }
+  });
+  assert.equal(await loadOlder(), false);
+  assert.deepEqual(state.messages.map(message => message.id), ['m3']);
+  assert.deepEqual([...state.messageIds], ['m3']);
+  assert.deepEqual(area.querySelectorAll('.message').map(node => node.dataset.messageId), ['m3']);
+  assert.equal(state.hasMoreMessages, true);
+  assert.equal(state.loadingOlderMessages, false);
+  assert.equal(state.loadingOlderRequestId, null);
+  assert.equal(state.batchRenderingMessages, false);
+  assert.equal(toastMessages.length, 1);
+});
+
 test('older-history rendering is transactional and releases only its own loading state', () => {
   const older = extractFunction('loadOlderMessages');
   assert.match(older, /const originalMessages=state\.messages\.slice\(\)/);
