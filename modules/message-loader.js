@@ -195,7 +195,7 @@
       ]);
       enrichments.forEach((outcome, index) => {
         if (outcome.status === 'rejected') {
-          console.warn('Optional message metadata failed:', index, outcome.reason?.message || outcome.reason);
+          logger.warn('Optional message metadata failed:', index, outcome.reason?.message || outcome.reason);
         }
       });
       if (!isCurrent()) return false;
@@ -288,7 +288,7 @@
             requestId
           );
         } catch (error) {
-          console.warn('Message receipt update failed:', error?.message || error);
+          logger.warn('Message receipt update failed:', error?.message || error);
         }
       }
 
