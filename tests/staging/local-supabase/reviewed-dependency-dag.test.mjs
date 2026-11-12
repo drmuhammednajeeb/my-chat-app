@@ -39,6 +39,15 @@ test('reviewed dependency graph references existing source files and known nodes
   }
 });
 
+test('professional message controls run after public-channel schema and reaction index prerequisites', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const pins = dag.nodes.find(node => node.id === 'chat.pins');
+  assert.ok(pins.requires.includes('chat.channels-public'));
+  assert.ok(pins.requires.includes('chat.reactions'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'chat.channels-public' && to === 'chat.pins'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'chat.reactions' && to === 'chat.pins'));
+});
+
 test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime blocker', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const nodes = [...dag.platformNodes, ...dag.nodes].map(node => node.id);
@@ -59,8 +68,8 @@ test('reviewed dependency graph is acyclic and preserves the direct-RPC runtime 
   }
   assert.equal(visited, nodes.length, 'dependency graph contains a cycle');
   assert.ok(dag.blockers.some(item => item.id === 'DAG-002' && item.severity === 'RESOLVED_FOR_LOCAL_REPLAY'));
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-014' && item.severity === 'BLOCKER'));
-  assert.ok(dag.blockers.some(item => item.id === 'DAG-015' && item.severity === 'BLOCKER'));
+  assert.ok(dag.blockers.some(item => item.id === 'DAG-014' && item.severity === 'PRODUCTION_DEPLOYMENT_PENDING' && item.status === 'LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION'));
+  assert.ok(dag.blockers.some(item => item.id === 'DAG-015' && item.severity === 'PRODUCTION_DEPLOYMENT_PENDING' && item.status === 'LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION'));
   for (const id of ['DAG-014', 'DAG-015']) {
     const blocker = dag.blockers.find(item => item.id === id);
     assert.ok(blocker.evidence?.includes('tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
@@ -85,6 +94,8 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'synthetic-direct-chat-auth-before-membership.sql',
     'synthetic-direct-chat-profiles-after-membership.sql',
     'direct-conversation-eligibility-runtime.test.sql',
+    'forward-direct-conversation-eligibility.assert.sql',
+    'forward-hardening-postconditions.assert.sql',
     'local-platform-prerequisites.assert.sql',
     'local-platform-postconditions.assert.sql'
   ];
@@ -93,8 +104,9 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
   assert.equal(patchManifest.fixtures[0].path, 'tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql');
   assert.ok(patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql') > patchManifest.fixtures.findIndex(item => item.path === 'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'legacy.messages').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
-  assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.some(source => source.startsWith('tests/staging/local-supabase/fixtures/')));
-  assert.ok(dag.nodes.find(node => node.id === 'team.admin').testSource.some(source => source.includes('team_management_dashboard.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'membership.syntax-fix').testSource.includes('supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
+  assert.equal(dag.nodes.find(node => node.id === 'team.admin').source.length, 0);
+  assert.ok(dag.nodes.find(node => node.id === 'test-fixture.admin-seed').testSource.includes('tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql'));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-auth-seed').source.some(source => source.includes('synthetic-direct-chat-auth-before-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-profiles').source.some(source => source.includes('synthetic-direct-chat-profiles-after-membership.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'test-fixture.direct-chat-runtime').source.some(source => source.includes('direct-conversation-eligibility-runtime.test.sql')));
@@ -167,7 +179,6 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   }
   assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 19);
   for (const fixture of [
-    'tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
     'tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql',
@@ -182,8 +193,8 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(dag.blockers.find(item => item.id === id)?.evidence?.some(path => path.includes('local-platform-')));
   }
   for (const id of ['DAG-014', 'DAG-015']) {
-    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
-    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'BLOCKER');
+    assert.equal(dag.blockers.find(item => item.id === id)?.severity, 'PRODUCTION_DEPLOYMENT_PENDING');
+    assert.equal(manifest.blockers.find(item => item.id === id)?.severity, 'PRODUCTION_DEPLOYMENT_PENDING');
   }
   const allNodes = [...dag.platformNodes, ...dag.nodes];
   const ids = allNodes.map(node => node.id);
@@ -206,6 +217,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   assert.equal(manifest.sourceCoverage.sqlFiles, inventory.files.length);
   assert.equal(manifest.sourceCoverage.mappedSources, inventory.files.length - duplicateCopies.size);
   assert.equal(manifest.sourceCoverage.mappedSourcesReplacedByFixtures, patchManifest.patches.length);
+  assert.equal(patchManifest.patches.length, 2);
   assert.equal(manifest.sourceCoverage.executedMappedSources, manifest.sourceCoverage.mappedSources - patchManifest.patches.length);
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, manifest.sourceCoverage.testOnlySqlFixtures);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, manifest.sourceCoverage.executedMappedSources + manifest.sourceCoverage.executedTestOnlySqlFixtures);
@@ -216,6 +228,10 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(selected.includes(file.path), 'candidate replay source missing: ' + file.path);
   }
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
+  const canonicalSourceCounts = new Map();
+  for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
+  assert.equal(canonicalSourceCounts.size, 66);
+  assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
 
@@ -226,6 +242,48 @@ test('direct conversation RPC recovery instructions are read-only', async () => 
   assert.match(doc, /get_or_create_direct_conversation_impl/);
   assert.match(doc, /read-only/i);
   assert.doesNotMatch(doc, /^\s*(insert|update|delete|create|alter|drop)\s+/im);
+});
+
+test('forward RLS postconditions run after migrations without duplicate SQL selection', async () => {
+  const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const selectedSql = manifest.candidateNodeOrder.flatMap(node => (node.testSources ?? []).filter(source => source.endsWith('.sql')));
+  assert.equal(selectedSql.length, new Set(selectedSql).size);
+  const migrationIndex = manifest.candidateNodeOrder.findIndex(node => node.nodeId === 'security.active-membership-rls-forward');
+  const assertionIndex = manifest.candidateNodeOrder.findIndex(node => node.nodeId === 'test-fixture.forward-hardening-postconditions');
+  assert.ok(migrationIndex >= 0 && assertionIndex > migrationIndex);
+  assert.ok(dag.nodes.find(node => node.id === 'test-fixture.forward-hardening-postconditions').requires.includes('security.active-membership-rls-forward'));
+});
+
+test('legacy messages compatibility fixture matches the production schema baseline without copying rows', async () => {
+  const sql = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/legacy-messages-compat.sql'), 'utf8');
+  const lower = sql.toLowerCase();
+  for (const expected of [
+    'id bigint generated by default as identity primary key',
+    'sender text not null',
+    'receiver text',
+    'content text',
+    'image_url text',
+    'created_at timestamp with time zone default now()',
+    'alter table public.messages enable row level security;',
+    'grant all on table public.messages to service_role;',
+    'grant select, update, usage on sequence public.messages_id_seq to anon, authenticated, service_role;'
+  ]) assert.ok(lower.includes(expected), 'legacy messages fixture missing: ' + expected);
+  assert.ok(!lower.includes('insert into public.messages'), 'fixture must never copy production rows');
+});
+test('forward direct-conversation hardening is followed by runtime and concurrency probes', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
+  assert.match(runner, /security\.direct-conversation-eligibility-forward/);
+  assert.match(runner, /post-forward-eligibility-runtime/);
+  assert.match(runner, /post-forward-concurrency/);
+});
+
+test('forward default-privilege migration leaves Supabase-managed role defaults untouched and fails closed on owned objects', async () => {
+  const sql = await readFile(path.join(root, 'supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql'), 'utf8');
+  assert.doesNotMatch(sql, /alter default privileges for role supabase_admin/i);
+  assert.match(sql, /supabase_admin owns public-schema objects/);
+  assert.match(sql, /from pg_proc p[\s\S]*?r\.rolname = 'supabase_admin'/i);
+  assert.match(sql, /alter default privileges for role postgres/i);
 });
 
 test('local pg_cron runtime probe is loopback-only and cleans up its unique job', async () => {
@@ -249,8 +307,8 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.local-pg-cron-runtime');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED');
-  assert.ok(node.blockedBy.includes('DAG-008'));
+  assert.equal(node.status, 'TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED');
+  assert.deepEqual(node.blockedBy, []);
   assert.ok(node.requires.includes('test-fixture.local-platform-postflight'));
   assert.ok(dag.blockers.find(item => item.id === 'DAG-008').evidence.includes('tests/staging/local-supabase/local-pg-cron-runtime.mjs'));
   assert.equal(dag.executionAuthorized, false);
@@ -285,7 +343,7 @@ test('local platform preflight and postflight are read-only, ordered, and fail c
 });
 
 
-test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', async () => {
+test('least-privilege overlay is a final, locally validated, loopback-only SQL fixture', async () => {
   const overlay = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql'), 'utf8');
   const assertion = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql'), 'utf8');
   assert.match(overlay, /TEST-ONLY/i);
@@ -300,17 +358,17 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
   assert.match(assertion, /pg_default_acl/);
   const node = JSON.parse(await readFile(dagPath, 'utf8')).nodes.find(item => item.id === 'security.least-privilege-overlay');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED');
+  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED');
   assert.ok(node.requires.includes('membership.final-format'));
   assert.ok(node.blockedBy.includes('DAG-016'));
   assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
 });
 
 
-test('chat composer media allowlists and message reaction options remain aligned with their database constraints', async () => {
+test('chat composer media allowlists are checked against the archived proposal, not represented as applied production SQL', async () => {
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  const migration = await readFile(path.join(root, 'database/changes/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
-  const reactionSchema = await readFile(path.join(root, 'database/changes/message_reactions_and_whatsapp_typography.sql'), 'utf8');
+  const migration = await readFile(path.join(root, 'database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
+  const reactionSchema = await readFile(path.join(root, 'supabase/migrations/20261106125643_message_reactions_and_realtime.sql'), 'utf8');
   const reactionModule = await readFile(path.join(root, 'modules/message-reactions.js'), 'utf8');
   for (const mime of [
     'video/mp4',
@@ -323,6 +381,8 @@ test('chat composer media allowlists and message reaction options remain aligned
     assert.ok(html.includes(mime), 'chat file picker is missing ' + mime);
     assert.ok(migration.includes(mime), 'Storage allow-list is missing ' + mime);
   }
+  const archiveManifest = JSON.parse(await readFile(path.join(root, 'database/archive/manifest.json'), 'utf8'));
+  assert.ok(archiveManifest.sqlFiles.some(file => file.path === 'database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql' && file.classification === 'unapplied-proposal'));
   assert.ok(html.includes('modules/message-reactions.js'));
   assert.ok(html.includes('modules/message-reactions.css'));
   assert.match(reactionModule, /type: "like"/);
@@ -342,4 +402,55 @@ test('chat composer media allowlists and message reaction options remain aligned
     assert.ok(migration.includes(mime), 'conversation-documents allow-list is missing ' + mime);
   }
   assert.ok(html.includes("attachment_type?.startsWith('video/')"));
+});
+
+
+test('four forward hardening migrations remain outside the production ledger and record disposable-local runtime evidence', async () => {
+  const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  assert.equal(registry.productionMigrations.length, 62);
+  assert.equal(registry.forwardMigrations.length, 4);
+  const expected = new Map([
+    ['20261112160000_harden_direct_conversation_eligibility.sql', []],
+    ['20261112160001_harden_chat_media_upload_ownership.sql', []],
+    ['20261112160002_revoke_unsafe_public_default_privileges.sql', ['DAG-016']],
+    ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']]
+  ]);
+  for (const [name, blockers] of expected) {
+    const path = 'supabase/migrations/' + name;
+    const node = dag.nodes.find(item => item.source?.includes(path));
+    assert.ok(node, 'forward migration missing from DAG: ' + name);
+    assert.deepEqual(node.blockedBy, blockers);
+    const forward = registry.forwardMigrations.find(item => item.path === path);
+    assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
+    assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+    assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
+  }
+  assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
+});
+
+
+test('post-forward runtime assertions are ordered after their matching security migrations', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const direct = dag.nodes.find(item => item.id === 'test-fixture.forward-direct-conversation-eligibility');
+  const hardening = dag.nodes.find(item => item.id === 'test-fixture.forward-hardening-postconditions');
+  assert.ok(direct && hardening);
+  assert.ok(direct.requires.includes('security.direct-conversation-eligibility-forward'));
+  assert.ok(hardening.requires.includes('security.active-membership-rls-forward'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === direct.id && to === 'test-fixture.direct-chat-concurrency'));
+  for (const path of [
+    'tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql',
+    'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql'
+  ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 19);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 83);
+});
+
+
+test('direct-conversation stress executes once after the forward eligibility migration', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
+  assert.match(runner, /postForwardConcurrencyExecuted/);
+  assert.ok(runner.includes("node.nodeId === 'test-fixture.direct-chat-concurrency' && !postForwardConcurrencyExecuted"));
+  assert.match(runner, /post-forward-concurrency/);
 });

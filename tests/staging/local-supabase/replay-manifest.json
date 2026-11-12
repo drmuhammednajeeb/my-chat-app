@@ -3,36 +3,39 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 55,
-    "mappedSources": 52,
-    "identicalDuplicateCopiesExcluded": 3,
+    "sqlFiles": 66,
+    "mappedSources": 66,
+    "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
-      "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
       "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql",
       "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql",
       "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
       "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
-      "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+      "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql",
+      "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
       "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
       "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
       "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
       "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
       "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
       "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+      "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql",
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
-    "mappedSourcesReplacedByFixtures": 4,
-    "executedMappedSources": 48,
+    "mappedSourcesReplacedByFixtures": 2,
+    "executedMappedSources": 64,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 67
+    "executedSqlFiles": 83,
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeRunId": 43260183037,
+    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
   },
   "execution": {
     "enabled": false,
@@ -46,28 +49,28 @@
   "candidateNodeOrder": [
     {
       "nodeId": "test-fixture.local-platform-preflight",
-      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_NOT_EXECUTED",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_PREFLIGHT_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Run only after the disposable local stack starts and before application SQL replay. It performs catalog reads and raises on missing prerequisites; it never installs extensions or mutates data."
-    },
-    {
-      "nodeId": "legacy.messages",
-      "status": "TEST_ONLY_COMPATIBILITY_FIXTURE",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
-        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
       ],
       "blockedBy": [],
       "parityNote": null
     },
     {
+      "nodeId": "legacy.messages",
+      "status": "TEST_ONLY_SCHEMA_BASELINE_MATCHED_PRODUCTION_CATALOG",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
+        "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Schema-only fixture matches the read-only production catalog metadata; data remains empty and production is untouched."
+    },
+    {
       "nodeId": "core.base",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -76,8 +79,8 @@
       "nodeId": "core.grants",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "supabase/migrations/202611060002_tighten_api_grants.sql",
-        "supabase/migrations/202611060003_minimum_table_privileges.sql"
+        "supabase/migrations/20261106062058_tighten_api_grants.sql",
+        "supabase/migrations/20261106062111_minimum_table_privileges.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -86,7 +89,7 @@
       "nodeId": "core.creator",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
+        "supabase/migrations/20261106062150_fix_creator_membership_rls.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -95,16 +98,8 @@
       "nodeId": "chat.preferences",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/user_specific_direct_chat_preferences.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
-    },
-    {
-      "nodeId": "chat.reactions",
-      "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/message_reactions_and_whatsapp_typography.sql"
+        "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql",
+        "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -122,7 +117,9 @@
       "nodeId": "chat.avatar-storage",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql",
+        "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql",
+        "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -140,14 +137,14 @@
       "nodeId": "core.profile-fks",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "supabase/migrations/202611060004_reference_profiles.sql"
+        "supabase/migrations/20261106062133_reference_profiles.sql"
       ],
       "blockedBy": [],
       "parityNote": null
     },
     {
       "nodeId": "chat.media-upload-path-hardening",
-      "status": "TEST_ONLY_SECURITY_HARDENING_CANDIDATE",
+      "status": "TEST_ONLY_CHAT_MEDIA_PATH_FIXTURE_LOCAL_RUNTIME_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql"
       ],
@@ -157,17 +154,15 @@
     {
       "nodeId": "chat.voice",
       "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/20261107080000_chat_voice_messages.sql"
-      ],
+      "testSources": [],
       "blockedBy": [],
       "parityNote": null
     },
     {
       "nodeId": "chat.direct-conversation-rpc",
-      "status": "TEST_ONLY_RESTORED_PRODUCTION_SOURCE",
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
       "testSources": [
-        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+        "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql"
       ],
       "blockedBy": [
         "DAG-015"
@@ -181,22 +176,13 @@
         "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Must run before membership.base installs auth.users invitation/profile triggers; all identities use reserved .test emails and synthetic IDs."
-    },
-    {
-      "nodeId": "chat.channels-public",
-      "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/public_announcement_channels.sql"
-      ],
-      "blockedBy": [],
       "parityNote": null
     },
     {
       "nodeId": "chat.preference-archive-rls",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
+        "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -211,10 +197,19 @@
       "parityNote": null
     },
     {
-      "nodeId": "team.admin",
-      "status": "TEST_COPY_ONLY_SYNTHETIC_ADMIN_EMAIL",
+      "nodeId": "chat.hide-atomic-direct-rpc-implementation",
+      "status": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
       "testSources": [
-        "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+        "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.channels-public",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/20261106125643_message_reactions_and_realtime.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -223,28 +218,36 @@
       "nodeId": "chat.self",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107061012_self_message_conversation.sql",
-        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
+        "supabase/migrations/20261107061012_self_message_conversation.sql",
+        "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql"
       ],
       "blockedBy": [],
       "parityNote": null
     },
     {
-      "nodeId": "chat.profile-status-and-conversation-images",
-      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "nodeId": "chat.reactions",
+      "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261112000100_profile_status_and_conversation_images.sql",
-        "tests/profile-status-and-conversation-images.test.mjs"
+        "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Source-only feature migration. Do not apply to production; requires disposable-local runtime RLS, Storage, and Realtime validation."
+      "parityNote": null
     },
     {
       "nodeId": "chat.pins",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+        "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql",
+        "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql"
       ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "team.admin",
+      "status": "SCHEMA_FOLDED_INTO_20261106130351",
+      "testSources": [],
       "blockedBy": [],
       "parityNote": null
     },
@@ -252,7 +255,7 @@
       "nodeId": "chat.groups",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
+        "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -261,16 +264,9 @@
       "nodeId": "chat.channels-private",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/private_channels_with_secure_invites.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
-    },
-    {
-      "nodeId": "chat.account-settings-message-edit",
-      "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
+        "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+        "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql",
+        "supabase/migrations/20261106132753_index_channel_invites_created_by.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -279,7 +275,7 @@
       "nodeId": "chat.hardening",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
+        "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql"
       ],
       "blockedBy": [
         "DAG-014",
@@ -288,10 +284,28 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.account-settings-message-edit",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.admin-seed",
+      "status": "TEST_ONLY_SYNTHETIC_ADMIN_SEED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
       "nodeId": "chat.workspaces",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+        "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -300,7 +314,7 @@
       "nodeId": "chat.expiry",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
+        "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -309,7 +323,7 @@
       "nodeId": "chat.group-ownership-transfer",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107125616_secure_group_ownership_transfer.sql"
+        "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -318,7 +332,7 @@
       "nodeId": "chat.personal-lists-realtime",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
+        "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -327,7 +341,7 @@
       "nodeId": "chat.favorite-column",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
+        "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -336,7 +350,7 @@
       "nodeId": "chat.message-edit-hardening",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107124500_harden_message_edit_permissions.sql"
+        "supabase/migrations/20261107120149_harden_message_edit_permissions.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -345,7 +359,7 @@
       "nodeId": "chat.workspace-indexes",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107134600_index_workspace_foreign_keys.sql"
+        "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -353,9 +367,7 @@
     {
       "nodeId": "chat.media-and-reactions",
       "status": "SOURCE_REVIEWED",
-      "testSources": [
-        "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql"
-      ],
+      "testSources": [],
       "blockedBy": [],
       "parityNote": null
     },
@@ -363,7 +375,7 @@
       "nodeId": "chat.expiry-purge",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+        "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -372,7 +384,7 @@
       "nodeId": "chat.group-settings-hardening",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
+        "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -381,7 +393,7 @@
       "nodeId": "chat.remove-duplicate-favorite",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
+        "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -390,7 +402,7 @@
       "nodeId": "chat.restore-message-edit-guard",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107130000_restore_message_edit_guard.sql"
+        "supabase/migrations/20261107120239_restore_message_edit_guard.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -399,26 +411,26 @@
       "nodeId": "chat.workspace-realtime",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
-        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
+        "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql",
+        "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql"
       ],
       "blockedBy": [],
       "parityNote": null
     },
     {
       "nodeId": "test-fixture.local-platform-postflight",
-      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_POSTFLIGHT_NOT_EXECUTED",
+      "status": "TEST_ONLY_READ_ONLY_LOCAL_PLATFORM_POSTFLIGHT_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Run only after the relevant disposable-local replay nodes. Confirms extension placement and job definition, not actual scheduler execution."
+      "parityNote": null
     },
     {
       "nodeId": "chat.team-admin-group-overrides",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107130534_include_team_admins_in_group_management.sql"
+        "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -427,27 +439,25 @@
       "nodeId": "chat.message-edit-indexes",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107131500_index_message_edit_history.sql"
+        "supabase/migrations/20261107120426_index_message_edit_history.sql"
       ],
       "blockedBy": [],
       "parityNote": null
     },
     {
       "nodeId": "test-fixture.local-pg-cron-runtime",
-      "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_NOT_EXECUTED",
+      "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED",
       "testSources": [
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
       ],
-      "blockedBy": [
-        "DAG-008"
-      ],
-      "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@loopback:54322/postgres. Schedules a unique SELECT 1 probe, waits up to 90 seconds for succeeded status, then unschedules and removes only its own job-run details. Never run against cloud or production."
+      "blockedBy": [],
+      "parityNote": null
     },
     {
       "nodeId": "chat.scope-team-admin-overrides",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+        "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -456,7 +466,7 @@
       "nodeId": "membership.base",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107144109_private_membership_system_20261107.sql"
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -465,7 +475,7 @@
       "nodeId": "membership.wrappers",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
+        "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -474,7 +484,7 @@
       "nodeId": "membership.invitation-policies",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
+        "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -483,7 +493,7 @@
       "nodeId": "membership.invitation-indexes",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
+        "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -492,7 +502,7 @@
       "nodeId": "membership.auth-fix",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
+        "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -513,7 +523,7 @@
         "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Runs after membership.base profile guard and before membership.official adds verified-number column; deliberately omits the missing-profile identity."
+      "parityNote": null
     },
     {
       "nodeId": "membership.official",
@@ -528,7 +538,7 @@
       "nodeId": "membership.syntax-fix",
       "status": "TEST_COPY_ONLY",
       "testSources": [
-        "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+        "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -537,7 +547,7 @@
       "nodeId": "membership.retire-sequence",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
+        "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -555,7 +565,7 @@
       "nodeId": "membership.restore-rpc",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
+        "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -564,9 +574,31 @@
       "nodeId": "membership.chat-rls-fix",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+        "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql"
       ],
       "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.channel-visibility-avatar-background",
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
+      "testSources": [
+        "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql"
+      ],
+      "blockedBy": [
+        "DAG-014"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.harden-channel-rpc-wrappers",
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
+      "testSources": [
+        "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql"
+      ],
+      "blockedBy": [
+        "DAG-014"
+      ],
       "parityNote": null
     },
     {
@@ -589,15 +621,22 @@
     },
     {
       "nodeId": "chat.direct-conversation-rpc-eligibility-guard",
-      "status": "TEST_ONLY_GUARD_IMPLEMENTED_RUNTIME_VALIDATION_BLOCKED",
+      "status": "TEST_ONLY_GUARD_LOCAL_RUNTIME_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs"
       ],
-      "blockedBy": [
-        "DAG-014",
-        "DAG-015"
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.profile-status-and-conversation-images",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
+        "tests/profile-status-and-conversation-images.test.mjs"
       ],
+      "blockedBy": [],
       "parityNote": null
     },
     {
@@ -610,24 +649,103 @@
         "DAG-014",
         "DAG-015"
       ],
-      "parityNote": "Disposable-local runtime script only. Requires the full approved replay; no CI or production SQL execution. Two-session reversed-pair concurrency remains separately blocked."
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.profile-status-video-media",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112091605_profile_status_video_media.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "chat.profile-status-combined-content-media",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "security.direct-conversation-eligibility-forward",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
+      "testSources": [
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "security.chat-media-upload-ownership-forward",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
+      "testSources": [
+        "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "security.public-default-privileges-forward",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
+      "testSources": [
+        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.forward-direct-conversation-eligibility",
+      "status": "TEST_ONLY_POST_FORWARD_DIRECT_CONVERSATION_ASSERTIONS_PASSED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "security.active-membership-rls-forward",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
+      "testSources": [
+        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
     },
     {
       "nodeId": "test-fixture.direct-chat-concurrency",
-      "status": "TEST_ONLY_LOCAL_TWO_SESSION_CONCURRENCY_HARNESS_NOT_EXECUTED",
+      "status": "TEST_ONLY_DIRECT_CHAT_CONCURRENCY_RUNTIME_PASSED",
       "testSources": [
         "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
         "tests/staging/local-supabase/direct-conversation-concurrency.test.mjs"
       ],
-      "blockedBy": [
-        "DAG-014",
-        "DAG-015"
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.forward-hardening-postconditions",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
-      "parityNote": "Manual disposable-local-only runner. Requires LOCAL_SUPABASE_DB_URL pointing to postgres@127.0.0.1:54322/postgres and psql; never run against cloud or production. A static regression test verifies the concurrency runner establishes the two reserved synthetic users as eligible after the rollback-only matrix; those changes are confined to the disposable database."
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
     },
     {
       "nodeId": "security.least-privilege-overlay",
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
@@ -640,29 +758,14 @@
       "blockedBy": [
         "DAG-016"
       ],
-      "parityNote": "After applying the test-only overlay, run read-only catalog assertions and rollback-only CRUD/RPC compatibility probes (chat list create/update/upsert/delete, star upsert/delete, secure message edit audit insert, and cross-user isolation). Runtime execution remains blocked pending a disposable Supabase replay. A separate local Auth/Storage API runtime probe validates file upload, upsert, signed read, private/shared visibility, cross-user path spoof denial, owner deletion, and public avatar delivery. It has not been executed. A separate disposable local Supabase workflow provisions PostgreSQL 17 and the managed Auth/Storage/Realtime services, replays the manifest's exact DAG order, then runs the runtime probes and always stops the temporary stack. It is not a hosted environment and does not authorize production deployment."
+      "parityNote": null
     }
   ],
-  "duplicateSelection": [
-    {
-      "logicalChange": "chat privilege hardening",
-      "selected": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-      "excludedIdenticalCopy": "database/changes/chat_table_privilege_hardening.sql",
-      "sha256": "400e727c552cea4b32602f43be6eed6d722406847e3f0f4bd3a19ae37814cdf4"
-    },
-    {
-      "logicalChange": "unified notifications",
-      "selected": "supabase/migrations/20261107014128_unified_user_notifications.sql",
-      "excludedIdenticalCopy": "database/changes/unified_notifications.sql",
-      "sha256": "9bec9867db333ddd5c7950fc8cdd0c04c76ca554e1117cf71d53e7b6b818fda8"
-    },
-    {
-      "logicalChange": "notification indexes",
-      "selected": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
-      "excludedIdenticalCopy": "database/changes/index_user_notification_foreign_keys.sql",
-      "sha256": "c59daeb5b307f67ed8148611530d94f4330ac9fedbbe52df0e9c908a2b687ea2"
-    }
-  ],
+  "duplicateSelection": {
+    "policy": "No duplicate active SQL copies remain. Every production ledger version maps to one canonical migration path.",
+    "excludedDuplicateCount": 0,
+    "excludedDuplicatePaths": []
+  },
   "blockers": [
     {
       "id": "DAG-002",
@@ -676,62 +779,101 @@
     },
     {
       "id": "DAG-003",
-      "severity": "REVIEW_REQUIRED_RUNTIME_TEST",
-      "issue": "The historical-to-final membership format transition is represented and the final migration allowlist is tested for all six function targets, including both admin RPC implementations. A PostgreSQL local apply test must still prove the replacement and resulting constraints."
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "The full disposable replay applied the historical-to-final membership transition. The Forever membership-number workflow passed, and post-forward direct-conversation eligibility checks verified active membership, verified membership number, final format, and confirmed Auth email. Production remains unchanged.",
+      "evidence": [
+        "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-006",
-      "severity": "REVIEW_REQUIRED_RUNTIME_RLS_TEST",
-      "issue": "Static source review found three policy definitions timestamped after the membership rewrite; all three use a direct or indirect active-membership guard, with zero later unguarded policies detected. The DAG sequences all earlier feature policy sources before the rewrite. Runtime PostgreSQL RLS tests are still required."
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Post-forward active-membership restrictive RLS assertions and rollback-only authenticated CRUD/RPC compatibility tests passed in disposable local Supabase. No unguarded application policy was observed in the runtime assertions.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-007",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "Verify pgcrypto extension schema and extensions.digest / extensions.gen_random_bytes resolution locally."
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Disposable-local preflight and postflight verified pgcrypto is installed in extensions and extensions.digest(bytea,text) plus extensions.gen_random_bytes(integer) resolve.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-008",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "pg_cron availability and the expected purge-job definition now have read-only local pre/postflight assertions. A separate loopback-only probe runner is prepared to prove actual scheduler execution using a temporary SELECT 1 job with scoped cleanup. Neither the probe nor the scheduler has been run; this blocker remains until disposable-local runtime evidence exists.",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "The reviewed purge-job definition was verified and the loopback-only disposable pg_cron probe executed a temporary SELECT 1 job successfully with scoped cleanup.",
       "evidence": [
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
-      ]
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-010",
-      "severity": "REVIEW_REQUIRED",
-      "issue": "Supabase-managed Auth, Storage, Realtime schemas and roles must be asserted locally before SQL."
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Disposable-local preflight verified Auth, Storage, Realtime schemas, auth.users, auth.uid(), storage objects, Realtime publication, and required API roles; local Auth and Storage API probes passed.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
     },
     {
       "id": "DAG-013",
-      "severity": "REVIEW_REQUIRED_SECURITY_HARDENING",
-      "issue": "The canonical chat-media INSERT policy checks conversation membership but does not bind path segment 2 (the uploader folder in the browser's conversationId/userId/object path) to auth.uid(). A test-only replacement policy adds this ownership check before the membership rewrite. Verify upload, signed-URL read, and cross-user path denial in local RLS tests before considering a production migration."
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160001 passed disposable-local replay. Storage API probes passed valid chat-media upload, member signed-read, cross-user uploader-folder spoof denial, private-document share controls, and avatar owner-upsert checks. Production still uses the pre-migration policy until the forward migration is separately approved and applied.",
+      "evidence": [
+        "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     },
     {
       "id": "DAG-014",
-      "severity": "BLOCKER",
-      "issue": "The direct-conversation RPC source is restored and rollback-only PostgreSQL assertions plus a two-session reversed-pair runner are prepared. Runtime execution is still required in a disposable local Supabase environment to prove unauthenticated/null/self/missing-profile rejection, existing-conversation reuse, exactly-one concurrent creation, exact ACL enforcement, and active-membership gating. Do not enable replay until those runtime tests pass.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160000 and post-forward SQL assertions passed in disposable local Supabase. Twenty-four reversed-pair concurrent requests converged on one direct conversation; 40 authenticated message writes persisted uniquely. Production RPC remains unchanged until the forward migration is separately approved and applied.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
-        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
-      ]
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     },
     {
       "id": "DAG-015",
-      "severity": "BLOCKER",
-      "issue": "The recovered production RPC lacked caller and target eligibility checks. A separate test-only overlay now checks both participants against active membership, verified membership number, final number format, and confirmed Auth email while locking authoritative rows. The overlay and negative-case PostgreSQL assertions are prepared, but runtime validation, concurrency, and exact ACL behavior remain blocked; no production migration is authorized.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160000 passed caller/target eligibility, active membership, verified-number, final-format, confirmed-email, and RPC ACL assertions in disposable local Supabase. The production RPC remains unchanged until the forward migration is separately approved and applied.",
       "evidence": [
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
         "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
         "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
-        "tests/staging/local-supabase/direct-conversation-concurrency.mjs"
-      ]
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     },
     {
       "id": "DAG-016",
-      "severity": "BLOCKER",
-      "issue": "Least-privilege overlay is prepared for disposable local replay only. Must prove API role table/sequence/function privileges, active-member policy coverage, and unchanged legitimate CRUD/RPC behavior before any production migration is designed."
+      "severity": "EXTERNAL_PLATFORM_CONFIGURATION_REVIEW_REQUIRED",
+      "issue": "Forward migrations 20261112160002 and 20261112160003 passed disposable-local least-privilege, restrictive active-membership RLS, and rollback-only CRUD/RPC tests. Production postgres-owned defaults are addressed by the migration. Supabase-managed supabase_admin defaults remain broad and cannot be changed by postgres because it is not a member of that superuser role; read-only production inspection found zero public relations/functions owned by supabase_admin. Keep production deployment gated on Supabase-level review of this external default-ACL residual.",
+      "evidence": [
+        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
+        "docs/RLS_LEAST_PRIVILEGE_HARDENING.md"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_SUPABASE_MANAGED_ROLE_RESIDUAL_REMAINS"
     }
   ],
   "requiredSourceRecovery": [
@@ -745,5 +887,90 @@
     "Candidate order is derived from the reviewed acyclic dependency graph.",
     "Test-only SQL copies and the chat-media upload-path hardening fixture are local-only; they are not production migrations.",
     "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved."
-  ]
+  ],
+  "forwardReconciliationMigrations": [
+    {
+      "path": "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql",
+      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
+      "blockedBy": [
+        "DAG-014",
+        "DAG-015"
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
+      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037
+    }
+  ],
+  "validationEvidence": {
+    "runtime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 43260183037,
+      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "completedAt": "2026-11-12T16:37:17Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 83,
+      "checks": [
+        "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
+        "pgcrypto schema and function resolution passed",
+        "temporary pg_cron scheduler job executed successfully",
+        "24 reversed-pair concurrent requests converged on one direct conversation",
+        "40 concurrent authenticated message writes persisted uniquely",
+        "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
+        "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
+        "full reviewed disposable replay completed"
+      ]
+    },
+    "audit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 43260183019,
+      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "completedAt": "2026-11-12T16:35:00Z",
+      "tests": 77,
+      "passed": 77,
+      "failed": 0
+    }
+  },
+  "reviewState": "LOCAL_REPLAY_AND_CI_PASSED_PRODUCTION_RELEASE_REVIEW_REQUIRED"
 }

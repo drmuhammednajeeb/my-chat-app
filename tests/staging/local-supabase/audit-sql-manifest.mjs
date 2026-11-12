@@ -67,13 +67,15 @@ function inspectFile(file) {
 }
 
 export async function buildSqlAudit(root = DEFAULT_ROOT) {
-  const [migrations, historical] = await Promise.all([
+  const [migrations, archived] = await Promise.all([
     walkSql(root, 'supabase/migrations', 'migration'),
-    walkSql(root, 'database/changes', 'historical_change')
+    walkSql(root, 'database/archive', 'archived_non_executable')
   ]);
-  const inspected = [...migrations, ...historical].map(inspectFile);
+  const inspectedMigrations = migrations.map(inspectFile);
+  const inspectedArchive = archived.map(inspectFile);
+  const inspected = [...inspectedMigrations, ...inspectedArchive];
   const byHash = new Map();
-  for (const file of inspected) {
+  for (const file of inspectedMigrations) {
     const list = byHash.get(file.sha256) ?? [];
     list.push(file.path);
     byHash.set(file.sha256, list);
@@ -83,7 +85,7 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
     .map(([sha256, paths]) => ({ sha256, paths: paths.sort() }))
     .sort((a, b) => a.paths[0].localeCompare(b.paths[0]));
 
-  const migrationFiles = inspected.filter(file => file.kind === 'migration')
+  const migrationFiles = inspectedMigrations
     .sort((a, b) => (a.migrationTimestamp ?? '').localeCompare(b.migrationTimestamp ?? '') || a.path.localeCompare(b.path));
   const hasLegacyTableDefinition = migrationFiles.some(file => file.createsTables.includes('messages'));
   const legacyBlockers = migrationFiles
@@ -93,9 +95,10 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
       reason: 'References public.messages, but no CREATE TABLE public.messages exists in the migration set.',
       classification: file.classification
     }));
-  const syntaxHazards = inspected.flatMap(file =>
+  const syntaxHazards = inspectedMigrations.flatMap(file =>
     file.suspectedMissingFunctionTerminators.map(item => ({ path: file.path, ...item }))
   );
+  const archivedSyntaxHazards = inspectedArchive.flatMap(file => file.suspectedMissingFunctionTerminators.map(item => ({ path: file.path, ...item })));
   const configExists = await stat(path.join(root, 'supabase/config.toml')).then(() => true).catch(() => false);
 
   const findings = [];
@@ -110,13 +113,15 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
     auditMode: 'READ_ONLY',
     sourceDirectories: [
       { path: 'supabase/migrations', role: 'Supabase CLI migration candidates', fileCount: migrations.length },
-      { path: 'database/changes', role: 'Historical SQL; excluded from automatic migration execution', fileCount: historical.length }
+      { path: 'database/archive', role: 'Non-executable provenance, pending reconciliation, and unapplied SQL; excluded from CLI replay', fileCount: archived.length }
     ],
     migrationOrder: migrationFiles.map(file => ({ path: file.path, timestamp: file.migrationTimestamp })),
-    files: inspected.sort((a, b) => a.path.localeCompare(b.path)),
+    files: inspectedMigrations.sort((a, b) => a.path.localeCompare(b.path)),
+    archivedFiles: inspectedArchive.sort((a, b) => a.path.localeCompare(b.path)),
     duplicateGroups,
     legacyBlockers,
     syntaxHazards,
+    archivedSyntaxHazards,
     bootstrap: {
       status: findings.some(item => item.severity === 'blocking') ? 'BLOCKED' : 'AUDIT_ONLY_NOT_APPROVED',
       executable: false,

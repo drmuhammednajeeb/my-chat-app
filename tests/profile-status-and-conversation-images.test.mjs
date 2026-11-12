@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../modules/profile-status-and-conversation-images.js', import.meta.url), 'utf8');
-const migration = readFileSync(new URL('../database/changes/20261112000100_profile_status_and_conversation_images.sql', import.meta.url), 'utf8');
+const migration = readFileSync(new URL('../supabase/migrations/20261112091557_profile_status_and_conversation_images.sql', import.meta.url), 'utf8');
 const styles = readFileSync(new URL('../modules/profile-status-and-conversation-images.css', import.meta.url), 'utf8');
 
 test('feature client module parses as a classic browser script', () => {

@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 1,
-  "planId": "local-supabase-bootstrap-design-v1",
+  "schemaVersion": 2,
+  "planId": "canonical-62-migration-bootstrap-design-v2",
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "execution": {
     "enabled": false,
     "files": [],
-    "allowHistoricalChangesDirectory": false,
+    "allowArchiveDirectory": false,
     "allowCanonicalMigrationMutation": false,
     "allowCloudSupabase": false,
     "allowProductionData": false
@@ -17,7 +17,7 @@
       "A complete object inventory covering tables, columns, constraints, indexes, sequences, functions, triggers, policies, grants, storage buckets, and publication membership",
       "A dependency graph proving every referenced object exists before its first use",
       "A corrected, separately reviewed test-only compatibility layer for legacy public.messages references, without modifying canonical SQL",
-      "Resolution of all cross-directory duplicate and ordering conflicts",
+      "Proof that all 62 production ledger versions map to exactly one canonical migration and the archive is excluded from CLI discovery.",
       "A successful PostgreSQL parse and execution rehearsal against a disposable local-only database",
       "A verified local-only Supabase endpoint guard and outbound network deny policy",
       "A cleanup test proving the ephemeral stack and fixtures are destroyed after the job",
@@ -29,18 +29,20 @@
     ]
   },
   "sources": {
-    "cliMigrations": {
+    "canonicalMigrations": {
       "path": "supabase/migrations",
-      "fileCount": 10,
+      "fileCount": 62,
+      "productionLedgerCount": 62,
       "executionAllowed": false,
-      "reason": "The current CLI sequence contains unresolved legacy-table references and dependencies on objects defined only in historical SQL."
+      "reason": "One canonical file exists for each production ledger version. Source-body equivalence and clean disposable replay remain under review."
     },
-    "historicalSql": {
-      "path": "database/changes",
-      "fileCount": 43,
+    "nonExecutableArchive": {
+      "path": "database/archive",
+      "fileCount": 12,
       "executionAllowed": false,
-      "reason": "This directory is not a canonical ordered migration stream. Timestamp order alone does not prove dependencies, and some files are duplicated or syntactically invalid."
-    }
+      "reason": "Source provenance, pending forward reconciliation and unapplied proposals only; never part of Supabase CLI discovery or replay."
+    },
+    "duplicateActiveCopies": 0
   },
   "dependencyLayers": [
     {
@@ -62,63 +64,58 @@
         "managed-platform-prerequisites"
       ],
       "blockingChecks": [
-        "Resolve public.messages assumptions in migrations 001 and 006",
-        "Prove table and FK order, including auth.users and profile references",
-        "Prove trigger functions exist before trigger creation"
+        "Resolve public.messages assumptions in canonical migrations 20261106061954 and 20261106062207 with the test-only legacy compatibility fixture; do not invent a production legacy table.",
+        "Prove table and FK order, including auth.users and profile references.",
+        "Prove trigger functions exist before trigger creation."
       ]
     },
     {
       "id": "chat-feature-foundation",
       "purpose": "direct-chat preferences, reactions, pins, delivery receipts, group capacity and team-admin helpers",
-      "status": "BLOCKED",
+      "status": "SOURCE_ORDER_RECONSTRUCTED_REVIEW_REQUIRED",
       "dependencies": [
         "core-chat-schema"
       ],
       "blockingChecks": [
-        "Migrations 007 references message_pins, message_reactions, app_private.is_team_admin, app_private.enforce_group_member_limit, and app_private.get_or_create_direct_conversation_impl",
-        "Those objects are not established by the preceding CLI migration set",
-        "Historical source ordering is not formally declared"
+        "Review the reconstructed reaction, message-pin and team-admin prerequisites folded into production versions 20261106125643 and 20261106130351.",
+        "Verify pin/reaction/receipt policies and grants in disposable PostgreSQL replay."
       ]
     },
     {
       "id": "channels-groups-and-workspaces",
       "purpose": "channels, group settings, member events, custom lists, workspaces, documents and private reply contexts",
-      "status": "BLOCKED",
+      "status": "SOURCE_ORDER_RECONSTRUCTED_REVIEW_REQUIRED",
       "dependencies": [
         "chat-feature-foundation"
       ],
       "blockingChecks": [
-        "Resolve conversations.type constraint evolution before channel functions and policies",
-        "Resolve dependencies on team-admin and group-management helpers",
-        "Verify storage path ownership and private-document RLS as a single coherent model"
+        "Verify channel baseline, private invite DDL and channel RPCs in ledger order.",
+        "Verify storage path ownership and private-document RLS as one coherent model."
       ]
     },
     {
       "id": "notifications-and-realtime",
       "purpose": "notification tables, triggers, indexes, publication membership and replica identity",
-      "status": "BLOCKED",
+      "status": "SOURCE_ORDER_REVIEW_REQUIRED",
       "dependencies": [
         "core-chat-schema",
         "chat-feature-foundation"
       ],
       "blockingChecks": [
-        "Ensure profiles, conversations, chat_messages and conversation_members exist before notification triggers",
-        "Deduplicate notification SQL only in a reviewed test manifest, never by silently choosing a file",
-        "Verify realtime publication membership idempotently"
+        "Verify notification triggers, indexes, publication membership and replica identity in disposable replay."
       ]
     },
     {
       "id": "private-membership-and-auth-lifecycle",
       "purpose": "team admins, membership invitations, signup triggers, official membership numbers and membership-state RPCs",
-      "status": "BLOCKED",
+      "status": "SOURCE_ORDER_RECONSTRUCTED_REVIEW_REQUIRED",
       "dependencies": [
         "core-chat-schema"
       ],
       "blockingChecks": [
-        "Create team-admin authority before functions that call app_private.is_team_admin",
-        "Verify auth.users BEFORE/AFTER triggers and invitation acceptance transaction semantics",
-        "Resolve legacy and official membership-number format transitions",
-        "Fix the missing statement terminator in 20261107152733 before any rehearsal"
+        "Verify auth.users BEFORE/AFTER triggers and invitation acceptance transaction semantics.",
+        "Run membership-number transition tests and verify canonical 20261107152733 syntax repair.",
+        "Assign the first team administrator through a separate controlled operational step; migrations do not seed a real identity."
       ]
     },
     {
@@ -143,44 +140,32 @@
     {
       "id": "LEGACY_MESSAGES_001",
       "severity": "BLOCKER",
-      "source": "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
-      "detail": "Drops a policy, revokes privileges, and enables RLS on public.messages before proving the table exists."
+      "source": "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
+      "detail": "References public.messages; only the disposable replay fixture supplies a minimal compatibility stub."
     },
     {
       "id": "LEGACY_MESSAGES_006",
       "severity": "BLOCKER",
-      "source": "supabase/migrations/202611060006_explicit_legacy_deny.sql",
-      "detail": "Creates a policy on public.messages without a preceding table definition in the CLI migration set."
+      "source": "supabase/migrations/20261106062207_explicit_legacy_deny.sql",
+      "detail": "Creates a policy on public.messages; the disposable replay must apply the compatibility fixture before this version."
     },
     {
       "id": "LATE_OBJECTS_007",
       "severity": "BLOCKER",
-      "source": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-      "detail": "References message_pins, message_reactions, app_private.is_team_admin, app_private.enforce_group_member_limit, app_private.get_or_create_direct_conversation_impl, and membership columns that are introduced in historical SQL or later changes."
-    },
-    {
-      "id": "CROSS_DIRECTORY_ORDER",
-      "severity": "BLOCKER",
-      "source": "database/changes",
-      "detail": "43 historical SQL files are not a canonical CLI migration sequence; filename timestamps and alphabetical order do not prove object dependencies."
-    },
-    {
-      "id": "DUPLICATE_SQL",
-      "severity": "REVIEW_REQUIRED",
-      "source": "database/changes",
-      "detail": "Three byte-identical pairs exist across the CLI and historical directories; a test plan must explicitly identify canonical source provenance."
+      "source": "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql",
+      "detail": "Must run after the canonical message pins/reactions and team-admin prerequisite in version 20261106130351; the DAG records this dependency, but replay remains unverified."
     },
     {
       "id": "SQL_TERMINATOR_20261107152733",
-      "severity": "BLOCKER",
-      "source": "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
-      "detail": "The CREATE OR REPLACE FUNCTION body ends at $function$ without the required terminating semicolon before REVOKE/GRANT statements."
+      "severity": "RESOLVED_CANONICAL_SOURCE_REPAIRED",
+      "source": "database/archive/source-provenance/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "detail": "The canonical migration 20261107152733 now has the required statement terminator. The original malformed source is retained only as non-executable archive provenance."
     },
     {
       "id": "MEMBERSHIP_SCHEMA_DRIFT",
-      "severity": "BLOCKER",
+      "severity": "REVIEW_REQUIRED_RUNTIME",
       "source": "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
-      "detail": "This migration expects app_private membership functions, member_invitations and constraints that are introduced in historical SQL, not in the preceding CLI migration stream."
+      "detail": "Membership prerequisites are now represented by earlier canonical production-version migrations. Verify the complete ordered transition in a disposable local replay before authorizing execution."
     },
     {
       "id": "DIRECT_CONVERSATION_RUNTIME",
@@ -199,6 +184,12 @@
       "severity": "BLOCKER",
       "source": "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
       "detail": "Read-only production catalog checks found broad postgres-owned public-schema default ACLs and non-RLS privileges on app tables. The loopback-only ACL/restrictive-policy overlay and assertions are prepared but have not been executed; legitimate CRUD/RPC compatibility must pass before any production migration is designed."
+    },
+    {
+      "id": "PENDING_STORAGE_MIME_RECONCILIATION",
+      "severity": "REVIEW_REQUIRED",
+      "source": "database/archive/pending-forward-reconciliation/20261112120001_reconcile_chat_media_voice_mime_types.sql",
+      "detail": "Production chat-media includes audio MIME types outside the 62-version ledger. Keep this separate forward reconciliation archived and unauthorized."
     }
   ],
   "networkPolicy": {
@@ -237,5 +228,15 @@
     "productionAllowed": false,
     "canonicalSqlMutationAllowed": false,
     "cleanup": "The temporary Supabase project is stopped in an always-run workflow cleanup step."
+  },
+  "reconciliationSummary": {
+    "productionLedgerVersions": 62,
+    "canonicalMigrationFiles": 62,
+    "archivedSqlFiles": 12,
+    "duplicateActiveCopies": 0,
+    "compoundSourcesSplit": true,
+    "unrecordedBaselinesFoldedIntoLedger": true,
+    "canonicalMembershipSyntaxRepair": true,
+    "firstAdminIdentitySeeded": false
   }
 }

@@ -11,7 +11,7 @@ const read = name => readFile(path.join(fixtureDir, name), 'utf8');
 test('synthetic Auth identities are seeded before membership triggers without bypassing them', async () => {
   const [authSeed, membershipBase, dagText] = await Promise.all([
     read('synthetic-direct-chat-auth-before-membership.sql'),
-    readFile(path.join(root, 'database/changes/20261107144109_private_membership_system_20261107.sql'), 'utf8'),
+    readFile(path.join(root, 'supabase/migrations/20261107144109_private_membership_system_20261107.sql'), 'utf8'),
     readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8')
   ]);
   const dag = JSON.parse(dagText);
@@ -158,8 +158,7 @@ test('multi-session concurrency and message stress runner is restricted to dispo
   const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
   const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-concurrency');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_LOCAL_24_SESSION_40_MESSAGE_STRESS_HARNESS_NOT_EXECUTED');
-  assert.ok(node.blockedBy.includes('DAG-014'));
-  assert.ok(node.blockedBy.includes('DAG-015'));
+  assert.equal(node.status, 'TEST_ONLY_DIRECT_CHAT_CONCURRENCY_RUNTIME_PASSED');
+  assert.deepEqual(node.blockedBy, []);
   assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.direct-chat-runtime' && to === node.id));
 });

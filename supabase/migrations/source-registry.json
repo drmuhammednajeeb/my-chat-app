@@ -1,0 +1,1881 @@
+{
+  "schemaVersion": 3,
+  "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
+  "generatedAt": "2026-11-12",
+  "repository": {
+    "fullName": "drmuhammednajeeb/my-chat-app",
+    "baseBranch": "main",
+    "baseCommit": "67c7e46d26037ad0cf94a44aaf3a507c6a5171b4",
+    "workingBranch": "database/unify-migration-sources-20261112",
+    "workingHead": "7b2bcceb4d9b33c654642801570a4fb95ba8770a"
+  },
+  "productionDatabase": {
+    "projectRef": "lvkeohpuucuklagvwpnq",
+    "migrationCount": 62,
+    "migrationHistorySource": "Supabase migration metadata contains version/name only; original SQL bodies are not stored in the ledger."
+  },
+  "sourceSets": {
+    "productionLedgerMigrations": 62,
+    "canonicalCliMigrationFiles": 66,
+    "archiveSqlFiles": 12,
+    "duplicatePairs": 0,
+    "testOnlyFixtureCount": 19,
+    "testOnlyFixturePaths": [
+      "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql",
+      "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql",
+      "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+      "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+      "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql",
+      "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
+      "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
+      "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
+      "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+      "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
+      "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
+      "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+      "tests/staging/local-supabase/fixtures/seed-synthetic-team-admin.sql",
+      "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
+      "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+    ],
+    "forwardReconciliationMigrations": 4
+  },
+  "rules": [
+    "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
+    "database/archive/ contains provenance, pending forward reconciliation, and unapplied proposals; it is never executable or part of CLI discovery/replay.",
+    "Each of the 62 production ledger versions maps to exactly one canonical migration filename and Git blob.",
+    "The production migration ledger stores version/name metadata only; reconstructed SQL bodies are not claimed to be byte-identical to original applied bodies.",
+    "Compound historical sources are split across their exact production version filenames; uncertain original boundaries are explicitly labeled reconstructed.",
+    "Folded historical versions remain explicit no-op migrations with provenance notes.",
+    "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
+    "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
+    "The 66-file CLI stream contains 62 historical production-ledger migrations plus 4 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+  ],
+  "productionMigrations": [
+    {
+      "version": "20261106061954",
+      "name": "ultra_chat_pro_v2",
+      "path": "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
+      "gitBlobSha": "61c671c68a5d65ce3acc06764dd3f991e2520cfa",
+      "mappingStatus": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "202611060001_ultra_chat_pro_v2.sql",
+          "sourceGitBlobSha": "61c671c68a5d65ce3acc06764dd3f991e2520cfa"
+        }
+      ],
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062058",
+      "name": "tighten_api_grants",
+      "path": "supabase/migrations/20261106062058_tighten_api_grants.sql",
+      "gitBlobSha": "89bb6cd6defc3210af18cd8815a727285214317f",
+      "mappingStatus": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "202611060002_tighten_api_grants.sql",
+          "sourceGitBlobSha": "89bb6cd6defc3210af18cd8815a727285214317f"
+        }
+      ],
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062111",
+      "name": "minimum_table_privileges",
+      "path": "supabase/migrations/20261106062111_minimum_table_privileges.sql",
+      "gitBlobSha": "e990252f9b0740e6b4f0b94e4013d31b3bb3ce47",
+      "mappingStatus": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "202611060003_minimum_table_privileges.sql",
+          "sourceGitBlobSha": "e990252f9b0740e6b4f0b94e4013d31b3bb3ce47"
+        }
+      ],
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062133",
+      "name": "reference_profiles",
+      "path": "supabase/migrations/20261106062133_reference_profiles.sql",
+      "gitBlobSha": "90ab731bf0e027e34091c3bd62307e5e7f2d42c8",
+      "mappingStatus": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "202611060004_reference_profiles.sql",
+          "sourceGitBlobSha": "90ab731bf0e027e34091c3bd62307e5e7f2d42c8"
+        }
+      ],
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062150",
+      "name": "fix_creator_membership_rls",
+      "path": "supabase/migrations/20261106062150_fix_creator_membership_rls.sql",
+      "gitBlobSha": "414a1ae97e3ba57870c9e79f80c74fe44b845b01",
+      "mappingStatus": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "202611060005_fix_creator_membership_rls.sql",
+          "sourceGitBlobSha": "414a1ae97e3ba57870c9e79f80c74fe44b845b01"
+        }
+      ],
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062207",
+      "name": "explicit_legacy_deny",
+      "path": "supabase/migrations/20261106062207_explicit_legacy_deny.sql",
+      "gitBlobSha": "dc1e9e33841c2aa42c444dcf1222b215f689320c",
+      "mappingStatus": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "202611060006_explicit_legacy_deny.sql",
+          "sourceGitBlobSha": "dc1e9e33841c2aa42c444dcf1222b215f689320c"
+        }
+      ],
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106102326",
+      "name": "atomic_direct_conversation_creation",
+      "path": "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql",
+      "gitBlobSha": "50bf9bf93de916f0083656a14e5ac9a9d926bae6",
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261106102326_atomic_direct_conversation_creation.sql",
+          "sourceGitBlobSha": "50bf9bf93de916f0083656a14e5ac9a9d926bae6"
+        }
+      ],
+      "note": "Recovered final function definitions and ACLs from read-only catalog inspection; original migration body unavailable."
+    },
+    {
+      "version": "20261106102443",
+      "name": "hide_atomic_direct_rpc_implementation",
+      "path": "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql",
+      "gitBlobSha": "42b3b7215f559655c98c8f9c124594d36e31f6eb",
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261106102443_hide_atomic_direct_rpc_implementation.sql",
+          "sourceGitBlobSha": "42b3b7215f559655c98c8f9c124594d36e31f6eb"
+        }
+      ],
+      "note": "Explicit no-op; final hidden implementation is created by 20261106102326."
+    },
+    {
+      "version": "20261106125643",
+      "name": "message_reactions_and_realtime",
+      "path": "supabase/migrations/20261106125643_message_reactions_and_realtime.sql",
+      "gitBlobSha": "a161966e306a32c3887131e36523aa4d8a30c4f7",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_AND_UNRECORDED_BASELINE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "message_reactions_and_whatsapp_typography.sql",
+          "sourceGitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d",
+          "archivedPath": "database/archive/source-provenance/message_reactions_and_whatsapp_typography.sql",
+          "archiveGitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d"
+        },
+        {
+          "originalFileName": "public_announcement_channels.sql",
+          "archivedPath": "database/archive/source-provenance/public_announcement_channels.sql",
+          "archiveGitBlobSha": "5a4acb8142fa2acaffc421c516b0dd96cb2f2c9a",
+          "sourceGitBlobSha": "5a4acb8142fa2acaffc421c516b0dd96cb2f2c9a"
+        }
+      ],
+      "note": "Public-channel baseline is folded before message-reaction DDL; original baseline had no independent production ledger version."
+    },
+    {
+      "version": "20261106125901",
+      "name": "index_message_reaction_user_fk",
+      "path": "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql",
+      "gitBlobSha": "b1da53262661a2a15f0a737fe7d94656e4af4ae6",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "message_reactions_and_whatsapp_typography.sql",
+          "sourceGitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d",
+          "archivedPath": "database/archive/source-provenance/message_reactions_and_whatsapp_typography.sql",
+          "archiveGitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d"
+        }
+      ],
+      "note": "Separated the message-reaction user foreign-key index from the compound source."
+    },
+    {
+      "version": "20261106130351",
+      "name": "professional_message_controls_and_receipts",
+      "path": "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+      "gitBlobSha": "d3c70514d7dc31c71d78cd86a302ad41162fcf5f",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_AND_UNRECORDED_BASELINE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "professional_message_controls_and_receipts.sql",
+          "sourceGitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab",
+          "archivedPath": "database/archive/source-provenance/professional_message_controls_and_receipts.sql",
+          "archiveGitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab"
+        },
+        {
+          "originalFileName": "team_management_dashboard.sql",
+          "archivedPath": "database/archive/source-provenance/team_management_dashboard.sql",
+          "archiveGitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df",
+          "sourceGitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df"
+        }
+      ],
+      "note": "Team-admin schema, policies and group-capacity trigger are folded before message-pin policies; no real administrator identity is seeded."
+    },
+    {
+      "version": "20261106130540",
+      "name": "realtime_conversation_member_receipts",
+      "path": "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql",
+      "gitBlobSha": "c80ee11fbb694a7b7301307d8deaa342e517fc42",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "professional_message_controls_and_receipts.sql",
+          "sourceGitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab",
+          "archivedPath": "database/archive/source-provenance/professional_message_controls_and_receipts.sql",
+          "archiveGitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab"
+        }
+      ],
+      "note": "Separated conversation_members Realtime publication and replica identity."
+    },
+    {
+      "version": "20261106130804",
+      "name": "index_message_pins_pinned_by",
+      "path": "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql",
+      "gitBlobSha": "05af01372640885e56d9571d231219b243d3c164",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "professional_message_controls_and_receipts.sql",
+          "sourceGitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab",
+          "archivedPath": "database/archive/source-provenance/professional_message_controls_and_receipts.sql",
+          "archiveGitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab"
+        }
+      ],
+      "note": "Separated message_pins.pinned_by index."
+    },
+    {
+      "version": "20261106132655",
+      "name": "private_channels_with_secure_invites",
+      "path": "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+      "gitBlobSha": "e43cb2d7307639281a64e3ddafdb1f653d3ca99a",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "private_channels_with_secure_invites.sql",
+          "sourceGitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
+          "archivedPath": "database/archive/source-provenance/private_channels_with_secure_invites.sql",
+          "archiveGitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261106132740",
+      "name": "deny_direct_channel_invite_table_access",
+      "path": "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql",
+      "gitBlobSha": "816ff49411d6f777e64632f6ef683cf75a9eec9c",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "private_channels_with_secure_invites.sql",
+          "sourceGitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
+          "archivedPath": "database/archive/source-provenance/private_channels_with_secure_invites.sql",
+          "archiveGitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f"
+        }
+      ],
+      "note": "Separated direct invite-table deny policy and table revocation."
+    },
+    {
+      "version": "20261106132753",
+      "name": "index_channel_invites_created_by",
+      "path": "supabase/migrations/20261106132753_index_channel_invites_created_by.sql",
+      "gitBlobSha": "921bd00518291a6b65a3ffc423a3140e88b3c499",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "private_channels_with_secure_invites.sql",
+          "sourceGitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
+          "archivedPath": "database/archive/source-provenance/private_channels_with_secure_invites.sql",
+          "archiveGitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f"
+        }
+      ],
+      "note": "Separated channel_invites.created_by index."
+    },
+    {
+      "version": "20261106135225",
+      "name": "harden_chat_table_privileges_and_membership_updates",
+      "path": "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql",
+      "gitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749",
+      "mappingStatus": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "202611060007_harden_chat_table_privileges.sql",
+          "sourceGitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749"
+        }
+      ],
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261107014128",
+      "name": "unified_user_notifications",
+      "path": "supabase/migrations/20261107014128_unified_user_notifications.sql",
+      "gitBlobSha": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107014128_unified_user_notifications.sql",
+          "sourceGitBlobSha": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107014350",
+      "name": "index_user_notification_foreign_keys",
+      "path": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
+      "gitBlobSha": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7",
+      "mappingStatus": "CANONICAL_COPY_SELECTED_DUPLICATE_REMOVED",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107014350_index_user_notification_foreign_keys.sql",
+          "sourceGitBlobSha": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7"
+        }
+      ],
+      "note": "One canonical versioned migration retained; byte-identical secondary source copy removed from the active source tree."
+    },
+    {
+      "version": "20261107032052",
+      "name": "user_specific_direct_chat_preferences",
+      "path": "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql",
+      "gitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
+      "mappingStatus": "SOURCE_BODY_PRESERVED_FINAL_STATE",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "user_specific_direct_chat_preferences.sql",
+          "sourceGitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
+          "archivedPath": "database/archive/source-provenance/user_specific_direct_chat_preferences.sql",
+          "archiveGitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08"
+        }
+      ],
+      "note": "The surviving direct-chat preference source contains the final scope state; original earlier body is unavailable."
+    },
+    {
+      "version": "20261107032150",
+      "name": "tighten_direct_chat_preference_scope",
+      "path": "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql",
+      "gitBlobSha": "2bd60472073c5e75549a65e5f5878531e26b5963",
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "user_specific_direct_chat_preferences.sql",
+          "sourceGitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
+          "archivedPath": "database/archive/source-provenance/user_specific_direct_chat_preferences.sql",
+          "archiveGitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08"
+        }
+      ],
+      "note": "Retained as an explicit no-op because the surviving final-state preference source is assigned to 20261107032052."
+    },
+    {
+      "version": "20261107035217",
+      "name": "user_avatars_storage_bucket",
+      "path": "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql",
+      "gitBlobSha": "0443cb6c83b44ebf8f6e3021db3404350538964d",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107035500_user_avatars_storage.sql",
+          "sourceGitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
+          "archivedPath": "database/archive/source-provenance/20261107035500_user_avatars_storage.sql",
+          "archiveGitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1"
+        }
+      ],
+      "note": "Separated avatar bucket declaration."
+    },
+    {
+      "version": "20261107035243",
+      "name": "realtime_profile_avatar_updates",
+      "path": "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql",
+      "gitBlobSha": "d6661071f523c1a60c0976fa7c1d248d0b08821e",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107035500_user_avatars_storage.sql",
+          "sourceGitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
+          "archivedPath": "database/archive/source-provenance/20261107035500_user_avatars_storage.sql",
+          "archiveGitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1"
+        }
+      ],
+      "note": "Separated profile Realtime publication membership."
+    },
+    {
+      "version": "20261107035443",
+      "name": "avatar_storage_upsert_select_policy",
+      "path": "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql",
+      "gitBlobSha": "6899e93c453556b14481921e81da7c9aacc1c9cf",
+      "mappingStatus": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107035500_user_avatars_storage.sql",
+          "sourceGitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
+          "archivedPath": "database/archive/source-provenance/20261107035500_user_avatars_storage.sql",
+          "archiveGitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1"
+        }
+      ],
+      "note": "Separated owner-scoped avatar object policies."
+    },
+    {
+      "version": "20261107041223",
+      "name": "per_user_chat_archive_and_preferences_rls",
+      "path": "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql",
+      "gitBlobSha": "9530e894fc2ea1e314fbeaf10ed893291b1cf1b3",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107050000_per_user_chat_archive_and_preferences_rls.sql",
+          "sourceGitBlobSha": "9530e894fc2ea1e314fbeaf10ed893291b1cf1b3"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107061012",
+      "name": "self_message_conversation",
+      "path": "supabase/migrations/20261107061012_self_message_conversation.sql",
+      "gitBlobSha": "38b59e24f1de15a351f2fe27ec65ade56e6e8175",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107061012_self_message_conversation.sql",
+          "sourceGitBlobSha": "38b59e24f1de15a351f2fe27ec65ade56e6e8175"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107061103",
+      "name": "ensure_self_chat_rpc",
+      "path": "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql",
+      "gitBlobSha": "93523592aa7d080a909954bfcca17a1609bb224b",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107061103_ensure_self_chat_rpc.sql",
+          "sourceGitBlobSha": "93523592aa7d080a909954bfcca17a1609bb224b"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107115802",
+      "name": "account_settings_reactions_message_edit_v2",
+      "path": "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql",
+      "gitBlobSha": "961b5b6c7d31bd9cc3a87aa037aa2a9891cba051",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107123000_account_settings_reactions_message_edit_v2.sql",
+          "sourceGitBlobSha": "961b5b6c7d31bd9cc3a87aa037aa2a9891cba051"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107120149",
+      "name": "harden_message_edit_permissions",
+      "path": "supabase/migrations/20261107120149_harden_message_edit_permissions.sql",
+      "gitBlobSha": "845a1e9074a3a55ab3faa5bb48d8d0ec47f8e880",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107124500_harden_message_edit_permissions.sql",
+          "sourceGitBlobSha": "845a1e9074a3a55ab3faa5bb48d8d0ec47f8e880"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107120239",
+      "name": "restore_message_edit_guard",
+      "path": "supabase/migrations/20261107120239_restore_message_edit_guard.sql",
+      "gitBlobSha": "73564e1dcd4dbb65c2b23e890ad070ade9b9482d",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107130000_restore_message_edit_guard.sql",
+          "sourceGitBlobSha": "73564e1dcd4dbb65c2b23e890ad070ade9b9482d"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107120426",
+      "name": "index_message_edit_history",
+      "path": "supabase/migrations/20261107120426_index_message_edit_history.sql",
+      "gitBlobSha": "ccc72a34680d0e2da3919b8760591981bc0cebb0",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107131500_index_message_edit_history.sql",
+          "sourceGitBlobSha": "ccc72a34680d0e2da3919b8760591981bc0cebb0"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107125149",
+      "name": "group_management_custom_lists_20261107",
+      "path": "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql",
+      "gitBlobSha": "8765dfb8905dfd6c60694fa2be2e472f3f14260b",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107125149_group_management_custom_lists_20261107.sql",
+          "sourceGitBlobSha": "8765dfb8905dfd6c60694fa2be2e472f3f14260b"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107125546",
+      "name": "enforce_group_message_expiry_and_realtime",
+      "path": "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql",
+      "gitBlobSha": "a808b77f71b4124993800a841495433f895026a3",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107125546_enforce_group_message_expiry_and_realtime.sql",
+          "sourceGitBlobSha": "a808b77f71b4124993800a841495433f895026a3"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107125616",
+      "name": "secure_group_ownership_transfer",
+      "path": "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql",
+      "gitBlobSha": "9fd8e829d33b13aed489d402135c33ce5138e739",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107125616_secure_group_ownership_transfer.sql",
+          "sourceGitBlobSha": "9fd8e829d33b13aed489d402135c33ce5138e739"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107125754",
+      "name": "sync_personal_chat_lists_and_preferences",
+      "path": "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql",
+      "gitBlobSha": "aa834b85b4d12eb418629578135bc9cdb64c5bb6",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107125754_sync_personal_chat_lists_and_preferences.sql",
+          "sourceGitBlobSha": "aa834b85b4d12eb418629578135bc9cdb64c5bb6"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107125934",
+      "name": "tighten_group_settings_security_and_indexes",
+      "path": "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql",
+      "gitBlobSha": "bd56800c78256c5ac8b329d2ee7642e435e43ff5",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107125934_tighten_group_settings_security_and_indexes.sql",
+          "sourceGitBlobSha": "bd56800c78256c5ac8b329d2ee7642e435e43ff5"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107130140",
+      "name": "personal_favorites_in_conversation_settings",
+      "path": "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql",
+      "gitBlobSha": "a89ece0b23230bb19e9a603163349cdf8e7e53a7",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107130140_personal_favorites_in_conversation_settings.sql",
+          "sourceGitBlobSha": "a89ece0b23230bb19e9a603163349cdf8e7e53a7"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107130534",
+      "name": "include_team_admins_in_group_management",
+      "path": "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql",
+      "gitBlobSha": "d339d8791bfaf0aa4ac63d2f183e81bd54fc56c9",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107130534_include_team_admins_in_group_management.sql",
+          "sourceGitBlobSha": "d339d8791bfaf0aa4ac63d2f183e81bd54fc56c9"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107130737",
+      "name": "remove_duplicate_chat_favorite_column",
+      "path": "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql",
+      "gitBlobSha": "6a165eb9bf85d2091ba4a64f35129baec8557d29",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107130737_remove_duplicate_chat_favorite_column.sql",
+          "sourceGitBlobSha": "6a165eb9bf85d2091ba4a64f35129baec8557d29"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107130851",
+      "name": "schedule_expired_group_message_purge",
+      "path": "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql",
+      "gitBlobSha": "4c154dcd14e70e0561880d6bce3d0d63b554d16b",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107130851_schedule_expired_group_message_purge.sql",
+          "sourceGitBlobSha": "4c154dcd14e70e0561880d6bce3d0d63b554d16b"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107130954",
+      "name": "scope_team_admin_overrides_to_group_features",
+      "path": "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql",
+      "gitBlobSha": "d547452a45275cb6eefb6b4b8c6585769061951e",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107130954_scope_team_admin_overrides_to_group_features.sql",
+          "sourceGitBlobSha": "d547452a45275cb6eefb6b4b8c6585769061951e"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107134334",
+      "name": "conversation_workspaces_private_documents",
+      "path": "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql",
+      "gitBlobSha": "b1211716490c9d758064c8266107d6fd7b356646",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107134500_conversation_workspaces_private_documents.sql",
+          "sourceGitBlobSha": "b1211716490c9d758064c8266107d6fd7b356646"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107134414",
+      "name": "index_workspace_and_document_foreign_keys",
+      "path": "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql",
+      "gitBlobSha": "a12f0f8159d2a05f3847ac18e89ca40317db560e",
+      "mappingStatus": "RECONSTRUCTED_FROM_HISTORICAL_SOURCE",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107134600_index_workspace_foreign_keys.sql",
+          "sourceGitBlobSha": "a12f0f8159d2a05f3847ac18e89ca40317db560e"
+        }
+      ],
+      "note": "Historical source body assigned to the exact production version after filename/version reconciliation; original body equivalence is not proven."
+    },
+    {
+      "version": "20261107135149",
+      "name": "workspace_realtime_and_note_assignment",
+      "path": "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql",
+      "gitBlobSha": "b25c60e57c28c744c95d53d15c47820fd917591a",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107135200_workspace_realtime_and_note_assignment.sql",
+          "sourceGitBlobSha": "b25c60e57c28c744c95d53d15c47820fd917591a"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107135501",
+      "name": "harden_workspace_storage_and_private_reply_scope",
+      "path": "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql",
+      "gitBlobSha": "70515432f0570cd9d9caeaca37f9cd431b316b6f",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107135500_harden_workspace_storage_and_private_reply_scope.sql",
+          "sourceGitBlobSha": "70515432f0570cd9d9caeaca37f9cd431b316b6f"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107144109",
+      "name": "private_membership_system_20261107",
+      "path": "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
+      "gitBlobSha": "175d72492486f99b05f7bb5f42638a8c8904dc4a",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107144109_private_membership_system_20261107.sql",
+          "sourceGitBlobSha": "175d72492486f99b05f7bb5f42638a8c8904dc4a"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107144227",
+      "name": "secure_membership_admin_rpc_wrappers",
+      "path": "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql",
+      "gitBlobSha": "38ee84d896b89510bbf4c6561d14df217029cb71",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107144227_secure_membership_admin_rpc_wrappers.sql",
+          "sourceGitBlobSha": "38ee84d896b89510bbf4c6561d14df217029cb71"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107144626",
+      "name": "membership_state_self_check_and_deny_policy",
+      "path": "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql",
+      "gitBlobSha": "3738d3d4cdb06598bef78f6e685ec9e7e2caee48",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107144626_membership_state_self_check_and_deny_policy.sql",
+          "sourceGitBlobSha": "3738d3d4cdb06598bef78f6e685ec9e7e2caee48"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107144758",
+      "name": "membership_invitation_foreign_key_indexes",
+      "path": "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql",
+      "gitBlobSha": "536966ce810bf9c7e8916e03982c11a79f86791f",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107144758_membership_invitation_foreign_key_indexes.sql",
+          "sourceGitBlobSha": "536966ce810bf9c7e8916e03982c11a79f86791f"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107145232",
+      "name": "membership_invitation_acceptance_after_auth_insert_fix",
+      "path": "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql",
+      "gitBlobSha": "cd6c0332400e2b80ba4961bc6183813d4b0f37a2",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql",
+          "sourceGitBlobSha": "cd6c0332400e2b80ba4961bc6183813d4b0f37a2"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107152550",
+      "name": "official_forever_membership_numbers_manual_verification",
+      "path": "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "gitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107152550_official_forever_membership_numbers_manual_verification.sql",
+          "sourceGitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107152733",
+      "name": "fix_official_membership_invite_duplicate_validation",
+      "path": "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "gitBlobSha": "038837a340b87cb17325d35ebc608e31a9a155eb",
+      "mappingStatus": "SOURCE_SYNTAX_REPAIRED",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+          "sourceGitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
+          "archivedPath": "database/archive/source-provenance/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+          "archiveGitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380"
+        }
+      ],
+      "note": "Canonical migration adds the missing function-statement terminator; original malformed source is retained in archive."
+    },
+    {
+      "version": "20261107153051",
+      "name": "remove_legacy_sequential_membership_generator",
+      "path": "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql",
+      "gitBlobSha": "8273fdebc852c5f95adb48990f4bb06ba78bd97a",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107153051_remove_legacy_sequential_membership_generator.sql",
+          "sourceGitBlobSha": "8273fdebc852c5f95adb48990f4bb06ba78bd97a"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107153110",
+      "name": "anchor_initial_official_membership_verification_by_number",
+      "path": "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "gitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+          "sourceGitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107153214",
+      "name": "restore_secure_membership_state_rpc_wrapper",
+      "path": "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql",
+      "gitBlobSha": "d71ebeca3808ae0b1ac321a48a089f6986422914",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107153214_restore_secure_membership_state_rpc_wrapper.sql",
+          "sourceGitBlobSha": "d71ebeca3808ae0b1ac321a48a089f6986422914"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107154825",
+      "name": "fix_chat_message_rls_reply_recursion",
+      "path": "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql",
+      "gitBlobSha": "aa73588f3bfce50b9874ef68511c52fe60f8d52b",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107154900_fix_chat_message_rls_reply_recursion.sql",
+          "sourceGitBlobSha": "aa73588f3bfce50b9874ef68511c52fe60f8d52b"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261107160647",
+      "name": "channel_visibility_avatar_group_background",
+      "path": "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql",
+      "gitBlobSha": "ca3abdd71f91f8b1ce426bdc07bb486f3f021812",
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107160647_channel_visibility_avatar_group_background.sql",
+          "sourceGitBlobSha": "ca3abdd71f91f8b1ce426bdc07bb486f3f021812"
+        }
+      ],
+      "note": "Recovered final channel columns, RPCs, channel avatar bucket/policies and ACLs; original body unavailable."
+    },
+    {
+      "version": "20261107160733",
+      "name": "harden_channel_rpc_wrappers",
+      "path": "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql",
+      "gitBlobSha": "3c28981ebf1d70ad789a55ccd2e6d6fe1769043c",
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "confidence": "reconstructed-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261107160733_harden_channel_rpc_wrappers.sql",
+          "sourceGitBlobSha": "3c28981ebf1d70ad789a55ccd2e6d6fe1769043c"
+        }
+      ],
+      "note": "Recovered public invoker wrappers and ACLs from production catalog; original body unavailable."
+    },
+    {
+      "version": "20261108075913",
+      "name": "unify_forever_membership_number_format",
+      "path": "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
+      "gitBlobSha": "3a69a03e9ae03374453c0d39d05b7a46c9fcafd5",
+      "mappingStatus": "RECOVERED_HISTORICAL_SOURCE_BODY",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261108075913_unify_forever_membership_number_format.sql",
+          "sourceGitBlobSha": "3a69a03e9ae03374453c0d39d05b7a46c9fcafd5"
+        }
+      ],
+      "note": "Recovered SQL source assigned to exact production version/name; production migration ledger does not retain the original SQL body."
+    },
+    {
+      "version": "20261112091557",
+      "name": "profile_status_and_conversation_images",
+      "path": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
+      "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_RECOVERED",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261112091557_profile_status_and_conversation_images.sql",
+          "sourceGitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306"
+        }
+      ],
+      "note": "Canonical source copied from PR #138; production history stores version/name only."
+    },
+    {
+      "version": "20261112091605",
+      "name": "profile_status_video_media",
+      "path": "supabase/migrations/20261112091605_profile_status_video_media.sql",
+      "gitBlobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0",
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_RECOVERED",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261112091605_profile_status_video_media.sql",
+          "sourceGitBlobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0"
+        }
+      ],
+      "note": "Canonical source copied from PR #138; production history stores version/name only."
+    },
+    {
+      "version": "20261112103237",
+      "name": "allow_combined_profile_status_content_and_media",
+      "path": "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql",
+      "gitBlobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_RECOVERED",
+      "confidence": "recovered-source-not-original-body-proven",
+      "originalSources": [
+        {
+          "originalFileName": "20261112103237_allow_combined_profile_status_content_and_media.sql",
+          "sourceGitBlobSha": "2919e335e27622a0d96b3bb97505f824794f80f6"
+        }
+      ],
+      "note": "Canonical source copied from PR #138; production history stores version/name only."
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
+      "gitBlobSha": "61c671c68a5d65ce3acc06764dd3f991e2520cfa",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106062058_tighten_api_grants.sql",
+      "gitBlobSha": "89bb6cd6defc3210af18cd8815a727285214317f",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106062111_minimum_table_privileges.sql",
+      "gitBlobSha": "e990252f9b0740e6b4f0b94e4013d31b3bb3ce47",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106062133_reference_profiles.sql",
+      "gitBlobSha": "90ab731bf0e027e34091c3bd62307e5e7f2d42c8",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106062150_fix_creator_membership_rls.sql",
+      "gitBlobSha": "414a1ae97e3ba57870c9e79f80c74fe44b845b01",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106062207_explicit_legacy_deny.sql",
+      "gitBlobSha": "dc1e9e33841c2aa42c444dcf1222b215f689320c",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql",
+      "gitBlobSha": "50bf9bf93de916f0083656a14e5ac9a9d926bae6",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql",
+      "gitBlobSha": "42b3b7215f559655c98c8f9c124594d36e31f6eb",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106125643_message_reactions_and_realtime.sql",
+      "gitBlobSha": "a161966e306a32c3887131e36523aa4d8a30c4f7",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql",
+      "gitBlobSha": "b1da53262661a2a15f0a737fe7d94656e4af4ae6",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+      "gitBlobSha": "d3c70514d7dc31c71d78cd86a302ad41162fcf5f",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql",
+      "gitBlobSha": "c80ee11fbb694a7b7301307d8deaa342e517fc42",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql",
+      "gitBlobSha": "05af01372640885e56d9571d231219b243d3c164",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+      "gitBlobSha": "e43cb2d7307639281a64e3ddafdb1f653d3ca99a",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql",
+      "gitBlobSha": "816ff49411d6f777e64632f6ef683cf75a9eec9c",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106132753_index_channel_invites_created_by.sql",
+      "gitBlobSha": "921bd00518291a6b65a3ffc423a3140e88b3c499",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql",
+      "gitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107014128_unified_user_notifications.sql",
+      "gitBlobSha": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
+      "gitBlobSha": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql",
+      "gitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql",
+      "gitBlobSha": "2bd60472073c5e75549a65e5f5878531e26b5963",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql",
+      "gitBlobSha": "0443cb6c83b44ebf8f6e3021db3404350538964d",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql",
+      "gitBlobSha": "d6661071f523c1a60c0976fa7c1d248d0b08821e",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql",
+      "gitBlobSha": "6899e93c453556b14481921e81da7c9aacc1c9cf",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql",
+      "gitBlobSha": "9530e894fc2ea1e314fbeaf10ed893291b1cf1b3",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107061012_self_message_conversation.sql",
+      "gitBlobSha": "38b59e24f1de15a351f2fe27ec65ade56e6e8175",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql",
+      "gitBlobSha": "93523592aa7d080a909954bfcca17a1609bb224b",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql",
+      "gitBlobSha": "961b5b6c7d31bd9cc3a87aa037aa2a9891cba051",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107120149_harden_message_edit_permissions.sql",
+      "gitBlobSha": "845a1e9074a3a55ab3faa5bb48d8d0ec47f8e880",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107120239_restore_message_edit_guard.sql",
+      "gitBlobSha": "73564e1dcd4dbb65c2b23e890ad070ade9b9482d",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107120426_index_message_edit_history.sql",
+      "gitBlobSha": "ccc72a34680d0e2da3919b8760591981bc0cebb0",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql",
+      "gitBlobSha": "8765dfb8905dfd6c60694fa2be2e472f3f14260b",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql",
+      "gitBlobSha": "a808b77f71b4124993800a841495433f895026a3",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql",
+      "gitBlobSha": "9fd8e829d33b13aed489d402135c33ce5138e739",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql",
+      "gitBlobSha": "aa834b85b4d12eb418629578135bc9cdb64c5bb6",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql",
+      "gitBlobSha": "bd56800c78256c5ac8b329d2ee7642e435e43ff5",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql",
+      "gitBlobSha": "a89ece0b23230bb19e9a603163349cdf8e7e53a7",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql",
+      "gitBlobSha": "d339d8791bfaf0aa4ac63d2f183e81bd54fc56c9",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql",
+      "gitBlobSha": "6a165eb9bf85d2091ba4a64f35129baec8557d29",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql",
+      "gitBlobSha": "4c154dcd14e70e0561880d6bce3d0d63b554d16b",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql",
+      "gitBlobSha": "d547452a45275cb6eefb6b4b8c6585769061951e",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql",
+      "gitBlobSha": "b1211716490c9d758064c8266107d6fd7b356646",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql",
+      "gitBlobSha": "a12f0f8159d2a05f3847ac18e89ca40317db560e",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql",
+      "gitBlobSha": "b25c60e57c28c744c95d53d15c47820fd917591a",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql",
+      "gitBlobSha": "70515432f0570cd9d9caeaca37f9cd431b316b6f",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
+      "gitBlobSha": "175d72492486f99b05f7bb5f42638a8c8904dc4a",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql",
+      "gitBlobSha": "38ee84d896b89510bbf4c6561d14df217029cb71",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql",
+      "gitBlobSha": "3738d3d4cdb06598bef78f6e685ec9e7e2caee48",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql",
+      "gitBlobSha": "536966ce810bf9c7e8916e03982c11a79f86791f",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql",
+      "gitBlobSha": "cd6c0332400e2b80ba4961bc6183813d4b0f37a2",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "gitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "gitBlobSha": "038837a340b87cb17325d35ebc608e31a9a155eb",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql",
+      "gitBlobSha": "8273fdebc852c5f95adb48990f4bb06ba78bd97a",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "gitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql",
+      "gitBlobSha": "d71ebeca3808ae0b1ac321a48a089f6986422914",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql",
+      "gitBlobSha": "aa73588f3bfce50b9874ef68511c52fe60f8d52b",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql",
+      "gitBlobSha": "ca3abdd71f91f8b1ce426bdc07bb486f3f021812",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql",
+      "gitBlobSha": "3c28981ebf1d70ad789a55ccd2e6d6fe1769043c",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
+      "gitBlobSha": "3a69a03e9ae03374453c0d39d05b7a46c9fcafd5",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
+      "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261112091605_profile_status_video_media.sql",
+      "gitBlobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql",
+      "gitBlobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    }
+  ],
+  "archiveFiles": [
+    {
+      "path": "database/archive/source-provenance/message_reactions_and_whatsapp_typography.sql",
+      "gitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/professional_message_controls_and_receipts.sql",
+      "gitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/private_channels_with_secure_invites.sql",
+      "gitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/user_specific_direct_chat_preferences.sql",
+      "gitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/20261107035500_user_avatars_storage.sql",
+      "gitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
+      "classification": "compound-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "gitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
+      "classification": "pre-repair-source-provenance",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/public_announcement_channels.sql",
+      "gitBlobSha": "5a4acb8142fa2acaffc421c516b0dd96cb2f2c9a",
+      "classification": "unrecorded-production-baseline-source",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/source-provenance/team_management_dashboard.sql",
+      "gitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df",
+      "classification": "unrecorded-production-baseline-source",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261107080000_chat_voice_messages.sql",
+      "gitBlobSha": "c0987b3e66afc3a0e5803542b103aef38a9bfb53",
+      "classification": "production-storage-drift-not-in-ledger",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261112120000_reconcile_team_management_dashboard.sql",
+      "gitBlobSha": "3c2f370689859a9e83309731e4aeb0abb0a34032",
+      "classification": "superseded-forward-reconciliation",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/pending-forward-reconciliation/20261112120001_reconcile_chat_media_voice_mime_types.sql",
+      "gitBlobSha": "50d5f7d1c6172a56dd9d4d85b3b8dc3835b54db9",
+      "classification": "pending-forward-reconciliation",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    },
+    {
+      "path": "database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql",
+      "gitBlobSha": "36009efa23ed5249d3a4d1aa027fe06c22e2aaee",
+      "classification": "unapplied-proposal",
+      "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
+    }
+  ],
+  "unresolvedProductionEntries": [],
+  "reviewRequiredProductionEntries": [
+    {
+      "version": "20261106061954",
+      "status": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062058",
+      "status": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062111",
+      "status": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062133",
+      "status": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062150",
+      "status": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106062207",
+      "status": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261106102326",
+      "status": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "note": "Recovered final function definitions and ACLs from read-only catalog inspection; original migration body unavailable."
+    },
+    {
+      "version": "20261106102443",
+      "status": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "note": "Explicit no-op; final hidden implementation is created by 20261106102326."
+    },
+    {
+      "version": "20261106125643",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_AND_UNRECORDED_BASELINE",
+      "note": "Public-channel baseline is folded before message-reaction DDL; original baseline had no independent production ledger version."
+    },
+    {
+      "version": "20261106125901",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "note": "Separated the message-reaction user foreign-key index from the compound source."
+    },
+    {
+      "version": "20261106130351",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_AND_UNRECORDED_BASELINE",
+      "note": "Team-admin schema, policies and group-capacity trigger are folded before message-pin policies; no real administrator identity is seeded."
+    },
+    {
+      "version": "20261106130540",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "note": "Separated conversation_members Realtime publication and replica identity."
+    },
+    {
+      "version": "20261106130804",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "note": "Separated message_pins.pinned_by index."
+    },
+    {
+      "version": "20261106132740",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "note": "Separated direct invite-table deny policy and table revocation."
+    },
+    {
+      "version": "20261106132753",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "note": "Separated channel_invites.created_by index."
+    },
+    {
+      "version": "20261106135225",
+      "status": "CANONICALIZED_FROM_MISNAMED_SOURCE",
+      "note": "Mapped the legacy CLI filename to the exact production ledger version/name."
+    },
+    {
+      "version": "20261107014350",
+      "status": "CANONICAL_COPY_SELECTED_DUPLICATE_REMOVED",
+      "note": "One canonical versioned migration retained; byte-identical secondary source copy removed from the active source tree."
+    },
+    {
+      "version": "20261107032052",
+      "status": "SOURCE_BODY_PRESERVED_FINAL_STATE",
+      "note": "The surviving direct-chat preference source contains the final scope state; original earlier body is unavailable."
+    },
+    {
+      "version": "20261107032150",
+      "status": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "note": "Retained as an explicit no-op because the surviving final-state preference source is assigned to 20261107032052."
+    },
+    {
+      "version": "20261107035217",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "note": "Separated avatar bucket declaration."
+    },
+    {
+      "version": "20261107035243",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "note": "Separated profile Realtime publication membership."
+    },
+    {
+      "version": "20261107035443",
+      "status": "RECONSTRUCTED_FROM_COMPOUND_SOURCE",
+      "note": "Separated owner-scoped avatar object policies."
+    },
+    {
+      "version": "20261107134414",
+      "status": "RECONSTRUCTED_FROM_HISTORICAL_SOURCE",
+      "note": "Historical source body assigned to the exact production version after filename/version reconciliation; original body equivalence is not proven."
+    },
+    {
+      "version": "20261107152733",
+      "status": "SOURCE_SYNTAX_REPAIRED",
+      "note": "Canonical migration adds the missing function-statement terminator; original malformed source is retained in archive."
+    },
+    {
+      "version": "20261107160647",
+      "status": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "note": "Recovered final channel columns, RPCs, channel avatar bucket/policies and ACLs; original body unavailable."
+    },
+    {
+      "version": "20261107160733",
+      "status": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "note": "Recovered public invoker wrappers and ACLs from production catalog; original body unavailable."
+    },
+    {
+      "version": "20261112091557",
+      "status": "CANONICAL_MIGRATION_SOURCE_RECOVERED",
+      "note": "Canonical source copied from PR #138; production history stores version/name only."
+    },
+    {
+      "version": "20261112091605",
+      "status": "CANONICAL_MIGRATION_SOURCE_RECOVERED",
+      "note": "Canonical source copied from PR #138; production history stores version/name only."
+    },
+    {
+      "version": "20261112103237",
+      "status": "CANONICAL_MIGRATION_SOURCE_RECOVERED",
+      "note": "Canonical source copied from PR #138; production history stores version/name only."
+    }
+  ],
+  "knownReplayBlockers": [
+    {
+      "id": "DAG-003",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "The full disposable replay applied the historical-to-final membership transition. The Forever membership-number workflow passed, and post-forward direct-conversation eligibility checks verified active membership, verified membership number, final format, and confirmed Auth email. Production remains unchanged.",
+      "evidence": [
+        "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+        "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
+        "membership.js",
+        "index.html",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
+    },
+    {
+      "id": "DAG-006",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Post-forward active-membership restrictive RLS assertions and rollback-only authenticated CRUD/RPC compatibility tests passed in disposable local Supabase. No unguarded application policy was observed in the runtime assertions.",
+      "evidence": [
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql",
+        "tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
+    },
+    {
+      "id": "DAG-007",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Disposable-local preflight and postflight verified pgcrypto is installed in extensions and extensions.digest(bytea,text) plus extensions.gen_random_bytes(integer) resolve.",
+      "evidence": [
+        "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+        "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
+    },
+    {
+      "id": "DAG-008",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "The reviewed purge-job definition was verified and the loopback-only disposable pg_cron probe executed a temporary SELECT 1 job successfully with scoped cleanup.",
+      "evidence": [
+        "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
+        "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
+    },
+    {
+      "id": "DAG-010",
+      "severity": "RESOLVED_FOR_LOCAL_REPLAY",
+      "issue": "Disposable-local preflight verified Auth, Storage, Realtime schemas, auth.users, auth.uid(), storage objects, Realtime publication, and required API roles; local Auth and Storage API probes passed.",
+      "evidence": [
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
+        "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED"
+    },
+    {
+      "id": "DAG-013",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160001 passed disposable-local replay. Storage API probes passed valid chat-media upload, member signed-read, cross-user uploader-folder spoof denial, private-document share controls, and avatar owner-upsert checks. Production still uses the pre-migration policy until the forward migration is separately approved and applied.",
+      "evidence": [
+        "index.html",
+        "database/archive/pending-forward-reconciliation/20261107080000_chat_voice_messages.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
+        "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-014",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160000 and post-forward SQL assertions passed in disposable local Supabase. Twenty-four reversed-pair concurrent requests converged on one direct conversation; 40 authenticated message writes persisted uniquely. Production RPC remains unchanged until the forward migration is separately approved and applied.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-015",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Forward migration 20261112160000 passed caller/target eligibility, active membership, verified-number, final-format, confirmed-email, and RPC ACL assertions in disposable local Supabase. The production RPC remains unchanged until the forward migration is separately approved and applied.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
+        "index.html",
+        "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
+        "tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs",
+        "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
+        "tests/staging/local-supabase/direct-conversation-concurrency.mjs",
+        "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+        "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-016",
+      "severity": "EXTERNAL_PLATFORM_CONFIGURATION_REVIEW_REQUIRED",
+      "issue": "Forward migrations 20261112160002 and 20261112160003 passed disposable-local least-privilege, restrictive active-membership RLS, and rollback-only CRUD/RPC tests. Production postgres-owned defaults are addressed by the migration. Supabase-managed supabase_admin defaults remain broad and cannot be changed by postgres because it is not a member of that superuser role; read-only production inspection found zero public relations/functions owned by supabase_admin. Keep production deployment gated on Supabase-level review of this external default-ACL residual.",
+      "evidence": [
+        "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "docs/RLS_LEAST_PRIVILEGE_HARDENING.md",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
+        "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+        "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_SUPABASE_MANAGED_ROLE_RESIDUAL_REMAINS"
+    }
+  ],
+  "externalSources": [
+    {
+      "pullRequest": 138,
+      "branch": "refactor/rebuild-status-workspace",
+      "headSha": "b1cd63e04a59565ce511544701744bdc3417c4f6",
+      "state": "OPEN_DRAFT_NOT_MERGED",
+      "files": [
+        {
+          "canonicalPath": "supabase/migrations/20261112091605_profile_status_video_media.sql",
+          "blobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0",
+          "productionMigration": "20261112091605/profile_status_video_media",
+          "status": "RECOVERED_IN_PR139"
+        },
+        {
+          "canonicalPath": "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql",
+          "blobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
+          "productionMigration": "20261112103237/allow_combined_profile_status_content_and_media",
+          "status": "RECOVERED_IN_PR139"
+        }
+      ]
+    }
+  ],
+  "safety": {
+    "mainModified": false,
+    "productionModified": false,
+    "sqlExecuted": false,
+    "executionAuthorized": false,
+    "localReplayEnabled": false,
+    "productionChangesAllowed": false,
+    "pr139Merged": false
+  },
+  "forwardMigrations": [
+    {
+      "version": "20261112160000",
+      "name": "harden_direct_conversation_eligibility",
+      "path": "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
+      "gitBlobSha": "8056b359084e48e4c3ab3534b78821d5ddfb1373",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Require both direct-conversation participants to satisfy active membership, verified membership-number, valid-format and confirmed-email checks while preserving pair-lock reuse.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "productionApplied": false
+    },
+    {
+      "version": "20261112160001",
+      "name": "harden_chat_media_upload_ownership",
+      "path": "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
+      "gitBlobSha": "df784e2a8eed8b2f2caa1f0fd695ec9b78474ac4",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Bind chat-media upload path segment 2 to auth.uid() in addition to conversation membership.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "productionApplied": false
+    },
+    {
+      "version": "20261112160002",
+      "name": "revoke_unsafe_public_default_privileges",
+      "path": "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
+      "gitBlobSha": "0fb675632d33485ec8ffeccd14d1467fbda91d48",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Remove unsafe default and direct API-role privileges while preserving reviewed application CRUD and RPC contracts.",
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "productionApplied": false
+    },
+    {
+      "version": "20261112160003",
+      "name": "enforce_active_membership_rls",
+      "path": "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
+      "gitBlobSha": "f39ce0f57748691eecb5371382d9754d22a9b444",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Add restrictive active-membership gates to RLS-enabled public tables and Storage objects.",
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "productionApplied": false
+    }
+  ],
+  "forwardMigrationPolicy": {
+    "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
+    "productionLedgerCount": 62,
+    "pendingForwardCount": 4,
+    "executionAuthorized": false,
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeRunId": 43260183037,
+    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+    "productionApplied": false
+  },
+  "validationEvidence": {
+    "runtime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 43260183037,
+      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "completedAt": "2026-11-12T16:37:17Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 83,
+      "checks": [
+        "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
+        "pgcrypto schema and function resolution passed",
+        "temporary pg_cron scheduler job executed successfully",
+        "24 reversed-pair concurrent requests converged on one direct conversation",
+        "40 concurrent authenticated message writes persisted uniquely",
+        "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
+        "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
+        "full reviewed disposable replay completed"
+      ]
+    },
+    "audit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 43260183019,
+      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "completedAt": "2026-11-12T16:35:00Z",
+      "tests": 77,
+      "passed": 77,
+      "failed": 0
+    }
+  }
+}

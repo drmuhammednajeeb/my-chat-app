@@ -9,12 +9,12 @@ test('read-only audit inventories sources, hashes duplicates, and blocks unresol
   const root = await mkdtemp(path.join(os.tmpdir(), 'sql-audit-'));
   try {
     await mkdir(path.join(root, 'supabase/migrations'), { recursive: true });
-    await mkdir(path.join(root, 'database/changes'), { recursive: true });
+    await mkdir(path.join(root, 'database/archive'), { recursive: true });
     const migration = '-- current schema\ncreate table public.chat_messages(id uuid);\ncreate policy p on public.messages for select using(false);\n';
     const duplicate = 'create index ix on public.chat_messages(id);\n';
     await writeFile(path.join(root, 'supabase/migrations/20261101000000_base.sql'), migration);
     await writeFile(path.join(root, 'supabase/migrations/20261102000000_index.sql'), duplicate);
-    await writeFile(path.join(root, 'database/changes/index-copy.sql'), duplicate);
+    await writeFile(path.join(root, 'database/archive/index-copy.sql'), duplicate);
 
     const report = await buildSqlAudit(root);
     assert.equal(report.auditMode, 'READ_ONLY');
@@ -22,11 +22,9 @@ test('read-only audit inventories sources, hashes duplicates, and blocks unresol
     assert.equal(report.bootstrap.status, 'BLOCKED');
     assert.equal(report.sourceDirectories[0].fileCount, 2);
     assert.equal(report.sourceDirectories[1].fileCount, 1);
-    assert.equal(report.duplicateGroups.length, 1);
-    assert.deepEqual(report.duplicateGroups[0].paths, [
-      'database/changes/index-copy.sql',
-      'supabase/migrations/20261102000000_index.sql'
-    ]);
+    assert.equal(report.duplicateGroups.length, 0);
+    assert.equal(report.archivedFiles.length, 1);
+    assert.equal(report.archivedFiles[0].path, 'database/archive/index-copy.sql');
     assert.equal(report.legacyBlockers.length, 1);
     assert.equal(report.legacyBlockers[0].path, 'supabase/migrations/20261101000000_base.sql');
     assert.ok(report.findings.some(item => item.code === 'SUPABASE_CONFIG_MISSING'));
@@ -68,19 +66,20 @@ test('qualified legacy references are detected and missing function terminators 
   const root = await mkdtemp(path.join(os.tmpdir(), 'sql-audit-'));
   try {
     await mkdir(path.join(root, 'supabase/migrations'), { recursive: true });
-    await mkdir(path.join(root, 'database/changes'), { recursive: true });
+    await mkdir(path.join(root, 'database/archive'), { recursive: true });
     await writeFile(
       path.join(root, 'supabase/migrations/20261101000000_base.sql'),
       'create table public.chat_messages(id uuid);\ncreate policy deny_old on public.messages for all using(false);\n'
     );
     await writeFile(
-      path.join(root, 'database/changes/20261102000000_bad_function.sql'),
+      path.join(root, 'database/archive/20261102000000_bad_function.sql'),
       'create or replace function app_private.sample() returns void language sql as $function$ select 1; $function$\nrevoke all on function app_private.sample() from public;\n'
     );
     const report = await buildSqlAudit(root);
     assert.equal(report.legacyBlockers.length, 1);
-    assert.equal(report.syntaxHazards.length, 1);
-    assert.ok(report.findings.some(item => item.code === 'SUSPECTED_MISSING_FUNCTION_TERMINATOR'));
+    assert.equal(report.syntaxHazards.length, 0);
+    assert.equal(report.archivedSyntaxHazards.length, 1);
+    assert.equal(report.findings.some(item => item.code === 'SUSPECTED_MISSING_FUNCTION_TERMINATOR'), false);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
