@@ -6,7 +6,7 @@
   "sourceSets": {
     "cliMigrations": {
       "path": "supabase/migrations",
-      "count": 13
+      "count": 15
     },
     "historicalChanges": {
       "path": "database/changes",
@@ -99,7 +99,7 @@
     {
       "id": "chat.direct-conversation-rpc",
       "source": [
-        "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
+        "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql"
       ],
       "provides": [
         "app_private.get_or_create_direct_conversation_impl(uuid)",
@@ -108,15 +108,17 @@
       "requires": [
         "core.base"
       ],
-      "status": "TEST_ONLY_RESTORED_PRODUCTION_SOURCE",
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
       "testSource": [
+        "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql",
         "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql"
       ],
       "provenance": "tests/staging/local-supabase/fixtures/direct-conversation-rpc.provenance.json",
       "parityNote": "Authoritative pg_get_functiondef source extracted read-only from the production catalog. Fixture includes the inspected authenticated/service_role ACL. Source restoration only; runtime behavior remains blocked pending disposable-local tests.",
       "blockedBy": [
         "DAG-015"
-      ]
+      ],
+      "note": "Final pg_get_functiondef bodies and inspected ACLs recovered from the live production catalog. The original migration bodies were not retained; this canonical file is a documented final-state reconstruction. Runtime replay remains blocked pending local validation."
     },
     {
       "id": "core.grants",
@@ -1151,6 +1153,24 @@
       ],
       "blockedBy": [],
       "note": "Copied byte-for-byte from PR #138 source; applied migration is in production history. Local replay remains blocked."
+    },
+    {
+      "id": "chat.hide-atomic-direct-rpc-implementation",
+      "source": [
+        "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql"
+      ],
+      "provides": [
+        "production migration ledger version 20261106102443"
+      ],
+      "requires": [
+        "chat.direct-conversation-rpc"
+      ],
+      "status": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "testSource": [
+        "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql"
+      ],
+      "blockedBy": [],
+      "note": "No-op version retained because the final hidden implementation is already created by the preceding recovered migration; preserves production migration ordering without repeating SQL."
     }
   ],
   "explicitEdges": [
@@ -1857,6 +1877,22 @@
     [
       "platform.storage",
       "chat.profile-status-video-media"
+    ],
+    [
+      "chat.direct-conversation-rpc",
+      "chat.hide-atomic-direct-rpc-implementation"
+    ],
+    [
+      "chat.hide-atomic-direct-rpc-implementation",
+      "chat.channels-public"
+    ],
+    [
+      "chat.hide-atomic-direct-rpc-implementation",
+      "chat.hardening"
+    ],
+    [
+      "chat.hide-atomic-direct-rpc-implementation",
+      "chat.direct-conversation-rpc-eligibility-guard"
     ]
   ],
   "blockers": [
