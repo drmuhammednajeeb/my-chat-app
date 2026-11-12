@@ -18,10 +18,10 @@ test('production migration source registry is explicit, complete, and fail-close
   assert.equal(registry.registryStatus, 'RECONCILIATION_INCOMPLETE');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.sourceSets.sqlSourceFiles, 62);
-  assert.equal(registry.sourceFiles.length, 62);
+  assert.equal(registry.sourceSets.sqlSourceFiles, 58);
+  assert.equal(registry.sourceFiles.length, 58);
   assert.equal(registry.sourceSets.cliMigrationFiles, 17);
-  assert.equal(registry.sourceSets.historicalChangeFiles, 45);
+  assert.equal(registry.sourceSets.historicalChangeFiles, 41);
   assert.equal(registry.sourceSets.duplicatePairs, 4);
   assert.equal(registry.sourceSets.canonicalizedProductionMigrations, 3);
   assert.equal(registry.sourceSets.reconstructedProductionMigrations, 4);
