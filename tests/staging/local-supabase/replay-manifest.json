@@ -3,9 +3,9 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 55,
-    "mappedSources": 52,
-    "identicalDuplicateCopiesExcluded": 3,
+    "sqlFiles": 58,
+    "mappedSources": 54,
+    "identicalDuplicateCopiesExcluded": 4,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
     "testOnlySqlFixturePaths": [
@@ -30,9 +30,9 @@
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
-    "executedMappedSources": 48,
+    "executedMappedSources": 50,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 67
+    "executedSqlFiles": 69
   },
   "execution": {
     "enabled": false,
@@ -231,13 +231,13 @@
     },
     {
       "nodeId": "chat.profile-status-and-conversation-images",
-      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
       "testSources": [
-        "database/changes/20261112000100_profile_status_and_conversation_images.sql",
+        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
         "tests/profile-status-and-conversation-images.test.mjs"
       ],
       "blockedBy": [],
-      "parityNote": "Source-only feature migration. Do not apply to production; requires disposable-local runtime RLS, Storage, and Realtime validation."
+      "parityNote": "Production-applied migration source copied byte-for-byte into canonical CLI directory. Do not reapply to production; local replay remains blocked pending runtime validation."
     },
     {
       "nodeId": "chat.pins",
@@ -641,6 +641,24 @@
         "DAG-016"
       ],
       "parityNote": "After applying the test-only overlay, run read-only catalog assertions and rollback-only CRUD/RPC compatibility probes (chat list create/update/upsert/delete, star upsert/delete, secure message edit audit insert, and cross-user isolation). Runtime execution remains blocked pending a disposable Supabase replay. A separate local Auth/Storage API runtime probe validates file upload, upsert, signed read, private/shared visibility, cross-user path spoof denial, owner deletion, and public avatar delivery. It has not been executed. A separate disposable local Supabase workflow provisions PostgreSQL 17 and the managed Auth/Storage/Realtime services, replays the manifest's exact DAG order, then runs the runtime probes and always stops the temporary stack. It is not a hosted environment and does not authorize production deployment."
+    },
+    {
+      "nodeId": "chat.profile-status-video-media",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112091605_profile_status_video_media.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
+    },
+    {
+      "nodeId": "chat.profile-status-combined-content-media",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
     }
   ],
   "duplicateSelection": [
