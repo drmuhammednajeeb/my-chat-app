@@ -852,7 +852,7 @@
     {
       "id": "DAG-016",
       "severity": "BLOCKER",
-      "issue": "Least-privilege overlay is prepared for disposable local replay only. Must prove API role table/sequence/function privileges, active-member policy coverage, and unchanged legitimate CRUD/RPC behavior before any production migration is designed.",
+      "issue": "Forward hardening has now been exercised in disposable local replay. The remaining external boundary is the Supabase-managed supabase_admin default ACL: postgres cannot alter it, and production catalog inspection currently finds no public objects owned by that role. Keep approval blocked until the full post-forward local runtime suite passes and the managed-role residual is accepted/documented.",
       "evidence": []
     }
   ],
