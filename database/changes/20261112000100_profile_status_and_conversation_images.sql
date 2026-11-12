@@ -174,7 +174,7 @@ begin
   if new.image_path is not distinct from old.image_path then
     return new;
   end if;
-  if actor is null or not app_private.can_manage_conversation(new.id) then
+  if actor is null or not app_private.is_active_member() or not app_private.can_manage_conversation(new.id) then
     raise exception 'تغيير صورة المحادثة غير مصرح به' using errcode = '42501';
   end if;
   if new.image_path is not null then
@@ -214,6 +214,9 @@ declare
 begin
   if actor is null then
     raise exception 'يجب تسجيل الدخول لتغيير صورة المحادثة' using errcode = '28000';
+  end if;
+  if not app_private.is_active_member() then
+    raise exception 'هذه العملية متاحة للأعضاء النشطين فقط' using errcode = '42501';
   end if;
   if not app_private.can_manage_conversation(p_conversation_id) then
     raise exception 'تغيير الصورة متاح لمالك المحادثة أو مشرفها فقط' using errcode = '42501';
