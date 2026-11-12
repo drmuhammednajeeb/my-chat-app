@@ -303,8 +303,10 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
   const migrationFiles = inspected.filter(file => file.kind === 'migration');
   const order = buildMigrationOrder(migrationFiles);
   const syntaxHazards = inspected.flatMap(file =>
-    file.suspectedMissingFunctionTerminators.map(item => ({ path: file.path, ...item }))
+    file.suspectedMissingFunctionTerminators.map(item => ({ path: file.path, kind: file.kind, ...item }))
   );
+  const migrationSyntaxHazards = syntaxHazards.filter(item => item.kind === 'migration');
+  const historicalSyntaxHazards = syntaxHazards.filter(item => item.kind === 'historical_change');
   const configExists = await stat(path.join(root, 'supabase/config.toml')).then(() => true).catch(() => false);
 
   const findings = [];
@@ -342,11 +344,17 @@ export async function buildSqlAudit(root = DEFAULT_ROOT) {
     message: 'A migration references a public table that is only created by a later migration.',
     files: [...new Set(order.forwardDependencies.map(item => item.path))]
   });
-  if (syntaxHazards.length) findings.push({
+  if (migrationSyntaxHazards.length) findings.push({
     severity: 'blocking',
     code: 'SUSPECTED_MISSING_FUNCTION_TERMINATOR',
-    message: 'A dollar-quoted SQL/DO body appears to be missing its statement terminator.',
-    files: [...new Set(syntaxHazards.map(item => item.path))]
+    message: 'A Supabase migration candidate contains a dollar-quoted SQL/DO body without a statement terminator.',
+    files: [...new Set(migrationSyntaxHazards.map(item => item.path))]
+  });
+  if (historicalSyntaxHazards.length) findings.push({
+    severity: 'warning',
+    code: 'HISTORICAL_SQL_SYNTAX_REVIEW',
+    message: 'Historical SQL outside supabase/migrations contains a suspected missing statement terminator. It is not a Supabase CLI migration candidate, so it is reported for manual review rather than blocking migration ordering.',
+    files: [...new Set(historicalSyntaxHazards.map(item => item.path))]
   });
   if (duplicateGroups.length) findings.push({
     severity: 'warning',
