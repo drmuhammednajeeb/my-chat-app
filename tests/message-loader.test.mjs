@@ -88,7 +88,7 @@ test('empty conversation completes without scope errors and renders a deliberate
   const h = harness({ rows: [] });
   assert.equal(await loadMessages(h.deps), true);
   assert.equal(h.area.children.length, 1);
-  assert.match(h.area.children[0].textContent, /بداية محادثة جديدة/);
+  assert.equal(h.area.children[0].children[0].textContent, 'بداية محادثة جديدة');
   assert.equal(h.calls.receipt, 1);
   assert.equal(h.state.isLoadingMessages, false);
   assert.equal(h.state.messageTimelineConversationId, 'conversation-1');
