@@ -1368,10 +1368,9 @@ async function loadOlderMessages(){
  const conversationId=state.active?.id,area=$('messages');
  if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
  const oldest=state.messages[0];if(!oldest?.created_at||!oldest?.id)return false;
- const originalMessages=state.messages.slice(),originalMessageIds=new Set(state.messageIds),originalHasMore=state.hasMoreMessages;
+ const originalMessages=state.messages.slice(),originalHasMore=state.hasMoreMessages;
  const originalMessageIdSet=new Set(originalMessages.map(message=>message.id));
- const originalTop=area.scrollTop;
- state.loadingOlderMessages=true;const requestId=state.messageLoadVersion;state.loadingOlderRequestId=requestId;
+  state.loadingOlderMessages=true;const requestId=state.messageLoadVersion;state.loadingOlderRequestId=requestId;
  const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
  const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
  const oldTop=area.scrollTop;
@@ -1402,13 +1401,13 @@ async function loadOlderMessages(){
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   state.hasMoreMessages=older.length===50;
   state.isLoadingMessages=true;state.batchRenderingMessages=true;state.batchRenderingConversationId=conversationId;area.style.overflowAnchor='none';
-  const beforeRenderNodes=new Set(Array.from(area.childNodes)),olderRenderIds=new Set();
+  const beforeRenderNodes=new Set(Array.from(area.childNodes));
   for(const message of older){
    if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
    if(state.messageIds.has(message.id))continue;
+   if(!originalMessageIdSet.has(message.id))renderedHistoryIds.add(message.id);
    const rendered=await renderMessage(message,conversationId,requestId);
    if(!rendered&&!state.messageIds.has(message.id))throw new Error('Older message rendering did not complete');
-   if(state.messageIds.has(message.id)&&!originalMessageIdSet.has(message.id))renderedHistoryIds.add(message.id);
   }
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area);
@@ -1443,9 +1442,11 @@ async function loadOlderMessages(){
   }
   return false;
  }finally{
-  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
-   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area)}
-   state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.isLoadingMessages=false;area.style.overflowAnchor='';
+  if(state.loadingOlderRequestId===requestId){
+   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId)reconcileMessageTimeline(area)}
+   state.loadingOlderMessages=false;state.loadingOlderRequestId=null;
+   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId)state.isLoadingMessages=false;
+   area.style.overflowAnchor='';
   }
   loader.remove();
  }
