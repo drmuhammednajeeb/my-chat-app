@@ -32,5 +32,5 @@ const backupAt=scripts.indexOf("./modules/backup-restore.js");
 const membershipAt=scripts.indexOf("./membership.js");
 assert.ok(backupAt>membershipAt,"backup module must load after membership/application shell scripts");
 assert.ok(worker.includes('new URL("./modules/backup-restore.js", base).href'));
-assert.match(worker,/CACHE_VERSION = "v22"/);
+assert.match(worker,/CACHE_VERSION = "v24"/);
 console.log("Encrypted backup/restore integration source checks: PASS");
