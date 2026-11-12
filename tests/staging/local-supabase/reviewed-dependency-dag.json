@@ -1049,7 +1049,8 @@
         "membership.final-format",
         "test-fixture.direct-chat-runtime",
         "test-fixture.direct-chat-concurrency",
-        "chat.media-upload-path-hardening"
+        "chat.media-upload-path-hardening",
+        "chat.profile-status-combined-content-media"
       ],
       "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_VALIDATION_BLOCKED",
       "testSource": [
@@ -1102,7 +1103,8 @@
         "chat.channels-public",
         "chat.avatar-storage",
         "platform.storage",
-        "platform.realtime"
+        "platform.realtime",
+        "membership.final-format"
       ],
       "testSource": [
         "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
@@ -1843,6 +1845,14 @@
     [
       "chat.profile-status-video-media",
       "chat.profile-status-combined-content-media"
+    ],
+    [
+      "membership.final-format",
+      "chat.profile-status-and-conversation-images"
+    ],
+    [
+      "chat.profile-status-combined-content-media",
+      "security.least-privilege-overlay"
     ]
   ],
   "blockers": [
