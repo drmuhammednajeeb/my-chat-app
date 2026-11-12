@@ -298,8 +298,13 @@
         audio.load();
       };
       render();
-      // Explicit load initialises metadata for dynamically-created media elements.
-      try { audio.load(); } catch (_) {}
+      // Defer metadata loading until the caller has appended the player to the message DOM.
+      // This is especially important for older messages without a persisted duration.
+      Promise.resolve().then(() => {
+        if (destroyed) return;
+        try { audio.load(); } catch (_) {}
+        render();
+      });
       return wrapper;
     }
 
