@@ -287,7 +287,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,reactions:new Map(),pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
@@ -577,7 +577,7 @@ async function enterAppInternal(user,lifecycleVersion){
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  state.channel=null;state.typingChannel=null;state.active=null;state.activeChatPreference=null;
  state.messages=[];state.messageIds.clear();state.renderingMessageIds.clear();
- state.messageLoadVersion++;state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();
+ state.messageLoadVersion++;state.pinnedMessages=new Map();state.replyMessages=new Map();
  state.replyTarget=null;state.editTarget=null;state.groupSettings=null;
  $('messageInput').value='';$('messageInput').disabled=true;$('sendBtn').disabled=true;
  $('chatTitle').textContent=conversationsLoaded&&state.conversations.length?'مرحباً بك':'لا توجد محادثات بعد';
@@ -1002,7 +1002,7 @@ async function clearDirectChatForMe(){
  if(!confirm('سيتم إخفاء الرسائل السابقة من حسابك فقط. لن تُحذف الرسائل من قاعدة البيانات ولن تتأثر لدى الطرف الآخر. هل تريد المتابعة؟'))return;
  const cutoff=new Date().toISOString();
  if(!await saveDirectChatPreference({cleared_before:cutoff}))return;
- state.messages=[];state.hasMoreMessages=false;state.messageIds.clear();state.renderingMessageIds.clear();state.replyMessages=new Map();state.reactions=new Map();state.pinnedMessages=new Map();state.newMessageCount=0;updateNewMessagesIndicator();renderPinnedBanner();$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>تم مسح سجل الدردشة من طرفك</h2><p>ستظهر هنا الرسائل الجديدة فقط. لا يزال السجل السابق متاحاً للطرف الآخر.</p></div>';
+ state.messages=[];state.hasMoreMessages=false;state.messageIds.clear();state.renderingMessageIds.clear();state.replyMessages=new Map();state.pinnedMessages=new Map();state.newMessageCount=0;updateNewMessagesIndicator();renderPinnedBanner();$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>تم مسح سجل الدردشة من طرفك</h2><p>ستظهر هنا الرسائل الجديدة فقط. لا يزال السجل السابق متاحاً للطرف الآخر.</p></div>';
  toast('تم إخفاء الرسائل السابقة من حسابك فقط');
 }
 
@@ -1019,7 +1019,7 @@ async function openConversation(c){
  applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
  state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.newMessageCount=0;updateNewMessagesIndicator();
  $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
- state.reactions=new Map();state.pinnedMessages=new Map();state.replyMessages=new Map();state.privateReplyContexts=new Map();
+ state.pinnedMessages=new Map();state.replyMessages=new Map();state.privateReplyContexts=new Map();
  state.replyTarget=null;state.editTarget=null;renderComposerContext();renderPinnedBanner();
  state.messageIds.clear();state.renderingMessageIds.clear();
  diagLog('conversation-open',{id:c.id,openToken});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);
@@ -1044,17 +1044,6 @@ async function openConversation(c){
  recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:true,latestOnly:true});
 }
 
-async function loadMessageReactions(conversationId,messages,requestId=null){
- const ids=(messages||[]).filter(m=>!m.deleted_at).map(m=>m.id);if(!ids.length)return true;
- try{
-  const {data,error}=await supabaseClient.from('message_reactions').select('message_id,user_id,reaction_type').eq('conversation_id',conversationId).in('message_id',ids);
-  if(requestId!==null&&(requestId!==state.messageLoadVersion||state.active?.id!==conversationId))return false;
-  if(error)throw error;
-  const next=new Map(state.reactions||[]);ids.forEach(id=>next.delete(id));
-  (data||[]).forEach(r=>{const list=next.get(r.message_id)||[];list.push(r);next.set(r.message_id,list)});
-  state.reactions=next;return true;
- }catch(error){console.warn('Message reactions could not be loaded:',error?.message||error);return false}
-}
 const CHAT_STICKERS=['❤️','😍','😂','🤣','🥰','😘','🔥','👏','👍','🙏','🎉','💯','🌹','✨','🤝','💪','🥳','😎','🤩','😭','😮','🙌','💐','⭐'];
 function encodeChatSticker(emoji){return '[[bizmind-sticker:'+emoji+']]'}
 function decodeChatSticker(content){const value=String(content||''),prefix='[[bizmind-sticker:',suffix=']]';if(!value.startsWith(prefix)||!value.endsWith(suffix))return null;const emoji=value.slice(prefix.length,-suffix.length);return CHAT_STICKERS.includes(emoji)?emoji:null}
@@ -1064,112 +1053,25 @@ function openChatStickerPicker(){
  CHAT_STICKERS.forEach(emoji=>{const button=document.createElement('button');button.type='button';button.className='chat-sticker-option';button.textContent=emoji;button.setAttribute('aria-label','إرسال ملصق '+emoji);button.onclick=()=>{document.querySelector('.message-detail-overlay')?.remove();$('messageInput').value=encodeChatSticker(emoji);sendMessage()};grid.append(button)});
  showMessageDetailModal('اختر ملصقاً',grid);
 }
-const MESSAGE_REACTION_OPTIONS=[
- {type:'like',emoji:'👍',label:'إعجاب'},
- {type:'heart',emoji:'❤️',label:'أحببت'},
- {type:'wow',emoji:'😮',label:'مندهش'},
- {type:'pray',emoji:'🙏',label:'تقدير'},
- {type:'fire',emoji:'🔥',label:'رائع'},
- {type:'celebrate',emoji:'🎉',label:'احتفال'}
-];
-function renderReactionBar(row,message){
- const previous=row.querySelector('.reaction-bar'),wasOpen=row.classList.contains('reactions-open');if(previous)previous.remove();
- if(message.deleted_at)return;
- const reactions=state.reactions.get(message.id)||[],bar=document.createElement('div');bar.className='reaction-bar';bar.setAttribute('aria-label','التفاعلات');
- MESSAGE_REACTION_OPTIONS.forEach(option=>{
-  const matching=reactions.filter(r=>r.reaction_type===option.type),mine=matching.some(r=>r.user_id===state.user?.id);
-  const button=document.createElement('button');button.type='button';button.className='reaction-btn'+(mine?' active':'');button.dataset.reaction=option.type;button.title=option.label;button.setAttribute('aria-label',option.label+' · '+matching.length);button.setAttribute('aria-pressed',String(mine));button.append(document.createTextNode(option.emoji));
-  if(matching.length){const count=document.createElement('span');count.className='reaction-count';count.textContent=matching.length.toLocaleString('en-US');count.title='عرض الأعضاء الذين تفاعلوا';count.addEventListener('click',event=>{event.stopPropagation();showReactionMembers(message,option,matching)});button.append(count)}
-  button.onclick=()=>toggleMessageReaction(message,option.type,button);bar.append(button);
- });
- row.append(bar);row.classList.toggle('reactions-open',wasOpen);
- if(wasOpen)positionMessageReactionBar(row);
-}
-function positionMessageReactionBar(row){
- const bar=row?.querySelector('.reaction-bar');if(!row||!bar||!row.classList.contains('reactions-open'))return;
- const anchor=row.getBoundingClientRect(),pop=bar.getBoundingClientRect(),gap=8,pad=8;
- let top=anchor.bottom+gap;if(top+pop.height>window.innerHeight-pad)top=anchor.top-pop.height-gap;
- top=Math.max(pad,Math.min(top,window.innerHeight-pop.height-pad));
- let left=row.classList.contains('mine')?anchor.right-pop.width:anchor.left;
- left=Math.max(pad,Math.min(left,window.innerWidth-pop.width-pad));
- bar.style.top=Math.round(top)+'px';bar.style.left=Math.round(left)+'px';bar.style.right='auto';
-}
-function openMessageReactions(row){
- if(!row||row.querySelector('.bubble.deleted'))return;
- document.querySelectorAll('.message.reactions-open').forEach(item=>{if(item!==row){item.classList.remove('reactions-open');const old=item.querySelector('.reaction-bar');if(old){old.style.top='';old.style.left='';old.style.right=''}}});
- const opening=!row.classList.contains('reactions-open');row.classList.toggle('reactions-open',opening);
- const bar=row.querySelector('.reaction-bar');if(!bar)return;
- if(!opening){bar.style.top='';bar.style.left='';bar.style.right='';return}
- positionMessageReactionBar(row);
-}
-document.addEventListener('pointerdown',event=>{if(!event.target.closest('.message.reactions-open'))document.querySelectorAll('.message.reactions-open').forEach(row=>row.classList.remove('reactions-open'))},true);
 function bindMessageGestures(row,message){
  const bubble=row.querySelector('.bubble');if(!bubble||message.deleted_at)return;
- let start=null,longPressTimer=null;
- const cancelLongPress=()=>{if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null}};
+ let start=null;
  bubble.addEventListener('pointerdown',event=>{
   if(event.target.closest('button,a,.reply-quote,.message-menu-wrap'))return;
   start={x:event.clientX,y:event.clientY,id:event.pointerId};
-  if(event.pointerType==='touch'){cancelLongPress();longPressTimer=setTimeout(()=>{if(start)openMessageReactions(row)},520)}
  });
  bubble.addEventListener('pointermove',event=>{
   if(!start||start.id!==event.pointerId)return;
   const dx=event.clientX-start.x,dy=event.clientY-start.y;
-  if(Math.hypot(dx,dy)>12)cancelLongPress();
   if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)<110)bubble.style.transform='translateX('+Math.max(-78,Math.min(78,dx*.42))+'px)';
  });
  bubble.addEventListener('pointerup',event=>{
   if(!start)return;
-  const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;cancelLongPress();bubble.style.transform='';
+  const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;bubble.style.transform='';
   const rtl=getComputedStyle(document.documentElement).direction==='rtl';
   if(Math.abs(dx)>=58&&Math.abs(dx)>Math.abs(dy)*1.25&&(rtl?dx>0:dx<0))beginReply(message);
  });
- bubble.addEventListener('pointercancel',()=>{start=null;cancelLongPress();bubble.style.transform=''});
- bubble.addEventListener('click',event=>{
-  if(event.pointerType==='touch'||!event.detail||event.target.closest('button,a,.reply-quote,img,.message-menu-wrap'))return;
-  openMessageReactions(row);
- });
-}
-const pendingReactionKeys=new Set();
-async function toggleMessageReaction(message,reactionType,button){
- const conversationId=message.conversation_id||state.active?.id,userId=state.user?.id,requestVersion=state.messageLoadVersion;
- if(!conversationId||!userId||state.active?.id!==conversationId||message.deleted_at)return;
- const pendingKey=message.id+':'+userId;if(pendingReactionKeys.has(pendingKey))return;
- pendingReactionKeys.add(pendingKey);
- const current=[...(state.reactions.get(message.id)||[])],mine=current.find(r=>r.user_id===userId);
- const next=current.filter(r=>r.user_id!==userId),removing=mine?.reaction_type===reactionType;
- if(!removing)next.push({message_id:message.id,conversation_id:conversationId,user_id:userId,reaction_type:reactionType});
- state.reactions.set(message.id,next);
- const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);
- if(row)renderReactionBar(row,message);
- try{
-  let result;
-  if(removing)result=await supabaseClient.from('message_reactions').delete().eq('conversation_id',conversationId).eq('message_id',message.id).eq('user_id',userId);
-  else result=await supabaseClient.from('message_reactions').upsert({conversation_id:conversationId,message_id:message.id,user_id:userId,reaction_type:reactionType},{onConflict:'message_id,user_id'});
-  if(result.error)throw result.error;
- }catch(error){
-  if(state.active?.id===conversationId&&state.messageLoadVersion===requestVersion){
-   state.reactions.set(message.id,current);
-   const activeRow=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===message.id);
-   if(activeRow)renderReactionBar(activeRow,message);
-   toast('تعذر حفظ التفاعل. أُعيدت الحالة السابقة؛ حاول مجدداً');
-  }
-  console.error('Message reaction failed:',error);
- }finally{pendingReactionKeys.delete(pendingKey);if(button?.isConnected)button.disabled=false}
-}
-function handleReactionRealtime(payload,conversationId){
- if(state.active?.id!==conversationId)return;
- const incoming=payload.new,old=payload.old,event=payload.eventType;
- const messageId=(event==='DELETE'?old?.message_id:incoming?.message_id);if(!messageId)return;
- const message=(state.messages||[]).find(m=>m.id===messageId);
- const eventConversation=event==='DELETE'?(old?.conversation_id||message?.conversation_id):incoming?.conversation_id;
- if(eventConversation!==conversationId)return;
- const current=[...(state.reactions.get(messageId)||[])],actorId=(event==='DELETE'?old?.user_id:incoming?.user_id);
- const next=current.filter(r=>r.user_id!==actorId);
- if(event!=='DELETE'&&incoming)next.push(incoming);
- state.reactions.set(messageId,next);
- const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId);
- if(row&&message)renderReactionBar(row,message);
+ bubble.addEventListener('pointercancel',()=>{start=null;bubble.style.transform=''});
 }
 
 function showMessageDetailModal(title,contentNode){
@@ -1285,7 +1187,6 @@ async function jumpToMessage(id){
    (parents||[]).forEach(m=>state.replyMessages.set(m.id,m));
   }
   await Promise.all([
-   loadMessageReactions(conversationId,rows,requestId),
    loadMessagePins(conversationId,requestId),
    loadPrivateReplyContexts(conversationId,rows,requestId)
   ]);
@@ -1432,7 +1333,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
    }
   }
   const meta=document.createElement('span');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · تم تعديلها':'');(bubble.querySelector('.message-content')||bubble).append(meta);renderMessageStatus(m,bubble);
-  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-caret-down"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption('إضافة تفاعل','ph-smiley',()=>openMessageReactions(row));addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
+  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-caret-down"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
   if(activeConversation?.type==='group'&&m.sender_id!==state.user?.id)addOption('رد خاص','ph-chat-circle-dots',()=>replyPrivatelyToGroupMessage(m));if(m.edited_at&&(m.sender_id===state.user?.id||state.isTeamAdmin))addOption('سجل التعديلات','ph-clock-counter-clockwise',()=>openMessageEditHistory(m));trigger.onclick=event=>{
  event.stopPropagation();const opening=menu.classList.contains('hidden');
  document.querySelectorAll('.message-options-menu').forEach(other=>{if(other!==menu){if(other._closeMenu)other._closeMenu();else other.classList.add('hidden')}});
@@ -1447,7 +1348,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
  top=Math.max(pad,Math.min(top,window.innerHeight-box.height-pad));
  menu.style.left=Math.round(left)+'px';menu.style.top=Math.round(top)+'px';trigger.setAttribute('aria-expanded','true');
 };menu.onclick=event=>event.stopPropagation();actions.append(trigger,menu);bubble.append(actions)}
-  row.append(bubble);renderReactionBar(row,m);renderMessagePinMark(row,m);bindMessageGestures(row,m);
+  row.append(bubble);renderMessagePinMark(row,m);bindMessageGestures(row,m);
   if(!isCurrent())return false;
   const latestMessage=(state.messages||[]).find(item=>item.id===m.id);if(!latestMessage||latestMessage!==m)return false;
   const empty=area.querySelector('.welcome');if(empty)area.replaceChildren();
@@ -1466,7 +1367,7 @@ async function loadMessages(){
  return window.BizmindMessageLoader.loadMessages({
   state,$,supabaseClient,document,performance,
   updateNewMessagesIndicator,diagLog,recordPerf,
-  compareMessagesChronologically,loadMessageReactions,
+  compareMessagesChronologically,
   loadMessagePins,loadPrivateReplyContexts,renderMessage,
   markConversationReceipt,toast
  });
@@ -1494,8 +1395,7 @@ async function loadOlderMessages(){
   if(!older.length){state.hasMoreMessages=false;return false}
   const replyIds=[...new Set(older.map(m=>m.reply_to).filter(id=>id&&!state.messages.some(x=>x.id===id)))];
   const replyTask=replyIds.length?supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds):Promise.resolve({data:[],error:null});
-  const [, , , replyResult]=await Promise.all([
-   loadMessageReactions(conversationId,older,requestId),
+  const [, , replyResult]=await Promise.all([
    loadMessagePins(conversationId,requestId),
    loadPrivateReplyContexts(conversationId,older,requestId),
    replyTask
@@ -1660,7 +1560,7 @@ function handleMessageUpdateRealtime(payload,conversationId){
  if(incoming.deleted_at&&index>=0&&state.messages[index].deleted_at===incoming.deleted_at&&existingRow?.querySelector('.bubble.deleted'))return;
  if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);
  if(incoming.deleted_at){
-  state.reactions?.delete(incoming.id);state.pinnedMessages?.delete(incoming.id);
+  state.pinnedMessages?.delete(incoming.id);
   const deletedRow=existingRow;
   if(deletedRow)deletedRow.remove();
   state.messageIds.delete(incoming.id);
@@ -1701,8 +1601,7 @@ function handleMessageDeleteRealtime(payload,conversationId){
  if(existing&&existing.conversation_id!==conversationId)return false;
  state.messages=(state.messages||[]).filter(message=>message.id!==deletedId);
  state.messageIds?.delete(deletedId);
- state.reactions?.delete(deletedId);
- state.pinnedMessages?.delete(deletedId);
+  state.pinnedMessages?.delete(deletedId);
  state.replyMessages?.delete(deletedId);
  const row=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===deletedId);
  if(row)row.remove();
@@ -1721,9 +1620,6 @@ function subscribeConversation(){
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id,state.messageLoadVersion).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom(),state.messageLoadVersion)})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>handleMessageUpdateRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'chat_messages'},p=>handleMessageDeleteRealtime(p,id))
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
-  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>handleReactionRealtime(p,id))
-  .on('postgres_changes',{event:'DELETE',schema:'public',table:'message_reactions'},p=>handleReactionRealtime(p,id))
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_pins',filter:'conversation_id=eq.'+id},p=>handlePinRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'message_pins'},p=>handlePinRealtime(p,id))
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversation_members',filter:'conversation_id=eq.'+id},p=>handleMembershipRealtime(p,id))
