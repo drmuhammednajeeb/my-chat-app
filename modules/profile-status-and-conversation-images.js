@@ -252,7 +252,7 @@
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initConversationImageSurface, { once: true });
-  else initStatusSurface();
+  else initConversationImageSurface();
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     if (session?.user) setTimeout(subscribeConversationImageRealtime, 0);
