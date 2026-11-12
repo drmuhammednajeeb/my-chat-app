@@ -8,7 +8,7 @@ const loaderSource = await readFile(new URL('../modules/message-loader.js', impo
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
-  const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
+  const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\(');
   const match = pattern.exec(source);
   assert.ok(match, 'Function not found: ' + name);
   const start = match.index;
@@ -237,10 +237,10 @@ test('delete action uses the returned database row and avoids a competing full r
 
 test('message loader reconciles the authoritative window and preserves valid realtime/history rows', () => {
   const load = extractFunction('loadMessages');
-  assert.match(load, /window\\.BizmindMessageLoader\\.loadMessages/);
-  assert.match(loaderSource, /const fetchedIds = new Set\\(fetchedRows\\.map\\(row => row\\.id\\)\\)/);
-  assert.match(loaderSource, /isOlderLoadedHistory = fetchedRows\\.length === 50/);
-  assert.match(loaderSource, /isAfterClear\\(row, clearedBefore\\)/);
+  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
+  assert.match(loaderSource, /const fetchedIds = new Set\(fetchedRows\.map\(row => row\.id\)\)/);
+  assert.match(loaderSource, /isOlderLoadedHistory = fetchedRows\.length === 50/);
+  assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
   assert.match(loaderSource, /arrivedDuringEmptyFetch/);
 });
 
@@ -294,11 +294,11 @@ test('receipt writes are serialized per conversation in one client session', asy
 
 test('renderer and extracted message loader retain stale-result and render-completion guards', () => {
   const render = extractFunction('renderMessageInternal'), load = extractFunction('loadMessages');
-  assert.match(render, /if\\(!isCurrent\\(\\)\\)return false/);
-  assert.match(render, /createSignedUrl\\(m\\.attachment_path,3600\\)/);
-  assert.match(load, /window\\.BizmindMessageLoader\\.loadMessages/);
-  assert.match(loaderSource, /state\\.messageLoadVersion === requestId && state\\.active\\?\\.id === conversationId/);
-  assert.match(loaderSource, /state\\.messagePollCursor = fetchedRows\\[0\\]/);
+  assert.match(render, /if\(!isCurrent\(\)\)return false/);
+  assert.match(render, /createSignedUrl\(m\.attachment_path,3600\)/);
+  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
+  assert.match(loaderSource, /state\.messageLoadVersion === requestId && state\.active\?\.id === conversationId/);
+  assert.match(loaderSource, /state\.messagePollCursor = fetchedRows\[0\]/);
   assert.match(loaderSource, /let allMessagesRendered = true/);
 });
 
