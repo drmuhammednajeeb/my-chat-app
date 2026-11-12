@@ -193,7 +193,8 @@ function inspectFile(file) {
     line: sql.slice(0, match.index).split('\n').length,
     offset: match.index
   }));
-  const referencedPublicTables = [...new Set([...sql.matchAll(/\b(?:from|join|update|into|on|references)\s+public\s*\.\s*([a-z_][\w$]*)/gi)].map(match => match[1].toLowerCase()))].sort();
+  const publicTableReferences = [...sql.matchAll(/\\b(?:from|join|update|into|on(?:\\s+table)?|references|alter\\s+table|drop\\s+table)\\s+public\\s*\\.\\s*([a-z_][\\w$]*)/gi)].map(match => ({ name: match[1].toLowerCase(), line: sql.slice(0, match.index).split('\\n').length, offset: match.index }));
+  const referencedPublicTables = [...new Set(publicTableReferences.map(reference => reference.name))].sort();
   const timestamp = file.kind === 'migration'
     ? file.path.split('/').at(-1).match(/^(\d{14}|\d{12}|\d{8})/)?.[1] ?? null
     : null;
@@ -207,6 +208,7 @@ function inspectFile(file) {
     migrationTimestamp: timestamp,
     createsPublicTables: createdPublicTables,
     referencedPublicTables,
+    publicTableReferences,
     legacyMessagesReferences: legacyRefs.map(({ token, line }) => ({ token, line })),
     legacyMessagesDependency: legacyRefs.length
       ? (hasCurrentChatMessages ? 'mixed_current_and_legacy_reference' : 'legacy_messages_reference')
@@ -242,30 +244,30 @@ function buildMigrationOrder(migrationFiles) {
   const forwardDependencies = [];
   const unresolvedLegacyReferences = [];
   for (const file of ordered) {
-    for (const reference of file.legacyMessagesReferences) {
-      const definitions = tableDefinitions.get('messages') ?? [];
+    for (const reference of file.publicTableReferences) {
+      const definitions = tableDefinitions.get(reference.name) ?? [];
       const priorDefinition = definitions.some(definition =>
         definition.position < positions.get(file.path)
-        || (definition.position === positions.get(file.path) && definition.offset < file.legacyMessagesReferences.find(item => item.line === reference.line)?.offset)
+        || (definition.position === positions.get(file.path) && definition.offset < reference.offset)
       );
-      if (!priorDefinition) unresolvedLegacyReferences.push({
-        path: file.path,
-        line: reference.line,
-        reason: 'References public.messages before any preceding CREATE TABLE public.messages in the migration sequence.'
-      });
-    }
-    for (const table of file.referencedPublicTables) {
-      const definitions = tableDefinitions.get(table) ?? [];
       const laterDefinition = definitions.find(definition =>
         definition.position > positions.get(file.path)
-        || (definition.position === positions.get(file.path) && definition.offset > 0)
+        || (definition.position === positions.get(file.path) && definition.offset > reference.offset)
       );
-      if (laterDefinition && !definitions.some(definition => definition.position < positions.get(file.path))) {
+      if (!priorDefinition && laterDefinition) {
         forwardDependencies.push({
           path: file.path,
-          table: 'public.' + table,
+          line: reference.line,
+          table: 'public.' + reference.name,
           laterDefinition: laterDefinition.path,
-          reason: 'Migration references a public table before its defining migration.'
+          reason: 'Migration references a public table before its defining migration or statement.'
+        });
+      }
+      if (reference.name === 'messages' && !priorDefinition) {
+        unresolvedLegacyReferences.push({
+          path: file.path,
+          line: reference.line,
+          reason: 'References public.messages before any preceding CREATE TABLE public.messages in the migration sequence.'
         });
       }
     }
