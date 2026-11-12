@@ -8,7 +8,7 @@ const loaderSource = await readFile(new URL('../modules/message-loader.js', impo
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 
 function extractFunction(name) {
-  const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\(');
+  const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
   const match = pattern.exec(source);
   assert.ok(match, 'Function not found: ' + name);
   const start = match.index;
