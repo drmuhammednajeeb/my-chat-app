@@ -6,6 +6,7 @@ import vm from 'node:vm';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../modules/profile-status-and-conversation-images.js', import.meta.url), 'utf8');
 const migration = readFileSync(new URL('../database/changes/20261112000100_profile_status_and_conversation_images.sql', import.meta.url), 'utf8');
+const mediaMigration = readFileSync(new URL('../database/changes/20261112000200_profile_status_video_media.sql', import.meta.url), 'utf8');
 const styles = readFileSync(new URL('../modules/profile-status-and-conversation-images.css', import.meta.url), 'utf8');
 
 test('feature client module parses as a classic browser script', () => {
@@ -17,7 +18,12 @@ test('feature assets are wired into the application shell', () => {
   assert.match(html, /<script src="\.\/modules\/profile-status-and-conversation-images\.js" defer><\/script>/);
   assert.match(html, /row\.dataset\.conversationId=c\.id/);
   assert.match(html, /card\.dataset\.conversationId=channel\.id/);
-  assert.match(styles, /\.bz-status-strip/);
+  assert.match(html, /id="statusTab"/);
+  assert.match(html, /setSidebarView\('status'\)/);
+  assert.match(client, /function ensureStatusPage\(/);
+  assert.match(client, /function renderStatusPage\(/);
+  assert.match(styles, /#chat\.status-mode/);
+  assert.match(styles, /\.bz-status-feed-card/);
   assert.match(styles, /\.has-conversation-image/);
 });
 
@@ -34,7 +40,13 @@ test('status records are append-only, owner-scoped and visible only for 24 hours
 test('status media uses a private bucket and reads require a live status row', () => {
   assert.match(migration, /values \('profile-status-media', 'profile-status-media', false/);
   assert.match(migration, /s\.image_path = storage\.objects\.name[\s\S]*?s\.expires_at > now\(\)/);
+  assert.match(mediaMigration, /add column if not exists media_type text/);
+  assert.match(mediaMigration, /media_type is not null/);
+  assert.match(mediaMigration, /video\/mp4[\s\S]*?video\/webm[\s\S]*?video\/quicktime/);
+  assert.match(mediaMigration, /file_size_limit = 26214400/);
+  assert.match(mediaMigration, /set public = false/);
   assert.match(client, /createSignedUrl\(row\.image_path, 60\)/);
+  assert.match(client, /row\.media_type === 'video' \? document\.createElement\('video'\)/);
   assert.match(client, /\.gt\('expires_at', now\)/);
 });
 
@@ -60,12 +72,26 @@ test('security-definer conversation image mutation paths require active membersh
   assert.ok(rpc.includes('if not app_private.is_active_member() then'));
 });
 
-test('client limits status and conversation image uploads and keeps status text/image exclusive', () => {
-  assert.match(client, /MAX_IMAGE_BYTES = 3 \* 1024 \* 1024/);
-  assert.match(client, /IMAGE_TYPES = new Set\(\['image\/jpeg', 'image\/png', 'image\/webp'\]\)/);
+test('client validates text, image and video statuses before upload', () => {
+  assert.match(client, /MAX_STATUS_MEDIA_BYTES = 25 \* 1024 \* 1024/);
+  assert.match(client, /VIDEO_TYPES = new Set\(\['video\/mp4', 'video\/webm', 'video\/quicktime'\]\)/);
   assert.match(client, /\(text && file\)/);
+  assert.match(client, /media_type: mediaType/);
+  assert.match(client, /mediaType = 'video'/);
   assert.match(client, /statusId \+ '\.' \+ extension/);
   assert.match(client, /upsert: false/);
+});
+
+test('status is a separate top-level workspace with a return path to chats', () => {
+  assert.match(html, /id="statusTab"/);
+  assert.match(html, /status-sidebar-mode/);
+  assert.match(html, /status-mode/);
+  assert.match(client, /id = 'statusPage'/);
+  assert.match(client, /id = 'statusPageBack'/);
+  assert.match(client, /setSidebarView\('chats'\)/);
+  assert.match(client, /statusPagePublish/);
+  assert.match(client, /statusFeed/);
+  assert.doesNotMatch(client, /profileStatusStrip/);
 });
 
 test('conversation image changes are published and reconciled for all active members', () => {
