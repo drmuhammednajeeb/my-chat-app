@@ -30,19 +30,19 @@ jobs:
           node-version: 22
       - name: Run isolated read-only audit tests
         run: |
-          node --test \\
-            tests/staging/local-supabase/audit-sql-manifest.test.mjs \\
-            tests/staging/local-supabase/bootstrap-guard.test.mjs \\
-            tests/staging/local-supabase/build-database-object-inventory.test.mjs \\
-            tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs \\
-            tests/staging/local-supabase/reviewed-dependency-dag.test.mjs \\
-            tests/workspace-load-race.test.mjs \\
-            tests/staging/local-supabase/direct-conversation-rpc.test.mjs \\
-            tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \\
-            tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \\
-            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \\
-            tests/staging/local-supabase/rls-least-privilege.test.mjs \\
-            tests/staging/local-supabase/storage-rls-runtime.test.mjs \\
+          node --test \
+            tests/staging/local-supabase/audit-sql-manifest.test.mjs \
+            tests/staging/local-supabase/bootstrap-guard.test.mjs \
+            tests/staging/local-supabase/build-database-object-inventory.test.mjs \
+            tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs \
+            tests/staging/local-supabase/reviewed-dependency-dag.test.mjs \
+            tests/workspace-load-race.test.mjs \
+            tests/staging/local-supabase/direct-conversation-rpc.test.mjs \
+            tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
+            tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
+            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \
+            tests/staging/local-supabase/rls-least-privilege.test.mjs \
+            tests/staging/local-supabase/storage-rls-runtime.test.mjs \
             tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs
       - name: Syntax-check manual local-only runners
         run: |
