@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryStatus": "RECONCILIATION_INCOMPLETE",
+  "registryStatus": "CANONICAL_STREAM_ASSEMBLED_REPLAY_BLOCKED",
   "generatedAt": "2026-11-12",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
@@ -13,96 +13,89 @@
     "migrationHistorySource": "Supabase migration metadata; metadata contains version/name only, not the original SQL body."
   },
   "sourceSets": {
-    "cliMigrationFiles": 17,
-    "historicalChangeFiles": 45,
-    "sqlSourceFiles": 62,
-    "duplicatePairs": 4,
+    "cliMigrationFiles": 64,
+    "historicalChangeFiles": 0,
+    "sqlSourceFiles": 64,
+    "archiveSqlFiles": 52,
+    "duplicatePairs": 0,
+    "testOnlyFixtureCount": 1,
     "testOnlyFixturePaths": [
-      "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
-      "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
-      "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
-      "tests/staging/local-supabase/fixtures/assert-synthetic-admin-active.sql",
-      "tests/staging/local-supabase/fixtures/chat-media-upload-path-hardening.sql",
-      "tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql",
-      "tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql",
-      "tests/staging/local-supabase/fixtures/direct-conversation-rpc.sql",
-      "tests/staging/local-supabase/fixtures/legacy-messages-compat.sql",
-      "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
-      "tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql",
-      "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql",
-      "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
-      "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
+      "tests/staging/local-supabase/fixtures/team-admin-seed.sql"
     ],
-    "testOnlyFixtureCount": 19,
-    "canonicalizedProductionMigrations": 3,
-    "reconstructedProductionMigrations": 4
+    "canonicalizedProductionMigrations": 50,
+    "reconstructedProductionMigrations": 6,
+    "foldedCompoundMigrations": 6,
+    "pendingForwardMigrations": 2,
+    "untrackedProductionChanges": 2,
+    "unappliedHistoricalProposals": 1
   },
   "rules": [
-    "Do not execute database/changes by glob, alphabetical order, or filename timestamp.",
-    "Do not treat test fixtures, overlays, synthetic seeds, or recovered final-state function definitions as production migrations.",
-    "No migration is replay-authorized by this registry.",
-    "Every production history entry must be mapped to an authoritative SQL source with reviewed content equivalence before canonical stream cutover.",
-    "A source filename match is provenance evidence only, not proof that the SQL body equals the applied production migration."
+    "supabase/migrations is the only executable SQL migration source.",
+    "database/archive is provenance-only and must never be executed or globbed.",
+    "database/changes contains documentation only; all historical SQL was archived.",
+    "Every production migration version maps to exactly one versioned canonical SQL file.",
+    "Forward reconciliation migrations are distinct from the 62 migrations already recorded in production and remain pending until separately approved."
   ],
   "productionMigrations": [
     {
       "version": "20261106061954",
       "name": "ultra_chat_pro_v2",
       "sourcePaths": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062058",
       "name": "tighten_api_grants",
       "sourcePaths": [
-        "supabase/migrations/202611060002_tighten_api_grants.sql"
+        "supabase/migrations/20261106062058_tighten_api_grants.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062111",
       "name": "minimum_table_privileges",
       "sourcePaths": [
-        "supabase/migrations/202611060003_minimum_table_privileges.sql"
+        "supabase/migrations/20261106062111_minimum_table_privileges.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062133",
       "name": "reference_profiles",
       "sourcePaths": [
-        "supabase/migrations/202611060004_reference_profiles.sql"
+        "supabase/migrations/20261106062133_reference_profiles.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062150",
       "name": "fix_creator_membership_rls",
       "sourcePaths": [
-        "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
+        "supabase/migrations/20261106062150_fix_creator_membership_rls.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062207",
       "name": "explicit_legacy_deny",
       "sourcePaths": [
-        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+        "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106102326",
@@ -111,8 +104,9 @@
         "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql"
       ],
       "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
-      "confidence": "final-state catalog recovery; not original migration-body equivalence",
-      "note": "Final pg_get_functiondef bodies and ACLs were recovered from the production catalog fixture; original migration body is unavailable."
+      "confidence": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL",
+      "note": "Final pg_get_functiondef bodies and ACLs were recovered from the production catalog fixture; original migration body is unavailable.",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261106102443",
@@ -121,97 +115,106 @@
         "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql"
       ],
       "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
-      "confidence": "final-state catalog recovery; not original migration-body equivalence",
-      "note": "Historical version preserved as no-op; final implementation and ACLs are created by the preceding canonical recovery migration."
+      "confidence": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE",
+      "note": "Historical version preserved as no-op; final implementation and ACLs are created by the preceding canonical recovery migration.",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106125643",
       "name": "message_reactions_and_realtime",
       "sourcePaths": [
-        "database/changes/message_reactions_and_whatsapp_typography.sql"
+        "supabase/migrations/20261106125643_message_reactions_and_realtime.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Contains message_reactions table, RLS, indexes and Realtime publication; verify exact production migration boundary."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "note": "Contains message_reactions table, RLS, indexes and Realtime publication; verify exact production migration boundary.",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106125901",
       "name": "index_message_reaction_user_fk",
       "sourcePaths": [
-        "database/changes/message_reactions_and_whatsapp_typography.sql"
+        "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The compound source includes message_reactions_user_id_idx; no separate source file."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "confidence": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE",
+      "note": "The compound source includes message_reactions_user_id_idx; no separate source file.",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106130351",
       "name": "professional_message_controls_and_receipts",
       "sourcePaths": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106130540",
       "name": "realtime_conversation_member_receipts",
       "sourcePaths": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source adds conversation_members to supabase_realtime and sets replica identity."
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "confidence": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL",
+      "note": "The source adds conversation_members to supabase_realtime and sets replica identity.",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261106130804",
       "name": "index_message_pins_pinned_by",
       "sourcePaths": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source includes message_pins_pinned_by_idx."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "confidence": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE",
+      "note": "The source includes message_pins_pinned_by_idx.",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106132655",
       "name": "private_channels_with_secure_invites",
       "sourcePaths": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106132740",
       "name": "deny_direct_channel_invite_table_access",
       "sourcePaths": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source revokes direct access to app_private.channel_invites and adds a deny policy."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "confidence": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE",
+      "note": "The source revokes direct access to app_private.channel_invites and adds a deny policy.",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106132753",
       "name": "index_channel_invites_created_by",
       "sourcePaths": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "supabase/migrations/20261106132753_index_channel_invites_created_by.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source includes channel_invites_created_by_idx."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "confidence": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE",
+      "note": "The source includes channel_invites_created_by_idx.",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106135225",
       "name": "harden_chat_table_privileges_and_membership_updates",
       "sourcePaths": [
-        "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-        "database/changes/chat_table_privilege_hardening.sql"
+        "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql"
       ],
-      "mappingStatus": "DUPLICATE_IDENTICAL_SOURCE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The two files are byte-identical; the CLI migration is the reviewed canonical copy."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "note": "The two files are byte-identical; the CLI migration is the reviewed canonical copy.",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107014128",
@@ -219,356 +222,394 @@
       "sourcePaths": [
         "supabase/migrations/20261107014128_unified_user_notifications.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107014350",
       "name": "index_user_notification_foreign_keys",
       "sourcePaths": [
-        "database/changes/index_user_notification_foreign_keys.sql",
         "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql"
       ],
-      "mappingStatus": "DUPLICATE_SOURCE_MATCH",
-      "confidence": "same logical name; compare blob hashes"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_PRESENT",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107032052",
       "name": "user_specific_direct_chat_preferences",
       "sourcePaths": [
-        "database/changes/user_specific_direct_chat_preferences.sql"
+        "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107032150",
       "name": "tighten_direct_chat_preference_scope",
       "sourcePaths": [
-        "database/changes/user_specific_direct_chat_preferences.sql"
+        "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The file contains direct-conversation-only ownership and membership predicates; exact migration boundary requires reconciliation."
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "confidence": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL",
+      "note": "The file contains direct-conversation-only ownership and membership predicates; exact migration boundary requires reconciliation.",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261107035217",
       "name": "user_avatars_storage_bucket",
       "sourcePaths": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source creates/configures avatars bucket and owner-only object policies."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "note": "The source creates/configures avatars bucket and owner-only object policies.",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107035243",
       "name": "realtime_profile_avatar_updates",
       "sourcePaths": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source adds public.profiles to supabase_realtime."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "confidence": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE",
+      "note": "The source adds public.profiles to supabase_realtime.",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261107035443",
       "name": "avatar_storage_upsert_select_policy",
       "sourcePaths": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source includes avatar object read/write policies; confirm exact migration split."
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "confidence": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL",
+      "note": "The source includes avatar object read/write policies; confirm exact migration split.",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261107041223",
       "name": "per_user_chat_archive_and_preferences_rls",
       "sourcePaths": [
-        "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
+        "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107061012",
       "name": "self_message_conversation",
       "sourcePaths": [
-        "database/changes/20261107061012_self_message_conversation.sql"
+        "supabase/migrations/20261107061012_self_message_conversation.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107061103",
       "name": "ensure_self_chat_rpc",
       "sourcePaths": [
-        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
+        "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107115802",
       "name": "account_settings_reactions_message_edit_v2",
       "sourcePaths": [
-        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
+        "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107120149",
       "name": "harden_message_edit_permissions",
       "sourcePaths": [
-        "database/changes/20261107124500_harden_message_edit_permissions.sql"
+        "supabase/migrations/20261107120149_harden_message_edit_permissions.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107120239",
       "name": "restore_message_edit_guard",
       "sourcePaths": [
-        "database/changes/20261107130000_restore_message_edit_guard.sql"
+        "supabase/migrations/20261107120239_restore_message_edit_guard.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107120426",
       "name": "index_message_edit_history",
       "sourcePaths": [
-        "database/changes/20261107131500_index_message_edit_history.sql"
+        "supabase/migrations/20261107120426_index_message_edit_history.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125149",
       "name": "group_management_custom_lists_20261107",
       "sourcePaths": [
-        "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
+        "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125546",
       "name": "enforce_group_message_expiry_and_realtime",
       "sourcePaths": [
-        "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
+        "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125616",
       "name": "secure_group_ownership_transfer",
       "sourcePaths": [
-        "database/changes/20261107125616_secure_group_ownership_transfer.sql"
+        "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125754",
       "name": "sync_personal_chat_lists_and_preferences",
       "sourcePaths": [
-        "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
+        "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125934",
       "name": "tighten_group_settings_security_and_indexes",
       "sourcePaths": [
-        "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
+        "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130140",
       "name": "personal_favorites_in_conversation_settings",
       "sourcePaths": [
-        "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
+        "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130534",
       "name": "include_team_admins_in_group_management",
       "sourcePaths": [
-        "database/changes/20261107130534_include_team_admins_in_group_management.sql"
+        "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130737",
       "name": "remove_duplicate_chat_favorite_column",
       "sourcePaths": [
-        "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
+        "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130851",
       "name": "schedule_expired_group_message_purge",
       "sourcePaths": [
-        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+        "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130954",
       "name": "scope_team_admin_overrides_to_group_features",
       "sourcePaths": [
-        "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+        "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107134334",
       "name": "conversation_workspaces_private_documents",
       "sourcePaths": [
-        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+        "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107134414",
       "name": "index_workspace_and_document_foreign_keys",
       "sourcePaths": [
-        "database/changes/20261107134600_index_workspace_foreign_keys.sql"
+        "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql"
       ],
-      "mappingStatus": "SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Filename timestamp differs from production version; indexes match the workspace/document FK index change."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "note": "Filename timestamp differs from production version; indexes match the workspace/document FK index change.",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107135149",
       "name": "workspace_realtime_and_note_assignment",
       "sourcePaths": [
-        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql"
+        "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107135501",
       "name": "harden_workspace_storage_and_private_reply_scope",
       "sourcePaths": [
-        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
+        "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107144109",
       "name": "private_membership_system_20261107",
       "sourcePaths": [
-        "database/changes/20261107144109_private_membership_system_20261107.sql"
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107144227",
       "name": "secure_membership_admin_rpc_wrappers",
       "sourcePaths": [
-        "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
+        "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107144626",
       "name": "membership_state_self_check_and_deny_policy",
       "sourcePaths": [
-        "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
+        "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107144758",
       "name": "membership_invitation_foreign_key_indexes",
       "sourcePaths": [
-        "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
+        "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107145232",
       "name": "membership_invitation_acceptance_after_auth_insert_fix",
       "sourcePaths": [
-        "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
+        "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107152550",
       "name": "official_forever_membership_numbers_manual_verification",
       "sourcePaths": [
-        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql"
+        "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107152733",
       "name": "fix_official_membership_invite_duplicate_validation",
       "sourcePaths": [
-        "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+        "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107153051",
       "name": "remove_legacy_sequential_membership_generator",
       "sourcePaths": [
-        "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
+        "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107153110",
       "name": "anchor_initial_official_membership_verification_by_number",
       "sourcePaths": [
-        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
+        "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107153214",
       "name": "restore_secure_membership_state_rpc_wrapper",
       "sourcePaths": [
-        "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
+        "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107154825",
       "name": "fix_chat_message_rls_reply_recursion",
       "sourcePaths": [
-        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+        "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107160647",
@@ -577,8 +618,9 @@
         "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql"
       ],
       "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
-      "confidence": "final-state catalog reconstruction; original migration body unavailable",
-      "note": "Reconstructed final-state columns, private SECURITY DEFINER functions, channel avatar bucket, storage policies and ACLs from live production catalog; original SQL body unavailable."
+      "confidence": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL",
+      "note": "Reconstructed final-state columns, private SECURITY DEFINER functions, channel avatar bucket, storage policies and ACLs from live production catalog; original SQL body unavailable.",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261107160733",
@@ -587,8 +629,9 @@
         "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql"
       ],
       "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
-      "confidence": "final-state catalog reconstruction; original migration body unavailable",
-      "note": "Reconstructed final public invoker wrappers and ACLs from live production catalog; original SQL body unavailable."
+      "confidence": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL",
+      "note": "Reconstructed final public invoker wrappers and ACLs from live production catalog; original SQL body unavailable.",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261108075913",
@@ -596,8 +639,9 @@
       "sourcePaths": [
         "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261112091557",
@@ -606,8 +650,9 @@
         "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql"
       ],
       "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
-      "confidence": "byte-identical-source-copy; not clean-replay-validated",
-      "note": "Canonical Supabase migration file added on this isolated PR from database/changes/20261112000100_profile_status_and_conversation_images.sql. No SQL was executed."
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "note": "Canonical Supabase migration file added on this isolated PR from database/changes/20261112000100_profile_status_and_conversation_images.sql. No SQL was executed.",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261112091605",
@@ -616,8 +661,9 @@
         "supabase/migrations/20261112091605_profile_status_video_media.sql"
       ],
       "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
-      "confidence": "byte-identical-source-copy; not clean-replay-validated",
-      "note": "Canonical Supabase migration file added on this isolated PR from PR138:database/changes/20261112000200_profile_status_video_media.sql. No SQL was executed."
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "note": "Canonical Supabase migration file added on this isolated PR from PR138:database/changes/20261112000200_profile_status_video_media.sql. No SQL was executed.",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261112103237",
@@ -626,506 +672,587 @@
         "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
       ],
       "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
-      "confidence": "byte-identical-source-copy; not clean-replay-validated",
-      "note": "Canonical Supabase migration file added on this isolated PR from PR138:database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql. No SQL was executed."
+      "confidence": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED",
+      "note": "Canonical Supabase migration file added on this isolated PR from PR138:database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql. No SQL was executed.",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     }
   ],
   "sourceFiles": [
     {
-      "path": "database/changes/20261107035500_user_avatars_storage.sql",
-      "gitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql",
-      "gitBlobSha": "9530e894fc2ea1e314fbeaf10ed893291b1cf1b3",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107061012_self_message_conversation.sql",
-      "gitBlobSha": "38b59e24f1de15a351f2fe27ec65ade56e6e8175",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107061103_ensure_self_chat_rpc.sql",
-      "gitBlobSha": "93523592aa7d080a909954bfcca17a1609bb224b",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107080000_chat_voice_messages.sql",
-      "gitBlobSha": "c0987b3e66afc3a0e5803542b103aef38a9bfb53",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql",
-      "gitBlobSha": "961b5b6c7d31bd9cc3a87aa037aa2a9891cba051",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107124500_harden_message_edit_permissions.sql",
-      "gitBlobSha": "845a1e9074a3a55ab3faa5bb48d8d0ec47f8e880",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107125149_group_management_custom_lists_20261107.sql",
-      "gitBlobSha": "8765dfb8905dfd6c60694fa2be2e472f3f14260b",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql",
-      "gitBlobSha": "a808b77f71b4124993800a841495433f895026a3",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107125616_secure_group_ownership_transfer.sql",
-      "gitBlobSha": "9fd8e829d33b13aed489d402135c33ce5138e739",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql",
-      "gitBlobSha": "aa834b85b4d12eb418629578135bc9cdb64c5bb6",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql",
-      "gitBlobSha": "bd56800c78256c5ac8b329d2ee7642e435e43ff5",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107130000_restore_message_edit_guard.sql",
-      "gitBlobSha": "73564e1dcd4dbb65c2b23e890ad070ade9b9482d",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql",
-      "gitBlobSha": "a89ece0b23230bb19e9a603163349cdf8e7e53a7",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107130534_include_team_admins_in_group_management.sql",
-      "gitBlobSha": "d339d8791bfaf0aa4ac63d2f183e81bd54fc56c9",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql",
-      "gitBlobSha": "6a165eb9bf85d2091ba4a64f35129baec8557d29",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107130851_schedule_expired_group_message_purge.sql",
-      "gitBlobSha": "4c154dcd14e70e0561880d6bce3d0d63b554d16b",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql",
-      "gitBlobSha": "d547452a45275cb6eefb6b4b8c6585769061951e",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107131500_index_message_edit_history.sql",
-      "gitBlobSha": "ccc72a34680d0e2da3919b8760591981bc0cebb0",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107134500_conversation_workspaces_private_documents.sql",
-      "gitBlobSha": "b1211716490c9d758064c8266107d6fd7b356646",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107134600_index_workspace_foreign_keys.sql",
-      "gitBlobSha": "a12f0f8159d2a05f3847ac18e89ca40317db560e",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
-      "gitBlobSha": "b25c60e57c28c744c95d53d15c47820fd917591a",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql",
-      "gitBlobSha": "70515432f0570cd9d9caeaca37f9cd431b316b6f",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107144109_private_membership_system_20261107.sql",
-      "gitBlobSha": "175d72492486f99b05f7bb5f42638a8c8904dc4a",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql",
-      "gitBlobSha": "38ee84d896b89510bbf4c6561d14df217029cb71",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql",
-      "gitBlobSha": "3738d3d4cdb06598bef78f6e685ec9e7e2caee48",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql",
-      "gitBlobSha": "536966ce810bf9c7e8916e03982c11a79f86791f",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql",
-      "gitBlobSha": "cd6c0332400e2b80ba4961bc6183813d4b0f37a2",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
-      "gitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
-      "gitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql",
-      "gitBlobSha": "8273fdebc852c5f95adb48990f4bb06ba78bd97a",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
-      "gitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql",
-      "gitBlobSha": "d71ebeca3808ae0b1ac321a48a089f6986422914",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql",
-      "gitBlobSha": "aa73588f3bfce50b9874ef68511c52fe60f8d52b",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql",
-      "gitBlobSha": "36009efa23ed5249d3a4d1aa027fe06c22e2aaee",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
-      "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
-      "sourceType": "historical-change",
-      "duplicateOf": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/chat_table_privilege_hardening.sql",
-      "gitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749",
-      "sourceType": "historical-change",
-      "duplicateOf": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/index_user_notification_foreign_keys.sql",
-      "gitBlobSha": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7",
-      "sourceType": "historical-change",
-      "duplicateOf": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/message_reactions_and_whatsapp_typography.sql",
-      "gitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/private_channels_with_secure_invites.sql",
-      "gitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/professional_message_controls_and_receipts.sql",
-      "gitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/public_announcement_channels.sql",
-      "gitBlobSha": "5a4acb8142fa2acaffc421c516b0dd96cb2f2c9a",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/team_management_dashboard.sql",
-      "gitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/unified_notifications.sql",
-      "gitBlobSha": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e",
-      "sourceType": "historical-change",
-      "duplicateOf": "supabase/migrations/20261107014128_unified_user_notifications.sql",
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/user_specific_direct_chat_preferences.sql",
-      "gitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
-      "sourceType": "historical-change",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
+      "path": "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql",
+      "version": "20261106061954",
+      "name": "ultra_chat_pro_v2",
       "gitBlobSha": "61c671c68a5d65ce3acc06764dd3f991e2520cfa",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
-      "path": "supabase/migrations/202611060002_tighten_api_grants.sql",
+      "path": "supabase/migrations/20261106062058_tighten_api_grants.sql",
+      "version": "20261106062058",
+      "name": "tighten_api_grants",
       "gitBlobSha": "89bb6cd6defc3210af18cd8815a727285214317f",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
-      "path": "supabase/migrations/202611060003_minimum_table_privileges.sql",
+      "path": "supabase/migrations/20261106062111_minimum_table_privileges.sql",
+      "version": "20261106062111",
+      "name": "minimum_table_privileges",
       "gitBlobSha": "e990252f9b0740e6b4f0b94e4013d31b3bb3ce47",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
-      "path": "supabase/migrations/202611060004_reference_profiles.sql",
+      "path": "supabase/migrations/20261106062133_reference_profiles.sql",
+      "version": "20261106062133",
+      "name": "reference_profiles",
       "gitBlobSha": "90ab731bf0e027e34091c3bd62307e5e7f2d42c8",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
-      "path": "supabase/migrations/202611060005_fix_creator_membership_rls.sql",
+      "path": "supabase/migrations/20261106062150_fix_creator_membership_rls.sql",
+      "version": "20261106062150",
+      "name": "fix_creator_membership_rls",
       "gitBlobSha": "414a1ae97e3ba57870c9e79f80c74fe44b845b01",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
-      "path": "supabase/migrations/202611060006_explicit_legacy_deny.sql",
+      "path": "supabase/migrations/20261106062207_explicit_legacy_deny.sql",
+      "version": "20261106062207",
+      "name": "explicit_legacy_deny",
       "gitBlobSha": "dc1e9e33841c2aa42c444dcf1222b215f689320c",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
-    },
-    {
-      "path": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-      "gitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749",
-      "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
-    },
-    {
-      "path": "supabase/migrations/20261107014128_unified_user_notifications.sql",
-      "gitBlobSha": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e",
-      "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
-    },
-    {
-      "path": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
-      "gitBlobSha": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7",
-      "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
-    },
-    {
-      "path": "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
-      "gitBlobSha": "3a69a03e9ae03374453c0d39d05b7a46c9fcafd5",
-      "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Existing CLI migration file; production version mapping must be taken from the live migration registry."
-    },
-    {
-      "path": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
-      "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
-      "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Copied byte-for-byte from database/changes/20261112000100_profile_status_and_conversation_images.sql; matches production migration version/name 20261112091557/profile_status_and_conversation_images; source parity is recorded, not replay authorization."
-    },
-    {
-      "path": "supabase/migrations/20261112091605_profile_status_video_media.sql",
-      "gitBlobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0",
-      "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Copied byte-for-byte from PR138:database/changes/20261112000200_profile_status_video_media.sql; matches production migration version/name 20261112091605/profile_status_video_media; source parity is recorded, not replay authorization."
-    },
-    {
-      "path": "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql",
-      "gitBlobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
-      "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Copied byte-for-byte from PR138:database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql; matches production migration version/name 20261112103237/allow_combined_profile_status_content_and_media; source parity is recorded, not replay authorization."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
       "path": "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql",
+      "version": "20261106102326",
+      "name": "atomic_direct_conversation_creation",
       "gitBlobSha": "50bf9bf93de916f0083656a14e5ac9a9d926bae6",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Recovered final function definitions and ACLs from the read-only production catalog fixture; not the original migration body."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
       "path": "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql",
+      "version": "20261106102443",
+      "name": "hide_atomic_direct_rpc_implementation",
       "gitBlobSha": "42b3b7215f559655c98c8f9c124594d36e31f6eb",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical version preserved as an intentional no-op because the final implementation is folded into the preceding canonical recovery migration."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106125643_message_reactions_and_realtime.sql",
+      "version": "20261106125643",
+      "name": "message_reactions_and_realtime",
+      "gitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql",
+      "version": "20261106125901",
+      "name": "index_message_reaction_user_fk",
+      "gitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+      "version": "20261106130351",
+      "name": "professional_message_controls_and_receipts",
+      "gitBlobSha": "9a87a6d5ad588cd0b6ddaa3becbe17e9e4825fe1",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql",
+      "version": "20261106130540",
+      "name": "realtime_conversation_member_receipts",
+      "gitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql",
+      "version": "20261106130804",
+      "name": "index_message_pins_pinned_by",
+      "gitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+      "version": "20261106132655",
+      "name": "private_channels_with_secure_invites",
+      "gitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql",
+      "version": "20261106132740",
+      "name": "deny_direct_channel_invite_table_access",
+      "gitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106132753_index_channel_invites_created_by.sql",
+      "version": "20261106132753",
+      "name": "index_channel_invites_created_by",
+      "gitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql",
+      "version": "20261106135225",
+      "name": "harden_chat_table_privileges_and_membership_updates",
+      "gitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107014128_unified_user_notifications.sql",
+      "version": "20261107014128",
+      "name": "unified_user_notifications",
+      "gitBlobSha": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
+      "version": "20261107014350",
+      "name": "index_user_notification_foreign_keys",
+      "gitBlobSha": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql",
+      "version": "20261107032052",
+      "name": "user_specific_direct_chat_preferences",
+      "gitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql",
+      "version": "20261107032150",
+      "name": "tighten_direct_chat_preference_scope",
+      "gitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql",
+      "version": "20261107035217",
+      "name": "user_avatars_storage_bucket",
+      "gitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql",
+      "version": "20261107035243",
+      "name": "realtime_profile_avatar_updates",
+      "gitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql",
+      "version": "20261107035443",
+      "name": "avatar_storage_upsert_select_policy",
+      "gitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql",
+      "version": "20261107041223",
+      "name": "per_user_chat_archive_and_preferences_rls",
+      "gitBlobSha": "9530e894fc2ea1e314fbeaf10ed893291b1cf1b3",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107061012_self_message_conversation.sql",
+      "version": "20261107061012",
+      "name": "self_message_conversation",
+      "gitBlobSha": "38b59e24f1de15a351f2fe27ec65ade56e6e8175",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql",
+      "version": "20261107061103",
+      "name": "ensure_self_chat_rpc",
+      "gitBlobSha": "93523592aa7d080a909954bfcca17a1609bb224b",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql",
+      "version": "20261107115802",
+      "name": "account_settings_reactions_message_edit_v2",
+      "gitBlobSha": "961b5b6c7d31bd9cc3a87aa037aa2a9891cba051",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107120149_harden_message_edit_permissions.sql",
+      "version": "20261107120149",
+      "name": "harden_message_edit_permissions",
+      "gitBlobSha": "845a1e9074a3a55ab3faa5bb48d8d0ec47f8e880",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107120239_restore_message_edit_guard.sql",
+      "version": "20261107120239",
+      "name": "restore_message_edit_guard",
+      "gitBlobSha": "73564e1dcd4dbb65c2b23e890ad070ade9b9482d",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107120426_index_message_edit_history.sql",
+      "version": "20261107120426",
+      "name": "index_message_edit_history",
+      "gitBlobSha": "ccc72a34680d0e2da3919b8760591981bc0cebb0",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql",
+      "version": "20261107125149",
+      "name": "group_management_custom_lists_20261107",
+      "gitBlobSha": "8765dfb8905dfd6c60694fa2be2e472f3f14260b",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql",
+      "version": "20261107125546",
+      "name": "enforce_group_message_expiry_and_realtime",
+      "gitBlobSha": "a808b77f71b4124993800a841495433f895026a3",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql",
+      "version": "20261107125616",
+      "name": "secure_group_ownership_transfer",
+      "gitBlobSha": "9fd8e829d33b13aed489d402135c33ce5138e739",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql",
+      "version": "20261107125754",
+      "name": "sync_personal_chat_lists_and_preferences",
+      "gitBlobSha": "aa834b85b4d12eb418629578135bc9cdb64c5bb6",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql",
+      "version": "20261107125934",
+      "name": "tighten_group_settings_security_and_indexes",
+      "gitBlobSha": "bd56800c78256c5ac8b329d2ee7642e435e43ff5",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql",
+      "version": "20261107130140",
+      "name": "personal_favorites_in_conversation_settings",
+      "gitBlobSha": "a89ece0b23230bb19e9a603163349cdf8e7e53a7",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql",
+      "version": "20261107130534",
+      "name": "include_team_admins_in_group_management",
+      "gitBlobSha": "d339d8791bfaf0aa4ac63d2f183e81bd54fc56c9",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql",
+      "version": "20261107130737",
+      "name": "remove_duplicate_chat_favorite_column",
+      "gitBlobSha": "6a165eb9bf85d2091ba4a64f35129baec8557d29",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql",
+      "version": "20261107130851",
+      "name": "schedule_expired_group_message_purge",
+      "gitBlobSha": "4c154dcd14e70e0561880d6bce3d0d63b554d16b",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql",
+      "version": "20261107130954",
+      "name": "scope_team_admin_overrides_to_group_features",
+      "gitBlobSha": "d547452a45275cb6eefb6b4b8c6585769061951e",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql",
+      "version": "20261107134334",
+      "name": "conversation_workspaces_private_documents",
+      "gitBlobSha": "b1211716490c9d758064c8266107d6fd7b356646",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql",
+      "version": "20261107134414",
+      "name": "index_workspace_and_document_foreign_keys",
+      "gitBlobSha": "a12f0f8159d2a05f3847ac18e89ca40317db560e",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql",
+      "version": "20261107135149",
+      "name": "workspace_realtime_and_note_assignment",
+      "gitBlobSha": "b25c60e57c28c744c95d53d15c47820fd917591a",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql",
+      "version": "20261107135501",
+      "name": "harden_workspace_storage_and_private_reply_scope",
+      "gitBlobSha": "70515432f0570cd9d9caeaca37f9cd431b316b6f",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
+      "version": "20261107144109",
+      "name": "private_membership_system_20261107",
+      "gitBlobSha": "349ad88d1da67ab40247f04b4388c2863505ffef",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql",
+      "version": "20261107144227",
+      "name": "secure_membership_admin_rpc_wrappers",
+      "gitBlobSha": "38ee84d896b89510bbf4c6561d14df217029cb71",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql",
+      "version": "20261107144626",
+      "name": "membership_state_self_check_and_deny_policy",
+      "gitBlobSha": "3738d3d4cdb06598bef78f6e685ec9e7e2caee48",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql",
+      "version": "20261107144758",
+      "name": "membership_invitation_foreign_key_indexes",
+      "gitBlobSha": "536966ce810bf9c7e8916e03982c11a79f86791f",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql",
+      "version": "20261107145232",
+      "name": "membership_invitation_acceptance_after_auth_insert_fix",
+      "gitBlobSha": "cd6c0332400e2b80ba4961bc6183813d4b0f37a2",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "version": "20261107152550",
+      "name": "official_forever_membership_numbers_manual_verification",
+      "gitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "version": "20261107152733",
+      "name": "fix_official_membership_invite_duplicate_validation",
+      "gitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql",
+      "version": "20261107153051",
+      "name": "remove_legacy_sequential_membership_generator",
+      "gitBlobSha": "8273fdebc852c5f95adb48990f4bb06ba78bd97a",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "version": "20261107153110",
+      "name": "anchor_initial_official_membership_verification_by_number",
+      "gitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql",
+      "version": "20261107153214",
+      "name": "restore_secure_membership_state_rpc_wrapper",
+      "gitBlobSha": "d71ebeca3808ae0b1ac321a48a089f6986422914",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql",
+      "version": "20261107154825",
+      "name": "fix_chat_message_rls_reply_recursion",
+      "gitBlobSha": "aa73588f3bfce50b9874ef68511c52fe60f8d52b",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
       "path": "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql",
+      "version": "20261107160647",
+      "name": "channel_visibility_avatar_group_background",
       "gitBlobSha": "ca3abdd71f91f8b1ce426bdc07bb486f3f021812",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Reconstructed from live production catalog columns, private function definitions, channel avatar bucket, storage policies and ACLs; original migration body unavailable."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
     },
     {
       "path": "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql",
+      "version": "20261107160733",
+      "name": "harden_channel_rpc_wrappers",
       "gitBlobSha": "3c28981ebf1d70ad789a55ccd2e6d6fe1769043c",
       "sourceType": "cli-migration",
-      "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Reconstructed public invoker wrappers and ACLs from live production catalog; original migration body unavailable."
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql",
+      "version": "20261108075913",
+      "name": "unify_forever_membership_number_format",
+      "gitBlobSha": "3a69a03e9ae03374453c0d39d05b7a46c9fcafd5",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
+      "version": "20261112091557",
+      "name": "profile_status_and_conversation_images",
+      "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261112091605_profile_status_video_media.sql",
+      "version": "20261112091605",
+      "name": "profile_status_video_media",
+      "gitBlobSha": "9d1f8706775954b58ad109f59f3cef735d9142e0",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql",
+      "version": "20261112103237",
+      "name": "allow_combined_profile_status_content_and_media",
+      "gitBlobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "RECORDED_IN_PRODUCTION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261112120000_reconcile_team_management_dashboard.sql",
+      "version": "20261112120000",
+      "name": "reconcile_team_management_dashboard",
+      "gitBlobSha": "3c2f370689859a9e83309731e4aeb0abb0a34032",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "PENDING_PRODUCTION_APPLICATION",
+      "executable": true
+    },
+    {
+      "path": "supabase/migrations/20261112120001_reconcile_chat_media_voice_mime_types.sql",
+      "version": "20261112120001",
+      "name": "reconcile_chat_media_voice_mime_types",
+      "gitBlobSha": "50d5f7d1c6172a56dd9d4d85b3b8dc3835b54db9",
+      "sourceType": "cli-migration",
+      "productionLedgerStatus": "PENDING_PRODUCTION_APPLICATION",
+      "executable": true
     }
   ],
   "unresolvedProductionEntries": [],
@@ -1266,144 +1393,154 @@
       "version": "20261106061954",
       "name": "ultra_chat_pro_v2",
       "sourcePaths": [
-        "supabase/migrations/202611060001_ultra_chat_pro_v2.sql"
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062058",
       "name": "tighten_api_grants",
       "sourcePaths": [
-        "supabase/migrations/202611060002_tighten_api_grants.sql"
+        "supabase/migrations/20261106062058_tighten_api_grants.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062111",
       "name": "minimum_table_privileges",
       "sourcePaths": [
-        "supabase/migrations/202611060003_minimum_table_privileges.sql"
+        "supabase/migrations/20261106062111_minimum_table_privileges.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062133",
       "name": "reference_profiles",
       "sourcePaths": [
-        "supabase/migrations/202611060004_reference_profiles.sql"
+        "supabase/migrations/20261106062133_reference_profiles.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062150",
       "name": "fix_creator_membership_rls",
       "sourcePaths": [
-        "supabase/migrations/202611060005_fix_creator_membership_rls.sql"
+        "supabase/migrations/20261106062150_fix_creator_membership_rls.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106062207",
       "name": "explicit_legacy_deny",
       "sourcePaths": [
-        "supabase/migrations/202611060006_explicit_legacy_deny.sql"
+        "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
+    },
+    {
+      "version": "20261106102326",
+      "name": "atomic_direct_conversation_creation",
+      "sourcePaths": [
+        "supabase/migrations/20261106102326_atomic_direct_conversation_creation.sql"
+      ],
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
+    },
+    {
+      "version": "20261106102443",
+      "name": "hide_atomic_direct_rpc_implementation",
+      "sourcePaths": [
+        "supabase/migrations/20261106102443_hide_atomic_direct_rpc_implementation.sql"
+      ],
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106125643",
       "name": "message_reactions_and_realtime",
       "sourcePaths": [
-        "database/changes/message_reactions_and_whatsapp_typography.sql"
+        "supabase/migrations/20261106125643_message_reactions_and_realtime.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Contains message_reactions table, RLS, indexes and Realtime publication; verify exact production migration boundary."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106125901",
       "name": "index_message_reaction_user_fk",
       "sourcePaths": [
-        "database/changes/message_reactions_and_whatsapp_typography.sql"
+        "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The compound source includes message_reactions_user_id_idx; no separate source file."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106130351",
       "name": "professional_message_controls_and_receipts",
       "sourcePaths": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106130540",
       "name": "realtime_conversation_member_receipts",
       "sourcePaths": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source adds conversation_members to supabase_realtime and sets replica identity."
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261106130804",
       "name": "index_message_pins_pinned_by",
       "sourcePaths": [
-        "database/changes/professional_message_controls_and_receipts.sql"
+        "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source includes message_pins_pinned_by_idx."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106132655",
       "name": "private_channels_with_secure_invites",
       "sourcePaths": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261106132740",
       "name": "deny_direct_channel_invite_table_access",
       "sourcePaths": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source revokes direct access to app_private.channel_invites and adds a deny policy."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106132753",
       "name": "index_channel_invites_created_by",
       "sourcePaths": [
-        "database/changes/private_channels_with_secure_invites.sql"
+        "supabase/migrations/20261106132753_index_channel_invites_created_by.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source includes channel_invites_created_by_idx."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261106135225",
       "name": "harden_chat_table_privileges_and_membership_updates",
       "sourcePaths": [
-        "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-        "database/changes/chat_table_privilege_hardening.sql"
+        "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql"
       ],
-      "mappingStatus": "DUPLICATE_IDENTICAL_SOURCE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The two files are byte-identical; the CLI migration is the reviewed canonical copy."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107014128",
@@ -1411,356 +1548,368 @@
       "sourcePaths": [
         "supabase/migrations/20261107014128_unified_user_notifications.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107014350",
       "name": "index_user_notification_foreign_keys",
       "sourcePaths": [
-        "database/changes/index_user_notification_foreign_keys.sql",
         "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql"
       ],
-      "mappingStatus": "DUPLICATE_SOURCE_MATCH",
-      "confidence": "same logical name; compare blob hashes"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_PRESENT",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107032052",
       "name": "user_specific_direct_chat_preferences",
       "sourcePaths": [
-        "database/changes/user_specific_direct_chat_preferences.sql"
+        "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107032150",
       "name": "tighten_direct_chat_preference_scope",
       "sourcePaths": [
-        "database/changes/user_specific_direct_chat_preferences.sql"
+        "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The file contains direct-conversation-only ownership and membership predicates; exact migration boundary requires reconciliation."
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261107035217",
       "name": "user_avatars_storage_bucket",
       "sourcePaths": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source creates/configures avatars bucket and owner-only object policies."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107035243",
       "name": "realtime_profile_avatar_updates",
       "sourcePaths": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source adds public.profiles to supabase_realtime."
+      "mappingStatus": "FOLDED_INTO_PRIOR_CANONICAL_MIGRATION",
+      "sourceVerificationStatus": "EFFECT_FOLDED_INTO_EARLIER_CANONICAL_SOURCE"
     },
     {
       "version": "20261107035443",
       "name": "avatar_storage_upsert_select_policy",
       "sourcePaths": [
-        "database/changes/20261107035500_user_avatars_storage.sql"
+        "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql"
       ],
-      "mappingStatus": "COMPOUND_SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "The source includes avatar object read/write policies; confirm exact migration split."
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261107041223",
       "name": "per_user_chat_archive_and_preferences_rls",
       "sourcePaths": [
-        "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql"
+        "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107061012",
       "name": "self_message_conversation",
       "sourcePaths": [
-        "database/changes/20261107061012_self_message_conversation.sql"
+        "supabase/migrations/20261107061012_self_message_conversation.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107061103",
       "name": "ensure_self_chat_rpc",
       "sourcePaths": [
-        "database/changes/20261107061103_ensure_self_chat_rpc.sql"
+        "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107115802",
       "name": "account_settings_reactions_message_edit_v2",
       "sourcePaths": [
-        "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql"
+        "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107120149",
       "name": "harden_message_edit_permissions",
       "sourcePaths": [
-        "database/changes/20261107124500_harden_message_edit_permissions.sql"
+        "supabase/migrations/20261107120149_harden_message_edit_permissions.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107120239",
       "name": "restore_message_edit_guard",
       "sourcePaths": [
-        "database/changes/20261107130000_restore_message_edit_guard.sql"
+        "supabase/migrations/20261107120239_restore_message_edit_guard.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107120426",
       "name": "index_message_edit_history",
       "sourcePaths": [
-        "database/changes/20261107131500_index_message_edit_history.sql"
+        "supabase/migrations/20261107120426_index_message_edit_history.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125149",
       "name": "group_management_custom_lists_20261107",
       "sourcePaths": [
-        "database/changes/20261107125149_group_management_custom_lists_20261107.sql"
+        "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125546",
       "name": "enforce_group_message_expiry_and_realtime",
       "sourcePaths": [
-        "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql"
+        "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125616",
       "name": "secure_group_ownership_transfer",
       "sourcePaths": [
-        "database/changes/20261107125616_secure_group_ownership_transfer.sql"
+        "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125754",
       "name": "sync_personal_chat_lists_and_preferences",
       "sourcePaths": [
-        "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql"
+        "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107125934",
       "name": "tighten_group_settings_security_and_indexes",
       "sourcePaths": [
-        "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql"
+        "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130140",
       "name": "personal_favorites_in_conversation_settings",
       "sourcePaths": [
-        "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql"
+        "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130534",
       "name": "include_team_admins_in_group_management",
       "sourcePaths": [
-        "database/changes/20261107130534_include_team_admins_in_group_management.sql"
+        "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130737",
       "name": "remove_duplicate_chat_favorite_column",
       "sourcePaths": [
-        "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql"
+        "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130851",
       "name": "schedule_expired_group_message_purge",
       "sourcePaths": [
-        "database/changes/20261107130851_schedule_expired_group_message_purge.sql"
+        "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107130954",
       "name": "scope_team_admin_overrides_to_group_features",
       "sourcePaths": [
-        "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+        "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107134334",
       "name": "conversation_workspaces_private_documents",
       "sourcePaths": [
-        "database/changes/20261107134500_conversation_workspaces_private_documents.sql"
+        "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107134414",
       "name": "index_workspace_and_document_foreign_keys",
       "sourcePaths": [
-        "database/changes/20261107134600_index_workspace_foreign_keys.sql"
+        "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql"
       ],
-      "mappingStatus": "SOURCE_CANDIDATE",
-      "confidence": "candidate-not-execution-proof",
-      "note": "Filename timestamp differs from production version; indexes match the workspace/document FK index change."
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107135149",
       "name": "workspace_realtime_and_note_assignment",
       "sourcePaths": [
-        "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql"
+        "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107135501",
       "name": "harden_workspace_storage_and_private_reply_scope",
       "sourcePaths": [
-        "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql"
+        "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107144109",
       "name": "private_membership_system_20261107",
       "sourcePaths": [
-        "database/changes/20261107144109_private_membership_system_20261107.sql"
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107144227",
       "name": "secure_membership_admin_rpc_wrappers",
       "sourcePaths": [
-        "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql"
+        "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107144626",
       "name": "membership_state_self_check_and_deny_policy",
       "sourcePaths": [
-        "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql"
+        "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107144758",
       "name": "membership_invitation_foreign_key_indexes",
       "sourcePaths": [
-        "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql"
+        "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107145232",
       "name": "membership_invitation_acceptance_after_auth_insert_fix",
       "sourcePaths": [
-        "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
+        "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107152550",
       "name": "official_forever_membership_numbers_manual_verification",
       "sourcePaths": [
-        "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql"
+        "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107152733",
       "name": "fix_official_membership_invite_duplicate_validation",
       "sourcePaths": [
-        "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+        "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107153051",
       "name": "remove_legacy_sequential_membership_generator",
       "sourcePaths": [
-        "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql"
+        "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107153110",
       "name": "anchor_initial_official_membership_verification_by_number",
       "sourcePaths": [
-        "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
+        "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107153214",
       "name": "restore_secure_membership_state_rpc_wrapper",
       "sourcePaths": [
-        "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
+        "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     },
     {
       "version": "20261107154825",
       "name": "fix_chat_message_rls_reply_recursion",
       "sourcePaths": [
-        "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql"
+        "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
+    },
+    {
+      "version": "20261107160647",
+      "name": "channel_visibility_avatar_group_background",
+      "sourcePaths": [
+        "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql"
+      ],
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
+    },
+    {
+      "version": "20261107160733",
+      "name": "harden_channel_rpc_wrappers",
+      "sourcePaths": [
+        "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql"
+      ],
+      "mappingStatus": "RECONSTRUCTED_FROM_PRODUCTION_CATALOG",
+      "sourceVerificationStatus": "CATALOG_FINAL_STATE_RECONSTRUCTED_NOT_ORIGINAL"
     },
     {
       "version": "20261108075913",
@@ -1768,8 +1917,634 @@
       "sourcePaths": [
         "supabase/migrations/20261108075913_unify_forever_membership_number_format.sql"
       ],
-      "mappingStatus": "SOURCE_NAME_MATCH",
-      "confidence": "name-only"
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
+    },
+    {
+      "version": "20261112091557",
+      "name": "profile_status_and_conversation_images",
+      "sourcePaths": [
+        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql"
+      ],
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
+    },
+    {
+      "version": "20261112091605",
+      "name": "profile_status_video_media",
+      "sourcePaths": [
+        "supabase/migrations/20261112091605_profile_status_video_media.sql"
+      ],
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
+    },
+    {
+      "version": "20261112103237",
+      "name": "allow_combined_profile_status_content_and_media",
+      "sourcePaths": [
+        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
+      ],
+      "mappingStatus": "CANONICAL_MIGRATION_SOURCE_ADDED",
+      "sourceVerificationStatus": "CANONICAL_SOURCE_NOT_CLEAN_REPLAY_VERIFIED"
     }
-  ]
+  ],
+  "archiveFiles": [
+    {
+      "path": "database/archive/historical-changes/20261107035500_user_avatars_storage.sql",
+      "sourcePath": "database/changes/20261107035500_user_avatars_storage.sql",
+      "gitBlobSha": "b4ba933234941f773aea6c6e3734eae629715ae1",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107035217_user_avatars_storage_bucket.sql",
+        "supabase/migrations/20261107035243_realtime_profile_avatar_updates.sql",
+        "supabase/migrations/20261107035443_avatar_storage_upsert_select_policy.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql",
+      "sourcePath": "database/changes/20261107050000_per_user_chat_archive_and_preferences_rls.sql",
+      "gitBlobSha": "9530e894fc2ea1e314fbeaf10ed893291b1cf1b3",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107041223_per_user_chat_archive_and_preferences_rls.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107061012_self_message_conversation.sql",
+      "sourcePath": "database/changes/20261107061012_self_message_conversation.sql",
+      "gitBlobSha": "38b59e24f1de15a351f2fe27ec65ade56e6e8175",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107061012_self_message_conversation.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107061103_ensure_self_chat_rpc.sql",
+      "sourcePath": "database/changes/20261107061103_ensure_self_chat_rpc.sql",
+      "gitBlobSha": "93523592aa7d080a909954bfcca17a1609bb224b",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107061103_ensure_self_chat_rpc.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107080000_chat_voice_messages.sql",
+      "sourcePath": "database/changes/20261107080000_chat_voice_messages.sql",
+      "gitBlobSha": "c0987b3e66afc3a0e5803542b103aef38a9bfb53",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_UNTRACKED_PRODUCTION_CHANGE_RECONCILED_FORWARD",
+      "replacementPaths": [
+        "supabase/migrations/20261112120001_reconcile_chat_media_voice_mime_types.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107123000_account_settings_reactions_message_edit_v2.sql",
+      "sourcePath": "database/changes/20261107123000_account_settings_reactions_message_edit_v2.sql",
+      "gitBlobSha": "961b5b6c7d31bd9cc3a87aa037aa2a9891cba051",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107115802_account_settings_reactions_message_edit_v2.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107124500_harden_message_edit_permissions.sql",
+      "sourcePath": "database/changes/20261107124500_harden_message_edit_permissions.sql",
+      "gitBlobSha": "845a1e9074a3a55ab3faa5bb48d8d0ec47f8e880",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107120149_harden_message_edit_permissions.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107125149_group_management_custom_lists_20261107.sql",
+      "sourcePath": "database/changes/20261107125149_group_management_custom_lists_20261107.sql",
+      "gitBlobSha": "8765dfb8905dfd6c60694fa2be2e472f3f14260b",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107125149_group_management_custom_lists_20261107.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107125546_enforce_group_message_expiry_and_realtime.sql",
+      "sourcePath": "database/changes/20261107125546_enforce_group_message_expiry_and_realtime.sql",
+      "gitBlobSha": "a808b77f71b4124993800a841495433f895026a3",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107125546_enforce_group_message_expiry_and_realtime.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107125616_secure_group_ownership_transfer.sql",
+      "sourcePath": "database/changes/20261107125616_secure_group_ownership_transfer.sql",
+      "gitBlobSha": "9fd8e829d33b13aed489d402135c33ce5138e739",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107125616_secure_group_ownership_transfer.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107125754_sync_personal_chat_lists_and_preferences.sql",
+      "sourcePath": "database/changes/20261107125754_sync_personal_chat_lists_and_preferences.sql",
+      "gitBlobSha": "aa834b85b4d12eb418629578135bc9cdb64c5bb6",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107125754_sync_personal_chat_lists_and_preferences.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107125934_tighten_group_settings_security_and_indexes.sql",
+      "sourcePath": "database/changes/20261107125934_tighten_group_settings_security_and_indexes.sql",
+      "gitBlobSha": "bd56800c78256c5ac8b329d2ee7642e435e43ff5",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107125934_tighten_group_settings_security_and_indexes.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107130000_restore_message_edit_guard.sql",
+      "sourcePath": "database/changes/20261107130000_restore_message_edit_guard.sql",
+      "gitBlobSha": "73564e1dcd4dbb65c2b23e890ad070ade9b9482d",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107120239_restore_message_edit_guard.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107130140_personal_favorites_in_conversation_settings.sql",
+      "sourcePath": "database/changes/20261107130140_personal_favorites_in_conversation_settings.sql",
+      "gitBlobSha": "a89ece0b23230bb19e9a603163349cdf8e7e53a7",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107130140_personal_favorites_in_conversation_settings.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107130534_include_team_admins_in_group_management.sql",
+      "sourcePath": "database/changes/20261107130534_include_team_admins_in_group_management.sql",
+      "gitBlobSha": "d339d8791bfaf0aa4ac63d2f183e81bd54fc56c9",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107130534_include_team_admins_in_group_management.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107130737_remove_duplicate_chat_favorite_column.sql",
+      "sourcePath": "database/changes/20261107130737_remove_duplicate_chat_favorite_column.sql",
+      "gitBlobSha": "6a165eb9bf85d2091ba4a64f35129baec8557d29",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107130737_remove_duplicate_chat_favorite_column.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107130851_schedule_expired_group_message_purge.sql",
+      "sourcePath": "database/changes/20261107130851_schedule_expired_group_message_purge.sql",
+      "gitBlobSha": "4c154dcd14e70e0561880d6bce3d0d63b554d16b",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107130851_schedule_expired_group_message_purge.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107130954_scope_team_admin_overrides_to_group_features.sql",
+      "sourcePath": "database/changes/20261107130954_scope_team_admin_overrides_to_group_features.sql",
+      "gitBlobSha": "d547452a45275cb6eefb6b4b8c6585769061951e",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107131500_index_message_edit_history.sql",
+      "sourcePath": "database/changes/20261107131500_index_message_edit_history.sql",
+      "gitBlobSha": "ccc72a34680d0e2da3919b8760591981bc0cebb0",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107120426_index_message_edit_history.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107134500_conversation_workspaces_private_documents.sql",
+      "sourcePath": "database/changes/20261107134500_conversation_workspaces_private_documents.sql",
+      "gitBlobSha": "b1211716490c9d758064c8266107d6fd7b356646",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107134334_conversation_workspaces_private_documents.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107134600_index_workspace_foreign_keys.sql",
+      "sourcePath": "database/changes/20261107134600_index_workspace_foreign_keys.sql",
+      "gitBlobSha": "a12f0f8159d2a05f3847ac18e89ca40317db560e",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107134414_index_workspace_and_document_foreign_keys.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107135200_workspace_realtime_and_note_assignment.sql",
+      "sourcePath": "database/changes/20261107135200_workspace_realtime_and_note_assignment.sql",
+      "gitBlobSha": "b25c60e57c28c744c95d53d15c47820fd917591a",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107135149_workspace_realtime_and_note_assignment.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql",
+      "sourcePath": "database/changes/20261107135500_harden_workspace_storage_and_private_reply_scope.sql",
+      "gitBlobSha": "70515432f0570cd9d9caeaca37f9cd431b316b6f",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107135501_harden_workspace_storage_and_private_reply_scope.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107144109_private_membership_system_20261107.sql",
+      "sourcePath": "database/changes/20261107144109_private_membership_system_20261107.sql",
+      "gitBlobSha": "175d72492486f99b05f7bb5f42638a8c8904dc4a",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107144227_secure_membership_admin_rpc_wrappers.sql",
+      "sourcePath": "database/changes/20261107144227_secure_membership_admin_rpc_wrappers.sql",
+      "gitBlobSha": "38ee84d896b89510bbf4c6561d14df217029cb71",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107144227_secure_membership_admin_rpc_wrappers.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107144626_membership_state_self_check_and_deny_policy.sql",
+      "sourcePath": "database/changes/20261107144626_membership_state_self_check_and_deny_policy.sql",
+      "gitBlobSha": "3738d3d4cdb06598bef78f6e685ec9e7e2caee48",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107144626_membership_state_self_check_and_deny_policy.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107144758_membership_invitation_foreign_key_indexes.sql",
+      "sourcePath": "database/changes/20261107144758_membership_invitation_foreign_key_indexes.sql",
+      "gitBlobSha": "536966ce810bf9c7e8916e03982c11a79f86791f",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107144758_membership_invitation_foreign_key_indexes.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql",
+      "sourcePath": "database/changes/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql",
+      "gitBlobSha": "cd6c0332400e2b80ba4961bc6183813d4b0f37a2",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107145232_membership_invitation_acceptance_after_auth_insert_fix.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "sourcePath": "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "gitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "sourcePath": "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "gitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107153051_remove_legacy_sequential_membership_generator.sql",
+      "sourcePath": "database/changes/20261107153051_remove_legacy_sequential_membership_generator.sql",
+      "gitBlobSha": "8273fdebc852c5f95adb48990f4bb06ba78bd97a",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107153051_remove_legacy_sequential_membership_generator.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "sourcePath": "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "gitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql",
+      "sourcePath": "database/changes/20261107153214_restore_secure_membership_state_rpc_wrapper.sql",
+      "gitBlobSha": "d71ebeca3808ae0b1ac321a48a089f6986422914",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107153214_restore_secure_membership_state_rpc_wrapper.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261107154900_fix_chat_message_rls_reply_recursion.sql",
+      "sourcePath": "database/changes/20261107154900_fix_chat_message_rls_reply_recursion.sql",
+      "gitBlobSha": "aa73588f3bfce50b9874ef68511c52fe60f8d52b",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107154825_fix_chat_message_rls_reply_recursion.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261110100000_chat_media_and_reaction_capabilities.sql",
+      "sourcePath": "database/changes/20261110100000_chat_media_and_reaction_capabilities.sql",
+      "gitBlobSha": "36009efa23ed5249d3a4d1aa027fe06c22e2aaee",
+      "archiveType": "historical-change",
+      "status": "NOT_APPLIED_PRODUCTION_ARCHIVED",
+      "replacementPaths": [],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/20261112000100_profile_status_and_conversation_images.sql",
+      "sourcePath": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
+      "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_DUPLICATE_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/chat_table_privilege_hardening.sql",
+      "sourcePath": "database/changes/chat_table_privilege_hardening.sql",
+      "gitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_DUPLICATE_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/index_user_notification_foreign_keys.sql",
+      "sourcePath": "database/changes/index_user_notification_foreign_keys.sql",
+      "gitBlobSha": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_DUPLICATE_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/message_reactions_and_whatsapp_typography.sql",
+      "sourcePath": "database/changes/message_reactions_and_whatsapp_typography.sql",
+      "gitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106125643_message_reactions_and_realtime.sql",
+        "supabase/migrations/20261106125901_index_message_reaction_user_fk.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/private_channels_with_secure_invites.sql",
+      "sourcePath": "database/changes/private_channels_with_secure_invites.sql",
+      "gitBlobSha": "de7be9ca152256fd10c16bd2343625fc91587a9f",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106132655_private_channels_with_secure_invites.sql",
+        "supabase/migrations/20261106132740_deny_direct_channel_invite_table_access.sql",
+        "supabase/migrations/20261106132753_index_channel_invites_created_by.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/professional_message_controls_and_receipts.sql",
+      "sourcePath": "database/changes/professional_message_controls_and_receipts.sql",
+      "gitBlobSha": "de4d9e3f5ff48a10ed5a1e2a6ece0b7389b5b3ab",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+        "supabase/migrations/20261106130540_realtime_conversation_member_receipts.sql",
+        "supabase/migrations/20261106130804_index_message_pins_pinned_by.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/public_announcement_channels.sql",
+      "sourcePath": "database/changes/public_announcement_channels.sql",
+      "gitBlobSha": "5a4acb8142fa2acaffc421c516b0dd96cb2f2c9a",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_SCHEMA_FOLDED_INTO_CANONICAL_SOURCES",
+      "replacementPaths": [
+        "supabase/migrations/20261107144109_private_membership_system_20261107.sql",
+        "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/team_management_dashboard.sql",
+      "sourcePath": "database/changes/team_management_dashboard.sql",
+      "gitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_RECONSTRUCTED_SOURCE_NO_HARDCODED_ADMIN",
+      "replacementPaths": [
+        "supabase/migrations/20261106130351_professional_message_controls_and_receipts.sql",
+        "supabase/migrations/20261112120000_reconcile_team_management_dashboard.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/unified_notifications.sql",
+      "sourcePath": "database/changes/unified_notifications.sql",
+      "gitBlobSha": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_DUPLICATE_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107014128_unified_user_notifications.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/historical-changes/user_specific_direct_chat_preferences.sql",
+      "sourcePath": "database/changes/user_specific_direct_chat_preferences.sql",
+      "gitBlobSha": "c9fc4c5ff4f4752edc773c49a64f4aad64cd3a08",
+      "archiveType": "historical-change",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261107032052_user_specific_direct_chat_preferences.sql",
+        "supabase/migrations/20261107032150_tighten_direct_chat_preference_scope.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/legacy-cli-migrations/202611060001_ultra_chat_pro_v2.sql",
+      "sourcePath": "supabase/migrations/202611060001_ultra_chat_pro_v2.sql",
+      "gitBlobSha": "61c671c68a5d65ce3acc06764dd3f991e2520cfa",
+      "archiveType": "legacy-cli-migration",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106061954_ultra_chat_pro_v2.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/legacy-cli-migrations/202611060002_tighten_api_grants.sql",
+      "sourcePath": "supabase/migrations/202611060002_tighten_api_grants.sql",
+      "gitBlobSha": "89bb6cd6defc3210af18cd8815a727285214317f",
+      "archiveType": "legacy-cli-migration",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106062058_tighten_api_grants.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/legacy-cli-migrations/202611060003_minimum_table_privileges.sql",
+      "sourcePath": "supabase/migrations/202611060003_minimum_table_privileges.sql",
+      "gitBlobSha": "e990252f9b0740e6b4f0b94e4013d31b3bb3ce47",
+      "archiveType": "legacy-cli-migration",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106062111_minimum_table_privileges.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/legacy-cli-migrations/202611060004_reference_profiles.sql",
+      "sourcePath": "supabase/migrations/202611060004_reference_profiles.sql",
+      "gitBlobSha": "90ab731bf0e027e34091c3bd62307e5e7f2d42c8",
+      "archiveType": "legacy-cli-migration",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106062133_reference_profiles.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/legacy-cli-migrations/202611060005_fix_creator_membership_rls.sql",
+      "sourcePath": "supabase/migrations/202611060005_fix_creator_membership_rls.sql",
+      "gitBlobSha": "414a1ae97e3ba57870c9e79f80c74fe44b845b01",
+      "archiveType": "legacy-cli-migration",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106062150_fix_creator_membership_rls.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/legacy-cli-migrations/202611060006_explicit_legacy_deny.sql",
+      "sourcePath": "supabase/migrations/202611060006_explicit_legacy_deny.sql",
+      "gitBlobSha": "dc1e9e33841c2aa42c444dcf1222b215f689320c",
+      "archiveType": "legacy-cli-migration",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106062207_explicit_legacy_deny.sql"
+      ],
+      "executable": false
+    },
+    {
+      "path": "database/archive/legacy-cli-migrations/202611060007_harden_chat_table_privileges.sql",
+      "sourcePath": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
+      "gitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749",
+      "archiveType": "legacy-cli-migration",
+      "status": "ARCHIVED_HISTORICAL_SOURCE",
+      "replacementPaths": [
+        "supabase/migrations/20261106135225_harden_chat_table_privileges_and_membership_updates.sql"
+      ],
+      "executable": false
+    }
+  ],
+  "pendingForwardMigrations": [
+    {
+      "version": "20261112120000",
+      "name": "reconcile_team_management_dashboard",
+      "sourcePath": "supabase/migrations/20261112120000_reconcile_team_management_dashboard.sql",
+      "status": "PENDING_PRODUCTION_APPLICATION",
+      "reason": "Team dashboard table/functions/trigger exist in production but are absent from the recorded migration ledger; migration is idempotent and does not seed an administrator."
+    },
+    {
+      "version": "20261112120001",
+      "name": "reconcile_chat_media_voice_mime_types",
+      "sourcePath": "supabase/migrations/20261112120001_reconcile_chat_media_voice_mime_types.sql",
+      "status": "PENDING_PRODUCTION_APPLICATION",
+      "reason": "Production chat-media bucket already allows recorded audio MIME types, but the setting is absent from the recorded migration ledger."
+    }
+  ],
+  "sourceVerificationPolicy": "The production migration ledger stores version/name metadata, not original SQL bodies. Exact source-body equivalence cannot be proven from the ledger alone. Reconstructed and folded migrations are explicitly marked; the replay remains blocked until isolated clean replay and catalog parity pass."
 }
