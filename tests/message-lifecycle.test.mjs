@@ -6,6 +6,7 @@ import vm from 'node:vm';
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const loaderSource = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
+const voiceSource = await readFile(new URL('../modules/voice-recorder.js', import.meta.url), 'utf8');
 
 function extractFunction(name) {
   const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
@@ -63,11 +64,14 @@ test('stickers are sent through the existing message pipeline and rendered as va
   assert.match(source, /\$\('messageInput'\)\.value=encodeChatSticker\(emoji\);sendMessage\(\)/);
 });
 
-test('voice send button dispatches stop-and-send while recording', () => {
-  assert.match(source, /\$\('sendBtn'\)\.onclick=\(\)=>state\.voiceRecorder\?sendVoiceRecording\(\):sendMessage\(\)/);
-  assert.match(source, /function sendVoiceRecording\(\)[\s\S]*?state\.voiceSendOnStop=true/);
-  assert.match(source, /if\(shouldSend\)\{setTimeout\(\(\)=>\{if\(state\.attachment===file\)sendMessage\(\)\},0\)\}/);
-  assert.match(source, /\$\('sendBtn'\)\.setAttribute\('aria-label','إرسال التسجيل الصوتي'\)/);
+test('voice recording is isolated in its own module and legacy capture code is absent from the app shell', () => {
+  assert.match(source, /<script src="\.\/modules\/voice-recorder\.js"><\/script>/);
+  assert.match(source, /window\.BizmindVoiceRecorder\.create/);
+  assert.match(source, /\$\('sendBtn'\)\.onclick=\(\)=>voiceRecorder\.isActive\(\)\?voiceRecorder\.send\(\):sendMessage\(\)/);
+  assert.doesNotMatch(source, /MediaRecorder|createFallbackVoiceRecorder|encodeVoiceWav|state\.voiceRecorder/);
+  assert.match(voiceSource, /requestData\(\)/);
+  assert.match(voiceSource, /currentRecorder\.onstop/);
+  assert.match(voiceSource, /snapshotIsCurrent/);
 });
 
 test('chat timeline rows cannot flex-shrink or rely on browser scroll anchoring', () => {
@@ -327,7 +331,7 @@ test('send attempts reuse a stable message ID and uploaded attachment on retry',
 test('group-only-admin restrictions survive composer, polling and voice entry points', () => {
   assert.match(extractFunction('resizeComposer'), /groupBlocked/);
   assert.match(extractFunction('pollMessagesFallback'), /groupReadOnly/);
-  assert.match(extractFunction('startVoiceRecording'), /only_admins_can_send/);
+  assert.match(voiceSource, /only_admins_can_send/);
 });
 
 
