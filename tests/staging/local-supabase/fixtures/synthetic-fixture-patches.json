@@ -3,19 +3,7 @@
   "mode": "TEST_COPY_ONLY",
   "patches": [
     {
-      "sourcePath": "database/changes/team_management_dashboard.sql",
-      "sourceGitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df",
-      "sourceSha256": "1595d37426ee03633b72ab874245d2c477052f911420cc53fcff95fe7d3c24dd",
-      "testCopyPath": "tests/staging/local-supabase/fixtures/team_management_dashboard.sql",
-      "testCopySha256": "27abcf3581704dd1ea02f1188d27dca15547ab9a431268f9fde893c2e0532b55",
-      "replacement": {
-        "from": "drmuhammed.najeeb2020@gmail.com",
-        "to": "admin@bizmindmakers.test",
-        "expectedOccurrences": 1
-      }
-    },
-    {
-      "sourcePath": "database/changes/20261107152550_official_forever_membership_numbers_manual_verification.sql",
+      "sourcePath": "supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "sourceGitBlobSha": "775015b47dbd7cbe4310fee9deacb322c2cc8b9f",
       "sourceSha256": "76728646a95048f13262fb1ecccb7eaad260b050d7b0493e3610e97d9e33d635",
       "testCopyPath": "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
@@ -27,7 +15,7 @@
       }
     },
     {
-      "sourcePath": "database/changes/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
+      "sourcePath": "supabase/migrations/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
       "sourceGitBlobSha": "251d430e00bd563b8f857359caa2fb5806dbe3bc",
       "sourceSha256": "2261bfe0d2cdb234db08e619065fd92091f097cb1de9da1af9505c8f5920c97a",
       "testCopyPath": "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -39,7 +27,7 @@
       }
     },
     {
-      "sourcePath": "database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
+      "sourcePath": "supabase/migrations/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
       "sourceGitBlobSha": "8d8302fa9f80c89e3247c8bcea03e725a265d380",
       "sourceSha256": "371e3b426ce5e2b47ba2cde669c2e32934baffae781ed684303a8e5cd5695088",
       "testCopyPath": "tests/staging/local-supabase/fixtures/20261107152733_fix_official_membership_invite_duplicate_validation.sql",
@@ -58,7 +46,7 @@
     },
     {
       "path": "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
-      "runWhen": "After core schema and before team_management_dashboard.sql; before membership auth triggers."
+      "runWhen": "After core schema and before team-admin-seed.sql; before membership auth triggers."
     },
     {
       "path": "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
@@ -95,6 +83,11 @@
     {
       "path": "tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql",
       "runWhen": "After chat.workspaces and chat.expiry-purge; read-only checks for pgcrypto schema placement and the expected pg_cron job definition. Does not prove scheduler execution."
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/team-admin-seed.sql",
+      "purpose": "seed the synthetic test admin after canonical team_admins table creation",
+      "runWhen": "after chat.pins and synthetic-auth-admin-before-membership"
     }
   ],
   "execution": {
