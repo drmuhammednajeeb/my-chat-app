@@ -172,6 +172,7 @@ const env = {
   PGOPTIONS: '-c app.test_only_local_replay=enabled -c statement_timeout=60s -c lock_timeout=10s'
 };
 const seenSql = new Set();
+let postForwardConcurrencyExecuted = false;
 for (const node of manifest.candidateNodeOrder) {
   if (node.nodeId === 'test-fixture.direct-chat-auth-seed') {
     await provisionSyntheticDirectChatAuthUsers();
@@ -201,7 +202,7 @@ for (const node of manifest.candidateNodeOrder) {
     run('psql', ['--no-psqlrc', '--set=ON_ERROR_STOP=1', ...identityArgs, '--file', absolute, raw], env, node.nodeId + ':' + relative);
   }
 
-  if (node.nodeId === 'test-fixture.direct-chat-concurrency') {
+  if (node.nodeId === 'test-fixture.direct-chat-concurrency' && !postForwardConcurrencyExecuted) {
     run(process.execPath, [
       path.join(ROOT, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs')
     ], { ...env, LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, node.nodeId);
@@ -217,6 +218,7 @@ for (const node of manifest.candidateNodeOrder) {
     run(process.execPath, [
       path.join(ROOT, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs')
     ], { ...env, LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {}) }, node.nodeId + ':post-forward-concurrency');
+    postForwardConcurrencyExecuted = true;
   }
   if (node.nodeId === 'test-fixture.local-pg-cron-runtime') {
     run(process.execPath, [
