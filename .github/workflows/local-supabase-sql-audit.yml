@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "engineering/stability-css-extraction-20261109"
+      - "fix/sql-migration-audit-root-cause-20261112"
   pull_request:
     branches:
       - "main"
@@ -13,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: local-sql-audit-${{ github.ref }}
+  group: local-sql-audit-\${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -29,19 +30,19 @@ jobs:
           node-version: 22
       - name: Run isolated read-only audit tests
         run: |
-          node --test \
-            tests/staging/local-supabase/audit-sql-manifest.test.mjs \
-            tests/staging/local-supabase/bootstrap-guard.test.mjs \
-            tests/staging/local-supabase/build-database-object-inventory.test.mjs \
-            tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs \
-            tests/staging/local-supabase/reviewed-dependency-dag.test.mjs \
-            tests/workspace-load-race.test.mjs \
-            tests/staging/local-supabase/direct-conversation-rpc.test.mjs \
-            tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
-            tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
-            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \
-            tests/staging/local-supabase/rls-least-privilege.test.mjs \
-            tests/staging/local-supabase/storage-rls-runtime.test.mjs \
+          node --test \\
+            tests/staging/local-supabase/audit-sql-manifest.test.mjs \\
+            tests/staging/local-supabase/bootstrap-guard.test.mjs \\
+            tests/staging/local-supabase/build-database-object-inventory.test.mjs \\
+            tests/staging/local-supabase/verify-test-only-sql-patches.test.mjs \\
+            tests/staging/local-supabase/reviewed-dependency-dag.test.mjs \\
+            tests/workspace-load-race.test.mjs \\
+            tests/staging/local-supabase/direct-conversation-rpc.test.mjs \\
+            tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \\
+            tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \\
+            tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \\
+            tests/staging/local-supabase/rls-least-privilege.test.mjs \\
+            tests/staging/local-supabase/storage-rls-runtime.test.mjs \\
             tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs
       - name: Syntax-check manual local-only runners
         run: |
@@ -130,9 +131,12 @@ jobs:
           }
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
           NODE
-      - name: Run original SQL manifest audit
+      - name: Run original SQL manifest audit and enforce blockers
         run: |
-          node tests/staging/local-supabase/audit-sql-manifest.mjs > "$RUNNER_TEMP/sql-audit-report.json"
+          set +e
+          node tests/staging/local-supabase/audit-sql-manifest.mjs --fail-on-blockers > "$RUNNER_TEMP/sql-audit-report.json"
+          audit_status=$?
+          set -e
           node --input-type=module -e "
             import fs from 'node:fs';
             const report = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/sql-audit-report.json', 'utf8'));
@@ -142,8 +146,11 @@ jobs:
             console.log('HISTORICAL_SQL_FILES=' + report.sourceDirectories[1].fileCount);
             console.log('DUPLICATE_GROUPS=' + report.duplicateGroups.length);
             console.log('LEGACY_BLOCKERS=' + report.legacyBlockers.length);
+            console.log('FORWARD_DEPENDENCIES=' + report.migrationOrderReview.forwardDependencies.length);
             console.log('SYNTAX_HAZARDS=' + report.syntaxHazards.length);
+            console.log('LOCAL_CLI_READINESS=' + report.localEnvironment.localCliReadiness);
             console.log('BOOTSTRAP_STATUS=' + report.bootstrap.status);
             for (const item of blockers) console.log('BLOCKER=' + item.code + ': ' + item.message);
             if (report.auditMode !== 'READ_ONLY' || report.bootstrap.executable !== false) process.exit(1);
           "
+          if [ "$audit_status" -ne 0 ]; then exit "$audit_status"; fi
