@@ -58,6 +58,8 @@
       const wrapper = documentRef.createElement("div");
       wrapper.className = "voice-message-player";
       wrapper.dataset.messageId = String(settings.messageId || "");
+      wrapper.setAttribute("role", "group");
+      wrapper.setAttribute("aria-label", "مشغل الرسالة الصوتية");
 
       const playButton = documentRef.createElement("button");
       playButton.type = "button";
