@@ -18,13 +18,13 @@ test('production migration source registry is explicit, complete, and fail-close
   assert.equal(registry.registryStatus, 'RECONCILIATION_INCOMPLETE');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.sourceSets.sqlSourceFiles, 60);
-  assert.equal(registry.sourceFiles.length, 60);
-  assert.equal(registry.sourceSets.cliMigrationFiles, 15);
+  assert.equal(registry.sourceSets.sqlSourceFiles, 62);
+  assert.equal(registry.sourceFiles.length, 62);
+  assert.equal(registry.sourceSets.cliMigrationFiles, 17);
   assert.equal(registry.sourceSets.historicalChangeFiles, 45);
   assert.equal(registry.sourceSets.duplicatePairs, 4);
   assert.equal(registry.sourceSets.canonicalizedProductionMigrations, 3);
-  assert.equal(registry.sourceSets.reconstructedProductionMigrations, 2);
+  assert.equal(registry.sourceSets.reconstructedProductionMigrations, 4);
   assert.equal(registry.sourceSets.testOnlyFixtureCount, 19);
   assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 19);
 
@@ -99,7 +99,7 @@ test('production migration source registry is explicit, complete, and fail-close
   assert.equal(registry.safety.localReplayEnabled, false);
   assert.equal(registry.safety.mainModified, false);
   assert.equal(registry.safety.pr138Merged, false);
-  assert.ok(registry.unresolvedProductionEntries.length > 0);
+  assert.ok(registry.reviewRequiredProductionEntries.length > 0);
   assert.ok(registry.knownReplayBlockers.some(item => item.id === 'DAG-014'));
   assert.ok(registry.knownReplayBlockers.some(item => item.id === 'DAG-015'));
   assert.ok(registry.knownReplayBlockers.some(item => item.id === 'DAG-016'));
