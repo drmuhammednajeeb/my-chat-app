@@ -1784,7 +1784,7 @@
       "version": "20261112160002",
       "name": "revoke_unsafe_public_default_privileges",
       "path": "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
-      "gitBlobSha": "9271d22d975f42ec35df1fd1ab5522922fb1b34e",
+      "gitBlobSha": "0fb675632d33485ec8ffeccd14d1467fbda91d48",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Remove unsafe default and direct API-role privileges while preserving reviewed application CRUD and RPC contracts.",
