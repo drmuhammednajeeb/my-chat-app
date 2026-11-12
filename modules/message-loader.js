@@ -79,6 +79,7 @@
       updateNewMessagesIndicator = () => {},
       diagLog = () => {},
       recordPerf = () => {},
+      reconcileMessageTimeline = () => {},
       compareMessagesChronologically: compare,
       loadMessagePins = async () => true,
       loadPrivateReplyContexts = async () => true,
@@ -231,12 +232,31 @@
         ));
       } else {
         const renderStartedAt = performanceRef.now();
-        for (const message of messages) {
-          if (!isCurrent()) { rollbackOwnedRender(); return false; }
-          const rendered = await renderMessage(message, conversationId, requestId);
-          if (!rendered && !state.messageIds.has(message.id)) allMessagesRendered = false;
+        const previousBatchRendering = state.batchRenderingMessages;
+        const previousBatchConversationId = state.batchRenderingConversationId;
+        state.batchRenderingMessages = true;
+        state.batchRenderingConversationId = conversationId;
+        try {
+          // Bounded parallel rendering overlaps independent signed-URL lookups.
+          // DOM ordering and day separators are reconciled once after the batch.
+          const renderConcurrency = 6;
+          for (let offset = 0; offset < messages.length; offset += renderConcurrency) {
+            if (!isCurrent()) { rollbackOwnedRender(); return false; }
+            const batch = messages.slice(offset, offset + renderConcurrency);
+            const outcomes = await Promise.allSettled(batch.map(message =>
+              renderMessage(message, conversationId, requestId)
+            ));
+            outcomes.forEach((outcome, index) => {
+              const rendered = outcome.status === 'fulfilled' && outcome.value;
+              if (!rendered && !state.messageIds.has(batch[index].id)) allMessagesRendered = false;
+            });
+          }
+        } finally {
+          state.batchRenderingMessages = previousBatchRendering;
+          state.batchRenderingConversationId = previousBatchConversationId;
         }
         if (!isCurrent()) { rollbackOwnedRender(); return false; }
+        if (allMessagesRendered) reconcileMessageTimeline(area);
 
         if (allMessagesRendered) {
           if (wasNearBottom || !sameConversationTimeline) {

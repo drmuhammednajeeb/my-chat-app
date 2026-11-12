@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 55,
-    "mappedSources": 52,
+    "sqlFiles": 56,
+    "mappedSources": 53,
     "identicalDuplicateCopiesExcluded": 3,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -30,9 +30,9 @@
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
-    "executedMappedSources": 48,
+    "executedMappedSources": 49,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 67
+    "executedSqlFiles": 68
   },
   "execution": {
     "enabled": false,
@@ -182,6 +182,15 @@
       ],
       "blockedBy": [],
       "parityNote": "Must run before membership.base installs auth.users invitation/profile triggers; all identities use reserved .test emails and synthetic IDs."
+    },
+    {
+      "nodeId": "chat.voice-duration",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/202611120002_chat_message_audio_duration.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Optional persisted audio duration. Review and apply the migration before production frontend deployment; this design-only manifest does not authorize SQL execution."
     },
     {
       "nodeId": "chat.channels-public",

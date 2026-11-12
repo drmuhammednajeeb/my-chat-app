@@ -42,9 +42,13 @@
 
   // Show the full duration until playback starts, then count down the remaining time.
   // Unknown metadata is deliberately not rendered as a misleading 00:00.
-  function formatPlaybackTime(duration, currentTime, hasStarted, ended, metadataReady) {
-    const total = Number(duration);
-    if (!metadataReady || !Number.isFinite(total) || total < 0) return "--:--";
+  function formatPlaybackTime(duration, currentTime, hasStarted, ended, metadataReady, fallbackDuration) {
+    const mediaDuration = Number(duration);
+    const fallback = Number(fallbackDuration);
+    const total = metadataReady && Number.isFinite(mediaDuration) && mediaDuration > 0
+      ? mediaDuration
+      : Number.isFinite(fallback) && fallback > 0 ? fallback : mediaDuration;
+    if (!Number.isFinite(total) || total < 0 || (!metadataReady && !(Number.isFinite(fallback) && fallback > 0))) return "--:--";
     const elapsed = Math.max(0, Number(currentTime) || 0);
     return formatTime(hasStarted && !ended ? Math.max(0, total - elapsed) : total);
   }
@@ -75,7 +79,7 @@
       playButton.type = "button";
       playButton.className = "voice-player-toggle";
       playButton.setAttribute("aria-label", "تشغيل الرسالة الصوتية");
-      playButton.innerHTML = '<i class="ph ph-play-fill" aria-hidden="true"></i>';
+      playButton.innerHTML = '<span class="voice-player-glyph voice-player-glyph-play" aria-hidden="true">▶</span>';
 
       const waveform = documentRef.createElement("div");
       waveform.className = "voice-player-waveform";
@@ -138,9 +142,12 @@
 
       function render() {
         if (destroyed) return;
-        const metadataReady = audio.readyState >= 1
-          && Number.isFinite(audio.duration) && audio.duration >= 0;
-        const total = metadataReady ? audio.duration : 0;
+        const mediaMetadataReady = audio.readyState >= 1
+          && Number.isFinite(audio.duration) && audio.duration > 0;
+        const persistedDuration = Number(settings.durationSeconds);
+        const persistedDurationReady = Number.isFinite(persistedDuration) && persistedDuration > 0;
+        const metadataReady = mediaMetadataReady || persistedDurationReady;
+        const total = mediaMetadataReady ? audio.duration : persistedDurationReady ? persistedDuration : 0;
         const elapsed = Number.isFinite(audio.currentTime) ? Math.max(0, audio.currentTime) : 0;
         const ratio = metadataReady && total > 0 ? Math.max(0, Math.min(1, elapsed / total)) : 0;
         const playing = !audio.paused && !audio.ended;
@@ -148,12 +155,19 @@
         wrapper.classList.toggle("is-playing", playing);
         if (!fallbackVisible) playButton.disabled = false;
         playButton.innerHTML = playing
-          ? '<i class="ph ph-pause-fill" aria-hidden="true"></i>'
-          : '<i class="ph ph-play-fill" aria-hidden="true"></i>';
+          ? '<span class="voice-player-glyph voice-player-glyph-pause" aria-hidden="true">Ⅱ</span>'
+          : '<span class="voice-player-glyph voice-player-glyph-play" aria-hidden="true">▶</span>';
         playButton.dataset.playbackState = playing ? "playing" : "paused";
         playButton.setAttribute("aria-pressed", playing ? "true" : "false");
         playButton.setAttribute("aria-label", playing ? "إيقاف الرسالة الصوتية مؤقتاً" : "تشغيل الرسالة الصوتية");
-        timerLabel.textContent = formatPlaybackTime(audio.duration, elapsed, hasStarted, audio.ended, metadataReady);
+        timerLabel.textContent = formatPlaybackTime(
+          mediaMetadataReady ? audio.duration : persistedDuration,
+          elapsed,
+          hasStarted,
+          audio.ended,
+          metadataReady,
+          persistedDuration
+        );
         timerLabel.setAttribute("aria-label", metadataReady
           ? (hasStarted && !audio.ended ? "الوقت المتبقي " : "مدة الرسالة الصوتية ") + timerLabel.textContent
           : "جار تحميل مدة الرسالة الصوتية");
@@ -284,8 +298,13 @@
         audio.load();
       };
       render();
-      // Explicit load initialises metadata for dynamically-created media elements.
-      try { audio.load(); } catch (_) {}
+      // Defer metadata loading until the caller has appended the player to the message DOM.
+      // This is especially important for older messages without a persisted duration.
+      Promise.resolve().then(() => {
+        if (destroyed) return;
+        try { audio.load(); } catch (_) {}
+        render();
+      });
       return wrapper;
     }
 
