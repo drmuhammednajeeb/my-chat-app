@@ -45,13 +45,14 @@ async function newPage() {
   return page;
 }
 
-async function installSendHarness(page, { text = 'hello', attachment = false } = {}) {
+async function installSendHarness(page, { text = 'hello', attachment = false, audioDuration = 0 } = {}) {
   await page.evaluate(({ source, text, attachment }) => {
     const state = window.__state = {
       voiceRecorder: null,
       active: { id: 'conversation-1', type: 'direct', members: [] },
       user: { id: 'user-1' },
-      attachment: attachment ? new File(['fixture'], 'proof.pdf', { type: 'application/pdf' }) : null,
+      attachment: attachment ? new File(['fixture'], audioDuration ? 'voice.webm' : 'proof.pdf', { type: audioDuration ? 'audio/webm' : 'application/pdf' }) : null,
+      voiceDuration: audioDuration,
       replyTarget: null, editTarget: null, privateReplyPending: null,
       uploading: false, pendingMessageSends: new Map(),
       messageIds: new Set(), messages: [], conversations: [{ id: 'conversation-1' }]
@@ -125,6 +126,17 @@ test('browser: a successful send persists once, renders, and clears only the sen
       uploading: window.__state.uploading
     }));
     assert.deepEqual(result, { inserts: 1, content: 'hello', rendered: 1, draft: '', uploading: false });
+  } finally { await page.close(); }
+});
+
+test('browser: a voice recording persists its measured duration with the message attachment', async () => {
+  const page = await newPage();
+  try {
+    await installSendHarness(page, { text: '', attachment: true, audioDuration: 7 });
+    await page.evaluate(() => window.__runSend());
+    const payload = await page.evaluate(() => window.__backend.insertCalls[0]?.payload);
+    assert.equal(payload.attachment_type, 'audio/webm');
+    assert.equal(payload.attachment_duration_seconds, 7);
   } finally { await page.close(); }
 });
 
