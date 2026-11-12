@@ -282,3 +282,5 @@ with check (
 );
 
 alter publication supabase_realtime add table public.message_pins;
+
+commit;

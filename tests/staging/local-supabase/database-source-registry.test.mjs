@@ -72,6 +72,19 @@ test('production source registry maps all 62 ledger versions to one canonical mi
   }
 });
 
+test('every canonical migration closes every explicit transaction block', async () => {
+  const directory = path.join(root, 'supabase/migrations');
+  const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
+  assert.equal(files.length, 62);
+  for (const name of files) {
+    const source = await readFile(path.join(directory, name), 'utf8');
+    const begins = (source.match(/^\\s*BEGIN\\s*;\\s*$/gim) ?? []).length;
+    const commits = (source.match(/^\\s*COMMIT\\s*;\\s*$/gim) ?? []).length;
+    const rollbacks = (source.match(/^\\s*ROLLBACK\\s*;\\s*$/gim) ?? []).length;
+    assert.equal(begins, commits + rollbacks, 'unclosed explicit transaction in ' + name);
+  }
+});
+
 test('archive manifest is provenance-only and excluded from Supabase CLI discovery', async () => {
   const [registry, archive] = await Promise.all([
     readFile(registryPath, 'utf8').then(JSON.parse),
