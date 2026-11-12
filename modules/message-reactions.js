@@ -235,7 +235,8 @@
         user_id: userId,
         reaction_type: reactionType
       });
-      state.reactions.set(message.id, optimistic);
+      if (optimistic.length) state.reactions.set(message.id, optimistic);
+      else state.reactions.delete(message.id);
       const row = findMessageRow(message.id);
       if (row) render(row, message);
 
