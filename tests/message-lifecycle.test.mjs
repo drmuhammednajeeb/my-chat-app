@@ -346,7 +346,7 @@ test('fallback synchronization pages full batches without dropping loaded histor
 test('older-history rendering is transactional and releases only its own loading state', () => {
   const older = extractFunction('loadOlderMessages');
   assert.match(older, /const originalMessages=state\.messages\.slice\(\)/);
-  assert.match(older, /const originalHasMore=state\.hasMoreMessages/);
+  assert.match(older, /originalHasMore=state\.hasMoreMessages/);
   assert.match(older, /renderedHistoryIds\.add\(message\.id\)/);
   assert.match(older, /state\.hasMoreMessages=originalHasMore/);
   assert.match(older, /state\.messageIds\.delete\(id\)/);
