@@ -426,3 +426,11 @@ test('post-forward runtime assertions are ordered after their matching security 
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 19);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 83);
 });
+
+
+test('direct-conversation stress executes once after the forward eligibility migration', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
+  assert.match(runner, /postForwardConcurrencyExecuted/);
+  assert.match(runner, /test-fixture\\.direct-chat-concurrency' && !postForwardConcurrencyExecuted/);
+  assert.match(runner, /post-forward-concurrency/);
+});
