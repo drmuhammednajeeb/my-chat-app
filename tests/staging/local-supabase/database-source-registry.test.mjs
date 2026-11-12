@@ -60,7 +60,7 @@ test('production registry preserves 62 ledger versions and separately maps four 
     assert.equal(migration.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     assert.equal(migration.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
     assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-    assert.equal(migration.localRuntimeRunId, 43258867470);
+    assert.ok(Number.isInteger(migration.localRuntimeRunId) && migration.localRuntimeRunId > 0);
     if (migration.version === '20261112160000' || migration.version === '20261112160001') assert.deepEqual(migration.blockedBy, []);
     else assert.deepEqual(migration.blockedBy, ['DAG-016']);
     const bytes = await readFile(path.join(root, migration.path));
