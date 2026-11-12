@@ -276,6 +276,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.profile-status-video-media",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112091605_profile_status_video_media.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
+    },
+    {
       "nodeId": "chat.hardening",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -340,6 +349,15 @@
       ],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "chat.profile-status-combined-content-media",
+      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
+      "testSources": [
+        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
     },
     {
       "nodeId": "chat.workspace-indexes",
@@ -641,24 +659,6 @@
         "DAG-016"
       ],
       "parityNote": "After applying the test-only overlay, run read-only catalog assertions and rollback-only CRUD/RPC compatibility probes (chat list create/update/upsert/delete, star upsert/delete, secure message edit audit insert, and cross-user isolation). Runtime execution remains blocked pending a disposable Supabase replay. A separate local Auth/Storage API runtime probe validates file upload, upsert, signed read, private/shared visibility, cross-user path spoof denial, owner deletion, and public avatar delivery. It has not been executed. A separate disposable local Supabase workflow provisions PostgreSQL 17 and the managed Auth/Storage/Realtime services, replays the manifest's exact DAG order, then runs the runtime probes and always stops the temporary stack. It is not a hosted environment and does not authorize production deployment."
-    },
-    {
-      "nodeId": "chat.profile-status-video-media",
-      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
-      "testSources": [
-        "supabase/migrations/20261112091605_profile_status_video_media.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
-    },
-    {
-      "nodeId": "chat.profile-status-combined-content-media",
-      "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
-      "testSources": [
-        "supabase/migrations/20261112103237_allow_combined_profile_status_content_and_media.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Production-applied migration copied byte-for-byte from PR #138 into canonical CLI migrations; do not reapply to production."
     }
   ],
   "duplicateSelection": [
