@@ -198,9 +198,10 @@ export async function buildObjectInventory(root = ROOT) {
   for (const file of files) { const list = hashGroups.get(file.sha256) ?? []; list.push(file.path); hashGroups.set(file.sha256, list); }
   const duplicateGroups = [...hashGroups.entries()].filter(([, paths]) => paths.length > 1)
     .map(([sha256, paths]) => ({ sha256, paths: paths.sort() })).sort((a, b) => a.paths[0].localeCompare(b.paths[0]));
-  const [appHtml, profileMediaJs] = await Promise.all([
+  const [appHtml, profileMediaJs, statusWorkspaceJs] = await Promise.all([
     readFile(path.join(root, 'index.html'), 'utf8').catch(() => ''),
-    readFile(path.join(root, 'modules/profile-status-and-conversation-images.js'), 'utf8').catch(() => '')
+    readFile(path.join(root, 'modules/profile-status-and-conversation-images.js'), 'utf8').catch(() => ''),
+    readFile(path.join(root, 'modules/status-workspace.js'), 'utf8').catch(() => '')
   ]);
   const membershipJs = await readFile(path.join(root, 'membership.js'), 'utf8').catch(() => '');
   const clientRpcNames = [...new Set(matches(appHtml, /\.rpc\(\s*['"]([a-z_]\w*)['"]/gi, m => m[1]))].sort();
@@ -217,7 +218,7 @@ export async function buildObjectInventory(root = ROOT) {
   const membershipBaseTimestamp = 20261107144109;
   const policiesAfterMembershipBase = files.filter(file => file.sourceTimestamp && Number(file.sourceTimestamp) > membershipBaseTimestamp).flatMap(file => file.policyDetails.map(policy => ({ path: file.path, ...policy })));
   const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
-  const clientSource = appHtml + '\n' + profileMediaJs;
+  const clientSource = appHtml + '\n' + profileMediaJs + '\n' + statusWorkspaceJs;
   const bucketConstants = new Map(matches(clientSource,
     /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(['"])([^'"]+)\2/g,
     m => [m[1], m[3]]));
