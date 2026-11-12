@@ -30,9 +30,9 @@
       "tests/staging/local-supabase/fixtures/team_management_dashboard.sql"
     ],
     "mappedSourcesReplacedByFixtures": 4,
-    "executedMappedSources": 48,
+    "executedMappedSources": 49,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 67
+    "executedSqlFiles": 68
   },
   "execution": {
     "enabled": false,
