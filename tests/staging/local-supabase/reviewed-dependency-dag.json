@@ -6,7 +6,7 @@
   "sourceSets": {
     "cliMigrations": {
       "path": "supabase/migrations",
-      "count": 15
+      "count": 17
     },
     "historicalChanges": {
       "path": "database/changes",
@@ -1171,6 +1171,54 @@
       ],
       "blockedBy": [],
       "note": "No-op version retained because the final hidden implementation is already created by the preceding recovered migration; preserves production migration ordering without repeating SQL."
+    },
+    {
+      "id": "chat.channel-visibility-avatar-background",
+      "source": [
+        "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql"
+      ],
+      "provides": [
+        "public.conversations.avatar_path",
+        "public.conversation_group_settings.background_theme",
+        "app_private channel discovery/join RPCs",
+        "private channel avatar bucket and policies"
+      ],
+      "requires": [
+        "chat.channels-public",
+        "chat.groups",
+        "membership.chat-rls-fix",
+        "platform.storage"
+      ],
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
+      "testSource": [
+        "supabase/migrations/20261107160647_channel_visibility_avatar_group_background.sql"
+      ],
+      "blockedBy": [
+        "DAG-014"
+      ],
+      "note": "Reconstructed from the current production catalog; original migration SQL was not retained. Disposable replay remains blocked."
+    },
+    {
+      "id": "chat.harden-channel-rpc-wrappers",
+      "source": [
+        "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql"
+      ],
+      "provides": [
+        "public.create_channel invoker wrapper",
+        "public.discover_public_channels invoker wrapper",
+        "public.join_public_channel invoker wrapper"
+      ],
+      "requires": [
+        "chat.channel-visibility-avatar-background"
+      ],
+      "status": "RECONSTRUCTED_PRODUCTION_FINAL_STATE_NOT_ORIGINAL",
+      "testSource": [
+        "supabase/migrations/20261107160733_harden_channel_rpc_wrappers.sql"
+      ],
+      "blockedBy": [
+        "DAG-014"
+      ],
+      "note": "Reconstructed exact current public wrapper definitions and ACLs from production catalog; original migration SQL was not retained."
     }
   ],
   "explicitEdges": [
@@ -1893,6 +1941,30 @@
     [
       "chat.hide-atomic-direct-rpc-implementation",
       "chat.direct-conversation-rpc-eligibility-guard"
+    ],
+    [
+      "chat.channels-public",
+      "chat.channel-visibility-avatar-background"
+    ],
+    [
+      "chat.groups",
+      "chat.channel-visibility-avatar-background"
+    ],
+    [
+      "membership.chat-rls-fix",
+      "chat.channel-visibility-avatar-background"
+    ],
+    [
+      "platform.storage",
+      "chat.channel-visibility-avatar-background"
+    ],
+    [
+      "chat.channel-visibility-avatar-background",
+      "chat.harden-channel-rpc-wrappers"
+    ],
+    [
+      "chat.harden-channel-rpc-wrappers",
+      "membership.final-format"
     ]
   ],
   "blockers": [
