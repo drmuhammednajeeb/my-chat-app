@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.12.2"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -48,6 +48,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 @media(prefers-reduced-motion:reduce){#boot-screen .boot-spinner{animation:none;border-top-color:#55cdb8}}
 </style>
 <link rel="stylesheet" href="./app-overrides.css">
+<link rel="stylesheet" href="./modules/app-updater.css">
 </head>
 <body>
 <div id="boot-screen" role="status" aria-live="polite" aria-atomic="true">
@@ -191,6 +192,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/message-loader.js"></script>
 <script src="./modules/voice-recorder.js"></script>
 <script src="./modules/audio-player.js"></script>
+<script src="./modules/app-updater.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -261,11 +263,7 @@ installAppButton?.addEventListener('click',async()=>{
  try{await promptEvent.prompt();await promptEvent.userChoice;}catch(error){console.warn('PWA install prompt:',error)}
  if(installAppButton)installAppButton.hidden=true;
 });
-if('serviceWorker' in navigator&&location.protocol==='https:'){
- window.addEventListener('load',()=>{
-  navigator.serviceWorker.register('./service-worker.js').catch(error=>console.warn('Service worker registration failed:',error));
- });
-}
+window.BizmindAppUpdater?.start();
 const groupSelectedProfiles=new Map();let groupSearchTimer=null;let groupSearchRequest=0;let publicChannelsCache=[];let channelDirectoryRequest=0;
 let messagesScrollFrame=0;
 function showListSkeleton(container,count=5){
@@ -2707,7 +2705,7 @@ async function loadPrivateReplyContexts(id,messages,requestId=null){
   return false;
  }
 }
-function renderPrivateReplyQuote(messageId,context){const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId),bubble=row?.querySelector('.bubble');if(!bubble||bubble.querySelector('.private-reply-quote'))return;const quote=document.createElement('div'),who=document.createElement('strong'),preview=document.createElement('span');quote.className='reply-quote private-reply-quote';who.textContent='رد خاص من مجموعة';preview.textContent=context?.quoted_content||'رسالة مقتبسة';quote.append(who,preview);const meta=bubble.querySelector('.meta');if(meta)bubble.insertBefore(quote,meta);else bubble.append(quote)}
+function renderPrivateReplyQuote(messageId,context){const row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===messageId),bubble=row?.querySelector('.bubble');if(!bubble||bubble.querySelector('.private-reply-quote'))return;const quote=document.createElement('div'),who=document.createElement('strong'),preview=document.createElement('span');quote.className='reply-quote private-reply-quote';who.textContent='رد خاص من مجموعة';preview.textContent=context?.quoted_content||'رسالة مقتبسة';quote.append(who,preview);const content=bubble.querySelector('.message-content');if(content)bubble.insertBefore(quote,content);else bubble.prepend(quote)}
 
 </script>
 <script src="./membership.js"></script>
