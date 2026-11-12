@@ -161,3 +161,17 @@ test('comment-only legacy table mentions are ignored', async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('a missing terminator inside a Supabase migration is a blocking finding', async () => {
+  const root = await createRoot();
+  try {
+    await writeFile(
+      path.join(root, 'supabase/migrations/20261101000000_bad.sql'),
+      'create function app_private.invalid() returns void language plpgsql as $$ begin null; end; $$\nrevoke all on function app_private.invalid() from public;\n'
+    );
+    const report = await buildSqlAudit(root);
+    assert.ok(report.findings.some(item => item.code === 'SUSPECTED_MISSING_FUNCTION_TERMINATOR' && item.severity === 'blocking'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
