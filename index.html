@@ -1674,8 +1674,16 @@ function handleMessageUpdateRealtime(payload,conversationId){
  if(row){
   const bubble=row.querySelector('.bubble');let content=bubble?.querySelector('.message-content');
   if(bubble&&incoming.content){
-   if(!content){content=document.createElement('div');content.className='message-content';const meta=bubble.querySelector('.meta');bubble.insertBefore(content,meta||null)}
-   content.textContent=incoming.content;
+   if(!content){
+    content=document.createElement('div');content.className='message-content';
+    const meta=bubble.querySelector('.meta'),status=bubble.querySelector('.message-status');
+    if(meta&&meta.parentElement===bubble)bubble.insertBefore(content,meta);else bubble.append(content);
+    if(meta)content.append(meta);if(status)content.append(status);
+   }else{
+    const meta=bubble.querySelector('.meta'),status=bubble.querySelector('.message-status');
+    content.textContent=incoming.content;
+    if(meta)content.append(meta);if(status)content.append(status);
+   }
   }
   const meta=row.querySelector('.meta');if(meta)meta.textContent=time(incoming.created_at)+(incoming.edited_at?' · تم تعديلها':'');
  }
