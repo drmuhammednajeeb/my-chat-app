@@ -236,7 +236,6 @@ function backupValidateShape(value,user,expectedSchemaVersion=value?.schemaVersi
   }
  }
  const requiredArchiveKeys=['conversations','messages','pins'];
-  if(value.schemaVersion<3)requiredArchiveKeys.push('reactions');
   for(const key of requiredArchiveKeys){
   if(!Array.isArray(value.conversationArchive[key]))throw new Error('أرشيف المحادثات غير مكتمل.');
   if(value.conversationArchive[key].length>BACKUP_MAX_ROWS)throw new Error('أرشيف المحادثات يتجاوز الحد الآمن.');
