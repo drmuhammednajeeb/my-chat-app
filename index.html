@@ -1456,13 +1456,13 @@ async function loadMessages(){
   fetchedRows.forEach(m=>merged.set(m.id,m));
   let messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   state.messages=messages;
-  const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];const nextReplyMessages=new Map();if(replyIds.length){const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;if(!replyError)(parents||[]).forEach(x=>nextReplyMessages.set(x.id,x))}
+  const replyIds=[...new Set(messages.map(m=>m.reply_to).filter(id=>id&&!messages.some(x=>x.id===id)))];const nextReplyMessages=new Map();if(replyIds.length){try{const {data:parents,error:replyError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds);if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;if(!replyError)(parents||[]).forEach(x=>nextReplyMessages.set(x.id,x));else diagLog('reply-parent-load-warning',{error:replyError.message})}catch(replyLoadError){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;console.warn('Reply parent context could not be loaded:',replyLoadError?.message||replyLoadError);diagLog('reply-parent-load-warning',{error:String(replyLoadError?.message||replyLoadError)})}}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;state.replyMessages=nextReplyMessages;
   await loadMessageReactions(conversationId,messages,requestId);
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadMessagePins(conversationId,requestId);
+  try{await loadMessagePins(conversationId,requestId)}catch(pinLoadError){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;console.warn('Pinned message metadata could not be loaded:',pinLoadError?.message||pinLoadError);diagLog('message-pins-load-warning',{error:String(pinLoadError?.message||pinLoadError)})}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  await loadPrivateReplyContexts(conversationId,messages,requestId);
+  try{await loadPrivateReplyContexts(conversationId,messages,requestId)}catch(privateReplyLoadError){if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;console.warn('Private reply metadata could not be loaded:',privateReplyLoadError?.message||privateReplyLoadError);diagLog('private-reply-context-load-warning',{error:String(privateReplyLoadError?.message||privateReplyLoadError)})}
   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
   // Reconcile again after auxiliary queries: Realtime INSERTs may arrive while those queries are in flight.
   const latest=new Map(messages.map(m=>[m.id,m]));
@@ -1470,9 +1470,9 @@ async function loadMessages(){
   messages=Array.from(latest.values()).sort((a,b)=>compareMessagesChronologically(a,b)).slice(-100);
   state.messages=messages;
   area.replaceChildren();state.messageIds.clear();
+  let allMessagesRendered=true;
   if(!messages.length){area.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-chat-teardrop-text"></i></div><h2>بداية محادثة جديدة</h2><p>أرسل أول رسالة لبدء التواصل.</p></div>'}
   else{
-   let allMessagesRendered=true;
    const messageRenderBatchStarted=performance.now();for(const message of messages){
     if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
     const rendered=await renderMessage(message,conversationId,requestId);if(!rendered&&!state.messageIds.has(message.id))allMessagesRendered=false;
