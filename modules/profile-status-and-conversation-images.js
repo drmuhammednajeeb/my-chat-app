@@ -660,7 +660,6 @@
       if (conversationImageChannel) supabaseClient.removeChannel(conversationImageChannel);
       statusChannel = null;
       conversationImageChannel = null;
-      byId('profileStatusStrip')?.remove();
     }
   });
 })();
