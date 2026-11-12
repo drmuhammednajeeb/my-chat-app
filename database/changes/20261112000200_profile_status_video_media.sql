@@ -42,44 +42,8 @@ alter table public.profile_statuses
         '^' || user_id::text || '/[0-9a-fA-F-]{36}\.(jpg|png|webp|mp4|webm|mov)$'
       )
       and case media_type
-        when 'image' then image_path ~* '\.(jpg|png|webp)
-    )
-  );
-
-update storage.buckets
-set public = false,
-    file_size_limit = 26214400,
-    allowed_mime_types = array[
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'video/mp4',
-      'video/webm',
-      'video/quicktime'
-    ]
-where id = 'profile-status-media';
-
-commit;
-
-        when 'video' then image_path ~* '\.(mp4|webm|mov)
-    )
-  );
-
-update storage.buckets
-set public = false,
-    file_size_limit = 26214400,
-    allowed_mime_types = array[
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'video/mp4',
-      'video/webm',
-      'video/quicktime'
-    ]
-where id = 'profile-status-media';
-
-commit;
-
+        when 'image' then image_path ~* '\.(jpg|png|webp)$'
+        when 'video' then image_path ~* '\.(mp4|webm|mov)$'
         else false
       end
     )
