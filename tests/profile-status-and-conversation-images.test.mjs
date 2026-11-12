@@ -91,7 +91,7 @@ test('status is a separate top-level workspace with a return path to chats', () 
   assert.match(client, /setSidebarView\('chats'\)/);
   assert.match(client, /statusPagePublish/);
   assert.match(client, /statusFeed/);
-  assert.doesNotMatch(client, /profileStatusStrip/);
+  assert.doesNotMatch(client, /function renderStatusStrip\(/);
 });
 
 test('conversation image changes are published and reconciled for all active members', () => {
