@@ -105,10 +105,10 @@ test('pause and resume account for elapsed time without a fixed three-minute cut
   assert.equal(env.controller.pause(), true);
   env.clock = 241000;
   assert.equal(env.controller.resume(), true);
-  env.clock = 301000;
+  env.clock = 361000;
   assert.equal(await env.controller.send(), true);
   const ready = env.events.find(item => item[0] === 'ready')[1];
-  assert.equal(ready.duration, 180);
+  assert.equal(ready.duration, 240);
   assert.equal(env.events.filter(item => item[0] === 'send').length, 1);
 });
 
