@@ -7,6 +7,7 @@ import audioPlayer from '../modules/audio-player.js';
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const loaderSource = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
+const appCss = await readFile(new URL('../app.css', import.meta.url), 'utf8');
 const voiceSource = await readFile(new URL('../modules/voice-recorder.js', import.meta.url), 'utf8');
 
 function extractFunction(name) {
@@ -45,13 +46,11 @@ function extractFunction(name) {
   throw new Error('Unbalanced function body: ' + name);
 }
 
-test('all six message reactions are rendered and the message menu is reachable without hover', () => {
-  const start = source.indexOf('const MESSAGE_REACTION_OPTIONS=');
-  const end = source.indexOf('function renderReactionBar(', start);
-  assert.ok(start >= 0 && end > start);
-  const options = source.slice(start, end);
-  assert.equal((options.match(/type:'/g) || []).length, 6);
-  assert.match(source, /renderReactionBar\(row,m\)/);
+test('emoji reactions are completely absent from conversation runtime and styles', () => {
+  assert.doesNotMatch(source, /reaction|message_reactions|إضافة تفاعل/i);
+  assert.doesNotMatch(appCss, /reaction-bar|reaction-btn|reactions-open/i);
+  assert.doesNotMatch(overrides, /reaction-bar|reaction-btn|reactions-open/i);
+  assert.match(source, /\.message-menu-trigger/);
   assert.match(overrides, /\.message-menu-trigger\{opacity:1;pointer-events:auto\}/);
 });
 
@@ -195,7 +194,6 @@ test('hard-delete realtime handler removes the row and all local message indexes
     active: { id: 'c1' },
     messages: [{ id: 'm1', conversation_id: 'c1' }, { id: 'm2', conversation_id: 'c1' }],
     messageIds: new Set(['m1', 'm2']),
-    reactions: new Map([['m1', []]]),
     pinnedMessages: new Map([['m1', {}]]),
     replyMessages: new Map([['m1', {}]]),
     conversations: []
@@ -207,7 +205,6 @@ test('hard-delete realtime handler removes the row and all local message indexes
   assert.equal(handler({ old: { id: 'm1' } }, 'c1'), true);
   assert.deepEqual(state.messages.map(message => message.id), ['m2']);
   assert.equal(state.messageIds.has('m1'), false);
-  assert.equal(state.reactions.has('m1'), false);
   assert.equal(state.pinnedMessages.has('m1'), false);
   assert.equal(state.replyMessages.has('m1'), false);
   assert.equal(removed, true);
@@ -227,7 +224,7 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
 test('hard-deleting the final message restores the empty-conversation state', () => {
   const state = {
     active: { id: 'c1' }, messages: [{ id: 'm1', conversation_id: 'c1' }],
-    messageIds: new Set(['m1']), reactions: new Map(), pinnedMessages: new Map(),
+    messageIds: new Set(['m1']), pinnedMessages: new Map(),
     replyMessages: new Map(), conversations: []
   };
   const area = { innerHTML: '' };
@@ -360,34 +357,6 @@ test('group-only-admin restrictions survive composer, polling and voice entry po
   assert.match(voiceSource, /only_admins_can_send/);
 });
 
-
-test('late reaction failures cannot mutate the next conversation state', async () => {
-  const state = {
-    user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 1,
-    reactions: new Map(), messages: []
-  };
-  let finishUpsert;
-  const supabaseClient = {
-    from(table) {
-      assert.equal(table, 'message_reactions');
-      return { upsert: () => new Promise(resolve => { finishUpsert = resolve; }) };
-    }
-  };
-  const toggle = vm.runInNewContext('(' + extractFunction('toggleMessageReaction') + ')', {
-    state, supabaseClient, pendingReactionKeys: new Set(),
-    document: { querySelectorAll: () => [] }, renderReactionBar() {},
-    toast() {}, console
-  });
-  const pending = toggle({ id: 'm1', conversation_id: 'c1' }, 'heart', null);
-  assert.equal(state.reactions.has('m1'), true);
-  state.active = { id: 'c2' };
-  state.messageLoadVersion = 2;
-  state.reactions = new Map([['m2', []]]);
-  finishUpsert({ error: { message: 'simulated network failure' } });
-  await pending;
-  assert.equal(state.reactions.has('m1'), false);
-  assert.equal(state.reactions.has('m2'), true);
-});
 
 test('message stars persist before updating local state and recover from backend failures', async () => {
   const state = {

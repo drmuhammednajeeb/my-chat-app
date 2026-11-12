@@ -22,5 +22,5 @@ test('service worker activation requires explicit user approval', async () => {
   const source = await readFile(new URL('../service-worker.js', import.meta.url), 'utf8');
   assert.ok(source.includes('event.data.type === "SKIP_WAITING"'));
   assert.ok(!source.includes('await self.skipWaiting();'));
-  assert.ok(source.includes('const CACHE_VERSION = "v26";'));
+  assert.ok(source.includes('const CACHE_VERSION = "v28";'));
 });

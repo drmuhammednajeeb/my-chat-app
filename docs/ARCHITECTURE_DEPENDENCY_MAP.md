@@ -41,8 +41,8 @@ Counts are snapshot-specific and should be regenerated after changes. Regex-base
 
 | Global | Role | Consumers / risk |
 |---|---|---|
-| `supabaseClient` | Single Supabase JS client configured with the project URL and publishable browser key | Auth, profiles, conversations, messages, reactions, groups, channels, storage, notifications, workspace, membership. Critical shared dependency |
-| `state` | Shared mutable application state: user/profile, conversations, active conversation, messages, reactions, presence, notifications, team and workspace data, media/recording state, request versions | Nearly every feature. Critical shared dependency |
+| `supabaseClient` | Single Supabase JS client configured with the project URL and publishable browser key | Auth, profiles, conversations, messages, groups, channels, storage, notifications, workspace, membership. Critical shared dependency |
+| `state` | Shared mutable application state: user/profile, conversations, active conversation, messages, presence, notifications, team and workspace data, media/recording state, request versions | Nearly every feature. Critical shared dependency |
 | `$` | `getElementById` shorthand | Nearly all UI code; depends on stable DOM IDs |
 | `toast` | Shared transient feedback UI | Membership and feature modules |
 | `esc`, `initials`, `time` | Formatting / escaping helpers | Rendering and UI modules |
@@ -54,7 +54,7 @@ Counts are snapshot-specific and should be regenerated after changes. Regex-base
 - Identity: `user`, `profile`, `userSettings`, membership state and admin flag.
 - Navigation: `sidebarView`, `conversationFilter`, `active`.
 - Conversations: `conversations`, `conversationsLoading`, direct-conversation promises and per-conversation preferences.
-- Messages: `messages`, `messageIds`, `messageLoadVersion`, reply/edit targets, pins, stars, selections and reactions.
+- Messages: `messages`, `messageIds`, `messageLoadVersion`, reply/edit targets, pins, stars and selections.
 - Realtime/presence: channel subscriptions, online users, typing, realtime status and polling lifecycle.
 - Media: attachment/upload state and voice recorder/stream/timers/chunks.
 - Notifications: list, unread count, filter and subscription.
@@ -75,8 +75,8 @@ Risk scale: **Critical** = shared lifecycle, auth, security-sensitive or realtim
 | Directory and presence | `setSidebarView`, `loadDirectory`, `renderDirectory`, `startPresence` | `state.user`, `state.directory*`, `state.onlineUsers`, `supabaseClient`, `toast` | `index.html`; `profiles`, Supabase Realtime presence | High |
 | Conversation list and direct chats | `isSelfConversation`, `ensureSelfConversation`, `otherMember`, `convName`, `convPreview`, `renderConversations`, `bindConversationSwipe`, `loadConversations`, `findDirectConversation`, `openDirectConversation`, direct-chat preference and archive/clear helpers, `openConversation` | `state.conversations`, `state.active`, `state.user`, `state.chatPrefs`, `supabaseClient`, DOM IDs, message lifecycle | `index.html`; `conversations`, `conversation_members`, `user_settings` / preference data | Critical |
 | Message lifecycle and rendering | `renderMessage`, `loadMessages`, `loadOlderMessages`, `sendMessage`, `editMessage`, `deleteMessage`, `messagePreview`, composer reply/edit helpers, read receipts, typing | `state.active`, `state.messages`, `state.messageIds`, `state.replyTarget`, `state.editTarget`, `state.messageLoadVersion`, `supabaseClient`, `toast`, DOM | `index.html`; `chat_messages`, receipts, typing and related RPC/RLS | Critical |
-| Realtime and polling | `subscribeConversation`, `subscribeProfileUpdates`, `subscribeNotifications`, `subscribePersonalChatData`, `handleMessageUpdateRealtime`, `handleReactionRealtime`, `handlePinRealtime`, `handleMembershipRealtime`, `startMessagePolling`, `stopMessagePolling`, `pollMessagesFallback` | `state.channel`, `state.profileChannel`, `state.notificationChannel`, `state.typingChannel`, request/version flags, `supabaseClient` | `index.html`; Supabase Realtime channels and Postgres changes | Critical |
-| Reactions, pins and message actions | `loadMessageReactions`, `renderReactionBar`, `openMessageReactions`, `bindMessageGestures`, `toggleMessageReaction`, reaction modal/member helpers, pin load/toggle/render helpers | Active conversation/message identity, `state.reactions`, `state.pinnedMessages`, message rendering and realtime handlers | `index.html`; `message_reactions`, pin tables/RPCs and RLS | High |
+| Realtime and polling | `subscribeConversation`, `subscribeProfileUpdates`, `subscribeNotifications`, `subscribePersonalChatData`, `handleMessageUpdateRealtime`, `handlePinRealtime`, `handleMembershipRealtime`, `startMessagePolling`, `stopMessagePolling`, `pollMessagesFallback` | `state.channel`, `state.profileChannel`, `state.notificationChannel`, `state.typingChannel`, request/version flags, `supabaseClient` | `index.html`; Supabase Realtime channels and Postgres changes | Critical |
+| Pins and message actions | `bindMessageGestures` (swipe-to-reply), pin load/toggle/render helpers, message menu actions | Active conversation/message identity, `state.pinnedMessages`, message rendering and realtime handlers | `index.html`; pin tables/RPCs and RLS | High |
 | Voice, attachments and media | `formatVoiceDuration`, voice elapsed/timer/UI helpers, cleanup/pause/resume, `sendVoiceRecording`, `encodeVoiceWav`, fallback recorder, `startVoiceRecording`, `stopVoiceRecording`, `cancelVoiceRecording`, `showAttachmentPreview`, `uploadAttachment` | `state.voice*`, `state.attachment`, `state.uploading`, `state.active`, browser MediaRecorder/stream APIs, `supabaseClient.storage` | `index.html`; private Storage buckets and message attachment metadata | Critical |
 | Groups and group administration | `loadGroupCandidates`, `renderGroupCandidates`, `renderGroupSelection`, group modal helpers, `groupRole`, `isGroupAdmin`, `ensureGroupModal`, `openGroupManagement`, `closeGroupManagement`, member/role/settings and composer-permission helpers, group menu actions | `state.active`, group members/roles, `state.groupSettings`, `supabaseClient`, message composer and modal DOM | `index.html`; `conversations`, `conversation_members`, group settings and storage | Critical |
 | Channels | `renderMyChannels`, `openChannelModal`, `closeChannelModal`, `shareChannelInvite` and channel directory/create/join event handlers | `state.conversations`, `state.sidebarView`, active conversation, `supabaseClient`, group-role and conversation helpers | `index.html`; channel fields, public/private channel RPCs, avatar Storage and RLS | High |
@@ -122,7 +122,7 @@ The current service worker precaches the app root, manifest, icons, `membership.
 | 4 | Diagnostics, theme/settings and notifications | More bounded than chat lifecycle | Persistence, multi-tab theme sync and notification receipt tests |
 | 5 | Membership and workspace | Clear feature domains but sensitive data/admin paths | Owner-only access, invitation lifecycle, private notes/docs and Storage policy tests |
 | 6 | Directory, presence, groups and channels | Crosses conversation membership and realtime permissions | Two-account membership, discover/join, private/public visibility and admin-role tests |
-| 7 | Messages, reactions, pins and media | Highest coupling and lifecycle sensitivity | Full two-account realtime, edit/delete, reply, reactions, voice and attachment tests |
+| 7 | Messages, reactions, pins and media | Highest coupling and lifecycle sensitivity | Full two-account realtime, edit/delete, reply, pins, voice and attachment tests |
 
 Each phase must be a separate reviewable commit or pull request. A phase must preserve observable behavior. No phase may weaken RLS or replace server-side authorization with client checks.
 
@@ -157,12 +157,9 @@ Use two separately authenticated test accounts, Account A and Account B, in sepa
 - Send messages in a channel and test realtime delivery between A and B.
 - Test channel visibility changes, membership changes, invite links and leave/rejoin behavior.
 
-### 7.5 Reactions and message actions
-- Add each supported reaction from both accounts.
-- Verify reaction counts and member lists update on both clients without refresh.
-- Remove/change a reaction; verify one reaction per user/message constraint and correct UI after rerender.
-- Verify tray positioning after scrolling, switching conversations, resizing and opening/closing menus.
-- Test reactions in direct chats, groups and channels separately.
+### 7.5 Message actions
+- Verify swipe-to-reply remains available without long-press or click reaction activation.
+- Verify message menu actions (reply, pin, star, edit and delete) remain available across direct chats, groups and channels.
 
 ### 7.6 Media and voice
 - Upload and open supported image/document attachments; verify signed URL behavior and membership restrictions.
@@ -213,3 +210,9 @@ A phase is complete only when:
 
 ---
 This document is an engineering plan and inventory. It does not itself authorize database changes, production deployment, merging, or broad refactoring.
+
+
+## 8. Removed conversation feature
+
+- Emoji message reactions have been removed from the client runtime, message rendering, composer/menu entry points, gesture handlers, CSS, and Realtime subscriptions.
+- Historical SQL migration files that originally created or constrained `public.message_reactions` are intentionally retained as immutable migration history. The existing database table and historical rows are left untouched; no production schema change or data deletion is performed by this UI removal.

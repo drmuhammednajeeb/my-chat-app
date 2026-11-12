@@ -68,7 +68,6 @@ function harness({ rows = [], error = null, render = null, metadata = {}, before
     diagLog: (...args) => calls.logs.push(args),
     recordPerf() {},
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at) || String(a.id).localeCompare(String(b.id)),
-    loadMessageReactions: async () => metadata.reactions ?? true,
     loadMessagePins: async () => metadata.pins ?? true,
     loadPrivateReplyContexts: async () => metadata.privateReplies ?? true,
     renderMessage: async message => {
@@ -107,9 +106,9 @@ test('populated conversation renders all rows and marks receipt once', async () 
   assert.equal(h.state.hasMoreMessages, false);
 });
 
-test('optional metadata failures do not block authoritative message rendering', async () => {
+test('optional pin and private-reply metadata failures do not block authoritative message rendering', async () => {
   const rows = [{ id: 'm1', conversation_id: 'conversation-1', created_at: '2026-01-01T00:00:00Z' }];
-  const h = harness({ rows, metadata: { reactions: Promise.reject(new Error('reactions offline')) } });
+  const h = harness({ rows, metadata: { pins: Promise.reject(new Error('pins offline')), privateReplies: Promise.reject(new Error('private replies offline')) } });
   assert.equal(await loadMessages(h.deps), true);
   assert.deepEqual(h.calls.render, ['m1']);
 });

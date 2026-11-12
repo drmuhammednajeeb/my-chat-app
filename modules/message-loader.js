@@ -80,7 +80,6 @@
       diagLog = () => {},
       recordPerf = () => {},
       compareMessagesChronologically: compare,
-      loadMessageReactions = async () => true,
       loadMessagePins = async () => true,
       loadPrivateReplyContexts = async () => true,
       renderMessage,
@@ -189,7 +188,6 @@
       if (!isCurrent()) return false;
 
       const enrichments = await Promise.allSettled([
-        Promise.resolve().then(() => loadMessageReactions(conversationId, messages, requestId)),
         Promise.resolve().then(() => loadMessagePins(conversationId, requestId)),
         Promise.resolve().then(() => loadPrivateReplyContexts(conversationId, messages, requestId))
       ]);

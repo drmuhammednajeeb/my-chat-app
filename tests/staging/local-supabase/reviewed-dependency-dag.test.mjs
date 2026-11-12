@@ -307,7 +307,7 @@ test('least-privilege overlay is a final, blocked, loopback-only SQL fixture', a
 });
 
 
-test('chat composer media types and reaction persistence constraints stay aligned', async () => {
+test('chat composer media allowlists remain aligned while emoji reactions are absent from the client', async () => {
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   const migration = await readFile(path.join(root, 'database/changes/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
   for (const mime of [
@@ -321,10 +321,7 @@ test('chat composer media types and reaction persistence constraints stay aligne
     assert.ok(html.includes(mime), 'chat file picker is missing ' + mime);
     assert.ok(migration.includes(mime), 'Storage allow-list is missing ' + mime);
   }
-  for (const reaction of ['like', 'heart', 'wow', 'pray', 'fire', 'celebrate']) {
-    assert.match(html, new RegExp("type:\\s*['\\\"]" + reaction + "['\\\"]"));
-    assert.ok(migration.includes("'" + reaction + "'"), 'database constraint is missing ' + reaction);
-  }
+  assert.doesNotMatch(html, /reaction|message_reactions|إضافة تفاعل/i);
   for (const mime of [
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -336,5 +333,5 @@ test('chat composer media types and reaction persistence constraints stay aligne
     assert.ok(html.includes(mime), 'workspace document picker is missing ' + mime);
     assert.ok(migration.includes(mime), 'conversation-documents allow-list is missing ' + mime);
   }
-  assert.match(html, /attachment_type\?\.startsWith\('video\/'\)/);
+  assert.ok(html.includes("attachment_type?.startsWith('video/')"));
 });
