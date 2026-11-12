@@ -30,6 +30,7 @@
 </script>
 <link rel="stylesheet" href="./app.css">
 <link rel="stylesheet" href="./modules/voice-recorder.css">
+<link rel="stylesheet" href="./modules/audio-player.css">
 <link rel="stylesheet" href="./modules/profile-status-and-conversation-images.css">
 
 
@@ -189,6 +190,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="./modules/message-loader.js"></script>
 <script src="./modules/voice-recorder.js"></script>
+<script src="./modules/audio-player.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -198,6 +200,7 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY
 const __supabaseResource=performance.getEntriesByType('resource').find(entry=>entry.name.includes('supabase.min.js'));
 window.__BIZMIND_BOOT_TIMINGS__={mainScriptStarted:__bootMainScriptStarted,supabaseScriptMs:__supabaseResource?Math.round(__supabaseResource.duration):null,clientReady:performance.now()};
 const $=id=>document.getElementById(id);
+const voiceMessagePlayer=window.BizmindAudioPlayer.create();
 const APP_THEME_KEY='bizmindmakers-chat-theme';
 let appThemePreference=window.__BIZMIND_THEME_PREFERENCE__||'system';
 let appThemeMedia=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
@@ -1010,7 +1013,7 @@ $('directClearBtn').onclick=clearDirectChatForMe;
 async function openConversation(c){
  if(!c?.id)return;
  const openToken=state.conversationOpenVersion=(state.conversationOpenVersion||0)+1;
- closeConversationWorkspace();state.messageLoadVersion++;stopMessagePolling();
+ voiceMessagePlayer.stopAll();closeConversationWorkspace();state.messageLoadVersion++;stopMessagePolling();
  const conversationOpenStarted=performance.now();
  if(voiceRecorder.isActive()){voiceRecorder.cancel();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
@@ -1421,7 +1424,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
     if(signedError){const failed=document.createElement('span');failed.textContent='تعذر فتح المرفق';bubble.append(failed)}
     else if(m.attachment_type?.startsWith('image/')){const img=document.createElement('img');img.src=signed.signedUrl;img.alt='مرفق';img.loading='lazy';img.onclick=()=>{$('lightboxImage').src=img.src;$('lightbox').classList.remove('hidden')};bubble.append(img)}
     else if(m.attachment_type?.startsWith('video/')){const video=document.createElement('video');video.className='message-video';video.controls=true;video.preload='metadata';video.playsInline=true;video.src=signed.signedUrl;video.setAttribute('aria-label','مرفق فيديو');bubble.append(video)}
-    else if(m.attachment_type?.startsWith('audio/')){const audio=document.createElement('audio');audio.className='message-audio';audio.controls=true;audio.preload='metadata';audio.src=signed.signedUrl;audio.setAttribute('aria-label','رسالة صوتية');let signedAt=Date.now(),refreshing=false,retried=false;const refreshAudioUrl=async(resume=false)=>{if(refreshing)return;refreshing=true;try{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;if(!isCurrent()||!audio.isConnected)return;audio.src=renewed.signedUrl;signedAt=Date.now();audio.load();if(resume)await audio.play().catch(()=>{})}catch(error){console.warn('Audio URL refresh failed:',error?.message||error);toast('تعذر فتح الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}finally{refreshing=false}};audio.addEventListener('play',()=>{if(Date.now()-signedAt>50*60*1000){audio.pause();refreshAudioUrl(true)}});audio.addEventListener('error',()=>{if(!retried){retried=true;refreshAudioUrl(false)}});audio.setAttribute('playsinline','');bubble.append(audio)}
+    else if(m.attachment_type?.startsWith('audio/')){const player=voiceMessagePlayer.createPlayer({messageId:m.id,src:signed.signedUrl,refreshUrl:async()=>{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;if(!isCurrent())return null;return renewed.signedUrl},onError:error=>{console.warn('Audio player error:',error?.message||error);toast('تعذر تشغيل الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}});bubble.append(player)}
     else{const a=document.createElement('a');a.href=signed.signedUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}
    }
    if(m.content){
@@ -2170,7 +2173,7 @@ $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox
 $('conversationWorkspaceBtn').onclick=()=>{closeChatHeaderMenu();openConversationWorkspace()};
 $('workspaceInboxTabs').addEventListener('click',e=>{const label=e.target.closest('[data-workspace-label]');if(label){state.workspaceActiveLabelId=state.workspaceActiveLabelId===label.dataset.workspaceLabel?null:label.dataset.workspaceLabel;renderWorkspaceInboxTabs();renderConversations();return}const b=e.target.closest('[data-workspace-category]');if(!b)return;state.workspaceCategory=b.dataset.workspaceCategory;state.workspaceActiveLabelId=null;renderWorkspaceInboxTabs();renderConversations()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('conversationWorkspaceModal')?.classList.contains('open'))closeConversationWorkspace()});
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authLifecycleVersion++;diagLog('auth-signed-out');if(voiceRecorder.isActive())voiceRecorder.cancel();stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authLifecycleVersion++;voiceMessagePlayer.stopAll();diagLog('auth-signed-out');if(voiceRecorder.isActive())voiceRecorder.cancel();stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
 (async()=>{
  const bootStatus=document.getElementById('bootStatus');
  const bootSupabaseMs=window.__BIZMIND_BOOT_TIMINGS__?.supabaseScriptMs;
