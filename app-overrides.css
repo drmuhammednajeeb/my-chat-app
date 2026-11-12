@@ -65,7 +65,7 @@
 .message-menu-option i{font-size:16px;color:#667781}
 .message-menu-option:last-child{color:#c03935}
 .message-menu-option:last-child i{color:#c03935}
-@media(hover:none){.message-menu-trigger{opacity:1;pointer-events:auto;width:25px;height:25px;background:#ffffffd9}}
+
 @media(max-width:760px){.chat-header-menu{top:55px;left:8px}.message-options-menu{min-width:148px}}
 
 /* Unified WhatsApp-inspired global theme and typography */
