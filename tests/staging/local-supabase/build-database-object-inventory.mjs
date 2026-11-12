@@ -159,6 +159,8 @@ function inspect(file) {
     return { name: m[1].trim(), table: m[2].toLowerCase(), statement, guardClass: denyAll ? 'DENY_ALL' : direct ? 'DIRECT_ACTIVE_MEMBER' : indirect ? 'INDIRECT_ACTIVE_MEMBER' : selfScoped ? 'SELF_SCOPE_ONLY' : 'NO_RECOGNIZED_GUARD' };
   });
   const policies = policyDetails.map(({ name, table }) => ({ name, table }));
+  const storageObjectPolicyBuckets = matches(sql, /\bcreate\s+policy\b[\s\S]*?\bon\s+storage\.objects\b[\s\S]*?;/gi,
+    policy => matches(policy[0], /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, bucket => bucket[1])).flat();
   const constraints = matches(sql, /\badd\s+constraint\s+([a-z_]\w*)/gi, m => m[1].toLowerCase());
   const relationsReferenced = [...new Set(matches(sql, /\b(?:from|join|update|into|references)\s+((?:public|app_private|auth|storage|cron|extensions)\s*\.\s*[a-z_]\w*)/gi, m => m[1].replace(/\s+/g, '').toLowerCase()))].sort();
   const internalFunctionsReferenced = [...new Set([...sql.matchAll(/\bapp_private\s*\.\s*([a-z_]\w*)\s*\(/gi)]
@@ -217,7 +219,7 @@ export async function buildObjectInventory(root = ROOT) {
   const laterPoliciesMissingActiveMemberGuard = policiesAfterMembershipBase.filter(policy => !['DIRECT_ACTIVE_MEMBER', 'INDIRECT_ACTIVE_MEMBER', 'DENY_ALL'].includes(policy.guardClass));
   const clientStorageBuckets = [...new Set(matches(appHtml + '\n' + profileMediaJs, /storage\.from\(\s*['"]([^'"]+)['"]/gi, m => m[1]))].sort();
   const declaredStorageBuckets = [...new Set(files.flatMap(file => file.storageBucketIds))].sort();
-  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => matches(file.sql, /create\s+policy\b[\s\S]*?\bon\s+storage\.objects\b[\s\S]*?;/gi, policy => matches(policy[0], /bucket_id\s*=\s*['"]([^'"]+)['"]/gi, m => m[1])).flat()))].sort();
+  const storageObjectPolicyBuckets = [...new Set(files.flatMap(file => file.storageObjectPolicyBuckets))].sort();
   const chatMediaUploadPolicy = files.flatMap(file => file.policyDetails).find(policy => policy.table === 'storage.objects' && policy.name === 'Conversation members upload chat media');
   const storageCoverage = {
     chatMediaUploadPathOwnershipGuard: Boolean(chatMediaUploadPolicy && /storage\.foldername\(name\)\)\s*\[\s*2\s*\].*auth\.uid\s*\(/i.test(chatMediaUploadPolicy.statement)),
