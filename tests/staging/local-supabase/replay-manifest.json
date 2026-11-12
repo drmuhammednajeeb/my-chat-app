@@ -352,6 +352,16 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.profile-status-combined-content-media",
+      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+      "testSources": [
+        "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql",
+        "tests/status-workspace.test.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": "Corrects the mutually exclusive content/media check and insert RLS predicate, and fixes UUID media-path regex escaping. Production application will be tracked separately from the disposable-local replay status."
+    },
+    {
       "nodeId": "chat.workspace-indexes",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -651,16 +661,6 @@
         "DAG-016"
       ],
       "parityNote": "After applying the test-only overlay, run read-only catalog assertions and rollback-only CRUD/RPC compatibility probes (chat list create/update/upsert/delete, star upsert/delete, secure message edit audit insert, and cross-user isolation). Runtime execution remains blocked pending a disposable Supabase replay. A separate local Auth/Storage API runtime probe validates file upload, upsert, signed read, private/shared visibility, cross-user path spoof denial, owner deletion, and public avatar delivery. It has not been executed. A separate disposable local Supabase workflow provisions PostgreSQL 17 and the managed Auth/Storage/Realtime services, replays the manifest's exact DAG order, then runs the runtime probes and always stops the temporary stack. It is not a hosted environment and does not authorize production deployment."
-    },
-    {
-      "nodeId": "chat.profile-status-combined-content-media",
-      "status": "SOURCE_REVIEWED_NOT_EXECUTED",
-      "testSources": [
-        "database/changes/20261112133500_allow_combined_profile_status_content_and_media.sql",
-        "tests/status-workspace.test.mjs"
-      ],
-      "blockedBy": [],
-      "parityNote": "Corrects the mutually exclusive content/media check and insert RLS predicate, and fixes UUID media-path regex escaping. Production application will be tracked separately from the disposable-local replay status."
     }
   ],
   "duplicateSelection": [
