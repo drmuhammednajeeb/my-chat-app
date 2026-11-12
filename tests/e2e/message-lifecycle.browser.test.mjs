@@ -369,6 +369,11 @@ test('voice recording finalizes the last MediaRecorder chunk before dispatching 
           type: state.attachment?.type,
           recorderCleared: state.voiceRecorder === null
         });
+        // Model the production sendMessage success path: it clears the
+        // attachment only after persistence succeeds, enabling the next recording.
+        state.attachment = null;
+        state.voiceDuration = 0;
+        nodes.attachmentPreview.replaceChildren();
       }
     };
     const start = new Function(
