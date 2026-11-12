@@ -14,8 +14,8 @@
   },
   "sourceSets": {
     "cliMigrationFiles": 17,
-    "historicalChangeFiles": 45,
-    "sqlSourceFiles": 62,
+    "historicalChangeFiles": 41,
+    "sqlSourceFiles": 58,
     "duplicatePairs": 4,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
@@ -206,8 +206,7 @@
       "version": "20261106135225",
       "name": "harden_chat_table_privileges_and_membership_updates",
       "sourcePaths": [
-        "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-        "database/changes/chat_table_privilege_hardening.sql"
+        "supabase/migrations/202611060007_harden_chat_table_privileges.sql"
       ],
       "mappingStatus": "DUPLICATE_IDENTICAL_SOURCE",
       "confidence": "candidate-not-execution-proof",
@@ -226,7 +225,6 @@
       "version": "20261107014350",
       "name": "index_user_notification_foreign_keys",
       "sourcePaths": [
-        "database/changes/index_user_notification_foreign_keys.sql",
         "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql"
       ],
       "mappingStatus": "DUPLICATE_SOURCE_MATCH",
@@ -912,30 +910,6 @@
       "note": "Historical source; not a canonical CLI migration stream."
     },
     {
-      "path": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
-      "gitBlobSha": "2a666772bd060bccf90a2a8d78cc61c59feb3306",
-      "sourceType": "historical-change",
-      "duplicateOf": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/chat_table_privilege_hardening.sql",
-      "gitBlobSha": "e164e04680c5c0a768bfbd39f4387e0d038a9749",
-      "sourceType": "historical-change",
-      "duplicateOf": "supabase/migrations/202611060007_harden_chat_table_privileges.sql",
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/index_user_notification_foreign_keys.sql",
-      "gitBlobSha": "304c3f9e9e1dd563df05a98269f1616bcb6a22a7",
-      "sourceType": "historical-change",
-      "duplicateOf": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
       "path": "database/changes/message_reactions_and_whatsapp_typography.sql",
       "gitBlobSha": "3abf3d58bd1d06bdd4a062dc3400c40484c28a5d",
       "sourceType": "historical-change",
@@ -972,14 +946,6 @@
       "gitBlobSha": "94443ec8716cbb1fb9a13f8c5c69c0fab85de0df",
       "sourceType": "historical-change",
       "duplicateOf": null,
-      "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
-      "note": "Historical source; not a canonical CLI migration stream."
-    },
-    {
-      "path": "database/changes/unified_notifications.sql",
-      "gitBlobSha": "140e14ef8fb7a9b4dd94d7279285fe0b1396b89e",
-      "sourceType": "historical-change",
-      "duplicateOf": "supabase/migrations/20261107014128_unified_user_notifications.sql",
       "executionPolicy": "NOT_EXECUTABLE_FROM_REGISTRY",
       "note": "Historical source; not a canonical CLI migration stream."
     },

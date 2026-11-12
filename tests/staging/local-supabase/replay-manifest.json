@@ -3,7 +3,7 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 62,
+    "sqlFiles": 61,
     "mappedSources": 58,
     "identicalDuplicateCopiesExcluded": 4,
     "allSourcesMappedOrExplicitlyExcluded": true,
@@ -711,6 +711,12 @@
       "selected": "supabase/migrations/20261107014350_index_user_notification_foreign_keys.sql",
       "excludedIdenticalCopy": "database/changes/index_user_notification_foreign_keys.sql",
       "sha256": "c59daeb5b307f67ed8148611530d94f4330ac9fedbbe52df0e9c908a2b687ea2"
+    },
+    {
+      "logicalChange": "profile status base migration",
+      "selected": "supabase/migrations/20261112091557_profile_status_and_conversation_images.sql",
+      "excludedIdenticalCopy": "database/changes/20261112000100_profile_status_and_conversation_images.sql",
+      "sha256": "dff699a1dabbef75c1dc6089a2e998eb01ae89d404c0320d0520f9e6c45892e1"
     }
   ],
   "blockers": [

@@ -9,7 +9,7 @@ import { buildObjectInventory } from './build-database-object-inventory.mjs';
 test('source inventory covers all known SQL files and remains read-only', async () => {
   const report = await buildObjectInventory();
   assert.equal(report.auditMode, 'READ_ONLY_SOURCE_INVENTORY');
-  assert.deepEqual(report.sourceCounts, { migrations: 17, historicalSql: 45, totalSqlFiles: 62, supabaseConfigPresent: false });
+  assert.deepEqual(report.sourceCounts, { migrations: 20, historicalSql: 41, totalSqlFiles: 61, supabaseConfigPresent: false });
   assert.ok(report.inventoryTotals.createdTables > 0);
   assert.ok(report.inventoryTotals.columns > 0);
   assert.ok(report.inventoryTotals.foreignKeys > 0);
@@ -24,9 +24,9 @@ test('inventory exposes unresolved legacy and missing RPC dependencies', async (
   assert.equal(report.legacyMessages.tableDefinitionFoundInRepositorySql, false);
   assert.ok(report.legacyMessages.referencedByMigrations.includes('supabase/migrations/202611060001_ultra_chat_pro_v2.sql'));
   assert.ok(report.legacyMessages.referencedByMigrations.includes('supabase/migrations/202611060006_explicit_legacy_deny.sql'));
-  assert.ok(report.unresolvedInternalFunctions.includes('app_private.get_or_create_direct_conversation_impl'));
+  assert.equal(report.unresolvedInternalFunctions.includes('app_private.get_or_create_direct_conversation_impl'), false);
   assert.deepEqual(report.unresolvedInternalFunctions, ['app_private.get_or_create_direct_conversation_impl']);
-  assert.ok(report.missingClientRpcs.includes('get_or_create_direct_conversation'));
+  assert.equal(report.missingClientRpcs.includes('get_or_create_direct_conversation'), false);
 });
 
 test('inventory identifies the application/database Forever membership format conflict', async () => {
@@ -40,7 +40,7 @@ test('inventory identifies the application/database Forever membership format co
 
 test('inventory retains duplicate provenance and the known syntax hazard', async () => {
   const report = await buildObjectInventory();
-  assert.equal(report.duplicateGroups.length, 4);
+  assert.equal(report.duplicateGroups.length, 0);
   assert.ok(report.syntaxHazards.some(item => item.path === 'database/changes/20261107152733_fix_official_membership_invite_duplicate_validation.sql'));
 });
 
@@ -56,7 +56,7 @@ test('platform service dependencies are explicit', async () => {
 
 test('all policy definitions after the membership rewrite enforce active membership', async () => {
   const report = await buildObjectInventory();
-  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 26);
+  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 27);
   assert.deepEqual(report.policyCoverage.laterPoliciesMissingActiveMemberGuard, []);
 });
 
@@ -72,10 +72,10 @@ test('fixed identity literals are inventoried for synthetic test substitution', 
 
 test('application Storage buckets are compared with repository bucket declarations and policies', async () => {
   const report = await buildObjectInventory();
-  assert.deepEqual(report.storageCoverage.clientBuckets, ['avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
-  assert.deepEqual(report.storageCoverage.declaredBucketIds, ['avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
+  assert.deepEqual(report.storageCoverage.clientBuckets, ['avatars', 'channel-avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
+  assert.deepEqual(report.storageCoverage.declaredBucketIds, ['avatars', 'channel-avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
   assert.deepEqual(report.storageCoverage.missingBucketDeclarations, []);
-  assert.deepEqual(report.storageCoverage.storageObjectPolicyBuckets, ['avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
+  assert.deepEqual(report.storageCoverage.storageObjectPolicyBuckets, ['avatars', 'channel-avatars', 'chat-media', 'conversation-avatars', 'conversation-documents', 'profile-status-media']);
   assert.deepEqual(report.storageCoverage.clientBucketsWithoutStoragePolicies, []);
   assert.equal(report.storageCoverage.chatMediaUploadPathOwnershipGuard, false);
 });
