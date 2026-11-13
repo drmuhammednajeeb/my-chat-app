@@ -16,7 +16,8 @@ test('production registry preserves 62 ledger versions and separately maps four 
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 62);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 66);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 67);
+  assert.equal(registry.sourceSets.pendingFeatureMigrations, 1);
   assert.equal(registry.sourceSets.forwardReconciliationMigrations, 4);
   assert.equal(registry.forwardMigrations.length, 4);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 62);
@@ -36,7 +37,7 @@ test('production registry preserves 62 ledger versions and separately maps four 
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 66);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 67);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
@@ -94,7 +95,7 @@ test('production registry preserves 62 ledger versions and separately maps four 
 test('every canonical migration closes every explicit transaction block', async () => {
   const directory = path.join(root, 'supabase/migrations');
   const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
-  assert.equal(files.length, 66);
+  assert.equal(files.length, 67);
   for (const name of files) {
     const source = await readFile(path.join(directory, name), 'utf8');
     const begins = (source.match(/^\s*BEGIN\s*;\s*$/gim) ?? []).length;
@@ -152,4 +153,21 @@ test('public conversation-image SECURITY DEFINER RPC is intentional and enforces
   assert.match(functionSql, /bucket_id = 'conversation-avatars'/i);
   assert.match(sql, /revoke all on function public\.set_conversation_image\(uuid,text\) from public, anon/i);
   assert.match(sql, /grant execute on function public\.set_conversation_image\(uuid,text\) to authenticated/i);
+});
+
+test('voice duration feature migration is tracked separately from production ledger and security forward migrations', async () => {
+  const registry = JSON.parse(await readFile(registryPath, 'utf8'));
+  const feature = registry.featureMigrations.find(item => item.version === '202611120002');
+  assert.ok(feature);
+  assert.equal(feature.path, 'supabase/migrations/202611120002_chat_message_audio_duration.sql');
+  assert.equal(feature.status, 'FEATURE_MIGRATION_NOT_APPLIED');
+  assert.equal(feature.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
+  assert.equal(feature.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+  assert.equal(feature.productionApplied, false);
+  assert.equal(registry.productionMigrations.some(item => item.version === feature.version), false);
+  assert.equal(registry.forwardMigrations.some(item => item.version === feature.version), false);
+  const bytes = await readFile(path.join(root, feature.path));
+  assert.equal(blobSha(bytes), feature.gitBlobSha);
+  assert.equal(registry.featureMigrationPolicy.executionAuthorized, false);
+  assert.equal(registry.featureMigrationPolicy.productionApplied, false);
 });
