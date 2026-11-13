@@ -79,6 +79,7 @@
       updateNewMessagesIndicator = () => {},
       diagLog = () => {},
       recordPerf = () => {},
+      updateDiagnostics = () => {},
       reconcileMessageTimeline = () => {},
       compareMessagesChronologically: compare,
       loadMessageReactions = async () => true,
@@ -258,7 +259,10 @@
           state.batchRenderingConversationId = previousBatchConversationId;
         }
         if (!isCurrent()) { rollbackOwnedRender(); return false; }
-        if (allMessagesRendered) reconcileMessageTimeline(area);
+        if (allMessagesRendered) {
+          reconcileMessageTimeline(area);
+          updateDiagnostics();
+        }
 
         if (allMessagesRendered) {
           if (wasNearBottom || !sameConversationTimeline) {
