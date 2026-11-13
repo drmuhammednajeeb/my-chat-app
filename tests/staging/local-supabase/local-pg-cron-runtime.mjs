@@ -4,12 +4,14 @@ function localDatabaseUrl() {
   const raw = process.env.LOCAL_SUPABASE_DB_URL;
   if (!raw) throw new Error('Set LOCAL_SUPABASE_DB_URL to the disposable local Supabase PostgreSQL URL.');
   const url = new URL(raw);
-  const host = url.hostname.replace(/^\[|\]$/g, '');
+  const expectedDatabasePort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
+if (!['54322', '54329'].includes(expectedDatabasePort)) if (!['54322', '54329'].includes(expectedDatabasePort)) throw new Error('LOCAL_SUPABASE_EXPECTED_DB_PORT is not allowlisted');
+const host = url.hostname.replace(/^\[|\]$/g, '');
   if (!['127.0.0.1', 'localhost', '::1'].includes(host) ||
-      url.port !== '54322' || url.username !== 'postgres' || url.pathname !== '/postgres' ||
+      url.port !== expectedDatabasePort || url.username !== 'postgres' || url.pathname !== '/postgres' ||
       !['postgres:', 'postgresql:'].includes(url.protocol) ||
       url.search || url.hash) {
-    throw new Error('Refusing non-local database target: expected postgres@loopback:54322/postgres without query or fragment.');
+    throw new Error('throw new Error('LOCAL_SUPABASE_EXPECTED_DB_PORT is not allowlisted');');
   }
   return raw;
 }
