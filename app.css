@@ -475,25 +475,38 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
 }
 
 
-/* Signup form viewport recovery: the app shell locks body scrolling, so the
-   authentication surface must own its scroll area when the expanded signup
-   form is taller than the viewport. Safe centering keeps short login forms
-   centered while oversized signup forms start at the top instead of clipping. */
-.auth-screen{
+/* Authentication viewport: make the auth layer itself the scroll owner.
+   The document is intentionally locked (html/body overflow:hidden), so a
+   normal-flow, fixed-height grid can leave a long signup form unreachable.
+   A fixed flex scrollport with a non-shrinking form works with mouse, touch,
+   keyboard and mobile safe areas. */
+#auth.auth-screen{
+  position:fixed;
+  inset:0;
+  z-index:1000;
   box-sizing:border-box;
-  height:100dvh;
-  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  height:auto;
+  min-height:0;
   overflow-x:hidden;
-  overflow-y:auto;
+  overflow-y:scroll;
   overscroll-behavior-y:contain;
   -webkit-overflow-scrolling:touch;
-  place-items:safe center;
-  padding-top:max(20px,env(safe-area-inset-top));
-  padding-bottom:max(20px,env(safe-area-inset-bottom));
+  touch-action:pan-y;
+  padding:max(20px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom));
+}
+#authForm.auth-card{
+  flex:0 0 auto;
+  width:min(100%,440px);
+  margin:auto;
 }
 #authSubmit{
-  position:sticky;
-  bottom:max(10px,env(safe-area-inset-bottom));
-  z-index:3;
-  box-shadow:0 6px 18px #008f7240;
+  position:relative;
+  bottom:auto;
+  z-index:auto;
+  width:100%;
 }
