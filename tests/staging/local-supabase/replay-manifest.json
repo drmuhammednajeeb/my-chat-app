@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 66,
-    "mappedSources": 66,
+    "sqlFiles": 67,
+    "mappedSources": 67,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -30,9 +30,9 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 64,
+    "executedMappedSources": 65,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 83,
+    "executedSqlFiles": 84,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "localRuntimeRunId": 43260183037,
     "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
@@ -157,6 +157,15 @@
       "testSources": [],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "chat.voice-duration",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/202611120002_chat_message_audio_duration.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Optional persisted audio duration. Review and apply the migration before production frontend deployment; this design-only manifest does not authorize SQL execution."
     },
     {
       "nodeId": "chat.direct-conversation-rpc",
@@ -886,7 +895,8 @@
   "safetyNotes": [
     "Candidate order is derived from the reviewed acyclic dependency graph.",
     "Test-only SQL copies and the chat-media upload-path hardening fixture are local-only; they are not production migrations.",
-    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved."
+    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved.",
+    "Voice-duration frontend writes require the separately approved 202611120002_chat_message_audio_duration.sql migration to be applied before production deployment; this repository change does not authorize that application."
   ],
   "forwardReconciliationMigrations": [
     {
