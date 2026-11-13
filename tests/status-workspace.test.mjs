@@ -79,3 +79,27 @@ test('status module remains part of the repository storage inventory input', asy
   assert.match(inventory, /statusWorkspaceJs/);
   assert.match(inventory, /profileMediaJs \+ '\\n' \+ statusWorkspaceJs/);
 });
+
+test('status workspace binds Realtime to the active account and retries recoverable disconnects', () => {
+  assert.match(client, /channelUserId/);
+  assert.match(client, /function stopRealtime\(\)/);
+  assert.match(client, /function scheduleRealtimeRetry\(uid,generation\)/);
+  assert.match(client, /CHANNEL_ERROR\|\|status==='TIMED_OUT'\|\|status==='CLOSED'/);
+  assert.match(client, /Math\.min\(30000,1000\*Math\.pow\(2,realtimeRetryAttempt\+\+\)\)/);
+  assert.match(client, /generation===channelGeneration&&actor\(\)===uid&&isOpen\(\)/);
+});
+
+test('status loading and polling run only while the workspace is active', () => {
+  assert.match(client, /if\(!uid\|\|!isOpen\(\)\)return/);
+  assert.match(client, /if\(actor\(\)&&isOpen\(\)&&document\.visibilityState==='visible'\)/);
+  assert.match(client, /function closeWorkspace\(\)/);
+  assert.match(client, /stopRealtime\(\);clearRefreshTimer\(\)/);
+  assert.doesNotMatch(client, /if\(actor\(\)\)\{subscribe\(\);ensureTimer\(\);void load\(\)\}/);
+});
+
+test('status navigation closes the workspace outside the status tab and preserves mobile return accessibility', () => {
+  assert.match(html, /if\(view!=='status'\)window\.BizmindStatusWorkspace\?\.close\?\.\(\)/);
+  assert.match(html, /statusPageBack/);
+  assert.match(html, /id="statusPage"[\s\S]*?aria-hidden="true"/);
+  assert.match(html, /\$\('statusPage'\)\.setAttribute\('aria-hidden',String\(!status\)\)/);
+});
