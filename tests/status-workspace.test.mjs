@@ -103,3 +103,8 @@ test('status navigation closes the workspace outside the status tab and preserve
   assert.match(html, /id="statusPage"[\s\S]*?aria-hidden="true"/);
   assert.match(html, /\$\('statusPage'\)\.setAttribute\('aria-hidden',String\(!status\)\)/);
 });
+
+test('successful account entry restores status navigation after an auth identity transition', () => {
+  assert.match(client, /if\(result&&state\.sidebarView==='status'\)\{open\(\)\}/);
+  assert.match(client, /if\(actor\(\)!==session\.user\.id\)\{closeWorkspace\(\);grouped=new Map\(\);return\}/);
+});
