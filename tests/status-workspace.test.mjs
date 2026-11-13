@@ -84,7 +84,7 @@ test('status workspace binds Realtime to the active account and retries recovera
   assert.match(client, /channelUserId/);
   assert.match(client, /function stopRealtime\(\)/);
   assert.match(client, /function scheduleRealtimeRetry\(uid,generation\)/);
-  assert.match(client, /CHANNEL_ERROR\|\|status==='TIMED_OUT'\|\|status==='CLOSED'/);
+  assert.match(client, /status==='CHANNEL_ERROR'\|\|status==='TIMED_OUT'\|\|status==='CLOSED'/);
   assert.match(client, /Math\.min\(30000,1000\*Math\.pow\(2,realtimeRetryAttempt\+\+\)\)/);
   assert.match(client, /generation===channelGeneration&&actor\(\)===uid&&isOpen\(\)/);
 });
