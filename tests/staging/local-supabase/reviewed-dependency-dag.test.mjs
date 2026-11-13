@@ -444,7 +444,7 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 19);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 83);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 84);
 });
 
 
@@ -453,4 +453,18 @@ test('direct-conversation stress executes once after the forward eligibility mig
   assert.match(runner, /postForwardConcurrencyExecuted/);
   assert.ok(runner.includes("node.nodeId === 'test-fixture.direct-chat-concurrency' && !postForwardConcurrencyExecuted"));
   assert.match(runner, /post-forward-concurrency/);
+});
+
+test('voice duration migration is ordered after the chat schema and remains source-only', async () => {
+  const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'chat.voice-duration');
+  const candidate = manifest.candidateNodeOrder.find(item => item.nodeId === 'chat.voice-duration');
+  assert.ok(node);
+  assert.ok(node.requires.includes('core.base'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'core.base' && to === 'chat.voice-duration'));
+  assert.ok(candidate.testSources.includes('supabase/migrations/202611120002_chat_message_audio_duration.sql'));
+  assert.equal(node.status, 'SOURCE_REVIEWED');
+  assert.equal(manifest.execution.productionAllowed, false);
+  assert.equal(manifest.execution.sqlExecuted, false);
 });
