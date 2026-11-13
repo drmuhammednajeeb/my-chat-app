@@ -83,7 +83,7 @@ test('manual RLS runtime runner refuses cloud targets and runs only loopback Pos
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs'), 'utf8');
   for (const fragment of [
     'LOCAL_SUPABASE_DB_URL',
-    "url.port !== '54322'",
+    'url.port !== expectedDatabasePort', 'LOCAL_SUPABASE_EXPECTED_DB_PORT',
     "url.username !== 'postgres'",
     "url.pathname !== '/postgres'",
     "127.0.0.1",
