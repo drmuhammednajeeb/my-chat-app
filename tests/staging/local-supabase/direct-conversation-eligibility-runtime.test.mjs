@@ -144,7 +144,7 @@ test('multi-session concurrency and message stress runner is restricted to dispo
   assert.match(runner, /PATH: process\.env\.PATH/);
   assert.doesNotMatch(runner, /\.\.\.process\.env/);
   assert.match(runner, /127\.0\.0\.1/);
-  assert.match(runner, /url\.port !== '54322'/);
+  assert.match(runner, /url\.port !== expectedDatabasePort/);\n  assert.match(runner, /LOCAL_SUPABASE_EXPECTED_DB_PORT/);
   assert.match(runner, /url\.username !== 'postgres'/);
   assert.match(runner, /Promise\.allSettled/);
   assert.match(runner, /pg_sleep\(0\.25\)/);
