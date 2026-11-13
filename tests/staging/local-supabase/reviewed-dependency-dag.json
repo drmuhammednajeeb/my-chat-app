@@ -797,8 +797,8 @@
       "blockedBy": [],
       "note": "Adds an optional nonnegative duration column to chat_messages. Frontend release requires the migration to be reviewed and applied before deployment; this source-only PR does not authorize SQL execution.",
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43360425307,
-      "localRuntimeCommit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5"
+      "localRuntimeRunId": 43360805961,
+      "localRuntimeCommit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074"
     },
     {
       "id": "core.profile-fks",
@@ -2477,9 +2477,9 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 43360425307,
-    "commit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5",
-    "completedAt": "2026-11-13T03:41:12Z",
+    "workflowRunId": 43360805961,
+    "commit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074",
+    "completedAt": "2026-11-13T03:45:18Z",
     "localOnly": true,
     "sqlFilesExecuted": 84,
     "checks": [
