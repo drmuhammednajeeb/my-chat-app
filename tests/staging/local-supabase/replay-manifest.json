@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 67,
-    "mappedSources": 67,
+    "sqlFiles": 68,
+    "mappedSources": 68,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -30,9 +30,9 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 65,
+    "executedMappedSources": 66,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 84,
+    "executedSqlFiles": 85,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "localRuntimeRunId": 43360805961,
     "localRuntimeCommit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074"
@@ -745,6 +745,16 @@
       "parityNote": null
     },
     {
+      "nodeId": "security.conversation-image-extension-forward",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql",
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Corrects the literal-dot extension check in both conversation-image functions; the post-forward fixture verifies the regex behavior and installed function definitions."
+    },
+    {
       "nodeId": "test-fixture.forward-hardening-postconditions",
       "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
       "testSources": [
@@ -952,6 +962,12 @@
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
