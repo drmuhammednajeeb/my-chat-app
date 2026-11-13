@@ -157,9 +157,9 @@ test('public conversation-image SECURITY DEFINER RPC is intentional and enforces
 
 test('voice duration feature migration is tracked separately from production ledger and security forward migrations', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
-  const feature = registry.featureMigrations.find(item => item.version === '202611120002');
+  const feature = registry.featureMigrations.find(item => item.version === '202611130001');
   assert.ok(feature);
-  assert.equal(feature.path, 'supabase/migrations/202611120002_chat_message_audio_duration.sql');
+  assert.equal(feature.path, 'supabase/migrations/202611130001_chat_message_audio_duration.sql');
   assert.equal(feature.status, 'FEATURE_MIGRATION_NOT_APPLIED');
   assert.equal(feature.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
   assert.equal(feature.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
