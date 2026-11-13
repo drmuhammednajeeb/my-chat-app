@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
-  "generatedAt": "2026-11-12",
+  "generatedAt": "2026-11-13",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
     "baseBranch": "main",
@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 66,
+    "canonicalCliMigrationFiles": 68,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 19,
@@ -41,7 +41,8 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
-    "forwardReconciliationMigrations": 4
+    "forwardReconciliationMigrations": 5,
+    "pendingFeatureMigrations": 1
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -1835,16 +1836,26 @@
       "localRuntimeRunId": 43260183037,
       "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
+    },
+    {
+      "version": "20261113060002",
+      "name": "fix_conversation_image_extension_validation",
+      "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
+      "gitBlobSha": "d42dd0d49999d58636321f654e8856ffb9f82914",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Correct the literal-dot suffix validation for jpg/png/webp paths in both conversation-image functions without weakening actor, membership, manager, object-existence or function ACL checks.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 4,
+    "pendingForwardCount": 5,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false
   },
   "validationEvidence": {
@@ -1877,5 +1888,46 @@
       "passed": 77,
       "failed": 0
     }
+  },
+  "featureMigrations": [
+    {
+      "version": "202611130001",
+      "name": "chat_message_audio_duration",
+      "path": "supabase/migrations/202611130001_chat_message_audio_duration.sql",
+      "gitBlobSha": "a2b2353c964a20e9f2165eeef971806cc666471a",
+      "status": "FEATURE_MIGRATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Persist the measured duration of recorded audio attachments for immediate and subsequent message rendering.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "note": "Added by PR #141 as a feature migration. It is not part of the historical production ledger or the four forward reconciliation migrations. Do not deploy the frontend until this migration is separately approved and applied to production.",
+      "localRuntimeRunId": 43360805961,
+      "localRuntimeCommit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074"
+    }
+  ],
+  "featureMigrationPolicy": {
+    "description": "Feature migrations are source-reviewed schema additions outside the historical production ledger and outside the security forward-reconciliation set. They require separate local runtime validation and explicit production approval before dependent frontend deployment.",
+    "pendingFeatureCount": 1,
+    "executionAuthorized": false,
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "productionApplied": false,
+    "localRuntimeRunId": 43360805961,
+    "localRuntimeCommit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074"
+  },
+  "certification": {
+    "status": "PRODUCTION_CERTIFICATION_BLOCKED",
+    "reviewedAt": "2026-11-13",
+    "productionProjectRef": "lvkeohpuucuklagvwpnq",
+    "productionSqlChanged": false,
+    "outstanding": [
+      "five security forward migrations not applied",
+      "conversation image extension correction awaits latest disposable runtime",
+      "Auth leaked-password protection disabled",
+      "SECURITY DEFINER RPC warning requires intentional API review",
+      "hosted two-account Realtime E2E not run",
+      "production backup/restore evidence not verified",
+      "Supabase-managed supabase_admin default ACL is platform-controlled"
+    ]
   }
 }

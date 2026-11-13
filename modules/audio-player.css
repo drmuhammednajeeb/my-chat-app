@@ -12,7 +12,9 @@
   cursor:pointer;touch-action:manipulation;box-shadow:0 2px 7px rgba(0,0,0,.13);
   transition:transform .15s ease,filter .15s ease,opacity .15s ease;
 }
-.voice-player-toggle i{display:block;line-height:1;margin:0;padding:0;font-size:1em}
+.voice-player-glyph{display:block;line-height:1;font-family:Arial,sans-serif;font-weight:900;pointer-events:none;user-select:none}
+.voice-player-glyph-play{font-size:18px;transform:translateX(-1px)}
+.voice-player-glyph-pause{font-size:20px;letter-spacing:-3px;padding-inline-end:3px}
 .voice-player-toggle:active{transform:scale(.94)}
 .voice-player-toggle:hover{filter:brightness(1.07)}
 .voice-player-toggle:disabled{opacity:.55;cursor:not-allowed}

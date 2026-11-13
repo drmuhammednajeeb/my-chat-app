@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 66,
-    "mappedSources": 66,
+    "sqlFiles": 68,
+    "mappedSources": 68,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -30,12 +30,10 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 64,
+    "executedMappedSources": 66,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 83,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
+    "executedSqlFiles": 85,
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
   },
   "execution": {
     "enabled": false,
@@ -157,6 +155,18 @@
       "testSources": [],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "chat.voice-duration",
+      "status": "SOURCE_REVIEWED",
+      "testSources": [
+        "supabase/migrations/202611130001_chat_message_audio_duration.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Optional persisted audio duration. Review and apply the migration before production frontend deployment; this design-only manifest does not authorize SQL execution.",
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43360805961,
+      "localRuntimeCommit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074"
     },
     {
       "nodeId": "chat.direct-conversation-rpc",
@@ -733,15 +743,13 @@
       "parityNote": null
     },
     {
-      "nodeId": "test-fixture.forward-hardening-postconditions",
-      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
+      "nodeId": "security.conversation-image-extension-forward",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSources": [
-        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
       ],
-      "blockedBy": [
-        "DAG-016"
-      ],
-      "parityNote": null
+      "blockedBy": [],
+      "parityNote": "Corrects the literal-dot extension check in both conversation-image functions; the post-forward fixture verifies the regex behavior and installed function definitions."
     },
     {
       "nodeId": "security.least-privilege-overlay",
@@ -754,6 +762,17 @@
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.forward-hardening-postconditions",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [
         "DAG-016"
@@ -886,7 +905,8 @@
   "safetyNotes": [
     "Candidate order is derived from the reviewed acyclic dependency graph.",
     "Test-only SQL copies and the chat-media upload-path hardening fixture are local-only; they are not production migrations.",
-    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved."
+    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved.",
+    "Voice-duration frontend writes require the separately approved 202611130001_chat_message_audio_duration.sql migration to be applied before production deployment; this repository change does not authorize that application."
   ],
   "forwardReconciliationMigrations": [
     {
@@ -939,6 +959,12 @@
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
@@ -972,5 +998,5 @@
       "failed": 0
     }
   },
-  "reviewState": "LOCAL_REPLAY_AND_CI_PASSED_PRODUCTION_RELEASE_REVIEW_REQUIRED"
+  "reviewState": "LOCAL_REPLAY_PENDING_NEW_CONVERSATION_IMAGE_MIGRATION"
 }

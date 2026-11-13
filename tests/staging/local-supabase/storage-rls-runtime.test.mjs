@@ -62,4 +62,6 @@ test('Storage runtime probe checks uploader ownership, private/shared reads, ups
     'finally',
     'cleanup()'
   ]) assert.ok(source.toLowerCase().includes(token.toLowerCase()), 'missing Storage behavior check: ' + token);
+  assert.match(source, /LOCAL_SUPABASE_EXPECTED_DB_PORT/);
+  assert.match(source, /db\.port !== expectedDatabasePort/);
 });

@@ -59,6 +59,11 @@ jobs:
           } else {
             config += '\n[db]\nmajor_version = 17\n';
           }
+          // Avoid collisions with the runner's shared/default PostgreSQL port.
+          config = config.replace(/^port\s*=\s*54322$/m, 'port = 54329');
+          if (!/^port\s*=\s*54329$/m.test(config)) {
+            throw new Error('Disposable Supabase database port override was not applied');
+          }
           fs.writeFileSync(file, config);
           NODE
 
@@ -66,6 +71,7 @@ jobs:
         env:
           RUNTIME_PROJECT_DIR: ${{ runner.temp }}/my-chat-app-supabase-runtime
           ALLOW_DISPOSABLE_LOCAL_REPLAY: "1"
+          LOCAL_SUPABASE_EXPECTED_DB_PORT: "54329"
         run: |
           cd "$RUNTIME_PROJECT_DIR"
           if ! supabase start --exclude studio,edge-runtime,logflare,vector,supavisor,postgres-meta > "$RUNNER_TEMP/supabase-start.log" 2>&1; then

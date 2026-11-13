@@ -150,6 +150,62 @@ test('failed render rolls back the entire timeline instead of leaving a partial 
   assert.equal(h.state.isLoadingMessages, false);
 });
 
+test('initial transcript rendering overlaps bounded attachment work and reconciles once', async () => {
+  const rows = Array.from({ length: 14 }, (_, index) => ({
+    id: 'm' + String(index + 1).padStart(2, '0'),
+    conversation_id: 'conversation-1',
+    created_at: new Date(Date.UTC(2026, 0, index + 1)).toISOString()
+  })).reverse();
+  const h = harness({ rows });
+  let active = 0, maximumActive = 0, reconciliations = 0, diagnosticsUpdates = 0;
+  h.deps.renderMessage = async message => {
+    active += 1;
+    maximumActive = Math.max(maximumActive, active);
+    await new Promise(resolve => setTimeout(resolve, 4));
+    const node = new Element('article');
+    node.className = 'message';
+    node.dataset.messageId = message.id;
+    h.area.append(node);
+    h.state.messageIds.add(message.id);
+    active -= 1;
+    return true;
+  };
+  h.deps.reconcileMessageTimeline = () => { reconciliations += 1; };
+  h.deps.updateDiagnostics = () => { diagnosticsUpdates += 1; };
+  assert.equal(await loadMessages(h.deps), true);
+  assert.ok(maximumActive > 1, 'independent message rendering should overlap');
+  assert.ok(maximumActive <= 6, 'render concurrency must remain bounded');
+  assert.equal(reconciliations, 1, 'timeline order should be reconciled once per initial batch');
+  assert.equal(diagnosticsUpdates, 1, 'diagnostics should update once after the render batch');
+  assert.equal(h.state.batchRenderingMessages, undefined);
+  assert.equal(h.state.batchRenderingConversationId, undefined);
+});
+
+test('parallel render failures wait for the whole batch before restoring the previous transcript', async () => {
+  const rows = ['m3', 'm2', 'm1'].map((id, index) => ({
+    id, conversation_id: 'conversation-1',
+    created_at: new Date(Date.UTC(2026, 0, index + 1)).toISOString()
+  }));
+  const h = harness({ rows });
+  const completed = [];
+  h.deps.renderMessage = async message => {
+    await new Promise(resolve => setTimeout(resolve, 6));
+    completed.push(message.id);
+    if (message.id === 'm1') throw new Error('simulated render rejection');
+    const node = new Element('article');
+    node.className = 'message';
+    node.dataset.messageId = message.id;
+    h.area.append(node);
+    h.state.messageIds.add(message.id);
+    return true;
+  };
+  assert.equal(await loadMessages(h.deps), false);
+  assert.deepEqual(completed.sort(), ['m1', 'm2', 'm3']);
+  assert.equal(h.area.children[0], h.oldNode);
+  assert.deepEqual(h.area.children.filter(node => node.className === 'message').map(node => node.dataset.messageId), ['old']);
+  assert.equal(h.state.batchRenderingMessages, undefined);
+});
+
 test('source declares render completion before the empty/populated branch', async () => {
   const declaration = source.indexOf('let allMessagesRendered = true;');
   const emptyBranch = source.indexOf('if (!messages.length)');

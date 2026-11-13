@@ -10,7 +10,10 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
   const source = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
   for (const token of [
     'ALLOW_DISPOSABLE_LOCAL_REPLAY',
-    "url.port !== '54322'",
+    'allowedDatabasePorts = new Set([\'54322\', \'54329\'])',
+    'LOCAL_SUPABASE_EXPECTED_DB_PORT',
+    'LOCAL_SUPABASE_EXPECTED_DB_PORT: expectedDatabasePort',
+    'url.port !== expectedDatabasePort',
     "url.username !== 'postgres'",
     "url.pathname !== '/postgres'",
     "'127.0.0.1'",
@@ -57,10 +60,37 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
     'supabase init',
     'supabase start --exclude',
     'major_version = 17',
+    'port = 54329',
+    'LOCAL_SUPABASE_EXPECTED_DB_PORT: "54329"',
     'LOCAL_SUPABASE_DB_URL',
     'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
     'local-supabase-replay-runtime.mjs',
     'supabase stop'
   ]) assert.ok(workflow.includes(token), 'missing isolated runtime workflow contract: ' + token);
   assert.doesNotMatch(workflow, /supabase link|--remote|--linked|SUPABASE_ACCESS_TOKEN/i);
+});
+
+test('runtime database target accepts only explicit loopback database ports', async () => {
+  const source = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
+  const workflow = await readFile(path.join(root, '.github/workflows/disposable-local-supabase-runtime.yml'), 'utf8');
+  assert.match(source, /new Set\(\['54322', '54329'\]\)/);
+  assert.match(source, /LOCAL_SUPABASE_EXPECTED_DB_PORT/);
+  assert.match(source, /url\.port !== expectedDatabasePort/);
+  assert.match(workflow, /port = 54329/);
+  assert.match(workflow, /LOCAL_SUPABASE_EXPECTED_DB_PORT: "54329"/);
+});
+
+test('all disposable runtime helpers enforce the same explicit loopback database-port allowlist', async () => {
+  const helpers = [
+    'local-pg-cron-runtime.mjs',
+    'local-rls-least-privilege-runtime.mjs',
+    'local-storage-rls-runtime.mjs',
+    'direct-conversation-concurrency.mjs'
+  ];
+  for (const helper of helpers) {
+    const source = await readFile(path.join(root, 'tests/staging/local-supabase', helper), 'utf8');
+    assert.match(source, /LOCAL_SUPABASE_EXPECTED_DB_PORT/);
+    assert.match(source, /54322.*54329|54329.*54322/);
+    assert.match(source, /expectedDatabasePort/);
+  }
 });

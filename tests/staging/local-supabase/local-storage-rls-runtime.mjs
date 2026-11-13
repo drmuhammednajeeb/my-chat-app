@@ -48,14 +48,16 @@ function localDatabaseProbe(sql) {
   const rawDb = required('LOCAL_SUPABASE_DB_URL');
   let db;
   try { db = new URL(rawDb); } catch { fail('invalid LOCAL_SUPABASE_DB_URL'); }
+  const expectedDatabasePort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
+  if (!['54322', '54329'].includes(expectedDatabasePort)) fail('LOCAL_SUPABASE_EXPECTED_DB_PORT is not allowlisted');
   const dbHost = db.hostname.replace(/^\[|\]$/g, '').toLowerCase();
   if (!['postgres:', 'postgresql:'].includes(db.protocol)
     || !['127.0.0.1', 'localhost', '::1'].includes(dbHost)
-    || db.port !== '54322'
+    || db.port !== expectedDatabasePort
     || db.username !== 'postgres'
     || db.pathname !== '/postgres'
     || db.search || db.hash) {
-    fail('refusing non-local database diagnostic target');
+    fail('refusing non-local database diagnostic target; expected postgres@loopback:' + expectedDatabasePort + '/postgres');
   }
   const result = spawnSync('psql', [
     '--no-psqlrc', '--quiet', '--tuples-only', '--no-align',
