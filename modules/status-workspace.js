@@ -4,7 +4,7 @@ const BUCKET='profile-status-media',MAX_TEXT=280,MAX_BYTES=25*1024*1024;
 const IMAGES=new Set(['image/jpeg','image/png','image/webp']);
 const VIDEOS=new Set(['video/mp4','video/webm','video/quicktime']);
 const EXT={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','video/mp4':'mp4','video/webm':'webm','video/quicktime':'mov'};
-let grouped=new Map(),channel=null,timer=null,request=0,loadEpoch=0,refreshQueued=false,previewUrl=null,viewerUser=null,viewerIndex=0,viewerRequest=0,busy=false;
+let grouped=new Map(),channel=null,channelUserId=null,channelGeneration=0,realtimeRetryTimer=null,realtimeRetryAttempt=0,timer=null,request=0,loadEpoch=0,refreshQueued=false,previewUrl=null,viewerUser=null,viewerIndex=0,viewerRequest=0,busy=false;
 const $=id=>document.getElementById(id),actor=()=>state.user?.id||null;
 const label=p=>p?.display_name||p?.username||'عضو',profile=r=>r?.profile||r?.profiles||{};
 function message(value){const n=$('statusPageMessage');if(n)n.textContent=value||''}
@@ -15,7 +15,7 @@ function time(v){return v?new Date(v).toLocaleString('ar-SA',{day:'numeric',mont
 function card(p,rows,own){const b=document.createElement('button');b.type='button';b.className='status-feed-card';b.append(avatar(p));const c=document.createElement('span');c.className='status-feed-copy';const name=document.createElement('strong');name.textContent=own?'أنت':label(p);const latest=rows.at(-1);const summary=document.createElement('small');summary.textContent=latest.content||(latest.media_type==='video'?'مقطع فيديو':'صورة');const meta=document.createElement('small');meta.className='status-feed-meta';meta.textContent=rows.length+' تحديث · '+time(latest.created_at);c.append(name,summary,meta);const arrow=document.createElement('span');arrow.className='status-feed-arrow';arrow.textContent='‹';b.append(c,arrow);b.addEventListener('click',()=>view(rows[0].user_id));return b}
 function render(){const own=$('statusOwnCard'),feed=$('statusFeed');if(!own||!feed||!actor())return;own.replaceChildren();feed.replaceChildren();const mine=grouped.get(actor())||[];if(mine.length)own.append(card(state.profile||profile(mine[0]),mine,true));else{const add=document.createElement('button');add.type='button';add.className='status-own-empty';add.textContent='لم تنشر حالة بعد — أضف أول تحديث';add.onclick=compose;own.append(add)}const ids=[...grouped.keys()].filter(id=>id!==actor());ids.sort((a,b)=>new Date(grouped.get(b).at(-1).created_at)-new Date(grouped.get(a).at(-1).created_at));ids.forEach(id=>feed.append(card(profile(grouped.get(id)[0]),grouped.get(id),false)));if(!ids.length){const p=document.createElement('p');p.className='status-empty';p.textContent='لا توجد حالات منشورة حالياً من بقية الأعضاء.';feed.append(p)}$('statusPage')?.setAttribute('aria-busy','false')}
 async function load(){
- const uid=actor();if(!uid)return;
+ const uid=actor();if(!uid||!isOpen())return;
  if(busy){refreshQueued=true;return}
  const epoch=loadEpoch;busy=true;
  try{
@@ -26,7 +26,7 @@ async function load(){
    const r=await supabaseClient.from('profile_statuses')
     .select('id,user_id,content,image_path,media_type,created_at,expires_at,profile:profiles!profile_statuses_user_id_fkey(id,username,display_name,avatar_url)')
     .gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(250);
-   if(epoch!==loadEpoch||seq!==request||currentUid!==actor())return;
+   if(epoch!==loadEpoch||seq!==request||currentUid!==actor()||!isOpen())return;
    if(r.error)throw r.error;
    grouped=group(r.data||[]);render();message('');
   }while(refreshQueued&&actor()&&epoch===loadEpoch);
@@ -46,20 +46,82 @@ function compose(){const m=shell('statusComposer','إضافة حالة'),body=m.
 async function publishStatus(text,input,button,msg){const uid=actor(),content=text.value.trim(),file=input.files?.[0]||null;if(!uid)return inform('سجّل الدخول أولاً');if(!content&&!file)return inform('اكتب نصاً أو أرفق صورة أو فيديو أو اجمع بينها');if(content.length>MAX_TEXT)return inform('الحد الأقصى للنص 280 حرفاً');if(file&&((!IMAGES.has(file.type)&&!VIDEOS.has(file.type))||file.size>MAX_BYTES))return inform('الوسائط غير مدعومة أو تتجاوز 25 ميجابايت');const id=crypto.randomUUID();let path=null;button.disabled=true;msg.textContent='جارٍ رفع الحالة…';try{let mediaType=null;if(file){mediaType=IMAGES.has(file.type)?'image':'video';path=uid+'/'+id+'.'+EXT[file.type];const upload=await supabaseClient.storage.from(BUCKET).upload(path,file,{contentType:file.type,cacheControl:'60',upsert:false});if(upload.error)throw upload.error}const saved=await supabaseClient.from('profile_statuses').insert({id,user_id:uid,content:content||null,image_path:path,media_type:mediaType}).select('id').single();if(saved.error)throw saved.error;close($('statusComposer'));inform('تم نشر الحالة بنجاح');await load()}catch(e){if(path){const cleanup=await supabaseClient.storage.from(BUCKET).remove([path]);if(cleanup.error)console.warn('Status upload rollback cleanup failed:',cleanup.error)}console.error('Status publish failed:',e);msg.textContent=e.message||'تعذر نشر الحالة';inform('تعذر نشر الحالة');button.disabled=false}}
 async function view(uid){viewerUser=uid;viewerIndex=0;await renderViewer()}
 async function renderViewer(){const seq=++viewerRequest,rows=grouped.get(viewerUser)||[];if(!rows.length){close($('statusViewer'));await load();return}viewerIndex=Math.max(0,Math.min(viewerIndex,rows.length-1));const row=rows[viewerIndex],p=profile(row),m=shell('statusViewer','الحالة'),body=m.querySelector('.status-dialog-body');body.replaceChildren();const heading=document.createElement('p');heading.className='status-viewer-heading';heading.textContent=label(p)+' · '+time(row.created_at);const content=document.createElement('div');content.className='status-viewer-content';if(row.content){const textNode=document.createElement('p');textNode.className='status-viewer-text';textNode.textContent=row.content;content.append(textNode)}if(row.image_path){const signed=await supabaseClient.storage.from(BUCKET).createSignedUrl(row.image_path,60);if(seq!==viewerRequest)return;if(signed.error||!signed.data?.signedUrl){inform('تعذر تحميل الوسائط أو انتهت صلاحية الرابط');await load();return}const media=document.createElement(row.media_type==='video'?'video':'img');media.src=signed.data.signedUrl;if(media.tagName==='VIDEO'){media.controls=true;media.playsInline=true;media.preload='metadata'}else media.alt='وسائط الحالة';content.append(media)}const actions=document.createElement('div');actions.className='status-actions';const prev=document.createElement('button');prev.type='button';prev.className='status-secondary';prev.textContent='السابق';prev.disabled=viewerIndex===0;prev.onclick=()=>{viewerIndex--;renderViewer()};const next=document.createElement('button');next.type='button';next.className='status-primary';next.textContent=viewerIndex===rows.length-1?'إغلاق':'التالي';next.onclick=()=>{if(viewerIndex<rows.length-1){viewerIndex++;renderViewer()}else close(m)};actions.append(prev,next);if(viewerUser===actor()){const del=document.createElement('button');del.type='button';del.className='status-danger';del.textContent='حذف الحالة';del.onclick=async()=>{del.disabled=true;const removed=await supabaseClient.from('profile_statuses').delete().eq('id',row.id).eq('user_id',actor());if(removed.error){del.disabled=false;inform('تعذر حذف الحالة');return}if(row.image_path){const storage=await supabaseClient.storage.from(BUCKET).remove([row.image_path]);if(storage.error)console.warn('Status object cleanup failed:',storage.error)}await load();const left=grouped.get(viewerUser)||[];if(!left.length)close(m);else{viewerIndex=Math.min(viewerIndex,left.length-1);await renderViewer()}};actions.append(del)}body.append(heading,content,actions);show(m)}
-function subscribe(){if(!actor()||channel)return;channel=supabaseClient.channel('status-workspace:'+actor()).on('postgres_changes',{event:'*',schema:'public',table:'profile_statuses'},()=>load()).subscribe(s=>{if(s!=='SUBSCRIBED')console.warn('Status realtime:',s)})}
-function reset(){
- loadEpoch++;request++;viewerRequest++;busy=false;refreshQueued=false;grouped=new Map();
- if(channel)supabaseClient.removeChannel(channel);channel=null;
- if(timer)clearInterval(timer);timer=null;
- document.querySelectorAll('.status-modal.open').forEach(close);
- $('statusOwnCard')?.replaceChildren();$('statusFeed')?.replaceChildren();message('');
- $('statusPage')?.classList.add('hidden');$('chat')?.classList.remove('status-mode');$('sidebar')?.classList.remove('status-sidebar-mode');
+function isOpen(){return !!$('chat')?.classList.contains('status-mode')&&!$('statusPage')?.classList.contains('hidden')}
+function clearRefreshTimer(){if(timer)clearInterval(timer);timer=null}
+function stopRealtime(){
+ channelGeneration++;
+ if(realtimeRetryTimer)clearTimeout(realtimeRetryTimer);
+ realtimeRetryTimer=null;realtimeRetryAttempt=0;
+ const active=channel;channel=null;channelUserId=null;
+ if(active)supabaseClient.removeChannel(active);
 }
-function ensureTimer(){if(!timer)timer=setInterval(()=>{if(actor()&&document.visibilityState==='visible')void load()},60000)}
-function open(){const p=$('statusPage');if(!p||!actor())return;p.classList.remove('hidden');p.setAttribute('aria-busy','true');subscribe();ensureTimer();void load()}
-function init(){$('statusPagePublish')?.addEventListener('click',compose);$('statusPageBack')?.addEventListener('click',()=>{setSidebarView('chats');$('sidebar')?.classList.remove('closed')});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=document.querySelector('.status-modal.open');if(m)close(m)}});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&actor())void load()});window.addEventListener('focus',()=>{if(actor())void load()});if(actor()){subscribe();ensureTimer();void load()}}
-const originalEnterApp=window.enterApp;if(typeof originalEnterApp==='function')window.enterApp=async function(){const result=await originalEnterApp.apply(this,arguments);if(result){subscribe();ensureTimer();await load()}return result};
-window.BizmindStatusWorkspace=Object.freeze({open,refresh:load,openComposer:compose,reset});
+function scheduleRealtimeRetry(uid,generation){
+ if(realtimeRetryTimer||generation!==channelGeneration)return;
+ const delay=Math.min(30000,1000*Math.pow(2,realtimeRetryAttempt++));
+ realtimeRetryTimer=setTimeout(()=>{
+  realtimeRetryTimer=null;
+  if(generation===channelGeneration&&actor()===uid&&isOpen())subscribe();
+ },delay);
+}
+function subscribe(){
+ const uid=actor();if(!uid||!isOpen())return;
+ if(channel&&channelUserId===uid)return;
+ if(channel)stopRealtime();
+ const generation=++channelGeneration;
+ const next=supabaseClient.channel('status-workspace:'+uid);
+ channel=next;channelUserId=uid;
+ next.on('postgres_changes',{event:'*',schema:'public',table:'profile_statuses'},()=>{if(generation===channelGeneration&&actor()===uid&&isOpen())void load()});
+ next.subscribe(status=>{
+  if(generation!==channelGeneration||channel!==next)return;
+  if(status==='SUBSCRIBED'){realtimeRetryAttempt=0;void load();return}
+  if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+   console.warn('Status realtime disconnected:',status);
+   channel=null;channelUserId=null;
+   supabaseClient.removeChannel(next);
+   scheduleRealtimeRetry(uid,generation);
+  }
+ });
+}
+function closeWorkspace(){
+ loadEpoch++;request++;viewerRequest++;busy=false;refreshQueued=false;
+ stopRealtime();clearRefreshTimer();
+ document.querySelectorAll('.status-modal.open').forEach(close);
+ const page=$('statusPage');
+ page?.classList.add('hidden');page?.setAttribute('aria-hidden','true');
+ $('chat')?.classList.remove('status-mode');$('sidebar')?.classList.remove('status-sidebar-mode');
+}
+function reset(){
+ closeWorkspace();grouped=new Map();
+ $('statusOwnCard')?.replaceChildren();$('statusFeed')?.replaceChildren();message('');
+ $('statusPage')?.setAttribute('aria-busy','false');
+}
+function ensureTimer(){if(!timer)timer=setInterval(()=>{if(actor()&&isOpen()&&document.visibilityState==='visible')void load()},60000)}
+function open(){
+ const p=$('statusPage');if(!p||!actor())return;
+ p.classList.remove('hidden');p.setAttribute('aria-hidden','false');p.setAttribute('aria-busy','true');
+ $('chat')?.classList.add('status-mode');$('sidebar')?.classList.add('status-sidebar-mode');
+ subscribe();ensureTimer();void load();
+}
+function init(){
+ $('statusPagePublish')?.addEventListener('click',compose);
+ $('statusPageBack')?.addEventListener('click',()=>{setSidebarView('chats');$('sidebar')?.classList.remove('closed')});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=document.querySelector('.status-modal.open');if(m)close(m)}});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&actor()&&isOpen()){subscribe();void load()}});
+ window.addEventListener('focus',()=>{if(actor()&&isOpen()){subscribe();void load()}});
+}
+const originalEnterApp=window.enterApp;
+if(typeof originalEnterApp==='function')window.enterApp=async function(){
+ const result=await originalEnterApp.apply(this,arguments);
+ if(result&&state.sidebarView==='status'){open()}
+ else if(result&&isOpen()){subscribe();ensureTimer();await load()}
+ return result
+};
+window.BizmindStatusWorkspace=Object.freeze({open,close:closeWorkspace,refresh:load,openComposer:compose,reset});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-supabaseClient.auth.onAuthStateChange((_event,session)=>{if(session?.user){ensureTimer();setTimeout(()=>{subscribe();void load()},0)}else reset()});
+supabaseClient.auth.onAuthStateChange((_event,session)=>{
+ if(session?.user){
+  if(actor()!==session.user.id){closeWorkspace();grouped=new Map();return}
+  if(isOpen()){subscribe();ensureTimer();void load()}
+ }else reset();
+});
 })();
