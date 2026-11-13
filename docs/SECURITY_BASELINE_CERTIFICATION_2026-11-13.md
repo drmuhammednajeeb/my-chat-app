@@ -10,7 +10,7 @@ The repository has a successful disposable-local security/runtime replay and the
 
 - Repository: `drmuhammednajeeb/my-chat-app`
 - Reviewed branch/commit: `feat/voice-duration-render-performance-mainline` / `db6889efbcd25ecf6ff14a5595a66d7d8e2ab694`
-- Review branch: `security/baseline-hardening-20261113`
+- Active implementation branch: `feat/voice-duration-render-performance-mainline` (PR #141)
 - Production Supabase project: `lvkeohpuucuklagvwpnq` (`my-chat-app`), PostgreSQL 17.11, ACTIVE_HEALTHY
 - Production migration ledger at inspection: 62 entries through `20261112103237`
 - PR #141: open, not merged, mergeable; latest six required workflow runs passed.
@@ -71,7 +71,7 @@ The `supabase_admin` default ACL grants remain controlled by Supabase. The appli
 ## Required closure gates
 
 1. Confirm a current recoverable production backup/snapshot and a tested restore procedure for the actual production project.
-2. Review and approve the four security forward migrations against the current production catalog, then apply them in order in a controlled window.
+2. Review and approve the five security forward migrations against the current production catalog, then apply them in order in a controlled window.
 3. Verify post-migration effective grants, default ACLs, restrictive active-membership policies, direct-conversation eligibility, and Storage uploader path ownership with read-only catalog assertions and real authenticated probes.
 4. Enable leaked-password protection in Supabase Auth settings and verify the Security Advisor no longer reports it.
 5. Retain the `set_conversation_image` RPC only after confirming the authenticated caller contract and documenting the intentional SECURITY DEFINER boundary; if refactoring to an invoker wrapper/private definer implementation, add migration and regression tests first.
