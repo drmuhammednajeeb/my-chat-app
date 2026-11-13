@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.12.6"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.12.8"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -33,6 +33,7 @@
 <link rel="stylesheet" href="./modules/audio-player.css">
 <link rel="stylesheet" href="./modules/message-reactions.css">
 <link rel="stylesheet" href="./modules/profile-status-and-conversation-images.css">
+<link rel="stylesheet" href="./modules/status-workspace.css">
 
 
 
@@ -89,6 +90,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
   <div class="profile"><div id="myAvatar" class="avatar profile-avatar-edit" role="button" tabindex="0" title="تغيير الصورة الشخصية" aria-label="تغيير الصورة الشخصية">U</div><input id="avatarInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" aria-label="اختيار صورة شخصية"><div class="profile-info"><strong id="myName">المستخدم</strong><small id="myHandle">@username</small></div><div class="notification-bell-wrap"><button id="notificationBell" type="button" title="مركز الإشعارات" aria-label="فتح مركز الإشعارات" aria-expanded="false"><i class="ph ph-bell"></i><span id="notificationBadge" class="hidden">0</span></button></div><button id="logoutBtn" class="iconbtn" title="تسجيل الخروج"><i class="ph ph-sign-out"></i></button></div>
   <div class="sidebar-tabs" role="tablist" aria-label="أقسام التطبيق">
    <button type="button" id="chatsTab" class="sidebar-tab active" role="tab" aria-selected="true"><i class="ph ph-chat-circle"></i> المحادثات</button>
+   <button type="button" id="statusTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-circle-dashed"></i> الحالة</button>
    <button type="button" id="groupsTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-users-three"></i> المجموعات</button>
    <button type="button" id="channelsTab" class="sidebar-tab" role="tab" aria-selected="false"><i class="ph ph-megaphone"></i> القنوات</button>
    <button type="button" id="teamTab" class="sidebar-tab hidden" role="tab" aria-selected="false"><i class="ph ph-chart-line-up"></i> إدارة الفريق</button>
@@ -107,6 +109,12 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
   <div class="sidebar-foot"><span>BizmindMakers Chat Pro 2.0</span><span id="connectionState">جارٍ الاتصال</span></div>
  </aside>
  <main id="chat" class="chat">
+  <section id="statusPage" class="status-page hidden" aria-label="مساحة الحالة" aria-busy="false">
+   <header class="status-page-head"><div><h2>الحالة</h2><p>تحديثات مؤقتة تختفي تلقائياً بعد 24 ساعة</p></div><div class="status-page-actions"><button id="statusPagePublish" type="button" class="status-primary">إضافة حالة</button><button id="statusPageBack" type="button" class="status-secondary">العودة إلى المحادثات</button></div></header>
+   <section class="status-own-section" aria-labelledby="statusOwnHeading"><h3 id="statusOwnHeading">حالتي</h3><div id="statusOwnCard" class="status-own-card"></div></section>
+   <section class="status-feed-section" aria-labelledby="statusFeedHeading"><h3 id="statusFeedHeading">حالات الأعضاء</h3><div id="statusFeed" class="status-feed" aria-live="polite"><p class="status-empty">جارٍ تحميل الحالات…</p></div></section>
+   <p id="statusPageMessage" class="status-page-message" role="status" aria-live="polite"></p>
+  </section>
   <header class="chat-head">
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <button id="chatAvatar" class="avatar profile-open-trigger" type="button" aria-label="عرض الملف الشخصي">U</button>
@@ -711,19 +719,20 @@ $('myAvatar').addEventListener('keydown',event=>{if(event.key==='Enter'||event.k
 function setSidebarView(view){
  if(view==='team'&&!state.isTeamAdmin){toast('لا تملك صلاحية إدارة الفريق');return}
  if(view==='users'&&state.sidebarView!=='users')state.sidebarReturnView=state.sidebarView;
- state.sidebarView=view;const users=view==='users',channels=view==='channels',groups=view==='groups',team=view==='team',personal=view==='chats';
+ state.sidebarView=view;const users=view==='users',channels=view==='channels',groups=view==='groups',team=view==='team',personal=view==='chats',status=view==='status';
  if(users){state.directorySearch='';state.directoryFilter='all';document.querySelectorAll('.directory-filter').forEach(item=>{const active=item.dataset.directoryFilter==='all';item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))})}
- $('chatsTab').classList.toggle('active',personal);$('groupsTab').classList.toggle('active',groups);$('channelsTab').classList.toggle('active',channels);$('teamTab').classList.toggle('active',team);
- $('chatsTab').setAttribute('aria-selected',String(personal));$('groupsTab').setAttribute('aria-selected',String(groups));$('channelsTab').setAttribute('aria-selected',String(channels));$('teamTab').setAttribute('aria-selected',String(team));
- $('chatFilters').classList.toggle('hidden',!personal);$('directoryFilters').classList.toggle('hidden',!users);$('conversationList').classList.toggle('hidden',!personal&&!groups);
+ $('chatsTab').classList.toggle('active',personal);$('statusTab').classList.toggle('active',status);$('groupsTab').classList.toggle('active',groups);$('channelsTab').classList.toggle('active',channels);$('teamTab').classList.toggle('active',team);
+ $('chatsTab').setAttribute('aria-selected',String(personal));$('statusTab').setAttribute('aria-selected',String(status));$('groupsTab').setAttribute('aria-selected',String(groups));$('channelsTab').setAttribute('aria-selected',String(channels));$('teamTab').setAttribute('aria-selected',String(team));
+ $('chatFilters').classList.toggle('hidden',!personal);$('workspaceInboxTabs').classList.toggle('hidden',status);$('directoryFilters').classList.toggle('hidden',!users);$('conversationList').classList.toggle('hidden',!personal&&!groups);
  $('directoryList').classList.toggle('hidden',!users&&!channels);$('directorySummary').classList.toggle('hidden',!users);$('loadMoreUsers').classList.toggle('hidden',!users||!state.directoryHasMore);
- $('browseUsersBtn').classList.toggle('hidden',users||team);$('directoryBackBtn').classList.toggle('hidden',!users);$('newChat').classList.toggle('hidden',!groups);$('createChannelOpen').classList.toggle('hidden',!channels);$('refreshDirectory').classList.toggle('hidden',!users);
- document.querySelector('.searchbox').classList.toggle('hidden',team);
- $('sidebarSectionTitle').textContent=users?'دليل المستخدمين':channels?'القنوات الإذاعية':groups?'مجموعات العمل':team?'إدارة الفريق':'المحادثات الشخصية';
+ $('browseUsersBtn').classList.toggle('hidden',users||team||status);$('directoryBackBtn').classList.toggle('hidden',!users);$('newChat').classList.toggle('hidden',!groups);$('createChannelOpen').classList.toggle('hidden',!channels);$('refreshDirectory').classList.toggle('hidden',!users);
+ document.querySelector('.searchbox').classList.toggle('hidden',team||status);$('sidebar').classList.toggle('status-sidebar-mode',status);$('chat').classList.toggle('status-mode',status);
+ $('sidebarSectionTitle').textContent=status?'الحالة':users?'دليل المستخدمين':channels?'القنوات الإذاعية':groups?'مجموعات العمل':team?'إدارة الفريق':'المحادثات الشخصية';
  $('search').placeholder=users?'ابحث بالاسم أو اسم المستخدم…':channels?'ابحث في قنواتك…':groups?'ابحث في مجموعات العمل…':team?'ابحث عن مجموعة…':'ابحث في المحادثات الشخصية…';
  $('search').setAttribute('aria-label',users?'البحث في المستخدمين':channels?'البحث في القنوات':groups?'البحث في مجموعات العمل':team?'البحث في المجموعات':'بحث المحادثات الشخصية');$('search').value='';if(users)state.directorySearch='';
  $('teamDashboard').classList.toggle('hidden',!team);$('chat').classList.toggle('team-mode',team);
- if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');if(state.teamData)renderTeamDashboard();else showTeamDashboardSkeleton();if(!state.teamLoading&&!state.teamData)loadTeamDashboard(true)}
+ if(status){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');window.BizmindStatusWorkspace?.open?.()}
+ else if(team){$('diagnosticsPanel').hidden=true;if(innerWidth<=760)$('sidebar').classList.add('closed');if(state.teamData)renderTeamDashboard();else showTeamDashboardSkeleton();if(!state.teamLoading&&!state.teamData)loadTeamDashboard(true)}
  else if(users){renderDirectory();if(!state.directoryUsers.length&&!state.directoryLoading)loadDirectory()}
  else if(channels){renderMyChannels()}else renderConversations();
 }
@@ -1834,7 +1843,7 @@ $('refreshBtn').onclick=async()=>{
  }catch(error){console.error('Chat refresh failed:',error);toast('تعذر تحديث المحادثات. حاول مرة أخرى')}
  finally{$('refreshBtn').disabled=false}
 };
-$('chatsTab').onclick=()=>setSidebarView('chats');$('groupsTab').onclick=()=>setSidebarView('groups');$('channelsTab').onclick=()=>setSidebarView('channels');$('browseUsersBtn').onclick=()=>setSidebarView('users');$('directoryBackBtn').onclick=()=>{const previous=state.sidebarReturnView;state.sidebarReturnView=null;setSidebarView(previous==='groups'||previous==='channels'||(previous==='team'&&state.isTeamAdmin)?previous:'chats')};$('teamTab').onclick=()=>setSidebarView('team');$('refreshDirectory').onclick=()=>loadDirectory(true);$('loadMoreUsers').onclick=()=>loadDirectory(false);
+$('chatsTab').onclick=()=>setSidebarView('chats');$('statusTab').onclick=()=>setSidebarView('status');$('groupsTab').onclick=()=>setSidebarView('groups');$('channelsTab').onclick=()=>setSidebarView('channels');$('browseUsersBtn').onclick=()=>setSidebarView('users');$('directoryBackBtn').onclick=()=>{const previous=state.sidebarReturnView;state.sidebarReturnView=null;setSidebarView(previous==='groups'||previous==='channels'||(previous==='team'&&state.isTeamAdmin)?previous:'chats')};$('teamTab').onclick=()=>setSidebarView('team');$('refreshDirectory').onclick=()=>loadDirectory(true);$('loadMoreUsers').onclick=()=>loadDirectory(false);
 document.querySelectorAll('.directory-filter').forEach(button=>button.addEventListener('click',()=>{state.directoryFilter=button.dataset.directoryFilter;document.querySelectorAll('.directory-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});loadDirectory(true)}));
 document.querySelectorAll('.chat-filter').forEach(button=>button.addEventListener('click',()=>{state.conversationFilter=button.dataset.filter;document.querySelectorAll('.chat-filter').forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});renderConversations()}));
 $('mobileMenu').onclick=()=>$('sidebar').classList.remove('closed');
@@ -2644,5 +2653,6 @@ function renderPrivateReplyQuote(messageId,context){const row=Array.from(documen
 </script>
 <script src="./membership.js"></script>
 <script src="./modules/profile-status-and-conversation-images.js" defer></script>
+<script src="./modules/status-workspace.js" defer></script>
 <script src="./modules/backup-restore.js"></script>
 </body></html>
