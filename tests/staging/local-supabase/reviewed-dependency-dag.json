@@ -1402,8 +1402,7 @@
       ],
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSource": [
-        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
-        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
       ],
       "blockedBy": [],
       "note": "Forward-only correction for the double-backslash regex in the historical conversation-image functions. Preserves empty search_path, SECURITY DEFINER authorization checks, object ownership prefix and authenticated-only public RPC execution."
