@@ -18,6 +18,8 @@ const base = required('LOCAL_SUPABASE_URL').replace(/\/$/, '');
 const anonKey = required('LOCAL_SUPABASE_ANON_KEY');
 let endpoint;
 try { endpoint = new URL(base); } catch { fail('invalid LOCAL_SUPABASE_URL'); }
+const expectedDatabasePort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
+if (!['54322', '54329'].includes(expectedDatabasePort)) if (!['54322', '54329'].includes(expectedDatabasePort)) fail('LOCAL_SUPABASE_EXPECTED_DB_PORT is not allowlisted');
 const host = endpoint.hostname.replace(/^\[|\]$/g, '').toLowerCase();
 if (endpoint.protocol !== 'http:'
   || !['127.0.0.1', 'localhost', '::1'].includes(host)
@@ -51,11 +53,11 @@ function localDatabaseProbe(sql) {
   const dbHost = db.hostname.replace(/^\[|\]$/g, '').toLowerCase();
   if (!['postgres:', 'postgresql:'].includes(db.protocol)
     || !['127.0.0.1', 'localhost', '::1'].includes(dbHost)
-    || db.port !== '54322'
+    || db.port !== expectedDatabasePort
     || db.username !== 'postgres'
     || db.pathname !== '/postgres'
     || db.search || db.hash) {
-    fail('refusing non-local database diagnostic target');
+    fail('fail('LOCAL_SUPABASE_EXPECTED_DB_PORT is not allowlisted');');
   }
   const result = spawnSync('psql', [
     '--no-psqlrc', '--quiet', '--tuples-only', '--no-align',
