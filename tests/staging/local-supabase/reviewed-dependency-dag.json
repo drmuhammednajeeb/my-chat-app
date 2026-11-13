@@ -2237,16 +2237,14 @@
       "security.active-membership-rls-forward",
       "test-fixture.forward-hardening-postconditions"
     ],
-    {
-      "from": "security.active-membership-rls-forward",
-      "to": "security.conversation-image-extension-forward",
-      "reason": "Conversation-image correction is replayed after the shared active-membership policy hardening."
-    },
-    {
-      "from": "security.conversation-image-extension-forward",
-      "to": "test-fixture.forward-hardening-postconditions",
-      "reason": "Post-forward assertions must inspect the corrected installed function definitions."
-    }
+    [
+      "security.active-membership-rls-forward",
+      "security.conversation-image-extension-forward"
+    ],
+    [
+      "security.conversation-image-extension-forward",
+      "test-fixture.forward-hardening-postconditions"
+    ]
   ],
   "blockers": [
     {
