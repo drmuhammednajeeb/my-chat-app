@@ -1,12 +1,12 @@
 # Staging Verification Gate
 
-**Current state: BLOCKED for real Supabase E2E.** This change prepares a fail-closed gate; it does not provision infrastructure or execute authenticated backend tests.
+**Current state: BLOCKED for hosted Supabase E2E.** The repository has passed a disposable-local Supabase migration replay, but no hosted two-account Auth/Realtime/Storage test has been run.
 
 ## Safety constraints
 
-- The production Supabase host `lvkeohpuucuklagvwpnq.supabase.co` is explicitly rejected.
+- The production Supabase host `lvkeohpuucuklagvwpnq.supabase.co` is explicitly rejected by the staging preflight.
 - The preflight performs local URL/configuration checks only. It makes no HTTP, Auth, database, Realtime, or Storage requests.
-- No migrations, schema changes, RLS changes, Storage changes, or production settings are performed.
+- No migrations, schema changes, RLS changes, Storage changes, or production settings are performed by this staging gate.
 - No credentials are stored in the repository. GitHub Actions secrets are read only when an operator configures them.
 - Two distinct, dedicated test identities are required. Never reuse personal or production accounts.
 - Do not configure secrets until a separate, free, isolated Supabase project exists and its owner has confirmed that it contains no production data.
@@ -34,27 +34,34 @@ Run **Staging E2E readiness gate** manually from GitHub Actions.
 
 ## Disposable local Supabase rehearsal (separate from hosted staging)
 
-A local-only catalog gate is now prepared:
+The **Disposable local Supabase runtime verification** workflow completed successfully on reviewed commit `883ebb0a7c74d64ad6334b67410bf95267d43535` (workflow run #684 / run ID `43376102024`):
 
-- `tests/staging/local-supabase/fixtures/local-platform-prerequisites.assert.sql` must run immediately after the disposable local stack starts and before application SQL. It is read-only and verifies Auth/Storage/Realtime schemas and objects, required roles, the Realtime publication, pgcrypto's required `extensions` placement, and pg_cron availability.
-- `tests/staging/local-supabase/fixtures/local-platform-postconditions.assert.sql` must run after the workspace and expiry-purge nodes. It verifies pgcrypto function resolution and the expected `cron.job` definition. It does not prove that the scheduler actually executed the job.
-- `tests/staging/local-supabase/local-pg-cron-runtime.mjs` is a separate loopback-only runtime probe. It schedules a uniquely named `SELECT 1` job, waits up to 90 seconds for a successful run, then unschedules it and removes only its own run details. It has not been executed.
-- Synthetic direct-chat Auth identities are created before membership triggers; Profiles are created after the membership profile guard. The runtime SQL fixture promotes eligible synthetic identities through the real local admin RPCs and ends in `ROLLBACK`.
-- `tests/staging/local-supabase/direct-conversation-concurrency.mjs` is a separate two-session reversed-pair test. It accepts only a disposable loopback PostgreSQL endpoint on port 54322 and refuses cloud targets.
+- It created an isolated temporary Supabase project.
+- It started the disposable Supabase stack and executed the reviewed migration replay.
+- The replay step completed successfully.
+- The workflow stopped and destroyed the disposable stack successfully.
 
-**Execution remains disabled.** Neither catalog assertion, runtime SQL fixture, concurrency runner, pg_cron probe, nor Supabase local stack has been executed. These files are test preparation, not runtime evidence.
+This is valid evidence for the reviewed local replay, including the forward migration source selected by the replay manifest. It is not evidence that migrations were applied to production or that hosted E2E passed.
+
+Separate loopback-only/manual probes remain distinct and must not be described as executed merely because the replay workflow passed:
+
+- `tests/staging/local-supabase/local-pg-cron-runtime.mjs` is a separate scheduler probe. It schedules a uniquely named `SELECT 1` job, waits up to 90 seconds for a successful run, then unschedules it and removes only its own run details. Its independent scheduler execution has not been verified.
+- `tests/staging/local-supabase/direct-conversation-concurrency.mjs` is a separate two-session reversed-pair test. It accepts only a disposable loopback PostgreSQL endpoint on port 54322 and refuses cloud targets. Its independent concurrency run has not been verified.
+- `tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs` is a separate manual runner for the least-privilege overlay. Its independent execution has not been verified.
+- The hosted staging readiness preflight is configuration-only and does not contact Supabase.
 
 ## Test classification
 
 | Test | Classification | Current meaning |
 |---|---|---|
-| Repository source/DAG/fixture audits | Executed by GitHub Actions | Static validation; no PostgreSQL was contacted |
-| Browser/message lifecycle regression | Executed by GitHub Actions | Browser and fake-Supabase regression; not hosted E2E |
+| Repository source/DAG/fixture audits | Passed in GitHub Actions | Static validation of repository sources |
+| Disposable local Supabase migration replay | Passed, run #684 | Real isolated local PostgreSQL/Supabase replay and cleanup |
+| Message lifecycle regression | Passed in GitHub Actions | Browser and fake-Supabase regression; not hosted E2E |
+| Encrypted backup/restore workflow | Passed | Synthetic workflow validation; not a production-data restore |
 | Hosted staging preflight | Configuration-only | No HTTP/Auth/database/Realtime/Storage requests |
-| Local platform preflight/postflight SQL | Prepared; not executed | Read-only catalog assertions for local Supabase only |
-| Direct-conversation PostgreSQL runtime SQL | Prepared; not executed | Rollback-only behavior, eligibility, reuse and ACL assertions |
-| Two-session reversed-pair concurrency | Prepared; not executed | Real PostgreSQL test runner; loopback-only guard |
-| pg_cron scheduler execution | Not verified | Job catalog definition alone is insufficient |
+| Independent pg_cron scheduler probe | Not independently verified | Job catalog definition alone is insufficient |
+| Two-session reversed-pair concurrency | Not independently verified | Separate real PostgreSQL runner; loopback-only guard |
+| Standalone least-privilege runtime runner | Not independently verified | Separate loopback-only runner |
 | Hosted Auth, Realtime, Storage, RLS E2E | Blocked / not run | Requires a separate isolated backend and reviewed runner |
 | Real load test | Not run | Requires isolated backend and explicit resource budget |
 
@@ -69,13 +76,12 @@ A local-only catalog gate is now prepared:
 
 **No capacity, production readiness, or real-backend E2E claim may be made from the simulations or preflight.**
 
-
 ## RLS and least-privilege hardening
 
 The production catalog was inspected read-only. RLS was enabled on the application tables examined, but the `postgres` default ACL for the `public` schema granted broad table, sequence, and function privileges to API roles. Existing tables therefore had non-RLS privileges that must be removed independently of row policies.
 
-A test-only least-privilege overlay is prepared in `tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql`. It removes unsafe API-role/default ACL grants and adds a restrictive active-membership policy to every postgres-owned public application table and `storage.objects`, while preserving feature-specific policies. Read-only postconditions are in `rls-least-privilege.assert.sql`. The manual runner `tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs` accepts only `postgres@loopback:54322/postgres` and is syntax-checked by CI; it has **not** been executed. The overlay is sequenced last and is not a production migration. See `docs/RLS_LEAST_PRIVILEGE_HARDENING.md` for live catalog findings and the required runtime matrix.
+A test-only least-privilege overlay is prepared in `tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql`. It removes unsafe API-role/default ACL grants and adds a restrictive active-membership policy to every postgres-owned public application table and `storage.objects`, while preserving feature-specific policies. Read-only postconditions are in `rls-least-privilege.assert.sql`. The manual runner `tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs` accepts only `postgres@loopback:54322/postgres`; its independent execution has not been verified. The overlay is sequenced last and is not a production migration. See `docs/RLS_LEAST_PRIVILEGE_HARDENING.md` for live catalog findings and the required runtime matrix.
 
 ## Additional security regression — conversation image suffix validation
 
-The live PostgreSQL probe found that the historical conversation-image regex did not match normal `.jpg` suffixes under `standard_conforming_strings=on`. A forward migration `20261113060002_fix_conversation_image_extension_validation.sql` and an assertion in `forward-hardening-postconditions.assert.sql` now cover this. The migration is registered in the source registry, replay manifest and dependency DAG. Its fresh disposable-local runtime replay is pending; do not report it as passed or apply it to production until the new workflow run succeeds.
+The live PostgreSQL probe found that the historical conversation-image regex did not match normal `.jpg` suffixes under `standard_conforming_strings=on`. The forward migration `20261113060002_fix_conversation_image_extension_validation.sql` and its post-forward assertion are registered in the source registry, replay manifest, and dependency DAG. The migration was included in the reviewed disposable-local replay, which completed successfully on run #684. It remains unapplied to production and still requires the separate production backup, approval, and controlled-release gates.
