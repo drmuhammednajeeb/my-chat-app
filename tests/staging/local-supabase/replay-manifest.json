@@ -162,7 +162,7 @@
       "nodeId": "chat.voice-duration",
       "status": "SOURCE_REVIEWED",
       "testSources": [
-        "supabase/migrations/202611120002_chat_message_audio_duration.sql"
+        "supabase/migrations/202611130001_chat_message_audio_duration.sql"
       ],
       "blockedBy": [],
       "parityNote": "Optional persisted audio duration. Review and apply the migration before production frontend deployment; this design-only manifest does not authorize SQL execution."
@@ -896,7 +896,7 @@
     "Candidate order is derived from the reviewed acyclic dependency graph.",
     "Test-only SQL copies and the chat-media upload-path hardening fixture are local-only; they are not production migrations.",
     "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved.",
-    "Voice-duration frontend writes require the separately approved 202611120002_chat_message_audio_duration.sql migration to be applied before production deployment; this repository change does not authorize that application."
+    "Voice-duration frontend writes require the separately approved 202611130001_chat_message_audio_duration.sql migration to be applied before production deployment; this repository change does not authorize that application."
   ],
   "forwardReconciliationMigrations": [
     {
