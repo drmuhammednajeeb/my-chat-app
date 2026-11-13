@@ -33,9 +33,7 @@
     "executedMappedSources": 66,
     "executedTestOnlySqlFixtures": 19,
     "executedSqlFiles": 85,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43360805961,
-    "localRuntimeCommit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074"
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
   },
   "execution": {
     "enabled": false,
@@ -1001,5 +999,5 @@
       "failed": 0
     }
   },
-  "reviewState": "LOCAL_REPLAY_AND_CI_PASSED_PRODUCTION_RELEASE_REVIEW_REQUIRED"
+  "reviewState": "LOCAL_REPLAY_PENDING_NEW_CONVERSATION_IMAGE_MIGRATION"
 }
