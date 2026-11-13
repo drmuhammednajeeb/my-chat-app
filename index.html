@@ -1371,7 +1371,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
 async function loadMessages(){
  return window.BizmindMessageLoader.loadMessages({
   state,$,supabaseClient,document,performance,
-  updateNewMessagesIndicator,diagLog,recordPerf,reconcileMessageTimeline,
+  updateNewMessagesIndicator,diagLog,recordPerf,updateDiagnostics,reconcileMessageTimeline,
   compareMessagesChronologically,
   loadMessageReactions:(id,messages,requestId)=>messageReactions.load(id,messages,requestId),
   loadMessagePins,loadPrivateReplyContexts,renderMessage,
