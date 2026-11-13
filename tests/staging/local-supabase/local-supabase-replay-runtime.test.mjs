@@ -78,3 +78,18 @@ test('runtime database target accepts only explicit loopback database ports', as
   assert.match(workflow, /port = 54329/);
   assert.match(workflow, /LOCAL_SUPABASE_EXPECTED_DB_PORT: "54329"/);
 });
+
+test('all disposable runtime helpers enforce the same explicit loopback database-port allowlist', async () => {
+  const helpers = [
+    'local-pg-cron-runtime.mjs',
+    'local-rls-least-privilege-runtime.mjs',
+    'local-storage-rls-runtime.mjs',
+    'direct-conversation-concurrency.mjs'
+  ];
+  for (const helper of helpers) {
+    const source = await readFile(path.join(root, 'tests/staging/local-supabase', helper), 'utf8');
+    assert.match(source, /LOCAL_SUPABASE_EXPECTED_DB_PORT/);
+    assert.match(source, /54322.*54329|54329.*54322/);
+    assert.match(source, /expectedDatabasePort/);
+  }
+});
