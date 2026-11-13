@@ -782,7 +782,7 @@
     {
       "id": "chat.voice-duration",
       "source": [
-        "supabase/migrations/202611120002_chat_message_audio_duration.sql"
+        "supabase/migrations/202611130001_chat_message_audio_duration.sql"
       ],
       "provides": [
         "persisted audio attachment duration for chat messages"
@@ -792,7 +792,7 @@
       ],
       "status": "SOURCE_REVIEWED",
       "testSource": [
-        "supabase/migrations/202611120002_chat_message_audio_duration.sql"
+        "supabase/migrations/202611130001_chat_message_audio_duration.sql"
       ],
       "blockedBy": [],
       "note": "Adds an optional nonnegative duration column to chat_messages. Frontend release requires the migration to be reviewed and applied before deployment; this source-only PR does not authorize SQL execution."
