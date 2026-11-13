@@ -34,8 +34,8 @@
     "executedTestOnlySqlFixtures": 19,
     "executedSqlFiles": 84,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43360425307,
-    "localRuntimeCommit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5"
+    "localRuntimeRunId": 43360805961,
+    "localRuntimeCommit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074"
   },
   "execution": {
     "enabled": false,
