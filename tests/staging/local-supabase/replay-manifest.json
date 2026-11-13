@@ -746,8 +746,7 @@
       "nodeId": "security.conversation-image-extension-forward",
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSources": [
-        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
-        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
       ],
       "blockedBy": [],
       "parityNote": "Corrects the literal-dot extension check in both conversation-image functions; the post-forward fixture verifies the regex behavior and installed function definitions."
