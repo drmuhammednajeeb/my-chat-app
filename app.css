@@ -473,3 +473,40 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
 @media(prefers-reduced-motion:reduce){
  .sidebar-tab,.group-dialog,.custom-list-dialog,.message-options-menu{transition:none!important}
 }
+
+
+/* Authentication viewport: make the auth layer itself the scroll owner.
+   The document is intentionally locked (html/body overflow:hidden), so a
+   normal-flow, fixed-height grid can leave a long signup form unreachable.
+   A fixed flex scrollport with a non-shrinking form works with mouse, touch,
+   keyboard and mobile safe areas. */
+#auth.auth-screen{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  height:auto;
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:scroll;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+  padding:max(20px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom));
+}
+#authForm.auth-card{
+  flex:0 0 auto;
+  width:min(100%,440px);
+  margin:auto;
+}
+#authSubmit{
+  position:relative;
+  bottom:auto;
+  z-index:auto;
+  width:100%;
+}
