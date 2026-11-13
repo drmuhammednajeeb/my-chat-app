@@ -1787,8 +1787,8 @@
       "purpose": "Require both direct-conversation participants to satisfy active membership, verified membership-number, valid-format and confirmed-email checks while preserving pair-lock reuse.",
       "blockedBy": [],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43260183037,
-      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "localRuntimeRunId": 43371515566,
+      "localRuntimeCommit": "db6889efbcd25ecf6ff14a5595a66d7d8e2ab694",
       "productionApplied": false
     },
     {
@@ -1801,8 +1801,8 @@
       "purpose": "Bind chat-media upload path segment 2 to auth.uid() in addition to conversation membership.",
       "blockedBy": [],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43260183037,
-      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "localRuntimeRunId": 43371515566,
+      "localRuntimeCommit": "db6889efbcd25ecf6ff14a5595a66d7d8e2ab694",
       "productionApplied": false
     },
     {
@@ -1817,8 +1817,8 @@
         "DAG-016"
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43260183037,
-      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "localRuntimeRunId": 43371515566,
+      "localRuntimeCommit": "db6889efbcd25ecf6ff14a5595a66d7d8e2ab694",
       "productionApplied": false
     },
     {
@@ -1833,8 +1833,8 @@
         "DAG-016"
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43260183037,
-      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "localRuntimeRunId": 43371515566,
+      "localRuntimeCommit": "db6889efbcd25ecf6ff14a5595a66d7d8e2ab694",
       "productionApplied": false
     }
   ],
@@ -1844,16 +1844,16 @@
     "pendingForwardCount": 4,
     "executionAuthorized": false,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+    "localRuntimeRunId": 43371515566,
+    "localRuntimeCommit": "db6889efbcd25ecf6ff14a5595a66d7d8e2ab694",
     "productionApplied": false
   },
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 43260183037,
-      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "workflowRunId": 43371515566,
+      "commit": "db6889efbcd25ecf6ff14a5595a66d7d8e2ab694",
       "completedAt": "2026-11-12T16:37:17Z",
       "localOnly": true,
       "sqlFilesExecuted": 83,
@@ -1866,17 +1866,20 @@
         "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
         "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
         "full reviewed disposable replay completed"
-      ]
+      ],
+      "cleanupStatus": "PASSED",
+      "note": "Latest PR #141 head completed disposable replay and stop/destroy cleanup successfully; this does not authorize or indicate production migration application."
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 43260183019,
-      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+      "workflowRunId": 43371515636,
+      "commit": "db6889efbcd25ecf6ff14a5595a66d7d8e2ab694",
       "completedAt": "2026-11-12T16:35:00Z",
       "tests": 77,
       "passed": 77,
-      "failed": 0
+      "failed": 0,
+      "note": "Latest PR #141 head SQL manifest audit completed successfully."
     }
   },
   "featureMigrations": [
@@ -1904,5 +1907,19 @@
     "productionApplied": false,
     "localRuntimeRunId": 43360805961,
     "localRuntimeCommit": "722b147f606b7ad1a3c04ce6a23c3c43adbb0074"
+  },
+  "certification": {
+    "status": "PRODUCTION_CERTIFICATION_BLOCKED",
+    "reviewedAt": "2026-11-13",
+    "productionProjectRef": "lvkeohpuucuklagvwpnq",
+    "productionSqlChanged": false,
+    "outstanding": [
+      "four security forward migrations not applied",
+      "Auth leaked-password protection disabled",
+      "SECURITY DEFINER RPC warning requires intentional API review",
+      "hosted two-account Realtime E2E not run",
+      "production backup/restore evidence not verified",
+      "Supabase-managed supabase_admin default ACL is platform-controlled"
+    ]
   }
 }
