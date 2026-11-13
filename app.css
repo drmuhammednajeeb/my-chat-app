@@ -473,3 +473,27 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
 @media(prefers-reduced-motion:reduce){
  .sidebar-tab,.group-dialog,.custom-list-dialog,.message-options-menu{transition:none!important}
 }
+
+
+/* Signup form viewport recovery: the app shell locks body scrolling, so the
+   authentication surface must own its scroll area when the expanded signup
+   form is taller than the viewport. Safe centering keeps short login forms
+   centered while oversized signup forms start at the top instead of clipping. */
+.auth-screen{
+  box-sizing:border-box;
+  height:100dvh;
+  min-height:100dvh;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  place-items:safe center;
+  padding-top:max(20px,env(safe-area-inset-top));
+  padding-bottom:max(20px,env(safe-area-inset-bottom));
+}
+#authSubmit{
+  position:sticky;
+  bottom:max(10px,env(safe-area-inset-bottom));
+  z-index:3;
+  box-shadow:0 6px 18px #008f7240;
+}
