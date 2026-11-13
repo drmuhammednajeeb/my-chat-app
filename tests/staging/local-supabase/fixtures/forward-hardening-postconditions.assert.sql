@@ -26,7 +26,7 @@ END;
 $conversation_image_extension$;
 
 -- TEST ONLY: post-forward-migration privilege, RLS, and CRUD compatibility assertions.
--- Run after 20261112160002 and 20261112160003 in the disposable local Supabase database.
+-- Run after 20261112160002, 20261112160003, and 202611130002 in disposable local Supabase.
 -- Catalog assertions are read-only; CRUD assertions run inside a transaction ending in ROLLBACK.
 
 -- Read-only assertions after rls-least-privilege-overlay.test-only.sql.
