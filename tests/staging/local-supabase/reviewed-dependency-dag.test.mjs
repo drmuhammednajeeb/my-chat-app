@@ -230,7 +230,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   const canonicalSourceCounts = new Map();
   for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
-  assert.equal(canonicalSourceCounts.size, 66);
+  assert.equal(canonicalSourceCounts.size, 67);
   assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
