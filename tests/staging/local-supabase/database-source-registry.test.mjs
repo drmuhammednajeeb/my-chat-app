@@ -60,13 +60,13 @@ test('production registry preserves 62 ledger versions and separately maps five 
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
     assert.equal(migration.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     assert.equal(migration.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
-    if (migration.version === '202611130002') {
+    if (migration.version === '20261113060002') {
       assert.equal(migration.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
     } else {
       assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(migration.localRuntimeRunId) && migration.localRuntimeRunId > 0);
     }
-    if (migration.version === '20261112160000' || migration.version === '20261112160001' || migration.version === '202611130002') assert.deepEqual(migration.blockedBy, []);
+    if (migration.version === '20261112160000' || migration.version === '20261112160001' || migration.version === '20261113060002') assert.deepEqual(migration.blockedBy, []);
     else assert.deepEqual(migration.blockedBy, ['DAG-016']);
     const bytes = await readFile(path.join(root, migration.path));
     assert.equal(blobSha(bytes), migration.gitBlobSha, 'forward migration blob mismatch: ' + migration.path);
@@ -179,7 +179,7 @@ test('voice duration feature migration is tracked separately from production led
 });
 
 test('conversation image extension forward migration validates a literal dot in both guarded functions', async () => {
-  const migrationPath = 'supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql';
+  const migrationPath = 'supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql';
   const sql = await readFile(path.join(root, migrationPath), 'utf8');
   const slash = String.fromCharCode(92);
   const correctPattern = "!~* '" + slash + ".(jpg|png|webp)$'";
