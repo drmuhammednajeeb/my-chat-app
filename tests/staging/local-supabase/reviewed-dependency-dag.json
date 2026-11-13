@@ -1376,7 +1376,8 @@
       ],
       "requires": [
         "security.active-membership-rls-forward",
-        "security.conversation-image-extension-forward"
+        "security.conversation-image-extension-forward",
+        "security.least-privilege-overlay"
       ],
       "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
       "testSource": [
@@ -1390,7 +1391,7 @@
     {
       "id": "security.conversation-image-extension-forward",
       "source": [
-        "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql"
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
       ],
       "provides": [
         "literal-dot extension validation for conversation avatar image paths in trigger and authenticated RPC"
@@ -1401,7 +1402,7 @@
       ],
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSource": [
-        "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql",
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [],
@@ -2243,6 +2244,14 @@
     ],
     [
       "security.conversation-image-extension-forward",
+      "test-fixture.forward-hardening-postconditions"
+    ],
+    [
+      "chat.profile-status-combined-content-media",
+      "security.conversation-image-extension-forward"
+    ],
+    [
+      "security.least-privilege-overlay",
       "test-fixture.forward-hardening-postconditions"
     ]
   ],
