@@ -746,22 +746,11 @@
       "nodeId": "security.conversation-image-extension-forward",
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSources": [
-        "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql",
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [],
       "parityNote": "Corrects the literal-dot extension check in both conversation-image functions; the post-forward fixture verifies the regex behavior and installed function definitions."
-    },
-    {
-      "nodeId": "test-fixture.forward-hardening-postconditions",
-      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
-      ],
-      "blockedBy": [
-        "DAG-016"
-      ],
-      "parityNote": null
     },
     {
       "nodeId": "security.least-privilege-overlay",
@@ -774,6 +763,17 @@
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.forward-hardening-postconditions",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [
         "DAG-016"
@@ -962,7 +962,7 @@
       "localRuntimeRunId": 43260183037
     },
     {
-      "path": "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql",
+      "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
