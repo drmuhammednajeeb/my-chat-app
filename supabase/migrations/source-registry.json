@@ -1838,9 +1838,9 @@
       "productionApplied": false
     },
     {
-      "version": "202611130002",
+      "version": "20261113060002",
       "name": "fix_conversation_image_extension_validation",
-      "path": "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql",
+      "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
       "gitBlobSha": "d42dd0d49999d58636321f654e8856ffb9f82914",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
