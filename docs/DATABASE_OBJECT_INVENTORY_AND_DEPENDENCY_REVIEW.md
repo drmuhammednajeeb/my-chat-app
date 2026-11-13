@@ -32,3 +32,9 @@ The archive is not part of Supabase CLI discovery or replay. It contains origina
 The canonical stream is assembled but not replay-authorized. Direct-conversation eligibility/concurrency (DAG-014 and DAG-015), least-privilege compatibility (DAG-016), managed Supabase prerequisites, RLS behavior, pgcrypto, pg_cron, and Storage path ownership still require disposable-local runtime evidence.
 
 No SQL was executed against production during this reconciliation. The main branch remains unchanged.
+
+## Runtime and production reconciliation update — 2026-11-13
+
+The earlier statement that the canonical stream was still awaiting disposable-local runtime evidence is superseded for the reviewed PR #141 commit `db6889efbcd25ecf6ff14a5595a66d7d8e2ab694`: disposable Supabase replay [43371515566](https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/43371515566) and SQL manifest audit [43371515636](https://github.com/drmuhammednajeeb/my-chat-app/actions/runs/43371515636) completed successfully. This validates the reviewed disposable replay, not production deployment authorization.
+
+The live production ledger remains at 62 applied versions through `20261112103237`. Four forward hardening migrations and the PR #141 audio-duration feature migration remain unapplied. The four security migrations passed local replay, but production still has the corresponding open findings until they are separately approved and applied. Do not infer production parity from CI replay. See `docs/SECURITY_BASELINE_CERTIFICATION_2026-11-13.md` for the exact findings and acceptance gates.
