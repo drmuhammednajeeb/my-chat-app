@@ -105,16 +105,19 @@ for (const forbidden of ['SUPABASE_ACCESS_TOKEN', 'SUPABASE_DB_PASSWORD', 'SUPAB
 }
 const raw = process.env.LOCAL_SUPABASE_DB_URL;
 if (!raw) fail('LOCAL_SUPABASE_DB_URL is required');
+const allowedDatabasePorts = new Set(['54322', '54329']);
+const expectedDatabasePort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
+if (!allowedDatabasePorts.has(expectedDatabasePort)) fail('LOCAL_SUPABASE_EXPECTED_DB_PORT is not allowlisted');
 let url;
 try { url = new URL(raw); } catch { fail('invalid LOCAL_SUPABASE_DB_URL'); }
 const host = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
 if (!['postgres:', 'postgresql:'].includes(url.protocol)
   || !['127.0.0.1', 'localhost', '::1'].includes(host)
-  || url.port !== '54322'
+  || url.port !== expectedDatabasePort
   || url.username !== 'postgres'
   || url.pathname !== '/postgres'
   || url.search || url.hash) {
-  fail('refusing non-local database target; expected postgres@loopback:54322/postgres');
+  fail('refusing non-local database target; expected postgres@loopback:' + expectedDatabasePort + '/postgres');
 }
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
