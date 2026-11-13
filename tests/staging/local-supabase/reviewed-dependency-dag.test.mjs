@@ -463,7 +463,7 @@ test('voice duration migration is ordered after the chat schema and remains sour
   assert.ok(node);
   assert.ok(node.requires.includes('core.base'));
   assert.ok(dag.explicitEdges.some(([from, to]) => from === 'core.base' && to === 'chat.voice-duration'));
-  assert.ok(candidate.testSources.includes('supabase/migrations/202611120002_chat_message_audio_duration.sql'));
+  assert.ok(candidate.testSources.includes('supabase/migrations/202611130001_chat_message_audio_duration.sql'));
   assert.equal(node.status, 'SOURCE_REVIEWED');
   assert.equal(manifest.execution.productionAllowed, false);
   assert.equal(manifest.execution.sqlExecuted, false);
