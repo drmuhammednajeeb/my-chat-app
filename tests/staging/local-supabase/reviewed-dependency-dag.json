@@ -1903,6 +1903,10 @@
     ],
     [
       "core.base",
+      "chat.voice-duration"
+    ],
+    [
+      "core.base",
       "chat.direct-conversation-rpc"
     ],
     [
@@ -2208,10 +2212,6 @@
     [
       "security.active-membership-rls-forward",
       "test-fixture.forward-hardening-postconditions"
-    ],
-    [
-      "core.base",
-      "chat.voice-duration"
     ]
   ],
   "blockers": [
