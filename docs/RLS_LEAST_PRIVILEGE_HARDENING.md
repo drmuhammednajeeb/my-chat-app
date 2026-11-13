@@ -78,3 +78,7 @@ A direct read-only production catalog query on 2026-11-12 confirmed that the `su
 - The forward migration hardens defaults for `postgres` and fails closed if a public relation or function becomes owned by `supabase_admin`; it does not attempt to grant role membership or mutate managed-role ACLs.
 
 This is an external platform configuration residual, not an application-object exposure observed in the current catalog. It must be reviewed with the Supabase project administrator/support before any claim that every future platform-created public object inherits a deny-by-default ACL. Do not attempt to work around the role boundary by granting membership to `postgres` or escalating privileges in an application migration.
+
+## Conversation-image path validation finding — 2026-11-13
+
+A read-only PostgreSQL probe with `standard_conforming_strings=on` confirmed the historical `\\.(jpg|png|webp)$` pattern does not match a normal `image.jpg` path. Forward migration `202611130002_fix_conversation_image_extension_validation.sql` replaces the trigger and authenticated RPC function bodies with the correct literal-dot expression `\.(jpg|png|webp)$`, preserving the empty `search_path`, active-member and conversation-manager checks, user-specific object prefix, object existence check, and authenticated-only public RPC grant. The post-forward fixture now asserts both regex behavior and the installed function definitions. This migration is source-added and awaiting a fresh disposable-local runtime replay; it has not been applied to production.
