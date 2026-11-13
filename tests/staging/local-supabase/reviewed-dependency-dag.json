@@ -1375,7 +1375,8 @@
         "post-forward catalog privilege, restrictive RLS, Storage ownership, and CRUD/RPC compatibility assertions"
       ],
       "requires": [
-        "security.active-membership-rls-forward"
+        "security.active-membership-rls-forward",
+        "security.conversation-image-extension-forward"
       ],
       "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
       "testSource": [
@@ -1385,6 +1386,26 @@
         "DAG-016"
       ],
       "note": "Read-only catalog assertions plus rollback-only authenticated CRUD/RPC checks after both forward privilege migrations."
+    },
+    {
+      "id": "security.conversation-image-extension-forward",
+      "source": [
+        "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql"
+      ],
+      "provides": [
+        "literal-dot extension validation for conversation avatar image paths in trigger and authenticated RPC"
+      ],
+      "requires": [
+        "security.active-membership-rls-forward",
+        "chat.profile-status-combined-content-media"
+      ],
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSource": [
+        "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql",
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
+      ],
+      "blockedBy": [],
+      "note": "Forward-only correction for the double-backslash regex in the historical conversation-image functions. Preserves empty search_path, SECURITY DEFINER authorization checks, object ownership prefix and authenticated-only public RPC execution."
     }
   ],
   "explicitEdges": [
@@ -2215,7 +2236,17 @@
     [
       "security.active-membership-rls-forward",
       "test-fixture.forward-hardening-postconditions"
-    ]
+    ],
+    {
+      "from": "security.active-membership-rls-forward",
+      "to": "security.conversation-image-extension-forward",
+      "reason": "Conversation-image correction is replayed after the shared active-membership policy hardening."
+    },
+    {
+      "from": "security.conversation-image-extension-forward",
+      "to": "test-fixture.forward-hardening-postconditions",
+      "reason": "Post-forward assertions must inspect the corrected installed function definitions."
+    }
   ],
   "blockers": [
     {
@@ -2409,7 +2440,7 @@
     "productionDataAllowed": false,
     "canonicalSqlMutationAllowed": false,
     "costBearingResourcesAllowed": false,
-    "forwardReconciliationMigrations": 4,
+    "forwardReconciliationMigrations": 5,
     "forwardMigrationExecutionAuthorized": false
   },
   "archiveSources": [
