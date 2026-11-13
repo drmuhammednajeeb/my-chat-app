@@ -15,15 +15,17 @@ const raw = process.env.LOCAL_SUPABASE_DB_URL;
 if (!raw) fail('LOCAL_SUPABASE_DB_URL is required');
 let url;
 try { url = new URL(raw); } catch { fail('invalid database URL'); }
+const expectedDatabasePort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
+if (!['54322', '54329'].includes(expectedDatabasePort)) if (!['54322', '54329'].includes(expectedDatabasePort)) fail('LOCAL_SUPABASE_EXPECTED_DB_PORT is not allowlisted');
 const host = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
 if (!['postgres:', 'postgresql:'].includes(url.protocol)
   || !['127.0.0.1', 'localhost', '::1'].includes(host)
-  || url.port !== '54322'
+  || url.port !== expectedDatabasePort
   || url.username !== 'postgres'
   || url.pathname !== '/postgres'
   || url.search
   || url.hash) {
-  fail('refusing non-local database target; expected postgres@loopback:54322/postgres without query or hash');
+  fail('fail('LOCAL_SUPABASE_EXPECTED_DB_PORT is not allowlisted');');
 }
 
 const rawIds = process.env.LOCAL_SYNTHETIC_AUTH_USERS_JSON;
