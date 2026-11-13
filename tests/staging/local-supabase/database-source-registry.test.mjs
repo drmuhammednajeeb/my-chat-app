@@ -9,19 +9,19 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
 const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
-test('production registry preserves 62 ledger versions and separately maps four forward migrations', async () => {
+test('production registry preserves 62 ledger versions and separately maps five forward migrations', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
   assert.equal(registry.schemaVersion, 3);
   assert.equal(registry.registryStatus, 'CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 62);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 67);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 68);
   assert.equal(registry.sourceSets.pendingFeatureMigrations, 1);
-  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 4);
-  assert.equal(registry.forwardMigrations.length, 4);
+  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 5);
+  assert.equal(registry.forwardMigrations.length, 5);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 62);
-  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 4);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 5);
   assert.equal(registry.forwardMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
@@ -37,7 +37,7 @@ test('production registry preserves 62 ledger versions and separately maps four 
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 67);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 68);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
@@ -62,8 +62,10 @@ test('production registry preserves 62 ledger versions and separately maps four 
     assert.equal(migration.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
     assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
     assert.ok(Number.isInteger(migration.localRuntimeRunId) && migration.localRuntimeRunId > 0);
-    if (migration.version === '20261112160000' || migration.version === '20261112160001') assert.deepEqual(migration.blockedBy, []);
+    if (migration.version === '20261112160000' || migration.version === '20261112160001' || migration.version === '202611130002') assert.deepEqual(migration.blockedBy, []);
     else assert.deepEqual(migration.blockedBy, ['DAG-016']);
+    if (migration.version === '202611130002') assert.equal(migration.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+    else assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
     const bytes = await readFile(path.join(root, migration.path));
     assert.equal(blobSha(bytes), migration.gitBlobSha, 'forward migration blob mismatch: ' + migration.path);
     assert.equal(registry.productionMigrations.some(item => item.version === migration.version), false);
@@ -95,7 +97,7 @@ test('production registry preserves 62 ledger versions and separately maps four 
 test('every canonical migration closes every explicit transaction block', async () => {
   const directory = path.join(root, 'supabase/migrations');
   const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
-  assert.equal(files.length, 67);
+  assert.equal(files.length, 68);
   for (const name of files) {
     const source = await readFile(path.join(directory, name), 'utf8');
     const begins = (source.match(/^\s*BEGIN\s*;\s*$/gim) ?? []).length;
@@ -172,4 +174,18 @@ test('voice duration feature migration is tracked separately from production led
   assert.equal(blobSha(bytes), feature.gitBlobSha);
   assert.equal(registry.featureMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.featureMigrationPolicy.productionApplied, false);
+});
+
+test('conversation image extension forward migration validates a literal dot in both guarded functions', async () => {
+  const migrationPath = 'supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql';
+  const sql = await readFile(path.join(root, migrationPath), 'utf8');
+  const slash = String.fromCharCode(92);
+  const correctPattern = "!~* '" + slash + ".(jpg|png|webp)$'";
+  const incorrectPattern = "!~* '" + slash + slash + ".(jpg|png|webp)$'";
+  assert.equal(sql.split(correctPattern).length - 1, 2);
+  assert.equal(sql.includes(incorrectPattern), false);
+  assert.match(sql, /CREATE OR REPLACE FUNCTION app_private\.validate_conversation_image_path/i);
+  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.set_conversation_image/i);
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\.set_conversation_image\(uuid,text\) FROM PUBLIC, anon/i);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.set_conversation_image\(uuid,text\) TO authenticated/i);
 });
