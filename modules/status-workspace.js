@@ -112,7 +112,8 @@ function init(){
 const originalEnterApp=window.enterApp;
 if(typeof originalEnterApp==='function')window.enterApp=async function(){
  const result=await originalEnterApp.apply(this,arguments);
- if(result&&isOpen()){subscribe();ensureTimer();await load()}
+ if(result&&state.sidebarView==='status'){open()}
+ else if(result&&isOpen()){subscribe();ensureTimer();await load()}
  return result
 };
 window.BizmindStatusWorkspace=Object.freeze({open,close:closeWorkspace,refresh:load,openComposer:compose,reset});
