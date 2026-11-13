@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
-  "generatedAt": "2026-11-12",
+  "generatedAt": "2026-11-13",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
     "baseBranch": "main",
@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 66,
+    "canonicalCliMigrationFiles": 67,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 19,
@@ -41,7 +41,8 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
-    "forwardReconciliationMigrations": 4
+    "forwardReconciliationMigrations": 4,
+    "pendingFeatureMigrations": 1
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -1877,5 +1878,27 @@
       "passed": 77,
       "failed": 0
     }
+  },
+  "featureMigrations": [
+    {
+      "version": "202611120002",
+      "name": "chat_message_audio_duration",
+      "path": "supabase/migrations/202611120002_chat_message_audio_duration.sql",
+      "gitBlobSha": "a2b2353c964a20e9f2165eeef971806cc666471a",
+      "status": "FEATURE_MIGRATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Persist the measured duration of recorded audio attachments for immediate and subsequent message rendering.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "note": "Added by PR #141 as a feature migration. It is not part of the historical production ledger or the four forward reconciliation migrations. Do not deploy the frontend until this migration is separately approved and applied to production."
+    }
+  ],
+  "featureMigrationPolicy": {
+    "description": "Feature migrations are source-reviewed schema additions outside the historical production ledger and outside the security forward-reconciliation set. They require separate local runtime validation and explicit production approval before dependent frontend deployment.",
+    "pendingFeatureCount": 1,
+    "executionAuthorized": false,
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "productionApplied": false
   }
 }
