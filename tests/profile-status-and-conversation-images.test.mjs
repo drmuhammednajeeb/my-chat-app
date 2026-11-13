@@ -8,20 +8,20 @@ const client = readFileSync(new URL('../modules/profile-status-and-conversation-
 const migration = readFileSync(new URL('../supabase/migrations/20261112091557_profile_status_and_conversation_images.sql', import.meta.url), 'utf8');
 const styles = readFileSync(new URL('../modules/profile-status-and-conversation-images.css', import.meta.url), 'utf8');
 
-test('feature client module parses as a classic browser script', () => {
+test('conversation image client remains a valid standalone browser module', () => {
   assert.doesNotThrow(() => new vm.Script(client, { filename: 'profile-status-and-conversation-images.js' }));
+  assert.doesNotMatch(client, /profile_statuses|profile-status-media|statusChannel|profileStatusStrip/);
 });
 
-test('feature assets are wired into the application shell', () => {
+test('conversation image assets remain wired and target the correct conversations', () => {
   assert.match(html, /\.\/modules\/profile-status-and-conversation-images\.css/);
   assert.match(html, /<script src="\.\/modules\/profile-status-and-conversation-images\.js" defer><\/script>/);
   assert.match(html, /row\.dataset\.conversationId=c\.id/);
   assert.match(html, /card\.dataset\.conversationId=channel\.id/);
-  assert.match(styles, /\.bz-status-strip/);
   assert.match(styles, /\.has-conversation-image/);
 });
 
-test('status records are append-only, owner-scoped and visible only for 24 hours', () => {
+test('status database foundation remains owner-scoped and expires after 24 hours', () => {
   assert.match(migration, /create table if not exists public\.profile_statuses/);
   assert.match(migration, /new\.expires_at := new\.created_at \+ interval '24 hours'/);
   assert.match(migration, /expires_at > now\(\)/);
@@ -31,14 +31,7 @@ test('status records are append-only, owner-scoped and visible only for 24 hours
   assert.doesNotMatch(migration, /grant [^;]*update on public\.profile_statuses to authenticated/i);
 });
 
-test('status media uses a private bucket and reads require a live status row', () => {
-  assert.match(migration, /values \('profile-status-media', 'profile-status-media', false/);
-  assert.match(migration, /s\.image_path = storage\.objects\.name[\s\S]*?s\.expires_at > now\(\)/);
-  assert.match(client, /createSignedUrl\(row\.image_path, 60\)/);
-  assert.match(client, /\.gt\('expires_at', now\)/);
-});
-
-test('conversation images use private storage and a manager-checked RPC', () => {
+test('conversation images retain private storage and manager authorization', () => {
   assert.match(migration, /values \('conversation-avatars', 'conversation-avatars', false/);
   assert.match(migration, /app_private\.can_manage_conversation\(\(\(storage\.foldername\(name\)\)\[1\]\)::uuid\)/);
   assert.match(migration, /create or replace function public\.set_conversation_image/);
@@ -54,29 +47,19 @@ test('security-definer conversation image mutation paths require active membersh
   assert.ok(triggerStart >= 0 && rpcStart > triggerStart);
   const triggerEnd = migration.indexOf('$;', triggerStart);
   const rpcEnd = migration.indexOf('$;', rpcStart);
-  const trigger = migration.slice(triggerStart, triggerEnd);
-  const rpc = migration.slice(rpcStart, rpcEnd);
-  assert.ok(trigger.includes('actor is null or not app_private.is_active_member()'));
-  assert.ok(rpc.includes('if not app_private.is_active_member() then'));
+  assert.ok(migration.slice(triggerStart, triggerEnd).includes('actor is null or not app_private.is_active_member()'));
+  assert.ok(migration.slice(rpcStart, rpcEnd).includes('if not app_private.is_active_member() then'));
 });
 
-test('client limits status and conversation image uploads and keeps status text/image exclusive', () => {
+test('conversation image uploads remain type- and size-bounded without overwrite', () => {
   assert.match(client, /MAX_IMAGE_BYTES = 3 \* 1024 \* 1024/);
   assert.match(client, /IMAGE_TYPES = new Set\(\['image\/jpeg', 'image\/png', 'image\/webp'\]\)/);
-  assert.match(client, /\(text && file\)/);
-  assert.match(client, /statusId \+ '\.' \+ extension/);
   assert.match(client, /upsert: false/);
+  assert.match(client, /createSignedUrl/);
 });
 
-test('conversation image changes are published and reconciled for all active members', () => {
+test('conversation image changes are published and reconciled through Realtime', () => {
   assert.ok(migration.includes("tablename = 'conversations'") && migration.includes('alter publication supabase_realtime add table public.conversations'));
   assert.ok(client.includes("table: 'conversations'") && client.includes('conversation.image_path = updated.image_path'));
   assert.ok(client.includes('subscribeConversationImageRealtime'));
-});
-
-test('status list refreshes on realtime changes and app visibility restoration', () => {
-  assert.match(client, /table: 'profile_statuses'/);
-  assert.match(client, /setInterval\(\(\) => \{[\s\S]*?loadProfileStatuses\(\)/);
-  assert.match(client, /document\.addEventListener\('visibilitychange'/);
-  assert.match(client, /window\.addEventListener\('focus'/);
 });
