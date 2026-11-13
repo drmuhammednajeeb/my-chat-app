@@ -59,6 +59,11 @@ jobs:
           } else {
             config += '\n[db]\nmajor_version = 17\n';
           }
+          // Avoid collisions with the runner's shared/default PostgreSQL port.
+          config = config.replace(/^port\\s*=\\s*54322$/m, 'port = 54329');
+          if (!/^port\\s*=\\s*54329$/m.test(config)) {
+            throw new Error('Disposable Supabase database port override was not applied');
+          }
           fs.writeFileSync(file, config);
           NODE
 
