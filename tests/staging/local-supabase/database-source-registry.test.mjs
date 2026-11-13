@@ -162,8 +162,10 @@ test('voice duration feature migration is tracked separately from production led
   assert.equal(feature.path, 'supabase/migrations/202611130001_chat_message_audio_duration.sql');
   assert.equal(feature.status, 'FEATURE_MIGRATION_NOT_APPLIED');
   assert.equal(feature.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
-  assert.equal(feature.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+  assert.equal(feature.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
   assert.equal(feature.productionApplied, false);
+  assert.ok(Number.isInteger(feature.localRuntimeRunId) && feature.localRuntimeRunId > 0);
+  assert.match(feature.localRuntimeCommit, /^[a-f0-9]{40}$/);
   assert.equal(registry.productionMigrations.some(item => item.version === feature.version), false);
   assert.equal(registry.forwardMigrations.some(item => item.version === feature.version), false);
   const bytes = await readFile(path.join(root, feature.path));
