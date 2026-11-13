@@ -795,7 +795,10 @@
         "supabase/migrations/202611130001_chat_message_audio_duration.sql"
       ],
       "blockedBy": [],
-      "note": "Adds an optional nonnegative duration column to chat_messages. Frontend release requires the migration to be reviewed and applied before deployment; this source-only PR does not authorize SQL execution."
+      "note": "Adds an optional nonnegative duration column to chat_messages. Frontend release requires the migration to be reviewed and applied before deployment; this source-only PR does not authorize SQL execution.",
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43360425307,
+      "localRuntimeCommit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5"
     },
     {
       "id": "core.profile-fks",
@@ -2474,11 +2477,11 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 43260183037,
-    "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-    "completedAt": "2026-11-12T16:37:17Z",
+    "workflowRunId": 43360425307,
+    "commit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5",
+    "completedAt": "2026-11-13T03:41:12Z",
     "localOnly": true,
-    "sqlFilesExecuted": 83,
+    "sqlFilesExecuted": 84,
     "checks": [
       "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
       "pgcrypto schema and function resolution passed",
@@ -2487,6 +2490,7 @@
       "40 concurrent authenticated message writes persisted uniquely",
       "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
       "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
+      "voice duration feature migration 202611130001 applied and its nullable 0–86400 second constraint replayed",
       "full reviewed disposable replay completed"
     ]
   },
