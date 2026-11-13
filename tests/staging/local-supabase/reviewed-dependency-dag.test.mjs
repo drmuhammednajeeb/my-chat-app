@@ -290,7 +290,8 @@ test('local pg_cron runtime probe is loopback-only and cleans up its unique job'
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-pg-cron-runtime.mjs'), 'utf8');
   for (const fragment of [
     'LOCAL_SUPABASE_DB_URL',
-    "url.port !== '54322'",
+    'url.port !== expectedDatabasePort',
+    'LOCAL_SUPABASE_EXPECTED_DB_PORT',
     "url.username !== 'postgres'",
     "cron.schedule('",
     'cron.job_run_details',
@@ -349,7 +350,8 @@ test('least-privilege overlay is a final, locally validated, loopback-only SQL f
   assert.match(overlay, /TEST-ONLY/i);
   assert.match(overlay, /app\.test_only_local_replay/i);
   const runner = await readFile(path.join(root, 'tests/staging/local-supabase/local-rls-least-privilege-runtime.mjs'), 'utf8');
-  assert.match(runner, /url\.port !== '54322'/);
+  assert.match(runner, /url\.port !== expectedDatabasePort/);
+  assert.match(runner, /LOCAL_SUPABASE_EXPECTED_DB_PORT/);
   assert.match(runner, /refusing non-local database target/i);
   assert.match(overlay, /REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM public, anon/i);
   assert.match(overlay, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public/i);
