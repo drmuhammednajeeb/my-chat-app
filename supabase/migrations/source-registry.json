@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 67,
+    "canonicalCliMigrationFiles": 68,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 19,
@@ -41,7 +41,7 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
-    "forwardReconciliationMigrations": 4,
+    "forwardReconciliationMigrations": 5,
     "pendingFeatureMigrations": 1
   },
   "rules": [
@@ -1836,12 +1836,24 @@
       "localRuntimeRunId": 43260183037,
       "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
+    },
+    {
+      "version": "202611130002",
+      "name": "fix_conversation_image_extension_validation",
+      "path": "supabase/migrations/202611130002_fix_conversation_image_extension_validation.sql",
+      "gitBlobSha": "d42dd0d49999d58636321f654e8856ffb9f82914",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Correct the literal-dot suffix validation for jpg/png/webp paths in both conversation-image functions without weakening actor, membership, manager, object-existence or function ACL checks.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 4,
+    "pendingForwardCount": 5,
     "executionAuthorized": false,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "localRuntimeRunId": 43260183037,
