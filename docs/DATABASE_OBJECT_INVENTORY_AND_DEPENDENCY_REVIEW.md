@@ -32,3 +32,7 @@ The archive is not part of Supabase CLI discovery or replay. It contains origina
 The canonical stream is assembled but not replay-authorized. Direct-conversation eligibility/concurrency (DAG-014 and DAG-015), least-privilege compatibility (DAG-016), managed Supabase prerequisites, RLS behavior, pgcrypto, pg_cron, and Storage path ownership still require disposable-local runtime evidence.
 
 No SQL was executed against production during this reconciliation. The main branch remains unchanged.
+
+## Conversation-image validation correction — 2026-11-13
+
+A read-only PostgreSQL regex probe exposed an incorrect double-backslash suffix expression in the historical conversation-image trigger and RPC functions. The forward-only migration `202611130002_fix_conversation_image_extension_validation.sql` corrects both functions and the post-forward fixture verifies `.jpg`, `.png`, `.webp`, rejection of `.txt`, and the installed function definitions. It is now included in the canonical forward migration inventory and DAG; fresh disposable-local replay is pending. Production remains unchanged.
