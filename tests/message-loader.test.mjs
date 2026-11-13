@@ -157,7 +157,7 @@ test('initial transcript rendering overlaps bounded attachment work and reconcil
     created_at: new Date(Date.UTC(2026, 0, index + 1)).toISOString()
   })).reverse();
   const h = harness({ rows });
-  let active = 0, maximumActive = 0, reconciliations = 0;
+  let active = 0, maximumActive = 0, reconciliations = 0, diagnosticsUpdates = 0;
   h.deps.renderMessage = async message => {
     active += 1;
     maximumActive = Math.max(maximumActive, active);
@@ -171,10 +171,12 @@ test('initial transcript rendering overlaps bounded attachment work and reconcil
     return true;
   };
   h.deps.reconcileMessageTimeline = () => { reconciliations += 1; };
+  h.deps.updateDiagnostics = () => { diagnosticsUpdates += 1; };
   assert.equal(await loadMessages(h.deps), true);
   assert.ok(maximumActive > 1, 'independent message rendering should overlap');
   assert.ok(maximumActive <= 6, 'render concurrency must remain bounded');
   assert.equal(reconciliations, 1, 'timeline order should be reconciled once per initial batch');
+  assert.equal(diagnosticsUpdates, 1, 'diagnostics should update once after the render batch');
   assert.equal(h.state.batchRenderingMessages, undefined);
   assert.equal(h.state.batchRenderingConversationId, undefined);
 });
