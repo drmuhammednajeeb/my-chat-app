@@ -34,8 +34,8 @@
     "executedTestOnlySqlFixtures": 19,
     "executedSqlFiles": 84,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
+    "localRuntimeRunId": 43360425307,
+    "localRuntimeCommit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5"
   },
   "execution": {
     "enabled": false,
@@ -165,7 +165,10 @@
         "supabase/migrations/202611130001_chat_message_audio_duration.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Optional persisted audio duration. Review and apply the migration before production frontend deployment; this design-only manifest does not authorize SQL execution."
+      "parityNote": "Optional persisted audio duration. Review and apply the migration before production frontend deployment; this design-only manifest does not authorize SQL execution.",
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 43360425307,
+      "localRuntimeCommit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5"
     },
     {
       "nodeId": "chat.direct-conversation-rpc",
