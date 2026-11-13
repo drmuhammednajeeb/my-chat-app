@@ -55,7 +55,8 @@ function reset(){
  $('statusOwnCard')?.replaceChildren();$('statusFeed')?.replaceChildren();message('');
  $('statusPage')?.classList.add('hidden');$('chat')?.classList.remove('status-mode');$('sidebar')?.classList.remove('status-sidebar-mode');
 }
-function ensureTimer(){if(!timer)timer=setInterval(()=>{if(actor()&&document.visibilityState==='visible')void load()},60000)}\nfunction open(){const p=$('statusPage');if(!p||!actor())return;p.classList.remove('hidden');p.setAttribute('aria-busy','true');subscribe();ensureTimer();void load()}
+function ensureTimer(){if(!timer)timer=setInterval(()=>{if(actor()&&document.visibilityState==='visible')void load()},60000)}
+function open(){const p=$('statusPage');if(!p||!actor())return;p.classList.remove('hidden');p.setAttribute('aria-busy','true');subscribe();ensureTimer();void load()}
 function init(){$('statusPagePublish')?.addEventListener('click',compose);$('statusPageBack')?.addEventListener('click',()=>{setSidebarView('chats');$('sidebar')?.classList.remove('closed')});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=document.querySelector('.status-modal.open');if(m)close(m)}});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&actor())void load()});window.addEventListener('focus',()=>{if(actor())void load()});if(actor()){subscribe();ensureTimer();void load()}}
 const originalEnterApp=window.enterApp;if(typeof originalEnterApp==='function')window.enterApp=async function(){const result=await originalEnterApp.apply(this,arguments);if(result){subscribe();ensureTimer();await load()}return result};
 window.BizmindStatusWorkspace=Object.freeze({open,refresh:load,openComposer:compose,reset});

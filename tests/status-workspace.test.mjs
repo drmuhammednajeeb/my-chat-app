@@ -63,7 +63,7 @@ test('combined content/media migration preserves active-member and owner checks'
   assert.match(combinedSql, /media_type in \('image', 'video'\)/);
   assert.match(combinedSql, /user_id = \(select auth\.uid\(\)\)/);
   assert.match(combinedSql, /is_active_member/);
-  assert.ok(combinedSql.includes(String.raw`{36}\\.`));
+  assert.ok(combinedSql.includes(String.raw`{36}\.`));
 });
 
 test('base status schema retains 24-hour expiry, RLS, and private bucket policies', () => {
