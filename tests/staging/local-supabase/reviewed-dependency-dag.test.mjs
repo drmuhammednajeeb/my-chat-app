@@ -467,7 +467,7 @@ test('voice duration migration is ordered after the chat schema and remains sour
   assert.equal(node.status, 'SOURCE_REVIEWED');
   assert.equal(node.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
   assert.equal(candidate.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-  assert.equal(candidate.localRuntimeRunId, 43360425307);
+  assert.equal(candidate.localRuntimeRunId, 43360805961);
   assert.equal(manifest.execution.productionAllowed, false);
   assert.equal(manifest.execution.sqlExecuted, false);
 });
