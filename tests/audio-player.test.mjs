@@ -162,3 +162,13 @@ test('player renders persisted duration immediately and keeps play/pause glyphs 
   audio.dispatch('ended');
   assert.equal(timer.textContent, '01:23');
 });
+
+test('voice duration migration adds a nullable bounded attachment duration column', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const migration = await readFile(new URL('../supabase/migrations/202611120002_chat_message_audio_duration.sql', import.meta.url), 'utf8');
+  assert.match(migration, /alter table public\.chat_messages/);
+  assert.match(migration, /add column if not exists attachment_duration_seconds integer/);
+  assert.match(migration, /attachment_duration_seconds is null/);
+  assert.match(migration, /attachment_duration_seconds between 0 and 86400/);
+  assert.doesNotMatch(migration, /drop column|delete from public\.chat_messages/i);
+});
