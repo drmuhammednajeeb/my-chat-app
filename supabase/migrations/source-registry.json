@@ -1881,9 +1881,9 @@
   },
   "featureMigrations": [
     {
-      "version": "202611120002",
+      "version": "202611130001",
       "name": "chat_message_audio_duration",
-      "path": "supabase/migrations/202611120002_chat_message_audio_duration.sql",
+      "path": "supabase/migrations/202611130001_chat_message_audio_duration.sql",
       "gitBlobSha": "a2b2353c964a20e9f2165eeef971806cc666471a",
       "status": "FEATURE_MIGRATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
