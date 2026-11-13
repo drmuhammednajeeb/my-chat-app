@@ -171,6 +171,7 @@ if (actualAppOrder[0] !== 'test-fixture.local-platform-preflight') {
 const env = {
   PATH: process.env.PATH ?? '',
   LOCAL_SUPABASE_DB_URL: raw,
+  LOCAL_SUPABASE_EXPECTED_DB_PORT: expectedDatabasePort,
   PGCONNECT_TIMEOUT: '5',
   PGOPTIONS: '-c app.test_only_local_replay=enabled -c statement_timeout=60s -c lock_timeout=10s'
 };
