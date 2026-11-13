@@ -1889,16 +1889,20 @@
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Persist the measured duration of recorded audio attachments for immediate and subsequent message rendering.",
       "blockedBy": [],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false,
-      "note": "Added by PR #141 as a feature migration. It is not part of the historical production ledger or the four forward reconciliation migrations. Do not deploy the frontend until this migration is separately approved and applied to production."
+      "note": "Added by PR #141 as a feature migration. It is not part of the historical production ledger or the four forward reconciliation migrations. Do not deploy the frontend until this migration is separately approved and applied to production.",
+      "localRuntimeRunId": 43360425307,
+      "localRuntimeCommit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5"
     }
   ],
   "featureMigrationPolicy": {
     "description": "Feature migrations are source-reviewed schema additions outside the historical production ledger and outside the security forward-reconciliation set. They require separate local runtime validation and explicit production approval before dependent frontend deployment.",
     "pendingFeatureCount": 1,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-    "productionApplied": false
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "productionApplied": false,
+    "localRuntimeRunId": 43360425307,
+    "localRuntimeCommit": "2efcfe886cc720181a3fb0fc5090b128c13c5cd5"
   }
 }
