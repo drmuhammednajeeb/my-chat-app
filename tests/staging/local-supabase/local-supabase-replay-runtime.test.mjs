@@ -68,3 +68,13 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
   ]) assert.ok(workflow.includes(token), 'missing isolated runtime workflow contract: ' + token);
   assert.doesNotMatch(workflow, /supabase link|--remote|--linked|SUPABASE_ACCESS_TOKEN/i);
 });
+
+test('runtime database target accepts only explicit loopback database ports', async () => {
+  const source = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
+  const workflow = await readFile(path.join(root, '.github/workflows/disposable-local-supabase-runtime.yml'), 'utf8');
+  assert.match(source, /new Set\(\['54322', '54329'\]\)/);
+  assert.match(source, /LOCAL_SUPABASE_EXPECTED_DB_PORT/);
+  assert.match(source, /url\.port !== expectedDatabasePort/);
+  assert.match(workflow, /port = 54329/);
+  assert.match(workflow, /LOCAL_SUPABASE_EXPECTED_DB_PORT: "54329"/);
+});
