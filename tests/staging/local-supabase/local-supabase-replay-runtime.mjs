@@ -255,8 +255,10 @@ for (const patch of patchManifest.patches) {
     fail('mapped-source test replacement is missing or not registered: ' + patch.sourcePath);
   }
 }
-const expectedSqlCount = manifest.sourceCoverage.executedSqlFiles;
-if (expectedSqlCount !== manifest.sourceCoverage.executedMappedSources + manifest.sourceCoverage.executedTestOnlySqlFixtures
+const expectedSqlCount = manifest.sourceCoverage.candidateSqlFiles ?? manifest.sourceCoverage.executedSqlFiles;
+const candidateMappedSources = manifest.sourceCoverage.candidateMappedSources ?? manifest.sourceCoverage.mappedSources;
+const candidateFixtures = manifest.sourceCoverage.candidateTestOnlySqlFixtures ?? manifest.sourceCoverage.testOnlySqlFixtures;
+if (expectedSqlCount !== candidateMappedSources + candidateFixtures
   || expectedSqlCount !== manifest.sourceCoverage.mappedSources - replacedSourcePaths.size + manifest.sourceCoverage.testOnlySqlFixtures) {
   fail('declared executed SQL coverage does not reconcile with mapped-source replacements');
 }
