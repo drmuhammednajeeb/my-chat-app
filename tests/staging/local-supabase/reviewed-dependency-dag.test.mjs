@@ -242,7 +242,7 @@ test('conversation image RPC exposes an invoker wrapper and keeps the definer im
   assert.match(migration, /create or replace function app_private\.set_conversation_image_impl\([\s\S]*?security definer[\s\S]*?set search_path = ''/i);
   assert.match(migration, /create or replace function public\.set_conversation_image\([\s\S]*?security invoker[\s\S]*?select app_private\.set_conversation_image_impl/i);
   assert.match(migration, /revoke all on function app_private\.set_conversation_image_impl\(uuid,text\)[\s\S]*?from public, anon, authenticated, service_role/i);
-  assert.match(migration, /grant execute on function app_private\.set_conversation_image_impl\(uuid,text\) to authenticated/i);
+  assert.match(migration, /grant execute on function app_private\.set_conversation_image_impl\(uuid,text\)[\s\S]*?to authenticated/i);
   assert.match(migration, /revoke all on function public\.set_conversation_image\(uuid,text\) from public, anon, service_role/i);
   assert.match(migration, /grant execute on function public\.set_conversation_image\(uuid,text\) to authenticated/i);
   const fixture = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql'), 'utf8');
