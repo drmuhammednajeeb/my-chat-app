@@ -23,7 +23,7 @@ function extract(name) {
   throw new Error("Unclosed function: " + name);
 }
 const helpers = ["normalizeDirectoryDigits", "normalizeDirectorySearch", "directoryMembershipDigits", "formatDirectoryMembershipNumber"].map(extract).join("\\n");
-const api = vm.runInNewContext("(" + helpers + "; ({normalizeDirectoryDigits,normalizeDirectorySearch,directoryMembershipDigits,formatDirectoryMembershipNumber}) )");
+const api = vm.runInNewContext("(function(){ " + helpers + "; return {normalizeDirectoryDigits,normalizeDirectorySearch,directoryMembershipDigits,formatDirectoryMembershipNumber}; })()");
 test("normalizes Arabic and Persian digits to ASCII", () => {
   assert.equal(api.normalizeDirectoryDigits("٩٧١-٠٠٠-٠٠٠-٠٠١"), "971-000-000-001");
   assert.equal(api.normalizeDirectoryDigits("۹۷۱۰۰۰۰۰۰۰۰۲"), "971000000002");
