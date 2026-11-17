@@ -47,6 +47,7 @@ BEGIN
     RAISE EXCEPTION 'Private conversation image implementation must remain SECURITY DEFINER with an empty search_path';
   END IF;
   IF has_function_privilege('anon','app_private.set_conversation_image_impl(uuid,text)','EXECUTE')
+     OR has_function_privilege('service_role','app_private.set_conversation_image_impl(uuid,text)','EXECUTE')
      OR NOT has_function_privilege('authenticated','app_private.set_conversation_image_impl(uuid,text)','EXECUTE')
      OR has_function_privilege('anon','public.set_conversation_image(uuid,text)','EXECUTE')
      OR has_function_privilege('service_role','public.set_conversation_image(uuid,text)','EXECUTE')
