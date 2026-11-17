@@ -31,7 +31,7 @@ const functionNames = [
   "buildDirectoryQuery",
   "loadDirectory"
 ];
-const functions = functionNames.map(extract).join("\\n");
+const functions = functionNames.map(extract).join("\n");
 
 function makeQueryRecorder(onRange = () => Promise.resolve({ data: [], error: null })) {
   const calls = [];
