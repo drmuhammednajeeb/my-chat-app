@@ -555,7 +555,7 @@ $function$;
 
 CREATE OR REPLACE FUNCTION app_private.configure_message_auto_cleanup(
   p_project_url text,
-  p_publishable_key text
+  p_backend_key text
 )
 RETURNS bigint
 LANGUAGE plpgsql
@@ -581,11 +581,8 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
-  IF p_publishable_key IS NULL OR NOT (
-      p_publishable_key ~ '^sb_publishable_[A-Za-z0-9_-]+$'
-      OR p_publishable_key ~ '^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$'
-    ) THEN
-    RAISE EXCEPTION 'A valid Supabase publishable/anon API key is required'
+  IF p_backend_key IS NULL OR p_backend_key !~ '^sb_secret_[A-Za-z0-9_-]+$' THEN
+    RAISE EXCEPTION 'A Supabase sb_secret_ API key is required for the cleanup worker'
       USING ERRCODE = '22023';
   END IF;
 
@@ -595,8 +592,8 @@ BEGIN
     'Project URL used by the scheduled message auto-cleanup worker'
   );
   PERFORM app_private.set_message_cleanup_vault_secret(
-    'message_cleanup_publishable_key',
-    p_publishable_key,
+    'message_cleanup_backend_key',
+    p_backend_key,
     'Publishable key used only for the scheduled Edge Function gateway request'
   );
 
@@ -621,7 +618,7 @@ BEGIN
           'apikey', (
             SELECT s.decrypted_secret
             FROM vault.decrypted_secrets s
-            WHERE s.name = 'message_cleanup_publishable_key'
+            WHERE s.name = 'message_cleanup_backend_key'
           ),
           'x-auto-cleanup-token', (
             SELECT s.decrypted_secret
@@ -637,6 +634,9 @@ BEGIN
   RETURN v_job_id;
 END;
 $function$;
+
+COMMENT ON FUNCTION app_private.configure_message_auto_cleanup(text, text) IS
+  'Requires the project default sb_secret_ API key. Stores it in Vault and sends it only through the apikey header to an Edge Function configured with auth: secret and verify_jwt=false.';
 
 REVOKE ALL ON FUNCTION app_private.set_message_cleanup_vault_secret(text, text, text)
   FROM PUBLIC, anon, authenticated, service_role;
