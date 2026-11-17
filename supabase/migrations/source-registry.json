@@ -16,10 +16,10 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 66,
+    "canonicalCliMigrationFiles": 67,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 19,
+    "testOnlyFixtureCount": 20,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -39,9 +39,10 @@
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
+      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
     ],
-    "forwardReconciliationMigrations": 4
+    "forwardReconciliationMigrations": 5
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -52,7 +53,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
-    "The 66-file CLI stream contains 62 historical production-ledger migrations plus 4 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+    "The 67-file CLI stream contains 62 historical production-ledger migrations plus 5 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
   ],
   "productionMigrations": [
     {
@@ -1835,16 +1836,26 @@
       "localRuntimeRunId": 43260183037,
       "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
+    },
+    {
+      "version": "20261117120000",
+      "name": "enforce_signup_display_name_server_side",
+      "path": "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql",
+      "gitBlobSha": "033eb790decbf35cfb0072a17e0da0cab92158ad",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Enforce two- or three-part Arabic/Latin signup display names in the Auth BEFORE INSERT trigger before an invitation can be consumed; normalize whitespace and preserve the accepted name in profile metadata.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 4,
+    "pendingForwardCount": 5,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false
   },
   "validationEvidence": {
