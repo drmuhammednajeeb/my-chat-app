@@ -760,7 +760,19 @@ function formatDirectoryMembershipNumber(value){
   ?digits.replace(/^(971)([0-9]{3})([0-9]{3})([0-9]{3})$/,'$1-$2-$3-$4')
   :String(value||'');
 }
-async function loadDirectory(reset=true){
+function buildDirectoryQuery(client,userId,search,filter,onlineIds,from,to){
+ const term=normalizeDirectorySearch(search);
+ let query=client.from('profiles')
+  .select('id,username,display_name,avatar_url,membership_number,membership_number_verified')
+  .neq('id',userId);
+ const membershipDigits=directoryMembershipDigits(term);
+ if(membershipDigits){
+  query=query.eq('membership_number_verified',true);
+  query=membershipDigits.length===12
+   ?query.eq('membership_number',membershipDigits)
+   :query.ilike('membership_number',membershipDigits+'%');
+ }else if(term){
+  const nameTerm=term.replace(/^@/,'').replace(/[\\%_,()]/g,'\\async function loadDirectory(reset=true){
  if(!state.user||(!reset&&state.directoryLoading))return;
  if(reset){state.directoryOffset=0;state.directoryUsers=[];state.directoryHasMore=false;state.directoryRequestId++}
  const requestId=state.directoryRequestId;
@@ -796,6 +808,53 @@ async function loadDirectory(reset=true){
   box.textContent='تعذر تنفيذ البحث. تحقق من الاتصال والصلاحيات ثم حاول مجدداً.';
   $('directoryList').append(box);$('directorySummary').textContent='تعذر تحميل النتائج';
   $('loadMoreUsers').classList.add('hidden');return;
+ }
+ const page=data||[];
+ state.directoryUsers=reset?page:state.directoryUsers.concat(page);
+ state.directoryOffset+=page.length;state.directoryHasMore=page.length===50;
+ renderDirectory();
+ $('loadMoreUsers').classList.toggle('hidden',!state.directoryHasMore||state.sidebarView!=='users');
+ $('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';
+}');
+  if(!nameTerm)return null;
+  query=query.or('display_name.ilike.%'+nameTerm+'%,username.ilike.%'+nameTerm+'%');
+ }
+ if(filter==='online'){
+  const ids=Array.from(onlineIds||[]);
+  if(!ids.length)return null;
+  query=query.in('id',ids);
+ }
+ return query.order('display_name',{ascending:true}).order('id',{ascending:true}).range(from,to);
+}
+async function loadDirectory(reset=true){
+ if(!state.user||(!reset&&state.directoryLoading))return;
+ if(reset){state.directoryOffset=0;state.directoryUsers=[];state.directoryHasMore=false;state.directoryRequestId++}
+ const requestId=state.directoryRequestId;
+ state.directoryLoading=true;$('loadMoreUsers').disabled=true;$('loadMoreUsers').textContent='جارٍ تحميل المستخدمين…';
+ if(reset)showListSkeleton($('directoryList'),5);
+ const from=state.directoryOffset,to=from+49;
+ const query=buildDirectoryQuery(supabaseClient,state.user.id,state.directorySearch,state.directoryFilter,state.onlineUsers,from,to);
+ if(!query){
+  if(requestId===state.directoryRequestId){
+   state.directoryLoading=false;state.directoryUsers=[];state.directoryHasMore=false;
+   renderDirectory();$('loadMoreUsers').disabled=false;
+   $('loadMoreUsers').textContent='عرض المزيد من المستخدمين';$('loadMoreUsers').classList.add('hidden');
+  }
+  return;
+ }
+ const directoryStarted=performance.now();
+ const {data,error}=await query;
+ recordPerf('directory_query',performance.now()-directoryStarted,{success:!error,rows:data?.length||0});
+ if(requestId!==state.directoryRequestId)return;
+ state.directoryLoading=false;
+ if(error){
+  console.error('Directory search failed:',error);
+  if(reset)$('directoryList').replaceChildren();
+  const box=document.createElement('div');box.className='directory-empty';
+  box.textContent='تعذر تنفيذ البحث. تحقق من الاتصال والصلاحيات ثم حاول مجدداً.';
+  $('directoryList').append(box);$('directorySummary').textContent='تعذر تحميل النتائج';
+  $('loadMoreUsers').classList.add('hidden');$('loadMoreUsers').disabled=false;
+  $('loadMoreUsers').textContent='عرض المزيد من المستخدمين';return;
  }
  const page=data||[];
  state.directoryUsers=reset?page:state.directoryUsers.concat(page);
