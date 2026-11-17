@@ -3,11 +3,11 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 66,
-    "mappedSources": 66,
+    "sqlFiles": 67,
+    "mappedSources": 67,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 19,
+    "testOnlySqlFixtures": 20,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -27,15 +27,14 @@
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
+      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 64,
-    "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 83,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
+    "executedMappedSources": 65,
+    "executedTestOnlySqlFixtures": 20,
+    "executedSqlFiles": 85,
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
   },
   "execution": {
     "enabled": false,
@@ -526,6 +525,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "membership.signup-name-validation-forward",
+      "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_RUNTIME",
+      "testSources": [
+        "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "New forward-only Auth trigger guard; pending disposable-local execution and synthetic signup lifecycle assertions."
+    },
+    {
       "nodeId": "membership.official",
       "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
       "testSources": [
@@ -533,6 +541,15 @@
       ],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.signup-name-guard",
+      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_PENDING_DISPOSABLE_LOCAL_RUNTIME",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Synthetic Auth users and invitations only; verifies validation happens before invitation consumption and accepted names are normalized."
     },
     {
       "nodeId": "membership.syntax-fix",
@@ -939,6 +956,18 @@
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
+      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
@@ -972,5 +1001,5 @@
       "failed": 0
     }
   },
-  "reviewState": "LOCAL_REPLAY_AND_CI_PASSED_PRODUCTION_RELEASE_REVIEW_REQUIRED"
+  "reviewState": "SIGNUP_NAME_FORWARD_MIGRATION_PENDING_DISPOSABLE_LOCAL_RUNTIME_AND_CI"
 }
