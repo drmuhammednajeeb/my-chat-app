@@ -5,6 +5,7 @@
 BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS pg_net;
+CREATE EXTENSION IF NOT EXISTS supabase_vault WITH SCHEMA vault;
 
 ALTER TABLE public.conversations
   ADD COLUMN IF NOT EXISTS is_official boolean NOT NULL DEFAULT false;
