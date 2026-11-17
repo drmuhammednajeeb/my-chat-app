@@ -239,16 +239,17 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
 
 test('conversation image RPC exposes an invoker wrapper and keeps the definer implementation private', async () => {
   const migration = await readFile(path.join(root, 'supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql'), 'utf8');
-  assert.match(migration, /create or replace function app_private\.set_conversation_image_impl\(uuid,text\)[\\s\\S]*?security definer[\\s\\S]*?set search_path = ''/i);
-  assert.match(migration, /create or replace function public\.set_conversation_image\([\\s\\S]*?security invoker[\\s\\S]*?select app_private\.set_conversation_image_impl/i);
-  assert.match(migration, /revoke all on function app_private\.set_conversation_image_impl\(uuid,text\)[\\s\\S]*?from public, anon, authenticated, service_role/i);
+  assert.match(migration, /create or replace function app_private\.set_conversation_image_impl\([\s\S]*?security definer[\s\S]*?set search_path = ''/i);
+  assert.match(migration, /create or replace function public\.set_conversation_image\([\s\S]*?security invoker[\s\S]*?select app_private\.set_conversation_image_impl/i);
+  assert.match(migration, /revoke all on function app_private\.set_conversation_image_impl\(uuid,text\)[\s\S]*?from public, anon, authenticated, service_role/i);
   assert.match(migration, /grant execute on function app_private\.set_conversation_image_impl\(uuid,text\) to authenticated/i);
-  assert.match(migration, /revoke all on function public\.set_conversation_image\(uuid,text\) from public, anon/i);
+  assert.match(migration, /revoke all on function public\.set_conversation_image\(uuid,text\) from public, anon, service_role/i);
   assert.match(migration, /grant execute on function public\.set_conversation_image\(uuid,text\) to authenticated/i);
   const fixture = await readFile(path.join(root, 'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql'), 'utf8');
   assert.match(fixture, /v_rpc_is_definer is distinct from false/i);
   assert.match(fixture, /v_impl_is_definer is distinct from true/i);
   assert.match(fixture, /has_function_privilege\('anon','app_private\.set_conversation_image_impl/i);
+  assert.match(fixture, /has_function_privilege\('service_role','public\.set_conversation_image/i);
 });
 
 test('direct conversation RPC recovery instructions are read-only', async () => {
