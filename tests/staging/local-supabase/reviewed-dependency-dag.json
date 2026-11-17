@@ -1364,6 +1364,42 @@
         "DAG-016"
       ],
       "note": "Read-only catalog assertions plus rollback-only authenticated CRUD/RPC checks after both forward privilege migrations."
+    },
+    {
+      "id": "membership.signup-name-validation-forward",
+      "source": [
+        "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "provides": [
+        "server-side two- or three-part Arabic/Latin display-name validation before invitation consumption"
+      ],
+      "requires": [
+        "membership.auth-fix"
+      ],
+      "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_RUNTIME",
+      "testSource": [
+        "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "blockedBy": [],
+      "note": "Forward-only Auth BEFORE INSERT guard. Rejects missing, one-part, four-part, numeric and symbol-containing names before the invitation row is locked or consumed; normalizes whitespace and stores the accepted display_name. Requires disposable-local Auth trigger and invitation lifecycle assertions."
+    },
+    {
+      "id": "test-fixture.signup-name-guard",
+      "source": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "provides": [
+        "rollback-only Auth trigger integration assertions for invalid and valid signup names"
+      ],
+      "requires": [
+        "membership.signup-name-validation-forward"
+      ],
+      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_PENDING_DISPOSABLE_LOCAL_RUNTIME",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "blockedBy": [],
+      "note": "Uses only synthetic .test users and invitation numbers, verifies invalid names do not consume invitations, verifies normalized two-part Arabic and three-part Latin names, then rolls back all rows."
     }
   ],
   "explicitEdges": [
@@ -2190,6 +2226,14 @@
     [
       "security.active-membership-rls-forward",
       "test-fixture.forward-hardening-postconditions"
+    ],
+    [
+      "membership.auth-fix",
+      "membership.signup-name-validation-forward"
+    ],
+    [
+      "membership.signup-name-validation-forward",
+      "test-fixture.signup-name-guard"
     ]
   ],
   "blockers": [
@@ -2384,7 +2428,7 @@
     "productionDataAllowed": false,
     "canonicalSqlMutationAllowed": false,
     "costBearingResourcesAllowed": false,
-    "forwardReconciliationMigrations": 4,
+    "forwardReconciliationMigrations": 5,
     "forwardMigrationExecutionAuthorized": false
   },
   "archiveSources": [
