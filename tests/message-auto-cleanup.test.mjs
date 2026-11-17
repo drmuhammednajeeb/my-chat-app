@@ -54,13 +54,17 @@ test("the UI displays the exact 100-hour retention notice and keeps media paths 
   assert.doesNotMatch(deleteHandler, /attachment_path\s*:\s*null|attachment_type\s*:\s*null/);
 });
 
-test("the Edge Function verifies a Vault token and uses a server-only service role", () => {
+test("the Edge Function uses Supabase secret-key auth plus a Vault invocation token", () => {
   assert.match(edge, /x-auto-cleanup-token/);
   assert.match(edge, /withSupabase\(\{ auth: "secret" \}/);
   assert.match(edge, /ctx\.supabaseAdmin/);
   assert.doesNotMatch(edge, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(edge, /verify_message_cleanup_token/);
   assert.match(edge, /runMessageCleanupBatch/);
+  assert.match(migration, /message_cleanup_backend_key/);
+  assert.match(migration, /sb_secret_/);
+  assert.match(migration, /configure_message_auto_cleanup\(text\)/);
+  assert.doesNotMatch(migration, /sb_publishable_/);
 });
 
 test("Storage API deletion completes before database message deletion", async () => {
