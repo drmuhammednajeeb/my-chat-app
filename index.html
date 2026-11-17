@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.17.1"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.17.2"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -69,14 +69,14 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
   <h2 id="authTitle">مرحباً بعودتك</h2><p id="authSub">سجّل الدخول لمتابعة محادثاتك.</p>
   <div class="tabs"><button type="button" id="loginTab" class="active">تسجيل الدخول</button><button type="button" id="signupTab">إنشاء حساب</button></div>
   <div id="signupFields" class="hidden">
-   <div class="form-row"><label for="displayName">الاسم الظاهر</label><input id="displayName" class="field" maxlength="48" autocomplete="name" placeholder="اسمك الذي سيظهر للآخرين"></div>
+   <div class="form-row"><label for="displayName">الاسم الكامل (اسمك ولقبك أو اسمك الثلاثي)</label><input id="displayName" class="field" maxlength="48" autocomplete="name" placeholder="محمد النبهاني أو محمد أحمد النبهاني" aria-describedby="displayNameHint"><small id="displayNameHint" class="signup-field-hint">نقبل الاسم الثنائي (الاسم + اللقب) أو الاسم الثلاثي.</small></div>
    <div class="form-row"><label for="username">اسم المستخدم</label><input id="username" class="field" maxlength="24" pattern="[a-zA-Z0-9_]{3,24}" autocomplete="username" placeholder="username"></div>
    <div class="form-row"><label for="membershipNumber">رقم العضوية الرسمي</label><input id="membershipNumber" class="field" maxlength="12" inputmode="numeric" pattern="971[0-9]{9}" autocomplete="off" placeholder="971123456789"></div>
    <div class="form-row"><label for="membershipInviteCode">رمز الدعوة الخاص</label><input id="membershipInviteCode" class="field" maxlength="36" autocomplete="off" spellcheck="false" placeholder="أدخل رمز الدعوة الذي استلمته"></div>
    <p class="auth-note" style="margin:4px 0 10px">التسجيل متاح بدعوة معتمدة فقط. يجب أن يطابق البريد الإلكتروني الدعوة وأن يتم توثيقه قبل الدخول.</p>
   </div>
   <div class="form-row"><label for="email">البريد الإلكتروني</label><input id="email" type="email" class="field" required autocomplete="email" placeholder="name@example.com"></div>
-  <div class="form-row"><label for="password">كلمة المرور</label><input id="password" type="password" class="field" required minlength="8" autocomplete="current-password" placeholder="8 أحرف على الأقل"></div>
+  <div class="form-row"><label for="password">كلمة المرور</label><input id="password" type="password" class="field" required minlength="8" autocomplete="current-password" placeholder="8 أحرف على الأقل" aria-describedby="passwordStrengthHint passwordStrengthText"><div class="password-strength" aria-live="polite"><div id="passwordStrengthMeter" class="password-strength-meter" role="progressbar" aria-label="مستوى قوة كلمة المرور" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0"><span></span><span></span><span></span><span></span></div><div class="password-strength-caption"><strong id="passwordStrengthText">لم تُدخل كلمة المرور بعد</strong><small id="passwordStrengthHint">مؤشر إرشادي فقط؛ يمكنك اختيار كلمة المرور المناسبة لك. الحد الأدنى للتسجيل 8 أحرف.</small></div></div></div>
   <div id="authError" class="alert hidden" role="alert" aria-live="assertive"></div>
   <div id="authStatus" class="auth-status" role="status" aria-live="polite" hidden></div><div id="resendSignupVerification" class="hidden" style="margin-top:8px"><button id="resendSignupVerificationBtn" type="button" class="reset-password-link">إعادة إرسال رسالة توثيق البريد</button></div>
   <div id="resetPasswordWrap" class="reset-password-wrap"><button id="resetPasswordBtn" class="reset-password-link" type="button">نسيت كلمة المرور؟</button><div id="resetCountdown" class="reset-countdown" role="status" aria-live="polite" hidden></div></div>
@@ -462,6 +462,35 @@ new MutationObserver(()=>{state.diagnostics.lastComposerChange={at:new Date().to
 window.addEventListener('error',e=>{state.diagnostics.lastRenderError='JS: '+(e.message||'unknown');diagLog('window-error',{message:e.message,source:e.filename,line:e.lineno})});
 window.addEventListener('unhandledrejection',e=>{state.diagnostics.lastRenderError='Promise: '+String(e.reason?.message||e.reason||'unknown');diagLog('unhandled-rejection',{message:state.diagnostics.lastRenderError})});
 function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'التسجيل متاح للأعضاء الذين لديهم دعوة ورقم عضوية رسمي فقط.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('authError').classList.add('hidden');$('resendSignupVerification')?.classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
+function normalizeSignupDisplayName(value){return String(value||'').normalize('NFC').trim().replace(/\\s+/gu,' ')}
+function validateSignupDisplayName(value){
+ const normalized=normalizeSignupDisplayName(value),parts=normalized.split(' ');
+ const validPart=/^[\\p{L}\\p{M}]+(?:[-'’][\\p{L}\\p{M}]+)*$/u;
+ return {normalized,valid:parts.length>=2&&parts.length<=3&&parts.every(part=>validPart.test(part))};
+}
+function getPasswordStrength(value){
+ const password=String(value||'');
+ if(!password)return {level:0,label:'لم تُدخل كلمة المرور بعد'};
+ let score=password.length>=8?1:0;
+ if(password.length>=10)score++;
+ if(password.length>=14)score++;
+ const classes=[/[\\p{Ll}]/u.test(password),/[\\p{Lu}]/u.test(password),/[\\p{N}]/u.test(password),/[^\\p{L}\\p{M}\\p{N}\\s]/u.test(password)].filter(Boolean).length;
+ if(classes>=2)score++;
+ if(classes>=3)score++;
+ if(classes>=4)score++;
+ if(password.length<8)return {level:1,label:'ضعيفة'};
+ if(score<=2)return {level:2,label:'متوسطة'};
+ if(score<=4)return {level:3,label:'قوية'};
+ return {level:4,label:'قوية جداً'};
+}
+function updatePasswordStrength(){
+ const result=getPasswordStrength($('password').value),meter=$('passwordStrengthMeter');
+ if(!meter)return;
+ meter.setAttribute('aria-valuenow',String(result.level));
+ meter.dataset.strength=String(result.level);
+ meter.querySelectorAll('span').forEach((segment,index)=>segment.classList.toggle('is-filled',index<result.level));
+ $('passwordStrengthText').textContent=result.label;
+}
 function authError(msg){$('authStatus').hidden=true;$('authError').textContent=msg;$('authError').classList.remove('hidden')}
 function authProgress(msg){$('authError').classList.add('hidden');$('authStatus').textContent=msg;$('authStatus').hidden=false}
 const RESET_COOLDOWN_MS=10*60*1000;
@@ -602,7 +631,7 @@ async function enterAppInternal(user,lifecycleVersion){
 }
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
 $('resetPasswordBtn').addEventListener('click',async()=>{try{await sendPasswordReset()}catch(error){console.error('Password reset request failed:',error);authError(error.message||'تعذر إرسال رابط الاستعادة. حاول مرة أخرى.')}});
-$('email').addEventListener('input',updateResetCooldown);
+$('email').addEventListener('input',updateResetCooldown);\n$('password').addEventListener('input',updatePasswordStrength);
 $('resendSignupVerificationBtn')?.addEventListener('click',async()=>{
  const email=$('email').value.trim();
  if(!email||!$('email').checkValidity()){authError('أدخل البريد الإلكتروني المستخدم في الدعوة أولاً.');return}
@@ -627,10 +656,10 @@ $('authForm').addEventListener('submit',async e=>{
   if(!password)throw new Error('أدخل كلمة المرور.');
   if(state.authMode==='signup'){
    if(password.length<8)throw new Error('كلمة المرور يجب ألا تقل عن 8 أحرف.');
-   const username=slug($('username').value),display=$('displayName').value.trim();
+   const username=slug($('username').value),nameResult=validateSignupDisplayName($('displayName').value),display=nameResult.normalized;
    const membershipNumber=$('membershipNumber').value.trim(),membershipInviteCode=$('membershipInviteCode').value.trim();
    if(username.length<3)throw new Error('اسم المستخدم يجب أن يتكون من 3 إلى 24 حرفاً إنجليزياً أو رقماً أو _');
-   if(!display)throw new Error('أدخل الاسم الظاهر');
+   if(!nameResult.valid)throw new Error('أدخل اسمك مع لقبك على الأقل (اسمين)، أو اسمك الثلاثي. مثال: محمد النبهاني أو محمد أحمد النبهاني. استخدم الحروف والمسافات فقط.');
    if(!/^971[0-9]{9}$/.test(membershipNumber))throw new Error('أدخل رقم فوريفر الرسمي: 971 ثم تسعة أرقام.');
    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(membershipInviteCode))throw new Error('رمز الدعوة غير صحيح. استخدم الرمز الذي أنشأه مسؤول التطبيق.');
    btn.disabled=true;btn.textContent='جارٍ إنشاء الحساب...';authProgress('جارٍ إنشاء حسابك والتحقق من البيانات...');
