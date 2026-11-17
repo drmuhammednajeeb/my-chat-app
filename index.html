@@ -205,11 +205,18 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/voice-recorder.js"></script>
 <script src="./modules/audio-player.js"></script>
 <script src="./modules/app-updater.js"></script>
+<script src="/api/runtime-config"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
-const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
-const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
+const runtimeConfig=window.BIZMIND_RUNTIME_CONFIG;
+if(!runtimeConfig||runtimeConfig.error||!runtimeConfig.supabaseUrl||!runtimeConfig.supabaseAnonKey){
+ console.error('Bizmind runtime configuration unavailable:',runtimeConfig?.error||'missing configuration');
+ document.documentElement.innerHTML='<main style="font-family:system-ui;padding:32px;direction:rtl"><h1>تعذر تشغيل التطبيق بأمان</h1><p>إعدادات الاتصال بهذه البيئة غير مكتملة أو غير صالحة. لم يتم الاتصال بقاعدة البيانات.</p></main>';
+ throw new Error('BIZMIND_RUNTIME_CONFIG_INVALID');
+}
+const SUPABASE_URL=runtimeConfig.supabaseUrl;
+const SUPABASE_ANON_KEY=runtimeConfig.supabaseAnonKey;
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 const __supabaseResource=performance.getEntriesByType('resource').find(entry=>entry.name.includes('supabase.min.js'));
 window.__BIZMIND_BOOT_TIMINGS__={mainScriptStarted:__bootMainScriptStarted,supabaseScriptMs:__supabaseResource?Math.round(__supabaseResource.duration):null,clientReady:performance.now()};
