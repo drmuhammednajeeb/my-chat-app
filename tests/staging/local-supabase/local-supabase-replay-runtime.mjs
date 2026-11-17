@@ -237,6 +237,15 @@ run(process.execPath, [
   LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
 }, 'storage-api-rls-runtime');
 
+run(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs')
+], {
+  ...env,
+  LOCAL_SUPABASE_URL: process.env.LOCAL_SUPABASE_URL ?? '',
+  LOCAL_SUPABASE_SERVICE_ROLE_KEY: process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY ?? '',
+  LOCAL_SUPABASE_DB_URL: raw
+}, 'message-auto-cleanup-storage-runtime');
+
 const patchManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
 if (patchManifest.mode !== 'TEST_COPY_ONLY' || !Array.isArray(patchManifest.patches)) {
   fail('synthetic fixture patch manifest is invalid');
@@ -255,8 +264,10 @@ for (const patch of patchManifest.patches) {
     fail('mapped-source test replacement is missing or not registered: ' + patch.sourcePath);
   }
 }
-const expectedSqlCount = manifest.sourceCoverage.executedSqlFiles;
-if (expectedSqlCount !== manifest.sourceCoverage.executedMappedSources + manifest.sourceCoverage.executedTestOnlySqlFixtures
+const expectedSqlCount = manifest.sourceCoverage.candidateSqlFiles ?? manifest.sourceCoverage.executedSqlFiles;
+const candidateMappedSources = manifest.sourceCoverage.candidateMappedSources ?? manifest.sourceCoverage.mappedSources;
+const candidateFixtures = manifest.sourceCoverage.candidateTestOnlySqlFixtures ?? manifest.sourceCoverage.testOnlySqlFixtures;
+if (expectedSqlCount !== candidateMappedSources + candidateFixtures
   || expectedSqlCount !== manifest.sourceCoverage.mappedSources - replacedSourcePaths.size + manifest.sourceCoverage.testOnlySqlFixtures) {
   fail('declared executed SQL coverage does not reconcile with mapped-source replacements');
 }

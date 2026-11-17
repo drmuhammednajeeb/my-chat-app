@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
-  "generatedAt": "2026-11-12",
+  "generatedAt": "2026-11-17",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
     "baseBranch": "main",
@@ -16,10 +16,10 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 66,
+    "canonicalCliMigrationFiles": 67,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 19,
+    "testOnlyFixtureCount": 20,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -39,9 +39,10 @@
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 4
+    "forwardReconciliationMigrations": 5
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -1835,47 +1836,81 @@
       "localRuntimeRunId": 43260183037,
       "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
+    },
+    {
+      "version": "20261117130000",
+      "name": "message_auto_cleanup_100h_storage",
+      "path": "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
+      "gitBlobSha": "48367150d850cede08414b89fe9f35328fea1125",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Queue all messages older than 100 hours and unreferenced chat-media objects older than 100 hours; preserve pinned messages and server-designated official channels; delete Storage objects through the Storage API before cascading message metadata cleanup.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44040777235,
+      "localRuntimeCommit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 4,
+    "pendingForwardCount": 5,
     "executionAuthorized": false,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+    "localRuntimeRunId": 44040777235,
+    "localRuntimeCommit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
     "productionApplied": false
   },
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 43260183037,
-      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-      "completedAt": "2026-11-12T16:37:17Z",
+      "workflowRunId": 44040777235,
+      "commit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
+      "completedAt": "2026-11-17T07:44:04Z",
       "localOnly": true,
-      "sqlFilesExecuted": 83,
+      "sqlFilesExecuted": 85,
       "checks": [
         "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
-        "pgcrypto schema and function resolution passed",
-        "temporary pg_cron scheduler job executed successfully",
-        "24 reversed-pair concurrent requests converged on one direct conversation",
-        "40 concurrent authenticated message writes persisted uniquely",
-        "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
-        "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
-        "full reviewed disposable replay completed"
+        "all 85 reviewed SQL sources and test fixtures replayed successfully",
+        "pgcrypto, pg_cron, pg_net and Supabase Vault dependencies resolved",
+        "message cleanup queue, 100-hour cutoff, pinned-message exclusion, official-channel marker, cascades and service-role-only RPC assertions passed",
+        "the current Edge Function secret-key implementation uses the Supabase default sb_secret_ key mode and the additional Vault invocation token",
+        "an actual disposable chat-media object was uploaded, aged past 100 hours, removed through the Storage API, and its queue item completed",
+        "Storage object and cleanup queue row were both confirmed absent after worker completion",
+        "the disposable Supabase stack was stopped and destroyed"
       ]
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 43260183019,
-      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-      "completedAt": "2026-11-12T16:35:00Z",
-      "tests": 77,
-      "passed": 77,
+      "workflowRunId": 44040777314,
+      "commit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
+      "completedAt": "2026-11-17T07:42:42Z",
+      "tests": 89,
+      "passed": 89,
       "failed": 0
+    },
+    "pendingAdditionalSources": [],
+    "previousRuntime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 44039542741,
+      "commit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b",
+      "completedAt": "2026-11-17T07:35:06Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 85,
+      "checks": [
+        "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
+        "all 85 reviewed SQL sources and test fixtures replayed successfully",
+        "pgcrypto, pg_cron, pg_net and Supabase Vault dependencies resolved",
+        "existing five-minute purge cron contract remained valid and enqueued rather than deleting database rows directly",
+        "message cleanup queue, pinned-message exclusion, official-channel marker, cascades and service-role-only RPC assertions passed",
+        "actual disposable chat-media object was uploaded, aged past 100 hours, removed through the Storage API, and its queue item completed",
+        "Storage object and cleanup queue row were both confirmed absent after worker completion",
+        "the disposable Supabase stack was stopped and destroyed"
+      ]
     }
   }
 }
