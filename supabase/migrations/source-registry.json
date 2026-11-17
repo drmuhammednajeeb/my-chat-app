@@ -1841,7 +1841,7 @@
       "version": "20261117120000",
       "name": "enforce_signup_display_name_server_side",
       "path": "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql",
-      "gitBlobSha": "7cf4d023ab14f97f7653a257e67d9456578879a9",
+      "gitBlobSha": "bb50ce6df5a1c3e798a1c62d19b181c018019ac9",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Enforce two- or three-part Arabic/Latin signup display names in the Auth BEFORE INSERT trigger before an invitation can be consumed; normalize whitespace and preserve the accepted name in profile metadata.",
