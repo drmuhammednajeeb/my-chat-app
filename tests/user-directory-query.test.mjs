@@ -19,7 +19,7 @@ function extract(name) {
     }
     if (ch === "'" || ch === '"' || ch === "`") { quote = ch; continue; }
     if (ch === "{") { depth++; opened = true; }
-    else if (ch === "}" && opened && --depth === 0) return source.slice(start, i + 1);
+    else if (ch === "}" && opened && --depth === 0) return source.slice(declarationStart, i + 1);
   }
   throw new Error("Unclosed function: " + name);
 }
