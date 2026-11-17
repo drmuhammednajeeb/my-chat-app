@@ -230,7 +230,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   const canonicalSourceCounts = new Map();
   for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
-  assert.equal(canonicalSourceCounts.size, 66);
+  assert.equal(canonicalSourceCounts.size, 67);
   assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
@@ -405,16 +405,17 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('four forward hardening migrations remain outside the production ledger and record disposable-local runtime evidence', async () => {
+test('five forward hardening migrations remain outside the production ledger and record disposable-local runtime evidence', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.forwardMigrations.length, 4);
+  assert.equal(registry.forwardMigrations.length, 5);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
     ['20261112160002_revoke_unsafe_public_default_privileges.sql', ['DAG-016']],
-    ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']]
+    ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
+    ['20261117120000_enforce_signup_display_name_server_side.sql', []]
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -423,9 +424,21 @@ test('four forward hardening migrations remain outside the production ledger and
     assert.deepEqual(node.blockedBy, blockers);
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
-    assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-    assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
+    if (name === '20261117120000_enforce_signup_display_name_server_side.sql') {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, undefined);
+    } else {
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
+    }
   }
+  const signupGuard = dag.nodes.find(node => node.id === 'membership.signup-name-validation-forward');
+  const signupAssertions = dag.nodes.find(node => node.id === 'test-fixture.signup-name-guard');
+  assert.ok(signupGuard && signupAssertions);
+  assert.ok(signupGuard.requires.includes('membership.auth-fix'));
+  assert.ok(signupAssertions.requires.includes(signupGuard.id));
+  assert.ok(manifest.candidateNodeOrder.findIndex(node => node.nodeId === signupAssertions.id) > manifest.candidateNodeOrder.findIndex(node => node.nodeId === signupGuard.id));
+  assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes('tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql'));
   assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
 });
 
@@ -443,8 +456,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql',
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 19);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 83);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 20);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 85);
 });
 
 
