@@ -525,15 +525,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "membership.signup-name-validation-forward",
-      "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_RUNTIME",
-      "testSources": [
-        "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "New forward-only Auth trigger guard; pending disposable-local execution and synthetic signup lifecycle assertions."
-    },
-    {
       "nodeId": "membership.official",
       "status": "TEST_COPY_ONLY_SYNTHETIC_MEMBER_NUMBER",
       "testSources": [
@@ -541,15 +532,6 @@
       ],
       "blockedBy": [],
       "parityNote": null
-    },
-    {
-      "nodeId": "test-fixture.signup-name-guard",
-      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_PENDING_DISPOSABLE_LOCAL_RUNTIME",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Synthetic Auth users and invitations only; verifies validation happens before invitation consumption and accepted names are normalized."
     },
     {
       "nodeId": "membership.syntax-fix",
@@ -657,6 +639,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "membership.signup-name-validation-forward",
+      "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_RUNTIME",
+      "testSources": [
+        "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "New forward-only Auth trigger guard; pending disposable-local execution and synthetic signup lifecycle assertions."
+    },
+    {
       "nodeId": "test-fixture.direct-chat-runtime",
       "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
       "testSources": [
@@ -676,6 +667,15 @@
       ],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.signup-name-guard",
+      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_PENDING_DISPOSABLE_LOCAL_RUNTIME",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Synthetic Auth users and invitations only; verifies validation happens before invitation consumption and accepted names are normalized."
     },
     {
       "nodeId": "chat.profile-status-combined-content-media",
