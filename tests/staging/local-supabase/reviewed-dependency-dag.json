@@ -1355,7 +1355,8 @@
       ],
       "requires": [
         "security.active-membership-rls-forward",
-        "security.conversation-image-extension-forward"
+        "security.conversation-image-extension-forward",
+        "security.least-privilege-overlay"
       ],
       "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PENDING_NEW_MIGRATION",
       "testSource": [
@@ -2221,6 +2222,10 @@
     ],
     [
       "security.conversation-image-extension-forward",
+      "test-fixture.forward-hardening-postconditions"
+    ],
+    [
+      "security.least-privilege-overlay",
       "test-fixture.forward-hardening-postconditions"
     ]
   ],
