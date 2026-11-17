@@ -231,7 +231,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   const canonicalSourceCounts = new Map();
   for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
-  assert.equal(canonicalSourceCounts.size, 67);
+  assert.equal(canonicalSourceCounts.size, 68);
   assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
@@ -452,6 +452,8 @@ test('post-forward runtime assertions are ordered after their matching security 
   assert.ok(hardening.requires.includes('security.active-membership-rls-forward'));
   assert.ok(hardening.requires.includes('security.conversation-image-extension-forward'));
   assert.ok(hardening.requires.includes('security.least-privilege-overlay'));
+  assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
+  assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
   assert.ok(dag.explicitEdges.some(([from, to]) => from === direct.id && to === 'test-fixture.direct-chat-concurrency'));
   for (const path of [
     'tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql',
@@ -652,17 +654,18 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('five forward hardening migrations remain outside the production ledger and record disposable-local runtime evidence', async () => {
+test('six forward migrations remain outside the production ledger and record explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.forwardMigrations.length, 5);
+  assert.equal(registry.forwardMigrations.length, 6);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
     ['20261112160002_revoke_unsafe_public_default_privileges.sql', ['DAG-016']],
     ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
-    ['20261113060002_fix_conversation_image_extension_validation.sql', []]
+    ['20261113060002_fix_conversation_image_extension_validation.sql', []],
+    ['20261117130000_message_auto_cleanup_100h_storage.sql', []]
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -674,6 +677,10 @@ test('five forward hardening migrations remain outside the production ledger and
     if (name === '20261113060002_fix_conversation_image_extension_validation.sql') {
       assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, undefined);
+    } else if (name === '20261117130000_message_auto_cleanup_100h_storage.sql') {
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 44040777235);
+      assert.equal(forward?.localRuntimeCommit, 'ee5d57ebea388beb5280e01c0af518b5a36c1ddd');
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
@@ -696,10 +703,12 @@ test('post-forward runtime assertions are ordered after their matching security 
   assert.ok(dag.explicitEdges.some(([from, to]) => from === direct.id && to === 'test-fixture.direct-chat-concurrency'));
   for (const path of [
     'tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql',
-    'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql'
+    'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
+    'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 19);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 84);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 20);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 86);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 86);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
