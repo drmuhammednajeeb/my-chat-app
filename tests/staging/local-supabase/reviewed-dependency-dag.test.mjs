@@ -97,7 +97,8 @@ test('test-only fixtures are present and canonical SQL remains outside the fixtu
     'forward-direct-conversation-eligibility.assert.sql',
     'forward-hardening-postconditions.assert.sql',
     'local-platform-prerequisites.assert.sql',
-    'local-platform-postconditions.assert.sql'
+    'local-platform-postconditions.assert.sql',
+    'message-auto-cleanup.assert.sql'
   ];
   for (const name of requiredFixtures) await access(path.join(root, 'tests/staging/local-supabase/fixtures', name));
   for (const fixture of patchManifest.fixtures) await access(path.join(root, fixture.path));
