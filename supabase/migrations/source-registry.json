@@ -1840,7 +1840,7 @@
       "version": "20261113060002",
       "name": "fix_conversation_image_extension_validation",
       "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
-      "gitBlobSha": "ca75cefe5754978578e4102d463dab5a31241f78",
+      "gitBlobSha": "aef5523972214dab0e4c8a90d12c252b7c586373",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Correct the literal-dot suffix validation in both conversation-image functions and move the exposed RPC to an authenticated SECURITY INVOKER wrapper over a private, guarded SECURITY DEFINER implementation.",
