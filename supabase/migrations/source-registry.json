@@ -1841,14 +1841,14 @@
       "version": "20261117130000",
       "name": "message_auto_cleanup_100h_storage",
       "path": "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
-      "gitBlobSha": "d7a5257e3acb3e95906da2ecaa9766682d81833b",
+      "gitBlobSha": "d5e578ba6175eb46eb096f6e4ba1cae367bf9a80",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Queue all messages older than 100 hours and unreferenced chat-media objects older than 100 hours; preserve pinned messages and server-designated official channels; delete Storage objects through the Storage API before cascading message metadata cleanup.",
       "blockedBy": [],
-      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 44039542741,
-      "localRuntimeCommit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b",
+      "localRuntimeStatus": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
+      "localRuntimeRunId": null,
+      "localRuntimeCommit": null,
       "productionApplied": false
     }
   ],
@@ -1857,13 +1857,36 @@
     "productionLedgerCount": 62,
     "pendingForwardCount": 5,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 44039542741,
-    "localRuntimeCommit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b",
+    "localRuntimeStatus": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
+    "localRuntimeRunId": null,
+    "localRuntimeCommit": null,
     "productionApplied": false
   },
   "validationEvidence": {
     "runtime": {
+      "status": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
+      "pendingCommit": "2034a87a3b6996e902f95595dfe58b4f08c773f0",
+      "pendingSources": [
+        "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
+        "supabase/functions/message-auto-cleanup/index.ts",
+        "supabase/functions/message-auto-cleanup/README.md",
+        "tests/message-auto-cleanup.test.mjs"
+      ],
+      "previousSuccessfulRunId": 44039542741,
+      "previousSuccessfulCommit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b"
+    },
+    "audit": {
+      "status": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_AUDIT",
+      "previousSuccessfulRunId": 44039542776,
+      "previousSuccessfulCommit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b"
+    },
+    "pendingAdditionalSources": [
+      "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
+      "supabase/functions/message-auto-cleanup/index.ts",
+      "supabase/functions/message-auto-cleanup/README.md",
+      "tests/message-auto-cleanup.test.mjs"
+    ],
+    "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
       "workflowRunId": 44039542741,
@@ -1881,17 +1904,6 @@
         "Storage object and cleanup queue row were both confirmed absent after worker completion",
         "the disposable Supabase stack was stopped and destroyed"
       ]
-    },
-    "audit": {
-      "status": "PASSED",
-      "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 44039542776,
-      "commit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b",
-      "completedAt": "2026-11-17T07:32:59Z",
-      "tests": 89,
-      "passed": 89,
-      "failed": 0
-    },
-    "pendingAdditionalSources": []
+    }
   }
 }
