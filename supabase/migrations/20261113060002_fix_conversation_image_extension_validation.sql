@@ -115,7 +115,7 @@ AS $$
   SELECT app_private.set_conversation_image_impl(p_conversation_id, p_image_path);
 $$;
 
-REVOKE ALL ON FUNCTION public.set_conversation_image(uuid,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.set_conversation_image(uuid,text) FROM PUBLIC, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.set_conversation_image(uuid,text) TO authenticated;
 
 COMMIT;
