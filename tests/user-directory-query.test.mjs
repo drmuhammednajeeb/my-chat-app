@@ -47,7 +47,7 @@ function makeQueryRecorder(onRange = () => Promise.resolve({ data: [], error: nu
   return { client, calls };
 }
 
-function makeApi({ client, state, elements, pending } = {}) {
+function makeApi({ client, state, elements, pending, overrides = {} } = {}) {
   const sandbox = {
     state,
     supabaseClient: client,
@@ -136,7 +136,7 @@ test("a late search response cannot overwrite the newest directory results", asy
   pending[0]({ data: [{ id: "stale-result" }], error: null });
   await oldRequest;
   assert.equal(state.directoryLoading, true);
-  assert.deepEqual(state.directoryUsers, []);
+  assert.equal(state.directoryUsers.length, 0);
 
   pending[1]({ data: [{ id: "latest-result" }], error: null });
   await newRequest;
@@ -164,4 +164,46 @@ test("directory query errors release the pagination control for retry", async ()
   await api.loadDirectory(true);
   assert.equal(loadMore.disabled, false);
   assert.equal(loadMore.textContent, "عرض المزيد من المستخدمين");
+});
+
+test("member card direct-message action uses the existing guarded conversation flow", async () => {
+  const conversation = { id: "direct-1", type: "direct" };
+  const state = {
+    user: { id: "current-user" },
+    conversations: [],
+    directConversationPromises: new Map()
+  };
+  let rpcCalls = 0;
+  let openCalls = 0;
+  const { client } = makeQueryRecorder();
+  client.rpc = async (name, args) => {
+    rpcCalls++;
+    assert.equal(name, "get_or_create_direct_conversation");
+    assert.equal(args.p_other_user_id, "member-1");
+    return { data: "direct-1", error: null };
+  };
+  let loads = 0;
+  const api = makeApi({
+    client,
+    state,
+    overrides: {
+      findDirectConversation: id => state.conversations.find(row => row.type === "direct" && row.id === conversation.id && id === "member-1") || null,
+      loadConversations: async () => {
+        loads++;
+        if (loads === 2) state.conversations = [conversation];
+        return true;
+      },
+      openConversation: async row => {
+        assert.equal(row, conversation);
+        openCalls++;
+      }
+    }
+  });
+  const button = { disabled: false, textContent: "مراسلة" };
+  await api.openDirectConversation({ id: "member-1" }, button);
+  assert.equal(rpcCalls, 1);
+  assert.equal(openCalls, 1);
+  assert.equal(button.disabled, false);
+  assert.equal(button.textContent, "مراسلة");
+  assert.match(source, /action\\.onclick=\\(\\)=>openDirectConversation\\(profile,action\\)/);
 });
