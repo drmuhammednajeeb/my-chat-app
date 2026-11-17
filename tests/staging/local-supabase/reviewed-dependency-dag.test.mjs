@@ -427,11 +427,11 @@ test('six forward migrations remain outside the production ledger with explicit 
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     if (name.startsWith('20261113060002_')) {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name.startsWith('20261117130000_')) {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-      assert.equal(forward?.localRuntimeRunId, 44040777235);
+      assert.equal(forward?.localRuntimeRunId, 44054041618);
       assert.equal(forward?.localRuntimeCommit, 'ee5d57ebea388beb5280e01c0af518b5a36c1ddd');
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
@@ -675,11 +675,11 @@ test('six forward migrations remain outside the production ledger and record exp
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     if (name === '20261113060002_fix_conversation_image_extension_validation.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name === '20261117130000_message_auto_cleanup_100h_storage.sql') {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-      assert.equal(forward?.localRuntimeRunId, 44040777235);
+      assert.equal(forward?.localRuntimeRunId, 44054041618);
       assert.equal(forward?.localRuntimeCommit, 'ee5d57ebea388beb5280e01c0af518b5a36c1ddd');
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
