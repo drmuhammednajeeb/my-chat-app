@@ -742,17 +742,6 @@
       "parityNote": "Corrects the literal-dot extension check in both conversation-image functions; post-forward assertions verify regex behavior and installed function definitions."
     },
     {
-      "nodeId": "test-fixture.forward-hardening-postconditions",
-      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
-      ],
-      "blockedBy": [
-        "DAG-016"
-      ],
-      "parityNote": null
-    },
-    {
       "nodeId": "security.least-privilege-overlay",
       "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED",
       "testSources": [
@@ -763,6 +752,17 @@
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.mjs",
         "tests/staging/local-supabase/local-supabase-replay-runtime.test.mjs"
+      ],
+      "blockedBy": [
+        "DAG-016"
+      ],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.forward-hardening-postconditions",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [
         "DAG-016"
