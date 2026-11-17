@@ -656,7 +656,25 @@ $('authForm').addEventListener('submit',async e=>{
   }
  }catch(err){
   console.error('Authentication flow failed:',err);
-  authError(err.message||'تعذر تسجيل الدخول. تحقق من الاتصال وحاول مرة أخرى.');
+  const rawMessage=String(err?.message||'');
+  const isSignup=state.authMode==='signup';
+  let userMessage=rawMessage;
+  if(isSignup){
+   if(/database error saving new user/i.test(rawMessage)||/الدعوة غير صحيحة أو منتهية أو سبق استخدامها/.test(rawMessage)){
+    userMessage='تعذر إنشاء الحساب لأن بيانات التسجيل لم تجتز التحقق. تأكد من أن البريد الإلكتروني ورقم العضوية ورمز الدعوة تطابق الدعوة السارية تماماً، وأن الدعوة لم تُستخدم من قبل. راجع أيضاً الاسم الظاهر واسم المستخدم وكلمة المرور.';
+   }else if(/already registered|user already exists|already been registered/i.test(rawMessage)){
+    userMessage='يوجد حساب مسجل بهذا البريد الإلكتروني بالفعل. انتقل إلى تسجيل الدخول أو استخدم استعادة كلمة المرور.';
+   }else if(/password.*(weak|short|length)|weak password/i.test(rawMessage)){
+    userMessage='كلمة المرور غير مستوفية للشروط. استخدم 8 أحرف على الأقل.';
+   }else if(/duplicate key|profiles_username|username.*(taken|exists|already)/i.test(rawMessage)){
+    userMessage='اسم المستخدم مستخدم بالفعل. اختر اسم مستخدم آخر.';
+   }else if(/invalid email/i.test(rawMessage)){
+    userMessage='صيغة البريد الإلكتروني غير صحيحة. راجع البريد الذي صدرت إليه الدعوة.';
+   }else if(!rawMessage){
+    userMessage='تعذر إنشاء الحساب. راجع الاسم والبريد ورقم العضوية ورمز الدعوة وكلمة المرور ثم حاول مجدداً.';
+   }
+  }else if(!rawMessage){userMessage='تعذر تسجيل الدخول. تحقق من بيانات الدخول والاتصال وحاول مرة أخرى.';}
+  authError(userMessage);
  }finally{
   btn.disabled=false;btn.textContent=defaultLabel;
  }
