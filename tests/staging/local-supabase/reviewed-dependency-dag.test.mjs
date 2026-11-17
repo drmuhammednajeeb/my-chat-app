@@ -177,7 +177,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 19);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 20);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
@@ -218,10 +218,10 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   assert.equal(manifest.sourceCoverage.mappedSources, inventory.files.length - duplicateCopies.size);
   assert.equal(manifest.sourceCoverage.mappedSourcesReplacedByFixtures, patchManifest.patches.length);
   assert.equal(patchManifest.patches.length, 2);
-  assert.equal(manifest.sourceCoverage.executedMappedSources, manifest.sourceCoverage.mappedSources - patchManifest.patches.length);
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, manifest.sourceCoverage.testOnlySqlFixtures);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, manifest.sourceCoverage.executedMappedSources + manifest.sourceCoverage.executedTestOnlySqlFixtures);
-  assert.equal(new Set(selected.filter(source => source.endsWith('.sql'))).size, manifest.sourceCoverage.executedSqlFiles);
+  assert.equal(manifest.sourceCoverage.candidateMappedSources, manifest.sourceCoverage.mappedSources - patchManifest.patches.length);
+  assert.equal(manifest.sourceCoverage.candidateTestOnlySqlFixtures, manifest.sourceCoverage.testOnlySqlFixtures);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, manifest.sourceCoverage.candidateMappedSources + manifest.sourceCoverage.candidateTestOnlySqlFixtures);
+  assert.equal(new Set(selected.filter(source => source.endsWith('.sql'))).size, manifest.sourceCoverage.candidateSqlFiles);
   for (const source of selected) await access(path.join(root, source));
   for (const file of inventory.files) {
     if (duplicateCopies.has(file.path) || patchedCanonicalSources.has(file.path)) continue;
@@ -230,7 +230,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   const canonicalSourceCounts = new Map();
   for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
-  assert.equal(canonicalSourceCounts.size, 66);
+  assert.equal(canonicalSourceCounts.size, 67);
   assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
@@ -405,16 +405,17 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('four forward hardening migrations remain outside the production ledger and record disposable-local runtime evidence', async () => {
+test('five forward migrations remain outside the production ledger with explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.forwardMigrations.length, 4);
+  assert.equal(registry.forwardMigrations.length, 5);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
     ['20261112160002_revoke_unsafe_public_default_privileges.sql', ['DAG-016']],
-    ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']]
+    ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
+    ['20261117130000_message_auto_cleanup_100h_storage.sql', []]
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -423,8 +424,13 @@ test('four forward hardening migrations remain outside the production ledger and
     assert.deepEqual(node.blockedBy, blockers);
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
-    assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-    assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
+    if (name.startsWith('20261117130000_')) {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE_VALIDATION');
+      assert.equal(forward?.localRuntimeRunId, null);
+    } else {
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
+    }
   }
   assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
 });
@@ -441,10 +447,14 @@ test('post-forward runtime assertions are ordered after their matching security 
   assert.ok(dag.explicitEdges.some(([from, to]) => from === direct.id && to === 'test-fixture.direct-chat-concurrency'));
   for (const path of [
     'tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql',
-    'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql'
+    'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
+    'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 19);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 83);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 85);
+  assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
+  assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
 });
 
 
