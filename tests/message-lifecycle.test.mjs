@@ -555,3 +555,88 @@ test('document storage filename sanitizer removes path separators and unsafe cha
   assert.equal(sanitize('folder\\\\name.pdf').includes('/'), false);
   assert.equal(sanitize('folder\\\\name.pdf').includes('\\\\'), false);
 });
+
+
+test('stale conversation realtime status callbacks cannot overwrite the active subscription state', () => {
+  const subscribe = extractFunction('subscribeConversation');
+  const channels = [];
+  const state = {
+    active: { id: 'c1' }, user: { id: 'u1' }, diagnostics: {},
+    channel: null, typingChannel: null, messagePollGeneration: 0
+  };
+  const supabaseClient = {
+    channel(name) {
+      const channel = {
+        name, handlers: [], statusHandler: null,
+        on(type, filter, callback) { this.handlers.push({ type, filter, callback }); return this; },
+        subscribe(callback) { this.statusHandler = callback || null; return this; }
+      };
+      channels.push(channel);
+      return channel;
+    },
+    removeChannel() { return Promise.resolve('ok'); }
+  };
+  const ui = { textContent: '' };
+  const context = {
+    state, supabaseClient, performance: { now: () => 10 },
+    diagLog() {}, recordPerf() {}, requestImmediateMessageReconciliation() {},
+    scheduleMessagePolling() {}, clearTimeout() {}, setTimeout: () => 1,
+    $: () => ui, console
+  };
+  const run = vm.runInNewContext('(' + subscribe + ')', context);
+  run();
+  const oldChat = channels[0];
+  state.active = { id: 'c2' };
+  run();
+  const currentChat = channels[2];
+  currentChat.statusHandler('SUBSCRIBED');
+  assert.equal(state.realtimeStatus, 'SUBSCRIBED');
+  oldChat.statusHandler('CHANNEL_ERROR');
+  assert.equal(state.realtimeStatus, 'SUBSCRIBED');
+  assert.equal(ui.textContent, 'متصل');
+});
+
+test('typing events and delayed clears from a previous conversation are ignored', () => {
+  const subscribe = extractFunction('subscribeConversation');
+  const channels = [];
+  const timers = new Map();
+  let nextTimer = 0;
+  const state = {
+    active: { id: 'c1' }, user: { id: 'u1' }, diagnostics: {},
+    channel: null, typingChannel: null, messagePollGeneration: 0
+  };
+  const supabaseClient = {
+    channel(name) {
+      const channel = {
+        name, handlers: [], statusHandler: null,
+        on(type, filter, callback) { this.handlers.push({ type, filter, callback }); return this; },
+        subscribe(callback) { this.statusHandler = callback || null; return this; }
+      };
+      channels.push(channel); return channel;
+    },
+    removeChannel() { return Promise.resolve('ok'); }
+  };
+  const ui = { textContent: '' };
+  const context = {
+    state, supabaseClient, performance: { now: () => 10 },
+    diagLog() {}, recordPerf() {}, requestImmediateMessageReconciliation() {},
+    scheduleMessagePolling() {}, console,
+    $: () => ui,
+    clearTimeout(id) { timers.delete(id); },
+    setTimeout(callback) { const id = ++nextTimer; timers.set(id, callback); return id; }
+  };
+  const run = vm.runInNewContext('(' + subscribe + ')', context);
+  run();
+  const oldTyping = channels[1].handlers.find(handler => handler.type === 'broadcast').callback;
+  oldTyping({ payload: { user_id: 'u2', is_typing: true, name: 'قديم' } });
+  const oldTimer = [...timers.values()][0];
+  state.active = { id: 'c2' };
+  run();
+  const currentTyping = channels[3].handlers.find(handler => handler.type === 'broadcast').callback;
+  currentTyping({ payload: { user_id: 'u3', is_typing: true, name: 'حالي' } });
+  assert.match(ui.textContent, /حالي/);
+  oldTyping({ payload: { user_id: 'u2', is_typing: true, name: 'قديم' } });
+  assert.match(ui.textContent, /حالي/);
+  oldTimer?.();
+  assert.match(ui.textContent, /حالي/);
+});
