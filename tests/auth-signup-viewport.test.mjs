@@ -86,3 +86,17 @@ test("password strength levels are advisory and the only signup threshold is eig
   assert.equal(api.getPasswordStrength("Abcdefgh1234!").label, "قوية جداً");
   assert.match(html, /if\(password\.length<8\)throw new Error/);
 });
+
+test("Auth trigger enforces two- or three-part names before consuming invitations", async () => {
+  const migration = await readFile(new URL("../supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql", import.meta.url), "utf8");
+  const fixture = await readFile(new URL("./staging/local-supabase/fixtures/signup-name-guard.assert.sql", import.meta.url), "utf8");
+  assert.match(migration, /security definer[\\s\\S]*?set search_path = ''/i);
+  assert.match(migration, /cardinality\\(v_name_parts\\) not between 2 and 3/i);
+  assert.match(migration, /submitted_part !~ /);
+  assert.ok(migration.indexOf("v_name_parts :=") < migration.indexOf("for update"), "name validation must happen before invitation locking");
+  assert.match(migration, /jsonb_build_object\\('display_name', v_display_name\\)/);
+  assert.match(fixture, /A one-part signup name was unexpectedly accepted/);
+  assert.match(fixture, /محمد   النبهاني/);
+  assert.match(fixture, /Mohammed Ahmed Alnabhani/);
+  assert.match(fixture, /rollback;/i);
+});
