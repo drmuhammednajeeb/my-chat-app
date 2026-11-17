@@ -436,7 +436,7 @@ test('five forward hardening migrations remain outside the production ledger and
   const signupGuard = dag.nodes.find(node => node.id === 'membership.signup-name-validation-forward');
   const signupAssertions = dag.nodes.find(node => node.id === 'test-fixture.signup-name-guard');
   assert.ok(signupGuard && signupAssertions);
-  assert.ok(signupGuard.requires.includes('membership.auth-fix'));
+  assert.ok(signupGuard.requires.includes('membership.final-format'));
   assert.ok(signupAssertions.requires.includes(signupGuard.id));
   assert.ok(manifest.candidateNodeOrder.findIndex(node => node.nodeId === signupAssertions.id) > manifest.candidateNodeOrder.findIndex(node => node.nodeId === signupGuard.id));
   assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes('tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql'));
