@@ -7,10 +7,10 @@ const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 test('the browser loads Supabase configuration from the environment-specific runtime endpoint', () => {
   const index = read('../index.html');
   const endpoint = read('../api/runtime-config.js');
-  assert.match(index, /<script src="\\/api\\/runtime-config"><\\/script>/);
-  assert.match(index, /window\\.BIZMIND_RUNTIME_CONFIG/);
-  assert.doesNotMatch(index, /const\\s+SUPABASE_URL\\s*=\\s*['"]https:\\/\\//);
-  assert.doesNotMatch(index, /const\\s+SUPABASE_ANON_KEY\\s*=\\s*['"][^'"]+['"]/);
+  assert.ok(index.includes('<script src="/api/runtime-config"></script>'));
+  assert.match(index, /window\.BIZMIND_RUNTIME_CONFIG/);
+  assert.doesNotMatch(index, /const\s+SUPABASE_URL\s*=\s*['"]https:\/\//);
+  assert.doesNotMatch(index, /const\s+SUPABASE_ANON_KEY\s*=\s*['"][^'"]+['"]/);
   assert.match(endpoint, /VERCEL_ENV/);
   assert.match(endpoint, /deployment === 'preview'.*PRODUCTION_PROJECT_HOST/s);
   assert.match(endpoint, /deployment === 'production'.*PRODUCTION_PROJECT_HOST/s);
