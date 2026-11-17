@@ -78,3 +78,8 @@ A direct read-only production catalog query on 2026-11-12 confirmed that the `su
 - The forward migration hardens defaults for `postgres` and fails closed if a public relation or function becomes owned by `supabase_admin`; it does not attempt to grant role membership or mutate managed-role ACLs.
 
 This is an external platform configuration residual, not an application-object exposure observed in the current catalog. It must be reviewed with the Supabase project administrator/support before any claim that every future platform-created public object inherits a deny-by-default ACL. Do not attempt to work around the role boundary by granting membership to `postgres` or escalating privileges in an application migration.
+
+
+## Conversation-image extension correction — 2026-11-17
+
+A read-only PostgreSQL regex probe identified that the historical conversation-image validation used a double-backslash suffix expression which rejected ordinary `.jpg`, `.png`, and `.webp` paths under `standard_conforming_strings=on`. The forward-only migration `20261113060002_fix_conversation_image_extension_validation.sql` corrects the trigger and authenticated RPC checks to a literal-dot expression while preserving the empty `search_path`, authenticated actor check, active-membership check, conversation-manager check, caller-specific object prefix, object-existence check, and authenticated-only RPC execution grant. A post-forward assertion now checks positive and negative suffix cases and inspects both installed function definitions. The migration is source-only, pending fresh disposable-local runtime validation, and is not applied to production.
