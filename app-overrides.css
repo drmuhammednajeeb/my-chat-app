@@ -472,3 +472,10 @@ html body{font-weight:500}
 @media(max-width:760px){
  #messages .bubble{font-size:14.5px;line-height:1.6}
 }
+
+
+/* Persistent 100-hour message and media retention notice */
+.auto-cleanup-notice{display:flex;align-items:center;gap:9px;flex:0 0 auto;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:12px;font-weight:600;line-height:1.7;text-align:right}
+.auto-cleanup-notice i{flex:none;color:var(--accent);font-size:17px}
+.auto-cleanup-notice span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:760px){.auto-cleanup-notice{padding:8px 11px;font-size:11px;gap:7px}}
