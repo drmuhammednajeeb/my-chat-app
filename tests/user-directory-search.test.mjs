@@ -12,7 +12,7 @@ function extract(name) {
     const ch = source[i];
     if (quote) {
       if (escaped) escaped = false;
-      else if (ch === "\\\\") escaped = true;
+      else if (ch === "\\") escaped = true;
       else if (ch === quote) quote = null;
       continue;
     }
@@ -22,7 +22,7 @@ function extract(name) {
   }
   throw new Error("Unclosed function: " + name);
 }
-const helpers = ["normalizeDirectoryDigits", "normalizeDirectorySearch", "directoryMembershipDigits", "formatDirectoryMembershipNumber"].map(extract).join("\\n");
+const helpers = ["normalizeDirectoryDigits", "normalizeDirectorySearch", "directoryMembershipDigits", "formatDirectoryMembershipNumber"].map(extract).join("\n");
 const api = vm.runInNewContext("(function(){ " + helpers + "; return {normalizeDirectoryDigits,normalizeDirectorySearch,directoryMembershipDigits,formatDirectoryMembershipNumber}; })()");
 test("normalizes Arabic and Persian digits to ASCII", () => {
   assert.equal(api.normalizeDirectoryDigits("٩٧١-٠٠٠-٠٠٠-٠٠١"), "971-000-000-001");
