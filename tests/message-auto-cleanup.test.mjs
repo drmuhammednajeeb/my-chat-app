@@ -56,7 +56,9 @@ test("the UI displays the exact 100-hour retention notice and keeps media paths 
 
 test("the Edge Function verifies a Vault token and uses a server-only service role", () => {
   assert.match(edge, /x-auto-cleanup-token/);
-  assert.match(edge, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(edge, /withSupabase\(\{ auth: "secret" \}/);
+  assert.match(edge, /ctx\.supabaseAdmin/);
+  assert.doesNotMatch(edge, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(edge, /verify_message_cleanup_token/);
   assert.match(edge, /runMessageCleanupBatch/);
 });
