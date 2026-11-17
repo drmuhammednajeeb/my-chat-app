@@ -92,6 +92,7 @@ test("Auth trigger enforces two- or three-part names before consuming invitation
   const fixture = await readFile(new URL("./staging/local-supabase/fixtures/signup-name-guard.assert.sql", import.meta.url), "utf8");
   assert.match(migration, /security definer[\s\S]*?set search_path = ''/i);
   assert.match(migration, /cardinality\(v_name_parts\) not between 2 and 3/i);
+  assert.match(migration, /btrim\(coalesce\(new\.raw_user_meta_data->>'display_name', ''\)\)/);
   assert.match(migration, /submitted_part !~ /);
   assert.ok(migration.indexOf("v_name_parts :=") < migration.indexOf("for update"), "name validation must happen before invitation locking");
   assert.match(migration, /jsonb_build_object\('display_name', v_display_name\)/);
