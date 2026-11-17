@@ -8,6 +8,7 @@ const source = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 function extract(name) {
   const start = source.indexOf("function " + name + "(");
   assert.notEqual(start, -1, name + " must exist in index.html");
+  const declarationStart = source.slice(Math.max(0, start - 6), start) === "async " ? start - 6 : start;
   let depth = 0, opened = false, quote = null, escaped = false;
   for (let i = source.indexOf("{", start); i < source.length; i++) {
     const ch = source[i];
