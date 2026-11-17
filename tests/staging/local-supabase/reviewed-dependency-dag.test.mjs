@@ -456,6 +456,7 @@ test('post-forward runtime assertions are ordered after their matching security 
   assert.equal(manifest.sourceCoverage.candidateSqlFiles, 85);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
+  assert.ok(dag.nodes.find(node => node.id === 'chat.auto-cleanup-100h').testSource.includes('tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs'));
 });
 
 
