@@ -1407,10 +1407,11 @@
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
         "tests/message-auto-cleanup.test.mjs",
         "supabase/functions/message-auto-cleanup/worker-core.mjs",
-        "supabase/functions/message-auto-cleanup/index.ts"
+        "supabase/functions/message-auto-cleanup/index.ts",
+        "tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs"
       ],
       "blockedBy": [],
-      "note": "The existing five-minute DB purge now enqueues only. A Vault-authenticated Edge Function removes chat-media objects via Storage API, checkpoints success, then deletes eligible message rows and dependent notification/reaction metadata. Pinned messages and server-marked official channels are excluded. Reply rows remain separate messages and reply_to stays SET NULL to protect newer or pinned replies."
+      "note": "The existing five-minute DB purge now enqueues only. A Vault-authenticated Edge Function removes chat-media objects via Storage API, checkpoints success, then deletes eligible message rows and dependent notification/reaction metadata. Pinned messages and server-marked official channels are excluded. Reply rows remain separate messages and reply_to stays SET NULL to protect newer or pinned replies. Disposable-local runtime also uploads an aged synthetic chat-media object and proves the real Storage API removal and queue completion."
     },
     {
       "id": "test-fixture.message-auto-cleanup",
@@ -1425,7 +1426,8 @@
       ],
       "status": "TEST_ONLY_POST_FORWARD_CLEANUP_ASSERTIONS_PENDING",
       "testSource": [
-        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+        "tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs"
       ],
       "blockedBy": [],
       "note": "Disposable-local SQL assertions only; no production data or Storage objects are used."
