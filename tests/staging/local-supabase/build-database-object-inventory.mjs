@@ -250,7 +250,8 @@ export async function buildObjectInventory(root = ROOT) {
     realtimePublication: files.some(file => file.publicationTables.length),
     pgcrypto: files.some(file => file.extensionCreates.some(ext => ext.name === 'pgcrypto')) || files.some(file => file.relationsReferenced.some(name => name.startsWith('extensions.'))),
     pgCron: files.some(file => file.cronUsage),
-    pgNet: files.some(file => file.extensionCreates.some(ext => ext.name === 'pg_net') || file.relationsReferenced.some(name => name.startsWith('net.')))
+    pgNet: files.some(file => file.extensionCreates.some(ext => ext.name === 'pg_net') || file.relationsReferenced.some(name => name.startsWith('net.'))),
+    vault: files.some(file => file.extensionCreates.some(ext => ext.name === 'supabase_vault') || file.relationsReferenced.some(name => name.startsWith('vault.')))
   };
   return {
     schemaVersion: 1, auditMode: 'READ_ONLY_SOURCE_INVENTORY',
