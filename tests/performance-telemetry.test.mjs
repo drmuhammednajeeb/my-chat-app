@@ -13,7 +13,7 @@ function extract(name) {
     const ch = source[i];
     if (quote) {
       if (escaped) escaped = false;
-      else if (ch === "\\\\") escaped = true;
+      else if (ch === "\\") escaped = true;
       else if (ch === quote) quote = null;
       continue;
     }
@@ -49,14 +49,15 @@ test("performance summary exposes P99 for tracked application and realtime metri
     metric: "message_fetch",
     ms: index + 1
   }));
-  const summary = vm.runInNewContext(
-    "(" + percentileFunction + ");(" + summaryFunction + ")",
+  const getSummary = vm.runInNewContext(
+    "(function(){ " + percentileFunction + "; " + summaryFunction + "; return performanceSummary; })()",
     {
       perfSamples,
       performance: { getEntriesByType: () => [] },
       navigator: {}
     }
   );
+  const summary = getSummary();
   assert.equal(summary.metrics.message_fetch.p50_ms, 50);
   assert.equal(summary.metrics.message_fetch.p95_ms, 95);
   assert.equal(summary.metrics.message_fetch.p99_ms, 99);
