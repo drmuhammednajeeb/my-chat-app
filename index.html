@@ -1742,13 +1742,19 @@ function handleMessageDeleteRealtime(payload,conversationId){
  return true;
 }
 function subscribeConversation(){
- if(state.channel)supabaseClient.removeChannel(state.channel);
- if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
+ // Invalidate old callbacks before requesting asynchronous channel removal.
+ const previousChannel=state.channel;state.channel=null;
+ const previousTypingChannel=state.typingChannel;state.typingChannel=null;
+ if(state.typingTimer){clearTimeout(state.typingTimer);state.typingTimer=null}
+ if(previousChannel)supabaseClient.removeChannel(previousChannel);
+ if(previousTypingChannel)supabaseClient.removeChannel(previousTypingChannel);
  const id=state.active.id;diagLog('realtime-subscribe',{conversationId:id});
  const realtimeSubscribeStartedAt=performance.now();
  let realtimeSubscribeRecorded=false;
  let channelHasSubscribed=false;
- state.channel=supabaseClient.channel('chat:'+id)
+ const channel=supabaseClient.channel('chat:'+id);
+ state.channel=channel;
+ channel
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);const realtimeRenderStartedAt=performance.now();renderMessage(incoming,id,state.messageLoadVersion).then(rendered=>recordPerf('realtime_message_render',performance.now()-realtimeRenderStartedAt,{success:rendered!==false})).catch(error=>{recordPerf('realtime_message_render',performance.now()-realtimeRenderStartedAt,{success:false});console.error('Realtime message failed:',error)});if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom(),state.messageLoadVersion)})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>handleMessageUpdateRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'chat_messages'},p=>handleMessageDeleteRealtime(p,id))
@@ -1766,6 +1772,8 @@ function subscribeConversation(){
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'private_reply_contexts',filter:'direct_conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.privateReplyContexts.set(p.new.direct_message_id,p.new);renderPrivateReplyQuote(p.new.direct_message_id,p.new)})
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_member_events',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id&&$('groupManagementModal')?.classList.contains('open'))openGroupManagement()})
   .subscribe(s=>{
+   // A removed subscription may still deliver a final status asynchronously.
+   if(state.channel!==channel||state.active?.id!==id)return;
    const reconnected=channelHasSubscribed&&s==='SUBSCRIBED';
    if(s==='SUBSCRIBED'){
     channelHasSubscribed=true;
@@ -1780,7 +1788,16 @@ function subscribeConversation(){
    // The immediate reconciliation above is sufficient; avoid a competing full timeline reload.
    $('connectionState').textContent=s==='SUBSCRIBED'?'متصل':s==='CHANNEL_ERROR'?'مشكلة اتصال — إعادة المحاولة':'إعادة الاتصال…';
   });
- state.typingChannel=supabaseClient.channel('typing:'+id).on('broadcast',{event:'typing'},({payload})=>{if(payload?.user_id!==state.user.id){$('typing').textContent=payload?.is_typing?(payload?.name||'عضو')+' يكتب الآن…':'';clearTimeout(state.typingTimer);if(payload?.is_typing)state.typingTimer=setTimeout(()=>$('typing').textContent='',2200)}}).subscribe();
+ const typingChannel=supabaseClient.channel('typing:'+id);
+ state.typingChannel=typingChannel;
+ typingChannel.on('broadcast',{event:'typing'},({payload})=>{
+  if(state.typingChannel!==typingChannel||state.active?.id!==id||payload?.user_id===state.user?.id)return;
+  $('typing').textContent=payload?.is_typing?(payload?.name||'عضو')+' يكتب الآن…':'';
+  clearTimeout(state.typingTimer);state.typingTimer=null;
+  if(payload?.is_typing)state.typingTimer=setTimeout(()=>{
+   if(state.typingChannel===typingChannel&&state.active?.id===id)$('typing').textContent='';
+  },2200);
+ }).subscribe();
 }
 async function editMessage(m){beginEditMessage(m)}
 async function deleteMessage(m){
