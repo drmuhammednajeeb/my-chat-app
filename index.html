@@ -632,7 +632,8 @@ async function enterAppInternal(user,lifecycleVersion){
 }
 $('loginTab').onclick=()=>setAuthMode('login');$('signupTab').onclick=()=>setAuthMode('signup');
 $('resetPasswordBtn').addEventListener('click',async()=>{try{await sendPasswordReset()}catch(error){console.error('Password reset request failed:',error);authError(error.message||'تعذر إرسال رابط الاستعادة. حاول مرة أخرى.')}});
-$('email').addEventListener('input',updateResetCooldown);\n$('password').addEventListener('input',updatePasswordStrength);
+$('email').addEventListener('input',updateResetCooldown);
+$('password').addEventListener('input',updatePasswordStrength);
 $('resendSignupVerificationBtn')?.addEventListener('click',async()=>{
  const email=$('email').value.trim();
  if(!email||!$('email').checkValidity()){authError('أدخل البريد الإلكتروني المستخدم في الدعوة أولاً.');return}
