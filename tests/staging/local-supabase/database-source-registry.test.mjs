@@ -60,9 +60,9 @@ test('production registry preserves 62 ledger versions and separately maps five 
     assert.equal(migration.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     assert.equal(migration.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
     if (migration.version === '20261117130000') {
-      assert.equal(migration.localRuntimeStatus, 'PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION');
-      assert.equal(migration.localRuntimeRunId, null);
-      assert.equal(migration.localRuntimeCommit, null);
+      assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(migration.localRuntimeRunId, 44040777235);
+      assert.equal(migration.localRuntimeCommit, 'ee5d57ebea388beb5280e01c0af518b5a36c1ddd');
       assert.deepEqual(migration.blockedBy, []);
     } else {
       assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
