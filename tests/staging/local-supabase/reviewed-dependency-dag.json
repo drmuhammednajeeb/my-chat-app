@@ -1401,7 +1401,7 @@
         "platform.pg_net",
         "platform.vault"
       ],
-      "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_VALIDATION",
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "testSource": [
         "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
@@ -1424,7 +1424,7 @@
       "requires": [
         "chat.auto-cleanup-100h"
       ],
-      "status": "TEST_ONLY_POST_FORWARD_CLEANUP_ASSERTIONS_PENDING",
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "testSource": [
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
         "tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs"
@@ -2559,24 +2559,20 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 43260183037,
-    "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-    "completedAt": "2026-11-12T16:37:17Z",
+    "workflowRunId": 44039542741,
+    "commit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b",
+    "completedAt": "2026-11-17T07:35:06Z",
     "localOnly": true,
-    "sqlFilesExecuted": 83,
+    "sqlFilesExecuted": 85,
     "checks": [
       "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
-      "pgcrypto schema and function resolution passed",
-      "temporary pg_cron scheduler job executed successfully",
-      "24 reversed-pair concurrent requests converged on one direct conversation",
-      "40 concurrent authenticated message writes persisted uniquely",
-      "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
-      "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
-      "full reviewed disposable replay completed"
-    ],
-    "pendingNodes": [
-      "chat.auto-cleanup-100h",
-      "test-fixture.message-auto-cleanup"
+      "all 85 reviewed SQL sources and test fixtures replayed successfully",
+      "pgcrypto, pg_cron, pg_net and Supabase Vault dependencies resolved",
+      "existing five-minute purge cron contract remained valid and enqueued rather than deleting database rows directly",
+      "message cleanup queue, pinned-message exclusion, official-channel marker, cascades and service-role-only RPC assertions passed",
+      "actual disposable chat-media object was uploaded, aged past 100 hours, removed through the Storage API, and its queue item completed",
+      "Storage object and cleanup queue row were both confirmed absent after worker completion",
+      "the disposable Supabase stack was stopped and destroyed"
     ]
   },
   "auditEvidence": {
