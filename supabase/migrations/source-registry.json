@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 67,
+    "canonicalCliMigrationFiles": 68,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 20,
@@ -42,7 +42,7 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 5
+    "forwardReconciliationMigrations": 6
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -1838,6 +1838,18 @@
       "productionApplied": false
     },
     {
+      "version": "20261113060002",
+      "name": "fix_conversation_image_extension_validation",
+      "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
+      "gitBlobSha": "aef5523972214dab0e4c8a90d12c252b7c586373",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Correct the literal-dot suffix validation in both conversation-image functions and move the exposed RPC to an authenticated SECURITY INVOKER wrapper over a private, guarded SECURITY DEFINER implementation.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false
+    },
+    {
       "version": "20261117130000",
       "name": "message_auto_cleanup_100h_storage",
       "path": "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
@@ -1855,11 +1867,9 @@
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 5,
+    "pendingForwardCount": 6,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 44040777235,
-    "localRuntimeCommit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false
   },
   "validationEvidence": {
@@ -1892,7 +1902,13 @@
       "passed": 89,
       "failed": 0
     },
-    "pendingAdditionalSources": [],
+    "pendingAdditionalSources": [
+      {
+        "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
+        "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+        "reason": "New image-extension and RPC-boundary migration awaits fresh disposable-local replay."
+      }
+    ],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
