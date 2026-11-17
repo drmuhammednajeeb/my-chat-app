@@ -6,8 +6,8 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
 test("all inline application scripts parse as valid JavaScript", () => {
-  const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-    .filter(([, attributes, body]) => !/\\bsrc\\s*=/.test(attributes) && body.trim());
+  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(([, attributes, body]) => !/\bsrc\s*=/.test(attributes) && body.trim());
   assert.ok(scripts.length > 0, "index.html must contain inline application scripts");
   for (const [, attributes, body] of scripts) {
     assert.doesNotThrow(
