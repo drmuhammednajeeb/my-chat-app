@@ -1841,7 +1841,7 @@
       "version": "20261117130000",
       "name": "message_auto_cleanup_100h_storage",
       "path": "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
-      "gitBlobSha": "c709a6102e54b224765cac875ad87c059342b8c4",
+      "gitBlobSha": "0d99788dab6535cd6327fe724380efe0a6987aa8",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Queue all messages older than 100 hours and unreferenced chat-media objects older than 100 hours; preserve pinned messages and server-designated official channels; delete Storage objects through the Storage API before cascading message metadata cleanup.",
