@@ -49,6 +49,7 @@ BEGIN
   IF has_function_privilege('anon','app_private.set_conversation_image_impl(uuid,text)','EXECUTE')
      OR NOT has_function_privilege('authenticated','app_private.set_conversation_image_impl(uuid,text)','EXECUTE')
      OR has_function_privilege('anon','public.set_conversation_image(uuid,text)','EXECUTE')
+     OR has_function_privilege('service_role','public.set_conversation_image(uuid,text)','EXECUTE')
      OR NOT has_function_privilege('authenticated','public.set_conversation_image(uuid,text)','EXECUTE') THEN
     RAISE EXCEPTION 'Conversation image RPC/helper execute ACLs are not least-privilege';
   END IF;
