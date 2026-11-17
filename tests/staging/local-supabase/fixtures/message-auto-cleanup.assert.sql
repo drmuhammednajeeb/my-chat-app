@@ -58,8 +58,8 @@ BEGIN
   INTO v_purge_definition;
 
   IF position('enqueue_expired_chat_messages' in v_purge_definition) = 0
-     OR position('DELETE FROM public.chat_messages' in upper(v_purge_definition)) > 0
-     OR position('DELETE FROM storage.objects' in upper(v_purge_definition)) > 0 THEN
+     OR position('DELETE FROM PUBLIC.CHAT_MESSAGES' in upper(v_purge_definition)) > 0
+     OR position('DELETE FROM STORAGE.OBJECTS' in upper(v_purge_definition)) > 0 THEN
     RAISE EXCEPTION 'legacy purge function still performs destructive SQL deletes';
   END IF;
 
