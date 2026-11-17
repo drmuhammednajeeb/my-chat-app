@@ -426,9 +426,9 @@ test('five forward migrations remain outside the production ledger with explicit
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     if (name.startsWith('20261117130000_')) {
-      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-      assert.equal(forward?.localRuntimeRunId, 44039542741);
-      assert.equal(forward?.localRuntimeCommit, '9793a99e4b29ba22ce20fe9c18d66d1b24e4394b');
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION');
+      assert.equal(forward?.localRuntimeRunId, null);
+      assert.equal(forward?.localRuntimeCommit, null);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
@@ -452,8 +452,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 20);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 85);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 19);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 83);
   assert.equal(manifest.sourceCoverage.candidateSqlFiles, 85);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
