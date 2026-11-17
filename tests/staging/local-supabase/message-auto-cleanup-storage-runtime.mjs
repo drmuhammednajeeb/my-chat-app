@@ -28,6 +28,7 @@ if (!["127.0.0.1", "localhost", "::1"].includes(dbHost) || database.port !== "54
 }
 
 const objectPath = "auto-cleanup-runtime/" + randomBytes(12).toString("hex") + ".png";
+const objectPathLiteral = "'" + objectPath.replaceAll("'", "''") + "'";
 const authHeaders = {
   apikey: serviceKey,
   Authorization: "Bearer " + serviceKey
@@ -40,8 +41,7 @@ function psql(sql) {
     "--set=ON_ERROR_STOP=1",
     "--tuples-only",
     "--no-align",
-    "--set=object_path=" + objectPath,
-    "--command", sql,
+    "--command", sql.replaceAll(":'object_path'", objectPathLiteral),
     dbUrl
   ], { encoding: "utf8", env: { ...process.env, PGCONNECT_TIMEOUT: "5" }, timeout: 30000 });
   if (result.error || result.status !== 0) {
