@@ -661,7 +661,7 @@ $('authForm').addEventListener('submit',async e=>{
    const username=slug($('username').value),nameResult=validateSignupDisplayName($('displayName').value),display=nameResult.normalized;
    const membershipNumber=$('membershipNumber').value.trim(),membershipInviteCode=$('membershipInviteCode').value.trim();
    if(username.length<3)throw new Error('اسم المستخدم يجب أن يتكون من 3 إلى 24 حرفاً إنجليزياً أو رقماً أو _');
-   if(!nameResult.valid)throw new Error('أدخل اسمك مع لقبك على الأقل (اسمين)، أو اسمك الثلاثي. مثال: محمد النبهاني أو محمد أحمد النبهاني. استخدم الحروف والمسافات فقط.');
+   if(!nameResult.valid)throw new Error('أدخل اسمك مع لقبك على الأقل (اسمين)، أو اسمك الثلاثي. مثال: محمد النبهاني أو محمد أحمد النبهاني. استخدم الحروف والمسافات، ويمكنك وضع شرطة أو فاصلة عليا داخل الاسم.');
    if(!/^971[0-9]{9}$/.test(membershipNumber))throw new Error('أدخل رقم فوريفر الرسمي: 971 ثم تسعة أرقام.');
    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(membershipInviteCode))throw new Error('رمز الدعوة غير صحيح. استخدم الرمز الذي أنشأه مسؤول التطبيق.');
    btn.disabled=true;btn.textContent='جارٍ إنشاء الحساب...';authProgress('جارٍ إنشاء حسابك والتحقق من البيانات...');
