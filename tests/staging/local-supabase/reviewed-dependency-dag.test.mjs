@@ -425,13 +425,8 @@ test('five forward hardening migrations remain outside the production ledger and
     assert.deepEqual(node.blockedBy, blockers);
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
-    if (name === '20261117120000_enforce_signup_display_name_server_side.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
-      assert.equal(forward?.localRuntimeRunId, undefined);
-    } else {
-      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-      assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
-    }
+    assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+    assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
   }
   const signupGuard = dag.nodes.find(node => node.id === 'membership.signup-name-validation-forward');
   const signupAssertions = dag.nodes.find(node => node.id === 'test-fixture.signup-name-guard');
