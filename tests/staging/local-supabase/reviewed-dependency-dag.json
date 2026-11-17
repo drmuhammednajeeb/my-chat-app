@@ -1401,7 +1401,7 @@
         "platform.pg_net",
         "platform.vault"
       ],
-      "status": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "testSource": [
         "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
@@ -1424,7 +1424,7 @@
       "requires": [
         "chat.auto-cleanup-100h"
       ],
-      "status": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "testSource": [
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
         "tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs"
@@ -2557,9 +2557,23 @@
     }
   ],
   "runtimeEvidence": {
-    "status": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
-    "previousSuccessfulRunId": 44039542741,
-    "previousSuccessfulCommit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b"
+    "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "workflow": "Disposable local Supabase runtime verification",
+    "workflowRunId": 44040777235,
+    "commit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
+    "completedAt": "2026-11-17T07:44:04Z",
+    "localOnly": true,
+    "sqlFilesExecuted": 85,
+    "checks": [
+      "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
+      "all 85 reviewed SQL sources and test fixtures replayed successfully",
+      "pgcrypto, pg_cron, pg_net and Supabase Vault dependencies resolved",
+      "message cleanup queue, 100-hour cutoff, pinned-message exclusion, official-channel marker, cascades and service-role-only RPC assertions passed",
+      "the current Edge Function secret-key implementation uses the Supabase default sb_secret_ key mode and the additional Vault invocation token",
+      "an actual disposable chat-media object was uploaded, aged past 100 hours, removed through the Storage API, and its queue item completed",
+      "Storage object and cleanup queue row were both confirmed absent after worker completion",
+      "the disposable Supabase stack was stopped and destroyed"
+    ]
   },
   "auditEvidence": {
     "status": "PASSED",
