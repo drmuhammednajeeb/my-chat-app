@@ -249,6 +249,7 @@ test('conversation image RPC exposes an invoker wrapper and keeps the definer im
   assert.match(fixture, /v_rpc_is_definer is distinct from false/i);
   assert.match(fixture, /v_impl_is_definer is distinct from true/i);
   assert.match(fixture, /has_function_privilege\('anon','app_private\.set_conversation_image_impl/i);
+  assert.match(fixture, /has_function_privilege\('service_role','app_private\.set_conversation_image_impl/i);
   assert.match(fixture, /has_function_privilege\('service_role','public\.set_conversation_image/i);
 });
 
