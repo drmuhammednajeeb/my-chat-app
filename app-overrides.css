@@ -472,3 +472,18 @@ html body{font-weight:500}
 @media(max-width:760px){
  #messages .bubble{font-size:14.5px;line-height:1.6}
 }
+
+
+/* Signup identity and password guidance */
+.signup-field-hint{display:block;margin-top:5px;color:var(--muted);font-size:12px;line-height:1.7}
+.password-strength{display:grid;gap:7px;margin-top:9px}
+.password-strength-meter{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;height:6px}
+.password-strength-meter span{display:block;border-radius:999px;background:var(--border,#d8dee8);transition:background-color .18s ease}
+.password-strength-meter[data-strength="1"] span.is-filled{background:#d97706}
+.password-strength-meter[data-strength="2"] span.is-filled{background:#ca8a04}
+.password-strength-meter[data-strength="3"] span.is-filled{background:#16a34a}
+.password-strength-meter[data-strength="4"] span.is-filled{background:#15803d}
+.password-strength-caption{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;font-size:12px}
+.password-strength-caption strong{color:var(--text)}
+.password-strength-caption small{color:var(--muted);line-height:1.6}
+@media(prefers-reduced-motion:reduce){.password-strength-meter span{transition:none}}
