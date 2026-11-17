@@ -71,6 +71,34 @@ begin
     raise exception 'Digit-containing name consumed the invitation';
   end if;
 
+  -- Four-part names are rejected by the same server-side rule.
+  begin
+    insert into auth.users (
+      id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data
+    ) values (
+      '22222222-2222-4222-8222-222222222225', 'authenticated', 'authenticated',
+      'signup-two-part@bizmindmakers.test', '', now(),
+      jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')),
+      jsonb_build_object(
+        'username', 'signup_two_part',
+        'display_name', 'محمد أحمد علي النبهاني',
+        'membership_number', '971009999991',
+        'membership_invite_code', '99999999-1111-4111-8111-111111111111'
+      )
+    );
+    raise exception 'A four-part signup name was unexpectedly accepted';
+  exception when others then
+    if sqlerrm not like '%الاسم يجب أن يتكون%' then raise; end if;
+  end;
+
+  select status into v_status
+  from app_private.member_invitations
+  where email = 'signup-two-part@bizmindmakers.test';
+  if v_status <> 'pending' then
+    raise exception 'Four-part name consumed the invitation';
+  end if;
+
   -- Two-part Arabic name is accepted, whitespace is normalized, and the profile is correct.
   insert into auth.users (
     id, aud, role, email, encrypted_password, email_confirmed_at,
