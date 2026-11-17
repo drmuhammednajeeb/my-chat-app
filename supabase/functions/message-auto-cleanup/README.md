@@ -16,19 +16,19 @@ Never expose the secret key or Vault token to the browser or commit them to the 
 
 ## Activation order
 
-1. Confirm the project's default Secret API key (`sb_secret_...`) exists in Supabase Settings → API Keys.
-2. Deploy the Edge Function using the command above.
-3. Apply the reviewed database migration.
-4. As the database owner, configure the scheduled caller once, passing the secret key through a secure psql/session input (not a committed file or chat):
+1. In Supabase Settings → API Keys, confirm the project's default Secret API key (`sb_secret_...`) exists.
+2. In Database → Vault, create a secret named `message_cleanup_backend_key` and paste the default Secret API key as its value. Do not put the key in SQL text, source files, or chat.
+3. Deploy the Edge Function using the command above.
+4. Apply the reviewed database migration.
+5. As the database owner, configure the scheduled caller once:
 
 ```sql
 select app_private.configure_message_auto_cleanup(
-  'https://lvkeohpuucuklagvwpnq.supabase.co',
-  '<SUPABASE_DEFAULT_SECRET_KEY>'
+  'https://lvkeohpuucuklagvwpnq.supabase.co'
 );
 ```
 
-The function stores the key, project URL, and generated random invocation token in Supabase Vault. The key is sent only in the `apikey` header. The worker runs every five minutes.
+The function reads the backend key from Vault, stores the project URL and generated random invocation token in Vault, and schedules the worker every five minutes. The key is sent only in the `apikey` header.
 
 The migration intentionally does not point local test databases at production.
 
