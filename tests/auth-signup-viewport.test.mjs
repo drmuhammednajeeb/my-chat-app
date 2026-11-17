@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { runInNewContext } from "node:vm";
 
 const [html, css, sw] = await Promise.all([
   readFile(new URL("../index.html", import.meta.url), "utf8"),
@@ -59,4 +60,29 @@ test("password strength is live guidance and does not enforce complexity", () =>
   assert.match(html, /\$\('password'\)\.addEventListener\('input',updatePasswordStrength\)/);
   assert.match(html, /if\(password\.length<8\)throw new Error/);
   assert.doesNotMatch(html, /if\(.*(?:uppercase|lowercase|symbol|digit).*(?:throw new Error)/i);
+});
+
+test("signup name validator accepts two or three Arabic/Latin names only", () => {
+  const start = html.indexOf("function normalizeSignupDisplayName");
+  const end = html.indexOf("function updatePasswordStrength()", start);
+  assert.ok(start >= 0 && end > start, "signup validation helpers must exist");
+  const helpers = html.slice(start, end);
+  const api = runInNewContext(`${helpers};({ normalizeSignupDisplayName, validateSignupDisplayName, getPasswordStrength })`);
+  assert.equal(api.validateSignupDisplayName("محمد النبهاني").valid, true);
+  assert.equal(api.validateSignupDisplayName("محمد أحمد النبهاني").valid, true);
+  assert.equal(api.validateSignupDisplayName("Mohammed Al Nabhani").valid, false, "four parts are not allowed");
+  assert.equal(api.validateSignupDisplayName("محمد").valid, false);
+  assert.equal(api.validateSignupDisplayName("محمد  النبهاني").normalized, "محمد النبهاني");
+  assert.equal(api.validateSignupDisplayName("محمد 123").valid, false);
+});
+
+test("password strength levels are advisory and the only signup threshold is eight characters", () => {
+  const start = html.indexOf("function normalizeSignupDisplayName");
+  const end = html.indexOf("function updatePasswordStrength()", start);
+  const api = runInNewContext(`${html.slice(start, end)};({ getPasswordStrength })`);
+  assert.equal(api.getPasswordStrength("abcdefgh").label, "ضعيفة");
+  assert.equal(api.getPasswordStrength("abcdefghij").label, "متوسطة");
+  assert.equal(api.getPasswordStrength("Abcdefgh1").label, "قوية");
+  assert.equal(api.getPasswordStrength("Abcdefgh1234!").label, "قوية جداً");
+  assert.match(html, /if\(password\.length<8\)throw new Error/);
 });
