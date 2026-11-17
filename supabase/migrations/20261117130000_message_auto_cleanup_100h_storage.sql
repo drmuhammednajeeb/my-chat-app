@@ -635,12 +635,12 @@ BEGIN
 END;
 $function$;
 
-COMMENT ON FUNCTION app_private.configure_message_auto_cleanup(text, text) IS
+COMMENT ON FUNCTION app_private.configure_message_auto_cleanup(text) IS
   'Requires the project default sb_secret_ API key. Stores it in Vault and sends it only through the apikey header to an Edge Function configured with auth: secret and verify_jwt=false.';
 
 REVOKE ALL ON FUNCTION app_private.set_message_cleanup_vault_secret(text, text, text)
   FROM PUBLIC, anon, authenticated, service_role;
-REVOKE ALL ON FUNCTION app_private.configure_message_auto_cleanup(text, text)
+REVOKE ALL ON FUNCTION app_private.configure_message_auto_cleanup(text)
   FROM PUBLIC, anon, authenticated, service_role;
 
 COMMIT;
