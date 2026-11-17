@@ -30,7 +30,8 @@ const functionNames = [
   "normalizeDirectorySearch",
   "directoryMembershipDigits",
   "buildDirectoryQuery",
-  "loadDirectory"
+  "loadDirectory",
+  "openDirectConversation"
 ];
 const functions = functionNames.map(extract).join("\n");
 
@@ -61,15 +62,19 @@ function makeApi({ client, state, elements, pending, overrides = {} } = {}) {
       createElement() {
         return { className: "", textContent: "" };
       }
-    }
+    },
+    findDirectConversation: () => null,
+    loadConversations: async () => true,
+    openConversation: async () => {},
+    toast() {}
   };
+  Object.assign(sandbox, overrides);
   if (pending) sandbox.pending = pending;
   return vm.runInNewContext(
-    "(function(){ " + functions + "; return { normalizeDirectoryDigits, normalizeDirectorySearch, directoryMembershipDigits, buildDirectoryQuery, loadDirectory }; })()",
+    "(function(){ " + functions + "; return { normalizeDirectoryDigits, normalizeDirectorySearch, directoryMembershipDigits, buildDirectoryQuery, loadDirectory, openDirectConversation }; })()",
     sandbox
   );
 }
-
 test("builds a verified exact PostgREST filter for a full Arabic member number", async () => {
   const { client, calls } = makeQueryRecorder();
   const api = makeApi({ client, state: {} });
