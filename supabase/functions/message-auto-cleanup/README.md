@@ -4,30 +4,33 @@ This worker removes eligible message media through the Supabase Storage API befo
 
 ## Deployment
 
-Deploy this function with JWT verification disabled because the scheduled caller uses a Vault-held per-project token which the function validates through the service-role-only `verify_message_cleanup_token` RPC:
+Deploy this function with JWT verification disabled. The function itself authenticates the caller through Supabase's server-side secret-key mode and an additional per-project Vault token:
 
 ```sh
 supabase functions deploy message-auto-cleanup --no-verify-jwt
 ```
 
-Never expose `SUPABASE_SERVICE_ROLE_KEY` or the Vault token to the browser.
+The Edge Function uses `@supabase/server` with `auth: "secret"` and `ctx.supabaseAdmin`. The caller must send the project's default `sb_secret_...` key in the `apikey` header only; do not send it in `Authorization: Bearer`. The function also verifies `x-auto-cleanup-token` against the random token stored in Vault.
+
+Never expose the secret key or Vault token to the browser or commit them to the repository.
 
 ## Activation order
 
-1. Deploy this Edge Function with `--no-verify-jwt`.
-2. Apply the reviewed database migration.
-3. As the database owner, configure the scheduled caller once:
+1. Confirm the project's default Secret API key (`sb_secret_...`) exists in Supabase Settings → API Keys.
+2. Deploy the Edge Function using the command above.
+3. Apply the reviewed database migration.
+4. As the database owner, configure the scheduled caller once, passing the secret key through a secure psql/session input (not a committed file or chat):
 
 ```sql
 select app_private.configure_message_auto_cleanup(
   'https://lvkeohpuucuklagvwpnq.supabase.co',
-  '<SUPABASE_PUBLISHABLE_OR_LEGACY_ANON_KEY>'
+  '<SUPABASE_DEFAULT_SECRET_KEY>'
 );
 ```
 
-The function stores the project URL, publishable key, and generated random invocation token in Supabase Vault. The worker runs every five minutes.
+The function stores the key, project URL, and generated random invocation token in Supabase Vault. The key is sent only in the `apikey` header. The worker runs every five minutes.
 
-Do not call the configuration function until the Edge Function has been deployed. The migration intentionally does not point local test databases at production.
+The migration intentionally does not point local test databases at production.
 
 ## Processing guarantees
 
