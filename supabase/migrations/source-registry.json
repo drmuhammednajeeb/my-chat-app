@@ -1846,8 +1846,10 @@
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Enforce two- or three-part Arabic/Latin signup display names in the Auth BEFORE INSERT trigger before an invitation can be consumed; normalize whitespace and preserve the accepted name in profile metadata.",
       "blockedBy": [],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-      "productionApplied": false
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "localRuntimeRunId": 44032439425,
+      "localRuntimeCommit": "d90d0c23793465b5e4c6b26c6d7b05dbc6ee4ad8"
     }
   ],
   "forwardMigrationPolicy": {
@@ -1855,18 +1857,20 @@
     "productionLedgerCount": 62,
     "pendingForwardCount": 5,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-    "productionApplied": false
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "productionApplied": false,
+    "localRuntimeRunId": 44032439425,
+    "localRuntimeCommit": "d90d0c23793465b5e4c6b26c6d7b05dbc6ee4ad8"
   },
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 43260183037,
-      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-      "completedAt": "2026-11-12T16:37:17Z",
+      "workflowRunId": 44032439425,
+      "commit": "d90d0c23793465b5e4c6b26c6d7b05dbc6ee4ad8",
+      "completedAt": "2026-11-17T06:38:12Z",
       "localOnly": true,
-      "sqlFilesExecuted": 83,
+      "sqlFilesExecuted": 85,
       "checks": [
         "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
         "pgcrypto schema and function resolution passed",
@@ -1875,17 +1879,19 @@
         "40 concurrent authenticated message writes persisted uniquely",
         "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
         "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
+        "signup Auth trigger rejected one-part, four-part and digit-containing names before invitation consumption",
+        "signup Auth trigger accepted and normalized two-part Arabic and three-part Latin names while preserving official membership-number verification",
         "full reviewed disposable replay completed"
       ]
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 43260183019,
-      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-      "completedAt": "2026-11-12T16:35:00Z",
-      "tests": 77,
-      "passed": 77,
+      "workflowRunId": 44032439393,
+      "commit": "d90d0c23793465b5e4c6b26c6d7b05dbc6ee4ad8",
+      "completedAt": "2026-11-17T06:36:44Z",
+      "tests": 78,
+      "passed": 78,
       "failed": 0
     }
   }
