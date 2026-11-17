@@ -1373,7 +1373,8 @@
         "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
       ],
       "provides": [
-        "literal-dot extension validation for conversation avatar image paths in trigger and authenticated RPC"
+        "literal-dot extension validation for conversation avatar image paths in trigger and authenticated RPC",
+        "public SECURITY INVOKER RPC wrapper over a private guarded SECURITY DEFINER implementation"
       ],
       "requires": [
         "security.active-membership-rls-forward",
@@ -1384,7 +1385,7 @@
         "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
       ],
       "blockedBy": [],
-      "note": "Forward-only correction for the historical double-backslash regex. Preserves empty search_path, SECURITY DEFINER authorization checks, object ownership prefix and authenticated-only public RPC execution."
+      "note": "Forward-only correction for the historical double-backslash regex and exposed SECURITY DEFINER RPC warning. Preserves auth.uid(), active-membership, manager, caller-owned object-path and object-existence checks; public RPC is invoker-only and delegates to an authenticated-only private definer helper with empty search_path."
     }
   ],
   "explicitEdges": [
