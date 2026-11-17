@@ -4,15 +4,17 @@ import { readFileSync } from 'node:fs';
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-test('the published browser app is pinned to the approved Cloud Supabase project', () => {
+test('the browser loads Supabase configuration from the environment-specific runtime endpoint', () => {
   const index = read('../index.html');
-  const declarations = [...index.matchAll(/const\s+SUPABASE_URL\s*=/g)];
-  assert.equal(declarations.length, 1, 'the browser must have exactly one Supabase URL declaration');
-  assert.match(
-    index,
-    /const\s+SUPABASE_URL\s*=\s*'https:\/\/lvkeohpuucuklagvwpnq\.supabase\.co'/,
-    'the deployed app must target the approved Cloud Supabase project'
-  );
+  const endpoint = read('../api/runtime-config.js');
+  assert.match(index, /<script src="\\/api\\/runtime-config"><\\/script>/);
+  assert.match(index, /window\\.BIZMIND_RUNTIME_CONFIG/);
+  assert.doesNotMatch(index, /const\\s+SUPABASE_URL\\s*=\\s*['"]https:\\/\\//);
+  assert.doesNotMatch(index, /const\\s+SUPABASE_ANON_KEY\\s*=\\s*['"][^'"]+['"]/);
+  assert.match(endpoint, /VERCEL_ENV/);
+  assert.match(endpoint, /deployment === 'preview'.*PRODUCTION_PROJECT_HOST/s);
+  assert.match(endpoint, /deployment === 'production'.*PRODUCTION_PROJECT_HOST/s);
+  assert.match(endpoint, /Cache-Control/);
 });
 
 test('no local Docker/Supabase endpoint can leak into browser runtime assets', () => {
