@@ -44,6 +44,49 @@ begin
     raise exception 'التسجيل مغلق. يلزم بريد الدعوة ورقم العضوية ورمز الدعوة المعتمد';
   end if;
 
+  if v_membership_number !~ '^971[0-9]{9}
+  from app_private.member_invitations i
+  where i.email = v_email
+    and i.membership_number = v_membership_number
+    and i.invite_code::text = v_code
+    and i.status = 'pending'
+    and i.expires_at > now()
+  for update;
+
+  if not found then
+    raise exception 'الدعوة غير صحيحة أو منتهية أو سبق استخدامها';
+  end if;
+
+  update app_private.member_invitations
+  set status = 'accepted', accepted_at = now()
+  where id = v_inv.id and status = 'pending';
+
+  if not found then
+    raise exception 'تم استخدام هذه الدعوة أو إلغاؤها بالفعل';
+  end if;
+
+  new.email := v_email;
+  new.raw_app_meta_data := coalesce(new.raw_app_meta_data, '{}'::jsonb)
+    || jsonb_build_object(
+      'membership_number', v_inv.membership_number,
+      'membership_number_verified', true,
+      'membership_status', 'active'
+    );
+  new.raw_user_meta_data := (
+    coalesce(new.raw_user_meta_data, '{}'::jsonb)
+    - 'membership_invite_code'
+    - 'membership_number'
+  ) || jsonb_build_object('display_name', v_display_name);
+
+  return new;
+end;
+$function$;
+
+revoke all on function app_private.enforce_invited_auth_signup() from public, anon, authenticated;
+ then
+    raise exception 'رقم العضوية الرسمي يجب أن يبدأ بـ 971 ويتبعه تسعة أرقام';
+  end if;
+
   select i.* into v_inv
   from app_private.member_invitations i
   where i.email = v_email
