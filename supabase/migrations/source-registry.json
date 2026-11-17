@@ -1896,7 +1896,8 @@
       "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
       "supabase/functions/message-auto-cleanup/index.ts",
-      "supabase/functions/message-auto-cleanup/worker-core.mjs"
+      "supabase/functions/message-auto-cleanup/worker-core.mjs",
+      "tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs"
     ]
   }
 }
