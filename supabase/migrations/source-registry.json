@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 67,
+    "canonicalCliMigrationFiles": 68,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 20,
@@ -42,7 +42,7 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 5
+    "forwardReconciliationMigrations": 6
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -1838,6 +1838,22 @@
       "productionApplied": false
     },
     {
+      "version": "20261113060002",
+      "name": "fix_conversation_image_extension_validation",
+      "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
+      "gitBlobSha": "aef5523972214dab0e4c8a90d12c252b7c586373",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Correct the literal-dot suffix validation in both conversation-image functions and move the exposed RPC to an authenticated SECURITY INVOKER wrapper over a private, guarded SECURITY DEFINER implementation.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "localRuntimeRunId": 44054041618,
+      "localRuntimeCommit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+      "localRuntimeCompletedAt": "2026-11-17T09:18:04Z",
+      "localRuntimeSqlFilesExecuted": 86
+    },
+    {
       "version": "20261117130000",
       "name": "message_auto_cleanup_100h_storage",
       "path": "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
@@ -1855,41 +1871,41 @@
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 5,
+    "pendingForwardCount": 6,
     "executionAuthorized": false,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 44040777235,
-    "localRuntimeCommit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
-    "productionApplied": false
+    "productionApplied": false,
+    "localRuntimeRunId": 44054041618,
+    "localRuntimeCommit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+    "localRuntimeCompletedAt": "2026-11-17T09:18:04Z",
+    "localRuntimeSqlFilesExecuted": 86
   },
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 44040777235,
-      "commit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
-      "completedAt": "2026-11-17T07:44:04Z",
+      "workflowRunId": 44054041618,
+      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+      "completedAt": "2026-11-17T09:18:04Z",
       "localOnly": true,
-      "sqlFilesExecuted": 85,
+      "sqlFilesExecuted": 86,
       "checks": [
-        "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
-        "all 85 reviewed SQL sources and test fixtures replayed successfully",
-        "pgcrypto, pg_cron, pg_net and Supabase Vault dependencies resolved",
-        "message cleanup queue, 100-hour cutoff, pinned-message exclusion, official-channel marker, cascades and service-role-only RPC assertions passed",
-        "the current Edge Function secret-key implementation uses the Supabase default sb_secret_ key mode and the additional Vault invocation token",
-        "an actual disposable chat-media object was uploaded, aged past 100 hours, removed through the Storage API, and its queue item completed",
-        "Storage object and cleanup queue row were both confirmed absent after worker completion",
-        "the disposable Supabase stack was stopped and destroyed"
+        "All 86 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
+        "The conversation-image extension validation forward migration executed and its post-forward assertions passed.",
+        "The public set_conversation_image RPC is SECURITY INVOKER; the private implementation retains SECURITY DEFINER with an empty search_path and authenticated-only EXECUTE ACL.",
+        "Storage API RLS runtime passed; synthetic upload, metadata, signed URL, ownership, and deletion probes passed.",
+        "Message auto-cleanup Storage runtime passed: one synthetic expired object was removed and its queue item completed.",
+        "The disposable Supabase stack was stopped and destroyed."
       ]
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 44040777314,
-      "commit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
-      "completedAt": "2026-11-17T07:42:42Z",
-      "tests": 89,
-      "passed": 89,
+      "workflowRunId": 44054041833,
+      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+      "completedAt": "2026-11-17T09:16:31Z",
+      "tests": 101,
+      "passed": 101,
       "failed": 0
     },
     "pendingAdditionalSources": [],
