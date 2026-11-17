@@ -1401,7 +1401,7 @@
         "platform.pg_net",
         "platform.vault"
       ],
-      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "status": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
       "testSource": [
         "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
@@ -1424,7 +1424,7 @@
       "requires": [
         "chat.auto-cleanup-100h"
       ],
-      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "status": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
       "testSource": [
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
         "tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs"
@@ -2557,23 +2557,9 @@
     }
   ],
   "runtimeEvidence": {
-    "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 44039542741,
-    "commit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b",
-    "completedAt": "2026-11-17T07:35:06Z",
-    "localOnly": true,
-    "sqlFilesExecuted": 85,
-    "checks": [
-      "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
-      "all 85 reviewed SQL sources and test fixtures replayed successfully",
-      "pgcrypto, pg_cron, pg_net and Supabase Vault dependencies resolved",
-      "existing five-minute purge cron contract remained valid and enqueued rather than deleting database rows directly",
-      "message cleanup queue, pinned-message exclusion, official-channel marker, cascades and service-role-only RPC assertions passed",
-      "actual disposable chat-media object was uploaded, aged past 100 hours, removed through the Storage API, and its queue item completed",
-      "Storage object and cleanup queue row were both confirmed absent after worker completion",
-      "the disposable Supabase stack was stopped and destroyed"
-    ]
+    "status": "PENDING_UPDATED_SECRET_KEY_IMPLEMENTATION_VALIDATION",
+    "previousSuccessfulRunId": 44039542741,
+    "previousSuccessfulCommit": "9793a99e4b29ba22ce20fe9c18d66d1b24e4394b"
   },
   "auditEvidence": {
     "status": "PASSED",
