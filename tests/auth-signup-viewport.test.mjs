@@ -70,7 +70,7 @@ test("signup name validator accepts two or three Arabic/Latin names only", () =>
   const api = runInNewContext(`${helpers};({ normalizeSignupDisplayName, validateSignupDisplayName, getPasswordStrength })`);
   assert.equal(api.validateSignupDisplayName("محمد النبهاني").valid, true);
   assert.equal(api.validateSignupDisplayName("محمد أحمد النبهاني").valid, true);
-  assert.equal(api.validateSignupDisplayName("Mohammed bin Ali Al Nabhani").valid, false, "four parts are not allowed");
+  assert.equal(api.validateSignupDisplayName("Mohammed bin Ali Nabhani").valid, false, "four parts are not allowed");
   assert.equal(api.validateSignupDisplayName("محمد").valid, false);
   assert.equal(api.validateSignupDisplayName("محمد  النبهاني").normalized, "محمد النبهاني");
   assert.equal(api.validateSignupDisplayName("محمد 123").valid, false);
