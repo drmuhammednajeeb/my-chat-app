@@ -3,11 +3,11 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 66,
-    "mappedSources": 66,
+    "sqlFiles": 67,
+    "mappedSources": 67,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 19,
+    "testOnlySqlFixtures": 20,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -27,15 +27,19 @@
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
     "executedMappedSources": 64,
     "executedTestOnlySqlFixtures": 19,
     "executedSqlFiles": 83,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE_VALIDATION",
+    "localRuntimeRunId": null,
+    "localRuntimeCommit": null,
+    "candidateMappedSources": 65,
+    "candidateTestOnlySqlFixtures": 20,
+    "candidateSqlFiles": 85
   },
   "execution": {
     "enabled": false,
@@ -427,6 +431,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.auto-cleanup-100h",
+      "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_VALIDATION",
+      "testSources": [
+        "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
       "nodeId": "chat.team-admin-group-overrides",
       "status": "SOURCE_REVIEWED",
       "testSources": [
@@ -449,6 +462,15 @@
       "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED",
       "testSources": [
         "tests/staging/local-supabase/local-pg-cron-runtime.mjs"
+      ],
+      "blockedBy": [],
+      "parityNote": null
+    },
+    {
+      "nodeId": "test-fixture.message-auto-cleanup",
+      "status": "TEST_ONLY_POST_FORWARD_CLEANUP_ASSERTIONS_PENDING",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
       ],
       "blockedBy": [],
       "parityNote": null
@@ -939,6 +961,13 @@
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE_VALIDATION",
+      "localRuntimeRunId": null
     }
   ],
   "validationEvidence": {
