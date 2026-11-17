@@ -510,3 +510,30 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
   z-index:auto;
   width:100%;
 }
+
+
+/* User directory: clearer member identity and responsive contact cards */
+.directory-help{padding:9px 15px;background:var(--panel2);color:var(--muted);font-size:11px;line-height:1.7;border-bottom:1px solid var(--line)}
+.directory-user{gap:11px;padding:12px 10px;margin:7px 0;border:1px solid var(--line);border-radius:13px;background:var(--panel);min-height:82px;transition:border-color .16s,background .16s,box-shadow .16s}
+.directory-user.is-online{border-color:color-mix(in srgb,var(--accent) 42%,var(--line))}
+.directory-user:hover{background:var(--panel2);box-shadow:0 3px 12px #0000000b}
+.directory-copy{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.directory-copy .directory-name{max-width:100%;font-size:13px;font-weight:800;color:var(--text)}
+.directory-copy .directory-handle{margin-top:0;direction:ltr;text-align:left;font-size:11px;color:var(--muted)}
+.directory-membership{display:inline-flex;align-items:center;gap:4px;max-width:100%;font-size:10px;color:var(--accent);font-weight:700;direction:rtl}
+.directory-membership bdi{font-variant-numeric:tabular-nums;letter-spacing:.15px}
+.directory-membership .ph{font-size:12px}
+.directory-status{border-radius:20px;padding:4px 7px;background:var(--panel2);font-size:10px}
+.directory-status.online{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.directory-message-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:34px;padding:7px 12px;border-radius:10px;background:var(--accent);color:#071b1a;font-size:11px;font-weight:800;white-space:nowrap}
+.directory-message-btn:hover{background:var(--accent2);color:#fff}
+.directory-message-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.directory-message-btn .ph{font-size:14px}
+@media(max-width:420px){
+ .directory-user{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:8px;padding:10px 8px;min-height:76px}
+ .directory-user .directory-avatar{width:42px;height:42px}
+ .directory-copy .directory-name{font-size:12px}
+ .directory-membership{font-size:9px}
+ .directory-status{display:none}
+ .directory-message-btn{grid-column:3;grid-row:1;padding:7px 9px;min-height:32px}
+}
