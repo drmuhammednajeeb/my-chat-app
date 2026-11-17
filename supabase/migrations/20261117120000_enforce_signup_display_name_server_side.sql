@@ -16,7 +16,7 @@ declare
 begin
   -- Validate and normalize the submitted name before locking or consuming an invite.
   v_display_name := regexp_replace(
-    btrim(coalesce(new.raw_user_meta_data, '{}'::jsonb)->>'display_name', ''),
+    btrim(coalesce(new.raw_user_meta_data->>'display_name', '')),
     '[[:space:]]+',
     ' ',
     'g'
