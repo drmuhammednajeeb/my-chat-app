@@ -1,5 +1,32 @@
+-- Verify the forward conversation-image migration uses a literal-dot suffix check.
+DO $conversation_image_extension$
+DECLARE
+  v_trigger_definition text;
+  v_rpc_definition text;
+BEGIN
+  IF NOT ('sample.jpg' ~ '\.(jpg|png|webp)$')
+     OR NOT ('sample.PNG' ~* '\.(jpg|png|webp)$')
+     OR NOT ('sample.webp' ~* '\.(jpg|png|webp)$')
+     OR ('sample.txt' ~* '\.(jpg|png|webp)$') THEN
+    RAISE EXCEPTION 'Conversation image extension regex behavior is incorrect';
+  END IF;
+
+  v_trigger_definition := pg_get_functiondef(
+    'app_private.validate_conversation_image_path()'::regprocedure
+  );
+  v_rpc_definition := pg_get_functiondef(
+    'public.set_conversation_image(uuid,text)'::regprocedure
+  );
+
+  IF position($needle$!~* '\.(jpg|png|webp)$'$needle$ IN v_trigger_definition) = 0
+     OR position($needle$!~* '\.(jpg|png|webp)$'$needle$ IN v_rpc_definition) = 0 THEN
+    RAISE EXCEPTION 'A conversation image function does not contain the corrected literal-dot suffix check';
+  END IF;
+END;
+$conversation_image_extension$;
+
 -- TEST ONLY: post-forward-migration privilege, RLS, and CRUD compatibility assertions.
--- Run after 20261112160002 and 20261112160003 in the disposable local Supabase database.
+-- Run after 20261112160002, 20261112160003, and 20261113060002 in disposable local Supabase.
 -- Catalog assertions are read-only; CRUD assertions run inside a transaction ending in ROLLBACK.
 
 -- Read-only assertions after rls-least-privilege-overlay.test-only.sql.
