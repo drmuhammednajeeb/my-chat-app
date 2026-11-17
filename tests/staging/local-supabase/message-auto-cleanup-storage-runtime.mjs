@@ -5,8 +5,7 @@ import { randomBytes } from "node:crypto";
 import { runMessageCleanupBatch } from "../../../supabase/functions/message-auto-cleanup/worker-core.mjs";
 
 function fail(message) {
-  console.error("LOCAL_MESSAGE_AUTO_CLEANUP_BLOCKED=" + message);
-  process.exit(1);
+  throw new Error("LOCAL_MESSAGE_AUTO_CLEANUP_BLOCKED=" + message);
 }
 
 const rawApi = process.env.LOCAL_SUPABASE_URL;
@@ -135,7 +134,11 @@ try {
   console.log("LOCAL_MESSAGE_AUTO_CLEANUP_QUEUE_ITEMS_COMPLETED=" + result.completed);
 } finally {
   if (uploaded) {
-    const cleanup = await removeStoragePaths("chat-media", [objectPath]);
-    if (cleanup.error) console.error("LOCAL_MESSAGE_AUTO_CLEANUP_TEST_OBJECT_CLEANUP_WARNING=" + cleanup.error.message);
+    try {
+      const cleanup = await removeStoragePaths("chat-media", [objectPath]);
+      if (cleanup.error) console.error("LOCAL_MESSAGE_AUTO_CLEANUP_TEST_OBJECT_CLEANUP_WARNING=" + cleanup.error.message);
+    } catch (error) {
+      console.error("LOCAL_MESSAGE_AUTO_CLEANUP_TEST_OBJECT_CLEANUP_WARNING=" + (error?.message || "unknown cleanup error"));
+    }
   }
 }
