@@ -177,7 +177,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 19);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 20);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
@@ -408,6 +408,7 @@ test('chat composer media allowlists are checked against the archived proposal, 
 test('five forward hardening migrations remain outside the production ledger and record disposable-local runtime evidence', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.forwardMigrations.length, 5);
   const expected = new Map([
