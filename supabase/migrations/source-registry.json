@@ -1840,7 +1840,7 @@
       "version": "20261113060002",
       "name": "fix_conversation_image_extension_validation",
       "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
-      "gitBlobSha": "d42dd0d49999d58636321f654e8856ffb9f82914",
+      "gitBlobSha": "ca75cefe5754978578e4102d463dab5a31241f78",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Correct the literal-dot suffix validation for jpg/png/webp paths in both conversation-image functions without weakening actor, membership, manager, object-existence or function ACL checks.",
