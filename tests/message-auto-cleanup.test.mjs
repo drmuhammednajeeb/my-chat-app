@@ -7,6 +7,7 @@ const migration = await readFile(new URL("../supabase/migrations/20261117130000_
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const overrides = await readFile(new URL("../app-overrides.css", import.meta.url), "utf8");
 const edge = await readFile(new URL("../supabase/functions/message-auto-cleanup/index.ts", import.meta.url), "utf8");
+const localRuntime = await readFile(new URL("./staging/local-supabase/message-auto-cleanup-storage-runtime.mjs", import.meta.url), "utf8");
 
 test("retention cutoff is 100 hours from original message creation for all conversation types", () => {
   assert.match(migration, /m\.created_at < pg_catalog\.clock_timestamp\(\) - interval '100 hours'/i);
@@ -143,4 +144,12 @@ test("already-removed storage paths are not removed a second time after the chec
     "mark_message_cleanup_storage_deleted",
     "complete_message_cleanup_batch"
   ]);
+});
+
+test("disposable local runtime exercises the real Storage API and stays loopback-only", () => {
+  assert.match(localRuntime, /LOCAL_SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(localRuntime, /127\.0\.0\.1/);
+  assert.match(localRuntime, /storage\/v1\/object/);
+  assert.match(localRuntime, /runMessageCleanupBatch/);
+  assert.match(localRuntime, /LOCAL_MESSAGE_AUTO_CLEANUP_STORAGE_RUNTIME=PASSED/);
 });
