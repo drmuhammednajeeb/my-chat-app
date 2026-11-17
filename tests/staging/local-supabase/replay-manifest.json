@@ -34,7 +34,9 @@
     "executedMappedSources": 65,
     "executedTestOnlySqlFixtures": 20,
     "executedSqlFiles": 85,
-    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeRunId": 44032439425,
+    "localRuntimeCommit": "d90d0c23793465b5e4c6b26c6d7b05dbc6ee4ad8"
   },
   "execution": {
     "enabled": false,
@@ -640,7 +642,7 @@
     },
     {
       "nodeId": "membership.signup-name-validation-forward",
-      "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_RUNTIME",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
       "testSources": [
         "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql"
       ],
@@ -670,7 +672,7 @@
     },
     {
       "nodeId": "test-fixture.signup-name-guard",
-      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_PENDING_DISPOSABLE_LOCAL_RUNTIME",
+      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_RUNTIME_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
       ],
@@ -961,24 +963,26 @@
       "path": "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44032439425
     },
     {
       "path": "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
       "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
       "blockedBy": [],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44032439425
     }
   ],
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 43260183037,
-      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-      "completedAt": "2026-11-12T16:37:17Z",
+      "workflowRunId": 44032439425,
+      "commit": "d90d0c23793465b5e4c6b26c6d7b05dbc6ee4ad8",
+      "completedAt": "2026-11-17T06:38:12Z",
       "localOnly": true,
-      "sqlFilesExecuted": 83,
+      "sqlFilesExecuted": 85,
       "checks": [
         "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
         "pgcrypto schema and function resolution passed",
@@ -987,19 +991,21 @@
         "40 concurrent authenticated message writes persisted uniquely",
         "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
         "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
+        "signup Auth trigger rejected one-part, four-part and digit-containing names before invitation consumption",
+        "signup Auth trigger accepted and normalized two-part Arabic and three-part Latin names while preserving official membership-number verification",
         "full reviewed disposable replay completed"
       ]
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 43260183019,
-      "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-      "completedAt": "2026-11-12T16:35:00Z",
-      "tests": 77,
-      "passed": 77,
+      "workflowRunId": 44032439393,
+      "commit": "d90d0c23793465b5e4c6b26c6d7b05dbc6ee4ad8",
+      "completedAt": "2026-11-17T06:36:44Z",
+      "tests": 78,
+      "passed": 78,
       "failed": 0
     }
   },
-  "reviewState": "SIGNUP_NAME_FORWARD_MIGRATION_PENDING_DISPOSABLE_LOCAL_RUNTIME_AND_CI"
+  "reviewState": "LOCAL_REPLAY_AND_CI_PASSED_PRODUCTION_RELEASE_REVIEW_REQUIRED"
 }
