@@ -443,7 +443,8 @@ BEGIN
     PERFORM vault.create_secret(
       pg_catalog.encode(extensions.gen_random_bytes(32), 'hex'),
       'message_cleanup_token',
-      'Internal authentication token for the message auto-cleanup Edge Function'
+      'Internal authentication token for the message auto-cleanup Edge Function',
+      NULL
     );
   END IF;
 END;
@@ -545,9 +546,9 @@ BEGIN
   LIMIT 1;
 
   IF v_secret_id IS NULL THEN
-    PERFORM vault.create_secret(p_value, p_name, p_description);
+    PERFORM vault.create_secret(p_value, p_name, p_description, NULL);
   ELSE
-    PERFORM vault.update_secret(v_secret_id, p_value, p_name, p_description);
+    PERFORM vault.update_secret(v_secret_id, p_value, p_name, p_description, NULL);
   END IF;
 END;
 $function$;
