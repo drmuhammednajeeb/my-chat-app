@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.17.1"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.17.2"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -301,24 +301,30 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
 const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
-const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v1';
-const perfSamples=(()=>{try{const value=JSON.parse(localStorage.getItem(PERF_STORAGE_KEY)||'[]');return Array.isArray(value)?value.slice(-80):[]}catch(_e){return []}})();
+const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v2';
+const perfSamples=(()=>{try{const value=JSON.parse(localStorage.getItem(PERF_STORAGE_KEY)||'[]');return Array.isArray(value)?value.slice(-500):[]}catch(_e){return []}})();
 let perfPersistTimer=null;
 function persistPerfSamples(){try{localStorage.setItem(PERF_STORAGE_KEY,JSON.stringify(perfSamples))}catch(_e){}perfPersistTimer=null}
 function recordPerf(metric,duration,details={}){
  const sample={metric,ms:Math.round(Math.max(0,Number(duration)||0)*10)/10,at:Date.now(),...details};
- perfSamples.push(sample);if(perfSamples.length>80)perfSamples.splice(0,perfSamples.length-80);
+ perfSamples.push(sample);if(perfSamples.length>500)perfSamples.splice(0,perfSamples.length-500);
  // Batch storage writes so instrumentation does not add synchronous I/O to message rendering.
  if(perfPersistTimer)clearTimeout(perfPersistTimer);
  perfPersistTimer=setTimeout(persistPerfSamples,1200);
  if(!$('diagnosticsPanel')?.hidden)updateDiagnostics();
 }
 window.addEventListener('pagehide',persistPerfSamples,{capture:true});
+function performancePercentile(values,percentile){
+ if(!values.length)return null;
+ const sorted=values.slice().sort((a,b)=>a-b);
+ const rank=Math.max(1,Math.ceil((Math.min(100,Math.max(0,percentile))/100)*sorted.length));
+ return sorted[rank-1];
+}
 function performanceSummary(){
  const metrics={};
- for(const metric of ['startup_supabase_script','startup_get_session','startup_membership_check','profile_load','startup_shell_reveal','startup_conversations_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total']){
-  const values=perfSamples.filter(x=>x.metric===metric).slice(-50).map(x=>x.ms).sort((a,b)=>a-b);
-  if(values.length)metrics[metric]={samples:values.length,avg_ms:Math.round(values.reduce((a,b)=>a+b,0)/values.length),p50_ms:values[Math.floor((values.length-1)*.5)],p95_ms:values[Math.floor((values.length-1)*.95)],max_ms:values[values.length-1]};
+ for(const metric of ['startup_supabase_script','startup_get_session','startup_membership_check','profile_load','startup_shell_reveal','startup_conversations_load','conversations_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total','realtime_subscribe','realtime_message_render']){
+  const values=perfSamples.filter(x=>x.metric===metric).slice(-200).map(x=>x.ms);
+  if(values.length)metrics[metric]={samples:values.length,avg_ms:Math.round(values.reduce((a,b)=>a+b,0)/values.length),p50_ms:performancePercentile(values,50),p95_ms:performancePercentile(values,95),p99_ms:performancePercentile(values,99),max_ms:Math.max(...values)};
  }
  const resources=performance.getEntriesByType('resource').filter(entry=>/supabase\.co\/(rest|storage|auth|realtime)/i.test(entry.name)).slice(-100);
  const network={supabase_resource_count:resources.length,reported_transfer_bytes:resources.reduce((sum,item)=>sum+(item.transferSize||0),0),reported_encoded_bytes:resources.reduce((sum,item)=>sum+(item.encodedBodySize||0),0),avg_resource_ms:resources.length?Math.round(resources.reduce((sum,item)=>sum+item.duration,0)/resources.length):0,bytes_may_be_zero_when_cross_origin_timing_is_restricted:true};
@@ -978,23 +984,26 @@ function bindConversationSwipe(shell,row,action,conversation,archived,list){
 }
 
 async function loadConversations(){
+ const conversationsStartedAt=performance.now();
+ const recordConversationsLoad=(success,rows=0)=>recordPerf('conversations_load',performance.now()-conversationsStartedAt,{success,rows});
  state.conversationsLoading=true;
  if(!state.conversations.length){showListSkeleton($('conversationList'),6);showListSkeleton($('directoryList'),4)}
  const {data:members,error}=await supabaseClient.from('conversation_members').select('conversation_id,role,last_read_at').eq('user_id',state.user.id);
- if(error){state.conversationsLoading=false;toast('تعذر تحميل المحادثات');console.error(error);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
- state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')renderMyChannels();return true}
+ if(error){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر تحميل المحادثات');console.error(error);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
+ state.memberReads=Object.fromEntries((members||[]).map(x=>[x.conversation_id,x.last_read_at]));const ids=(members||[]).map(x=>x.conversation_id);if(!ids.length){state.conversations=[];state.conversationsLoading=false;recordConversationsLoad(true,0);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return true}
  const {data:convs,error:ce}=await supabaseClient.from('conversations').select('*').in('id',ids).order('last_message_at',{ascending:false});
- if(ce){state.conversationsLoading=false;toast('تعذر قراءة المحادثات');console.error(ce);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
+ if(ce){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر قراءة المحادثات');console.error(ce);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url,bio)').in('conversation_id',ids);
- if(me){state.conversationsLoading=false;toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
+ if(me){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  const {data:latest,error:le}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
- if(le){state.conversationsLoading=false;toast('تعذر تحميل معاينة الرسائل');console.error(le);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
+ if(le){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر تحميل معاينة الرسائل');console.error(le);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  state.conversations=(convs||[]).map(c=>({...c,last_read_at:state.memberReads[c.id]||null,members:(allMembers||[]).filter(m=>m.conversation_id===c.id).map(m=>({...m,profile:m.profiles})),last_message:(latest||[]).find(m=>m.conversation_id===c.id)}));
  await loadDirectChatPreferences();
  await loadWorkspaceData();
  state.conversations.sort((a,b)=>new Date(b.last_message?.created_at||b.created_at)-new Date(a.last_message?.created_at||a.created_at));
  state.conversationsLoading=false;renderConversations();if(state.sidebarView==='channels')renderMyChannels();
  if(state.active){const refreshed=state.conversations.find(c=>c.id===state.active.id);if(refreshed)state.active=refreshed}
+ recordConversationsLoad(true,state.conversations.length);
  return true;
 }
 function findDirectConversation(userId){
@@ -1735,9 +1744,11 @@ function subscribeConversation(){
  if(state.channel)supabaseClient.removeChannel(state.channel);
  if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  const id=state.active.id;diagLog('realtime-subscribe',{conversationId:id});
+ const realtimeSubscribeStartedAt=performance.now();
+ let realtimeSubscribeRecorded=false;
  let channelHasSubscribed=false;
  state.channel=supabaseClient.channel('chat:'+id)
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);renderMessage(incoming,id,state.messageLoadVersion).catch(error=>console.error('Realtime message failed:',error));if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom(),state.messageLoadVersion)})
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>{if(state.active?.id!==id)return;state.diagnostics.lastRealtimeAt=new Date().toLocaleTimeString('en-GB');state.diagnostics.lastRealtimeEvent='INSERT';diagLog('realtime-insert',{id:p.new?.id});const incoming=p.new;if(state.activeChatPreference?.cleared_before&&new Date(incoming.created_at)<=new Date(state.activeChatPreference.cleared_before))return;const index=state.messages.findIndex(m=>m.id===incoming.id);if(index>=0)state.messages[index]=incoming;else state.messages.push(incoming);const realtimeRenderStartedAt=performance.now();renderMessage(incoming,id,state.messageLoadVersion).then(rendered=>recordPerf('realtime_message_render',performance.now()-realtimeRenderStartedAt,{success:rendered!==false})).catch(error=>{recordPerf('realtime_message_render',performance.now()-realtimeRenderStartedAt,{success:false});console.error('Realtime message failed:',error)});if(incoming.sender_id!==state.user.id)markConversationReceipt(id,document.visibilityState==='visible'&&isMessagesNearBottom(),state.messageLoadVersion)})
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chat_messages',filter:'conversation_id=eq.'+id},p=>handleMessageUpdateRealtime(p,id))
   .on('postgres_changes',{event:'DELETE',schema:'public',table:'chat_messages'},p=>handleMessageDeleteRealtime(p,id))
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'message_reactions',filter:'conversation_id=eq.'+id},p=>messageReactions.handleRealtime(p,id))
@@ -1755,7 +1766,12 @@ function subscribeConversation(){
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_member_events',filter:'conversation_id=eq.'+id},()=>{if(state.active?.id===id&&$('groupManagementModal')?.classList.contains('open'))openGroupManagement()})
   .subscribe(s=>{
    const reconnected=channelHasSubscribed&&s==='SUBSCRIBED';
-   if(s==='SUBSCRIBED')channelHasSubscribed=true;
+   if(s==='SUBSCRIBED'){
+    channelHasSubscribed=true;
+    if(!realtimeSubscribeRecorded){recordPerf('realtime_subscribe',performance.now()-realtimeSubscribeStartedAt,{success:true});realtimeSubscribeRecorded=true}
+   }else if((s==='CHANNEL_ERROR'||s==='TIMED_OUT')&&!realtimeSubscribeRecorded){
+    recordPerf('realtime_subscribe',performance.now()-realtimeSubscribeStartedAt,{success:false,status:s});realtimeSubscribeRecorded=true;
+   }
    state.realtimeStatus=s;diagLog('realtime-status',{status:s,reconnected});
    if(state.active?.id===id&&(s==='SUBSCRIBED'||s==='CHANNEL_ERROR'||s==='TIMED_OUT')){
     requestImmediateMessageReconciliation(s==='SUBSCRIBED'?'realtime-subscribed':'realtime-unavailable');

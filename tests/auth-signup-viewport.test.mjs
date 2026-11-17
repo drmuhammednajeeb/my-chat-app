@@ -2,11 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [html, css, sw] = await Promise.all([
+const [html, css, sw, versionJson] = await Promise.all([
   readFile(new URL("../index.html", import.meta.url), "utf8"),
   readFile(new URL("../app.css", import.meta.url), "utf8"),
-  readFile(new URL("../service-worker.js", import.meta.url), "utf8")
+  readFile(new URL("../service-worker.js", import.meta.url), "utf8"),
+  readFile(new URL("../version.json", import.meta.url), "utf8")
 ]);
+const release = JSON.parse(versionJson);
 
 test("signup form exposes a real submit control inside the auth form", () => {
   assert.match(html, /<div id="auth" class="auth-screen">[\s\S]*?<form id="authForm"[^>]*>[\s\S]*?<button id="authSubmit"[^>]*type="submit"/);
@@ -40,5 +42,5 @@ test("submit button is a normal full-width control, not a sticky overlay", () =>
 
 test("service worker cache is invalidated for the corrected auth stylesheet", () => {
   assert.match(sw, /const CACHE_VERSION = "v36";/);
-  assert.match(html, /app-version" content="2026\.11\.17\.1"/);
+  assert.match(html, new RegExp('app-version" content="' + release.version.split(".").join("\\.") + '"'));
 });
