@@ -124,11 +124,15 @@ BEGIN
     WHERE q.item_kind = 'message'
       AND q.message_id = OLD.id
   ) AND ROW(
-    NEW.conversation_id, NEW.created_at, NEW.content,
+    NEW.conversation_id, NEW.created_at,
     NEW.reply_to, NEW.attachment_path, NEW.attachment_type
   ) IS DISTINCT FROM ROW(
-    OLD.conversation_id, OLD.created_at, OLD.content,
+    OLD.conversation_id, OLD.created_at,
     OLD.reply_to, OLD.attachment_path, OLD.attachment_type
+  )
+  OR (
+    NEW.content IS DISTINCT FROM OLD.content
+    AND NOT (OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL)
   ) THEN
     RAISE EXCEPTION 'Message is already queued for retention cleanup'
       USING ERRCODE = '55000';
