@@ -210,5 +210,5 @@ test("member card direct-message action uses the existing guarded conversation f
   assert.equal(openCalls, 1);
   assert.equal(button.disabled, false);
   assert.equal(button.textContent, "مراسلة");
-  assert.match(source, /action\\.onclick=\\(\\)=>openDirectConversation\\(profile,action\\)/);
+  assert.match(source, /action\.onclick=\(\)=>openDirectConversation\(profile,action\)/);
 });
