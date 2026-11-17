@@ -554,8 +554,7 @@ END;
 $function$;
 
 CREATE OR REPLACE FUNCTION app_private.configure_message_auto_cleanup(
-  p_project_url text,
-  p_backend_key text
+  p_project_url text
 )
 RETURNS bigint
 LANGUAGE plpgsql
@@ -566,6 +565,7 @@ DECLARE
   v_project_url text := pg_catalog.rtrim(pg_catalog.btrim(p_project_url), '/');
   v_job_id bigint;
   v_old_job_id bigint;
+  v_backend_key text;
 BEGIN
   IF session_user <> 'postgres' THEN
     RAISE EXCEPTION 'Auto-cleanup scheduling must be configured by the database owner'
@@ -581,8 +581,11 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
-  IF p_backend_key IS NULL OR p_backend_key !~ '^sb_secret_[A-Za-z0-9_-]+$' THEN
-    RAISE EXCEPTION 'A Supabase sb_secret_ API key is required for the cleanup worker'
+  SELECT s.decrypted_secret INTO v_backend_key
+  FROM vault.decrypted_secrets s
+  WHERE s.name = 'message_cleanup_backend_key';
+  IF v_backend_key IS NULL OR v_backend_key !~ '^sb_secret_[A-Za-z0-9_-]+$' THEN
+    RAISE EXCEPTION 'Store the project default sb_secret_ key in Vault as message_cleanup_backend_key before enabling the worker'
       USING ERRCODE = '22023';
   END IF;
 
@@ -591,11 +594,7 @@ BEGIN
     v_project_url,
     'Project URL used by the scheduled message auto-cleanup worker'
   );
-  PERFORM app_private.set_message_cleanup_vault_secret(
-    'message_cleanup_backend_key',
-    p_backend_key,
-    'Publishable key used only for the scheduled Edge Function gateway request'
-  );
+
 
   FOR v_old_job_id IN
     SELECT j.jobid FROM cron.job j WHERE j.jobname = 'message-auto-cleanup-worker'
@@ -636,7 +635,7 @@ END;
 $function$;
 
 COMMENT ON FUNCTION app_private.configure_message_auto_cleanup(text) IS
-  'Requires the project default sb_secret_ API key. Stores it in Vault and sends it only through the apikey header to an Edge Function configured with auth: secret and verify_jwt=false.';
+  'Requires the project default sb_secret_ key to be pre-stored in Vault as message_cleanup_backend_key. The key is sent only through apikey to an Edge Function configured with auth: secret and verify_jwt=false.';
 
 REVOKE ALL ON FUNCTION app_private.set_message_cleanup_vault_secret(text, text, text)
   FROM PUBLIC, anon, authenticated, service_role;
