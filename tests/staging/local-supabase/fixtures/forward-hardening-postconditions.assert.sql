@@ -1,26 +1,53 @@
--- Verify the forward conversation-image migration uses a literal-dot suffix check.
+-- Verify literal-dot extension validation and the public-invoker/private-definer RPC boundary.
 DO $conversation_image_extension$
 DECLARE
   v_trigger_definition text;
+  v_impl_definition text;
   v_rpc_definition text;
+  v_rpc_is_definer boolean;
+  v_impl_is_definer boolean;
 BEGIN
-  IF NOT ('sample.jpg' ~ '\.(jpg|png|webp)$')
-     OR NOT ('sample.PNG' ~* '\.(jpg|png|webp)$')
-     OR NOT ('sample.webp' ~* '\.(jpg|png|webp)$')
-     OR ('sample.txt' ~* '\.(jpg|png|webp)$') THEN
+  IF NOT ('sample.jpg' ~ '\\.(jpg|png|webp)$')
+     OR NOT ('sample.PNG' ~* '\\.(jpg|png|webp)$')
+     OR NOT ('sample.webp' ~* '\\.(jpg|png|webp)$')
+     OR ('sample.txt' ~* '\\.(jpg|png|webp)$') THEN
     RAISE EXCEPTION 'Conversation image extension regex behavior is incorrect';
   END IF;
 
   v_trigger_definition := pg_get_functiondef(
     'app_private.validate_conversation_image_path()'::regprocedure
   );
+  v_impl_definition := pg_get_functiondef(
+    'app_private.set_conversation_image_impl(uuid,text)'::regprocedure
+  );
   v_rpc_definition := pg_get_functiondef(
     'public.set_conversation_image(uuid,text)'::regprocedure
   );
 
-  IF position($needle$!~* '\.(jpg|png|webp)$'$needle$ IN v_trigger_definition) = 0
-     OR position($needle$!~* '\.(jpg|png|webp)$'$needle$ IN v_rpc_definition) = 0 THEN
+  SELECT p.prosecdef INTO v_rpc_is_definer
+  FROM pg_proc p
+  WHERE p.oid = 'public.set_conversation_image(uuid,text)'::regprocedure;
+  SELECT p.prosecdef INTO v_impl_is_definer
+  FROM pg_proc p
+  WHERE p.oid = 'app_private.set_conversation_image_impl(uuid,text)'::regprocedure;
+
+  IF position($needle$!~* '\\.(jpg|png|webp)$'$needle$ IN v_trigger_definition) = 0
+     OR position($needle$!~* '\\.(jpg|png|webp)$'$needle$ IN v_impl_definition) = 0 THEN
     RAISE EXCEPTION 'A conversation image function does not contain the corrected literal-dot suffix check';
+  END IF;
+  IF v_rpc_is_definer IS DISTINCT FROM false
+     OR position('app_private.set_conversation_image_impl' IN lower(v_rpc_definition)) = 0 THEN
+    RAISE EXCEPTION 'Public conversation image RPC must be an invoker wrapper around the private implementation';
+  END IF;
+  IF v_impl_is_definer IS DISTINCT FROM true
+     OR position('search_path=""' IN lower(v_impl_definition)) = 0 THEN
+    RAISE EXCEPTION 'Private conversation image implementation must remain SECURITY DEFINER with an empty search_path';
+  END IF;
+  IF has_function_privilege('anon','app_private.set_conversation_image_impl(uuid,text)','EXECUTE')
+     OR NOT has_function_privilege('authenticated','app_private.set_conversation_image_impl(uuid,text)','EXECUTE')
+     OR has_function_privilege('anon','public.set_conversation_image(uuid,text)','EXECUTE')
+     OR NOT has_function_privilege('authenticated','public.set_conversation_image(uuid,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Conversation image RPC/helper execute ACLs are not least-privilege';
   END IF;
 END;
 $conversation_image_extension$;
