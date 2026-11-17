@@ -1368,16 +1368,18 @@
         "post-forward catalog privilege, restrictive RLS, Storage ownership, and CRUD/RPC compatibility assertions"
       ],
       "requires": [
-        "security.active-membership-rls-forward"
+        "security.active-membership-rls-forward",
+        "security.conversation-image-extension-forward",
+        "security.least-privilege-overlay"
       ],
-      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PENDING_NEW_MIGRATION",
       "testSource": [
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Read-only catalog assertions plus rollback-only authenticated CRUD/RPC checks after both forward privilege migrations."
+      "note": "Read-only catalog assertions plus rollback-only authenticated CRUD/RPC checks, including image-extension behavior, function security modes, empty search_path and execute ACLs."
     },
     {
       "id": "chat.auto-cleanup-100h",
@@ -1431,6 +1433,26 @@
       ],
       "blockedBy": [],
       "note": "Disposable-local SQL assertions only; no production data or Storage objects are used."
+    },
+    {
+      "id": "security.conversation-image-extension-forward",
+      "source": [
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
+      ],
+      "provides": [
+        "literal-dot extension validation for conversation avatar image paths in trigger and authenticated RPC",
+        "public SECURITY INVOKER RPC wrapper over a private guarded SECURITY DEFINER implementation"
+      ],
+      "requires": [
+        "security.active-membership-rls-forward",
+        "chat.profile-status-combined-content-media"
+      ],
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSource": [
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
+      ],
+      "blockedBy": [],
+      "note": "Forward-only correction for the historical double-backslash regex and exposed SECURITY DEFINER RPC warning. Preserves auth.uid(), active-membership, manager, caller-owned object-path and object-existence checks; public RPC is invoker-only and delegates to an authenticated-only private definer helper with empty search_path."
     }
   ],
   "explicitEdges": [
@@ -2297,6 +2319,22 @@
     [
       "chat.auto-cleanup-100h",
       "test-fixture.message-auto-cleanup"
+    ],
+    [
+      "security.active-membership-rls-forward",
+      "security.conversation-image-extension-forward"
+    ],
+    [
+      "chat.profile-status-combined-content-media",
+      "security.conversation-image-extension-forward"
+    ],
+    [
+      "security.conversation-image-extension-forward",
+      "test-fixture.forward-hardening-postconditions"
+    ],
+    [
+      "security.least-privilege-overlay",
+      "test-fixture.forward-hardening-postconditions"
     ]
   ],
   "blockers": [
@@ -2491,7 +2529,7 @@
     "productionDataAllowed": false,
     "canonicalSqlMutationAllowed": false,
     "costBearingResourcesAllowed": false,
-    "forwardReconciliationMigrations": 4,
+    "forwardReconciliationMigrations": 6,
     "forwardMigrationExecutionAuthorized": false
   },
   "archiveSources": [
