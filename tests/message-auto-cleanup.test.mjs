@@ -42,9 +42,15 @@ test("message metadata cascades, while separately authored reply messages are pr
   assert.match(migration, /private_reply_contexts rows and all other message metadata already cascade/i);
 });
 
-test("the UI displays the exact 100-hour retention notice", () => {
+test("the UI displays the exact 100-hour retention notice and keeps media paths for cleanup", () => {
   assert.ok(html.includes("الرسائل والمرفقات تُحذف تلقائياً بعد 100 ساعة من إرسالها تعزيزاً للخصوصية وسرعة الأداء"));
   assert.match(overrides, /\.auto-cleanup-notice/);
+  const start = html.indexOf("async function deleteMessage(m)");
+  const end = html.indexOf("function showAttachmentPreview", start);
+  assert.ok(start >= 0 && end > start);
+  const deleteHandler = html.slice(start, end);
+  assert.match(deleteHandler, /deleted_at:new Date\(\)\.toISOString\(\)/);
+  assert.doesNotMatch(deleteHandler, /attachment_path\s*:\s*null|attachment_type\s*:\s*null/);
 });
 
 test("the Edge Function verifies a Vault token and uses a server-only service role", () => {
