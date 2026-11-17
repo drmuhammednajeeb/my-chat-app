@@ -53,6 +53,20 @@
         "cron.schedule",
         "cron.unschedule"
       ]
+    },
+    {
+      "id": "platform.pg_net",
+      "provides": [
+        "net.http_post(text,jsonb,jsonb,jsonb,integer)"
+      ]
+    },
+    {
+      "id": "platform.vault",
+      "provides": [
+        "vault.create_secret",
+        "vault.update_secret",
+        "vault.decrypted_secrets"
+      ]
     }
   ],
   "nodes": [
@@ -1364,6 +1378,57 @@
         "DAG-016"
       ],
       "note": "Read-only catalog assertions plus rollback-only authenticated CRUD/RPC checks after both forward privilege migrations."
+    },
+    {
+      "id": "chat.auto-cleanup-100h",
+      "source": [
+        "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql"
+      ],
+      "provides": [
+        "100-hour retention queue for chat_messages",
+        "Storage API-first deletion of chat-media objects",
+        "pinned-message and official-channel retention exemptions",
+        "retryable cleanup of unreferenced chat-media objects"
+      ],
+      "requires": [
+        "chat.expiry-purge",
+        "chat.pins",
+        "chat.reactions",
+        "chat.notifications",
+        "chat.channels-public",
+        "platform.storage",
+        "platform.pg_cron",
+        "platform.pg_net",
+        "platform.vault"
+      ],
+      "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_VALIDATION",
+      "testSource": [
+        "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+        "tests/message-auto-cleanup.test.mjs",
+        "supabase/functions/message-auto-cleanup/worker-core.mjs",
+        "supabase/functions/message-auto-cleanup/index.ts"
+      ],
+      "blockedBy": [],
+      "note": "The existing five-minute DB purge now enqueues only. A Vault-authenticated Edge Function removes chat-media objects via Storage API, checkpoints success, then deletes eligible message rows and dependent notification/reaction metadata. Pinned messages and server-marked official channels are excluded. Reply rows remain separate messages and reply_to stays SET NULL to protect newer or pinned replies."
+    },
+    {
+      "id": "test-fixture.message-auto-cleanup",
+      "source": [
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+      ],
+      "provides": [
+        "post-migration assertions for cleanup queue, 100-hour cutoff, cascades, and worker RPC ACL"
+      ],
+      "requires": [
+        "chat.auto-cleanup-100h"
+      ],
+      "status": "TEST_ONLY_POST_FORWARD_CLEANUP_ASSERTIONS_PENDING",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+      ],
+      "blockedBy": [],
+      "note": "Disposable-local SQL assertions only; no production data or Storage objects are used."
     }
   ],
   "explicitEdges": [
@@ -2190,6 +2255,46 @@
     [
       "security.active-membership-rls-forward",
       "test-fixture.forward-hardening-postconditions"
+    ],
+    [
+      "chat.expiry-purge",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "chat.pins",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "chat.reactions",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "chat.notifications",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "chat.channels-public",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "platform.storage",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "platform.pg_cron",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "platform.pg_net",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "platform.vault",
+      "chat.auto-cleanup-100h"
+    ],
+    [
+      "chat.auto-cleanup-100h",
+      "test-fixture.message-auto-cleanup"
     ]
   ],
   "blockers": [
@@ -2466,6 +2571,10 @@
       "post-forward eligibility, RPC ACL, least-privilege, active-membership RLS and CRUD/RPC assertions passed",
       "Storage upload, signed reads, document sharing, avatar upsert and cross-user path-denial probes passed",
       "full reviewed disposable replay completed"
+    ],
+    "pendingNodes": [
+      "chat.auto-cleanup-100h",
+      "test-fixture.message-auto-cleanup"
     ]
   },
   "auditEvidence": {
