@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 66,
-    "mappedSources": 66,
+    "sqlFiles": 67,
+    "mappedSources": 67,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 19,
@@ -30,10 +30,10 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 64,
+    "executedMappedSources": 65,
     "executedTestOnlySqlFixtures": 19,
-    "executedSqlFiles": 83,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "executedSqlFiles": 84,
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "localRuntimeRunId": 43260183037,
     "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
   },
@@ -733,6 +733,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "security.conversation-image-extension-forward",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Corrects the literal-dot extension check in both conversation-image functions; post-forward assertions verify regex behavior and installed function definitions."
+    },
+    {
       "nodeId": "test-fixture.forward-hardening-postconditions",
       "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
       "testSources": [
@@ -939,6 +948,12 @@
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "localRuntimeRunId": 43260183037
+    },
+    {
+      "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
@@ -972,5 +987,5 @@
       "failed": 0
     }
   },
-  "reviewState": "LOCAL_REPLAY_AND_CI_PASSED_PRODUCTION_RELEASE_REVIEW_REQUIRED"
+  "reviewState": "LOCAL_REPLAY_PENDING_NEW_CONVERSATION_IMAGE_MIGRATION"
 }
