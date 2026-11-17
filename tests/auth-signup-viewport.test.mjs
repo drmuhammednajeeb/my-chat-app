@@ -42,3 +42,21 @@ test("service worker cache is invalidated for the corrected auth stylesheet", ()
   assert.match(sw, /const CACHE_VERSION = "v36";/);
   assert.match(html, /app-version" content="2026\.11\.17\.1"/);
 });
+
+test("signup requires a two- or three-part real name and normalizes whitespace", () => {
+  assert.match(html, /function normalizeSignupDisplayName\(value\)/);
+  assert.match(html, /function validateSignupDisplayName\(value\)/);
+  assert.match(html, /parts\.length>=2&&parts\.length<=3/);
+  assert.match(html, /nameResult\.valid/);
+  assert.match(html, /اسمك مع لقبك على الأقل/);
+  assert.match(html, /محمد النبهاني أو محمد أحمد النبهاني/);
+});
+
+test("password strength is live guidance and does not enforce complexity", () => {
+  assert.match(html, /id="passwordStrengthMeter"[^>]*role="progressbar"/);
+  assert.match(html, /function getPasswordStrength\(value\)/);
+  assert.match(html, /function updatePasswordStrength\(\)/);
+  assert.match(html, /\$\('password'\)\.addEventListener\('input',updatePasswordStrength\)/);
+  assert.match(html, /if\(password\.length<8\)throw new Error/);
+  assert.doesNotMatch(html, /if\(.*(?:uppercase|lowercase|symbol|digit).*(?:throw new Error)/i);
+});
