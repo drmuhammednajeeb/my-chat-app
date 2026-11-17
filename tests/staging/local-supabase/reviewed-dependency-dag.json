@@ -1447,12 +1447,19 @@
         "security.active-membership-rls-forward",
         "chat.profile-status-combined-content-media"
       ],
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PASSED",
       "testSource": [
         "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql"
       ],
       "blockedBy": [],
-      "note": "Forward-only correction for the historical double-backslash regex and exposed SECURITY DEFINER RPC warning. Preserves auth.uid(), active-membership, manager, caller-owned object-path and object-existence checks; public RPC is invoker-only and delegates to an authenticated-only private definer helper with empty search_path."
+      "note": "Forward-only correction for the historical double-backslash regex and exposed SECURITY DEFINER RPC warning. Preserves auth.uid(), active-membership, manager, caller-owned object-path and object-existence checks; public RPC is invoker-only and delegates to an authenticated-only private definer helper with empty search_path.",
+      "runtimeEvidence": {
+        "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "workflowRunId": 44054041618,
+        "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+        "completedAt": "2026-11-17T09:18:04Z",
+        "sqlFilesExecuted": 86
+      }
     }
   ],
   "explicitEdges": [
@@ -2597,11 +2604,11 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 44040777235,
-    "commit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
-    "completedAt": "2026-11-17T07:44:04Z",
+    "workflowRunId": 44054041618,
+    "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+    "completedAt": "2026-11-17T09:18:04Z",
     "localOnly": true,
-    "sqlFilesExecuted": 85,
+    "sqlFilesExecuted": 86,
     "checks": [
       "Supabase Auth, Storage, Realtime schemas and roles passed preflight",
       "all 85 reviewed SQL sources and test fixtures replayed successfully",
@@ -2616,11 +2623,11 @@
   "auditEvidence": {
     "status": "PASSED",
     "workflow": "Local Supabase SQL manifest audit",
-    "workflowRunId": 43260183019,
-    "commit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
-    "completedAt": "2026-11-12T16:35:00Z",
-    "tests": 77,
-    "passed": 77,
+    "workflowRunId": 44054041833,
+    "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+    "completedAt": "2026-11-17T09:16:31Z",
+    "tests": 101,
+    "passed": 101,
     "failed": 0
   }
 }
