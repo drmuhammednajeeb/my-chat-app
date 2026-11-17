@@ -1843,7 +1843,7 @@
       "gitBlobSha": "ca75cefe5754978578e4102d463dab5a31241f78",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
-      "purpose": "Correct the literal-dot suffix validation for jpg/png/webp paths in both conversation-image functions without weakening actor, membership, manager, object-existence or function ACL checks.",
+      "purpose": "Correct the literal-dot suffix validation in both conversation-image functions and move the exposed RPC to an authenticated SECURITY INVOKER wrapper over a private, guarded SECURITY DEFINER implementation.",
       "blockedBy": [],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false
