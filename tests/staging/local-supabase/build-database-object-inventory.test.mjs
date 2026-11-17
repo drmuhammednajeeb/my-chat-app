@@ -51,6 +51,7 @@ test('platform service dependencies are explicit', async () => {
   assert.equal(report.platformDependencies.pgcrypto, true);
   assert.equal(report.platformDependencies.pgCron, true);
   assert.equal(report.platformDependencies.pgNet, true);
+  assert.equal(report.platformDependencies.vault, true);
 });
 
 
