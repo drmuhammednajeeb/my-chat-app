@@ -9,18 +9,18 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
 const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
-test('production registry preserves 62 ledger versions and separately maps four forward migrations', async () => {
+test('production registry preserves 62 ledger versions and separately maps five forward migrations', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
   assert.equal(registry.schemaVersion, 3);
   assert.equal(registry.registryStatus, 'CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 62);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 66);
-  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 4);
-  assert.equal(registry.forwardMigrations.length, 4);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 67);
+  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 5);
+  assert.equal(registry.forwardMigrations.length, 5);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 62);
-  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 4);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 5);
   assert.equal(registry.forwardMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
@@ -36,7 +36,7 @@ test('production registry preserves 62 ledger versions and separately maps four 
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 66);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 67);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
@@ -59,10 +59,16 @@ test('production registry preserves 62 ledger versions and separately maps four 
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
     assert.equal(migration.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     assert.equal(migration.executionPolicy, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
-    assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-    assert.ok(Number.isInteger(migration.localRuntimeRunId) && migration.localRuntimeRunId > 0);
-    if (migration.version === '20261112160000' || migration.version === '20261112160001') assert.deepEqual(migration.blockedBy, []);
-    else assert.deepEqual(migration.blockedBy, ['DAG-016']);
+    if (migration.version === '20261113060002') {
+      assert.equal(migration.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(migration.localRuntimeRunId, undefined);
+      assert.deepEqual(migration.blockedBy, []);
+    } else {
+      assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.ok(Number.isInteger(migration.localRuntimeRunId) && migration.localRuntimeRunId > 0);
+      if (migration.version === '20261112160000' || migration.version === '20261112160001') assert.deepEqual(migration.blockedBy, []);
+      else assert.deepEqual(migration.blockedBy, ['DAG-016']);
+    }
     const bytes = await readFile(path.join(root, migration.path));
     assert.equal(blobSha(bytes), migration.gitBlobSha, 'forward migration blob mismatch: ' + migration.path);
     assert.equal(registry.productionMigrations.some(item => item.version === migration.version), false);
