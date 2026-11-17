@@ -45,7 +45,7 @@ $$;
 REVOKE ALL ON FUNCTION app_private.validate_conversation_image_path()
   FROM PUBLIC, anon, authenticated, service_role;
 
-CREATE OR REPLACE FUNCTION public.set_conversation_image(
+CREATE OR REPLACE FUNCTION app_private.set_conversation_image_impl(
   p_conversation_id uuid,
   p_image_path text
 )
@@ -93,6 +93,26 @@ BEGIN
     RAISE EXCEPTION 'المجموعة أو القناة غير موجودة' USING errcode = 'P0002';
   END IF;
 END;
+$$;
+
+REVOKE ALL ON FUNCTION app_private.set_conversation_image_impl(uuid,text)
+  FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION app_private.set_conversation_image_impl(uuid,text)
+  TO authenticated;
+
+-- Keep the public RPC contract, but make the exposed wrapper SECURITY INVOKER.
+-- The private SECURITY DEFINER implementation retains the authorization checks
+-- required to perform the protected conversations update.
+CREATE OR REPLACE FUNCTION public.set_conversation_image(
+  p_conversation_id uuid,
+  p_image_path text
+)
+RETURNS void
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+  SELECT app_private.set_conversation_image_impl(p_conversation_id, p_image_path);
 $$;
 
 REVOKE ALL ON FUNCTION public.set_conversation_image(uuid,text) FROM PUBLIC, anon;
