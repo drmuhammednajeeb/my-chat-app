@@ -46,6 +46,17 @@ BEGIN
     RAISE EXCEPTION 'message reaction cascade is missing';
   END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_constraint c
+    WHERE c.contype='f'
+      AND c.confrelid='public.chat_messages'::regclass
+      AND c.conname <> 'chat_messages_reply_to_fkey'
+      AND c.confdeltype <> 'c'
+  ) THEN
+    RAISE EXCEPTION 'a child table referencing chat_messages does not cascade on delete';
+  END IF;
+
   SELECT c.relrowsecurity INTO v_queue_rls
   FROM pg_catalog.pg_class c
   WHERE c.oid='app_private.message_cleanup_queue'::regclass;
