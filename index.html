@@ -775,7 +775,7 @@ async function loadDirectory(reset=true){
    ?query.eq('membership_number',membershipDigits)
    :query.ilike('membership_number',membershipDigits+'%');
  }else if(term){
-  const nameTerm=term.replace(/^@/,'').replace(/[\\%_,()]/g,'\\replace(/[\\\\%_,()]/g,'\\\\$&')');
+  const nameTerm=term.replace(/^@/,'').replace(/[\\%_,()]/g,'\\$&');
   if(!nameTerm){state.directoryLoading=false;state.directoryUsers=[];renderDirectory();$('loadMoreUsers').disabled=false;$('loadMoreUsers').textContent='عرض المزيد من المستخدمين';$('loadMoreUsers').classList.add('hidden');return}
   query=query.or('display_name.ilike.%'+nameTerm+'%,username.ilike.%'+nameTerm+'%');
  }
