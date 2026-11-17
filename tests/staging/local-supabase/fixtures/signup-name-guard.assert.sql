@@ -5,9 +5,9 @@ begin;
 insert into app_private.member_invitations (
   email, membership_number, invite_code, status, created_by, expires_at
 ) values
-  ('signup-two-part@bizmindmakers.test', '971009999991', '99999999-1111-4111-8111-111111111111', 'pending',
+  ('signup-two-part@bizmindmakers.test', '971001999991', '99999999-1111-4111-8111-111111111111', 'pending',
    '11111111-1111-4111-8111-111111111111', now() + interval '1 day'),
-  ('signup-three-part@bizmindmakers.test', '971009999992', '99999999-2222-4222-8222-222222222222', 'pending',
+  ('signup-three-part@bizmindmakers.test', '971001999992', '99999999-2222-4222-8222-222222222222', 'pending',
    '11111111-1111-4111-8111-111111111111', now() + interval '1 day');
 
 do $signup_name_test$
@@ -27,7 +27,7 @@ begin
       jsonb_build_object(
         'username', 'signup_two_part',
         'display_name', 'محمد',
-        'membership_number', '971009999991',
+        'membership_number', '971001999991',
         'membership_invite_code', '99999999-1111-4111-8111-111111111111'
       )
     );
@@ -55,7 +55,7 @@ begin
       jsonb_build_object(
         'username', 'signup_two_part',
         'display_name', 'محمد 123',
-        'membership_number', '971009999991',
+        'membership_number', '971001999991',
         'membership_invite_code', '99999999-1111-4111-8111-111111111111'
       )
     );
@@ -83,7 +83,7 @@ begin
       jsonb_build_object(
         'username', 'signup_two_part',
         'display_name', 'محمد أحمد علي النبهاني',
-        'membership_number', '971009999991',
+        'membership_number', '971001999991',
         'membership_invite_code', '99999999-1111-4111-8111-111111111111'
       )
     );
@@ -110,7 +110,7 @@ begin
     jsonb_build_object(
       'username', 'signup_two_part',
       'display_name', '  محمد   النبهاني  ',
-      'membership_number', '971009999991',
+      'membership_number', '971001999991',
       'membership_invite_code', '99999999-1111-4111-8111-111111111111'
     )
   );
@@ -140,7 +140,7 @@ begin
     jsonb_build_object(
       'username', 'signup_three_part',
       'display_name', 'Mohammed Ahmed Alnabhani',
-      'membership_number', '971009999992',
+      'membership_number', '971001999992',
       'membership_invite_code', '99999999-2222-4222-8222-222222222222'
     )
   );
