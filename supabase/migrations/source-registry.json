@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
-  "generatedAt": "2026-11-12",
+  "generatedAt": "2026-11-17",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
     "baseBranch": "main",
@@ -16,10 +16,10 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 66,
+    "canonicalCliMigrationFiles": 67,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 19,
+    "testOnlyFixtureCount": 20,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -39,9 +39,10 @@
       "tests/staging/local-supabase/fixtures/synthetic-admin-profile-after-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
-      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql"
+      "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 4
+    "forwardReconciliationMigrations": 5
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -1835,16 +1836,30 @@
       "localRuntimeRunId": 43260183037,
       "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
       "productionApplied": false
+    },
+    {
+      "version": "20261117130000",
+      "name": "message_auto_cleanup_100h_storage",
+      "path": "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
+      "gitBlobSha": "c709a6102e54b224765cac875ad87c059342b8c4",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Queue all messages older than 100 hours and unreferenced chat-media objects older than 100 hours; preserve pinned messages and server-designated official channels; delete Storage objects through the Storage API before cascading message metadata cleanup.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE_VALIDATION",
+      "localRuntimeRunId": null,
+      "localRuntimeCommit": null,
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 4,
+    "pendingForwardCount": 5,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "localRuntimeRunId": 43260183037,
-    "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE_VALIDATION",
+    "localRuntimeRunId": null,
+    "localRuntimeCommit": null,
     "productionApplied": false
   },
   "validationEvidence": {
@@ -1876,6 +1891,12 @@
       "tests": 77,
       "passed": 77,
       "failed": 0
-    }
+    },
+    "pendingAdditionalSources": [
+      "supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql",
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+      "supabase/functions/message-auto-cleanup/index.ts",
+      "supabase/functions/message-auto-cleanup/worker-core.mjs"
+    ]
   }
 }
