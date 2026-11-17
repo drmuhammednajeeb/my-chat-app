@@ -1374,14 +1374,14 @@
         "server-side two- or three-part Arabic/Latin display-name validation before invitation consumption"
       ],
       "requires": [
-        "membership.auth-fix"
+        "membership.final-format"
       ],
       "status": "FORWARD_RECONCILIATION_PENDING_DISPOSABLE_LOCAL_RUNTIME",
       "testSource": [
         "supabase/migrations/20261117120000_enforce_signup_display_name_server_side.sql"
       ],
       "blockedBy": [],
-      "note": "Forward-only Auth BEFORE INSERT guard. Rejects missing, one-part, four-part, numeric and symbol-containing names before the invitation row is locked or consumed; normalizes whitespace and stores the accepted display_name. Requires disposable-local Auth trigger and invitation lifecycle assertions."
+      "note": "Forward-only Auth BEFORE INSERT guard applied after the official membership-format migration. Preserves the verified official-number regex and membership_number_verified metadata, while rejecting missing, one-part, four-part, numeric and symbol-containing names before invitation consumption; normalizes whitespace and stores the accepted display_name."
     },
     {
       "id": "test-fixture.signup-name-guard",
@@ -2228,12 +2228,12 @@
       "test-fixture.forward-hardening-postconditions"
     ],
     [
-      "membership.auth-fix",
-      "membership.signup-name-validation-forward"
-    ],
-    [
       "membership.signup-name-validation-forward",
       "test-fixture.signup-name-guard"
+    ],
+    [
+      "membership.final-format",
+      "membership.signup-name-validation-forward"
     ]
   ],
   "blockers": [
