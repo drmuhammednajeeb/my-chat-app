@@ -29,9 +29,9 @@ begin
     raise exception 'A different user must be selected' using errcode = '22023';
   end if;
 
-  -- Reuse the existing canonical membership predicate for the caller.
-  -- It checks active status, verified membership number, valid number format,
-  -- and confirmed email against auth.users (not user-editable JWT metadata).
+  -- This helper checks active membership and confirmed email only.
+  -- The authoritative row-lock query below additionally enforces verified
+  -- membership, the official number format, and confirmed email for both users.
   if not app_private.is_active_member() then
     raise exception 'Both participants must meet direct-conversation eligibility requirements'
       using errcode = '42501';
