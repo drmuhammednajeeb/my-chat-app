@@ -1,11 +1,12 @@
 /* BizmindMakers Chat Pro service worker
- * Cache only the application shell and version-pinned static CDN assets.
- * Never cache Supabase/API requests, authenticated data, or user messages.
+ * Cache the application shell, version-pinned CDN assets, and validated public runtime config.
+ * Never cache Supabase data, authenticated API responses, or user messages.
  */
 const CACHE_PREFIX = "ultra-chat-pro";
-const CACHE_VERSION = "v37";
+const CACHE_VERSION = "v38";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const CDN_CACHE = `${CACHE_PREFIX}-cdn-${CACHE_VERSION}`;
+const RUNTIME_CONFIG_CACHE = `${CACHE_PREFIX}-runtime-config-${CACHE_VERSION}`;
 const CDN_ORIGINS = new Set([
   "https://cdn.jsdelivr.net",
   "https://unpkg.com",
@@ -46,13 +47,37 @@ self.addEventListener("install", event => {
   })());
 });
 
+function isCacheableRuntimeConfig(source) {
+  const prefix = "window.BIZMIND_RUNTIME_CONFIG = ";
+  if (typeof source !== "string" || !source.startsWith(prefix)) return false;
+  let payload = source.slice(prefix.length).trim();
+  if (payload.endsWith(";")) payload = payload.slice(0, -1).trim();
+  try {
+    const config = JSON.parse(payload);
+    if (!config || config.error || !["production", "preview", "development"].includes(config.environment)) return false;
+    if (typeof config.supabaseUrl !== "string" || typeof config.supabaseAnonKey !== "string") return false;
+    const endpoint = new URL(config.supabaseUrl);
+    if (endpoint.protocol !== "https:" || !endpoint.hostname.endsWith(".supabase.co") || endpoint.username || endpoint.password) return false;
+    const key = config.supabaseAnonKey;
+    if (/^sb_publishable_[A-Za-z0-9_-]+$/.test(key)) return true;
+    if (/^sb_secret_/i.test(key)) return false;
+    const parts = key.split(".");
+    if (parts.length !== 3) return false;
+    const encoded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = atob(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "="));
+    return JSON.parse(decoded).role === "anon";
+  } catch {
+    return false;
+  }
+}
+
 self.addEventListener("message", event => {
   if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil((async () => {
-    const keep = new Set([SHELL_CACHE, CDN_CACHE]);
+    const keep = new Set([SHELL_CACHE, CDN_CACHE, RUNTIME_CONFIG_CACHE]);
     const keys = await caches.keys();
     await Promise.all(keys
       .filter(key => key.startsWith(CACHE_PREFIX + "-") && !keep.has(key))
@@ -96,6 +121,28 @@ self.addEventListener("fetch", event => {
 
   const scopeUrl = new URL(self.registration.scope);
   if (!url.pathname.startsWith(scopeUrl.pathname)) return;
+
+  const runtimeConfigPath = new URL("/api/runtime-config", self.location.origin).pathname;
+  if (url.pathname === runtimeConfigPath) {
+    event.respondWith((async () => {
+      const cache = await caches.open(RUNTIME_CONFIG_CACHE);
+      try {
+        const response = await fetch(request);
+        if (response && response.ok && isCacheableRuntimeConfig(await response.clone().text())) {
+          await cache.put(request, response.clone());
+        }
+        return response;
+      } catch {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        return new Response('window.BIZMIND_RUNTIME_CONFIG = {"error":"Runtime configuration unavailable while offline."};', {
+          status: 503,
+          headers: { "Content-Type": "application/javascript; charset=utf-8" }
+        });
+      }
+    })());
+    return;
+  }
 
   if (request.mode === "navigate") {
     event.respondWith((async () => {
