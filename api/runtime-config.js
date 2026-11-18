@@ -6,18 +6,20 @@ const LOCAL_DEVELOPMENT_HOSTS = new Set(['localhost', '127.0.0.1']);
 function isPublicBrowserKey(value) {
   if (typeof value !== 'string' || !value.trim()) return false;
   const key = value.trim();
+
+  // Supabase's current publishable key format.
+  if (/^sb_publishable_[A-Za-z0-9_-]+$/.test(key)) return true;
   if (/^sb_secret_/i.test(key)) return false;
 
+  // Legacy anon keys are JWTs whose role claim must be exactly "anon".
   const parts = key.split('.');
-  if (parts.length === 3) {
-    try {
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
-      if (payload.role === 'service_role') return false;
-    } catch {
-      return false;
-    }
+  if (parts.length !== 3) return false;
+  try {
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+    return payload.role === 'anon';
+  } catch {
+    return false;
   }
-  return true;
 }
 
 function resolveRuntimeConfig(env = process.env) {
