@@ -658,7 +658,9 @@ $('authForm').addEventListener('submit',async e=>{
   console.error('Authentication flow failed:',err);
   const rawMessage=String(err?.message||'');
   const isSignup=state.authMode==='signup';
-  let userMessage=rawMessage;
+  let userMessage=isSignup
+   ?'تعذر إنشاء الحساب. راجع بيانات التسجيل والدعوة السارية ثم حاول مجدداً.'
+   :'تعذر تسجيل الدخول. تحقق من بيانات الدخول والاتصال ثم حاول مجدداً.';
   if(isSignup){
    if(/database error saving new user/i.test(rawMessage)||/الدعوة غير صحيحة أو منتهية أو سبق استخدامها/.test(rawMessage)){
     userMessage='تعذر إنشاء الحساب لأن بيانات التسجيل لم تجتز التحقق. تأكد من أن البريد الإلكتروني ورقم العضوية ورمز الدعوة تطابق الدعوة السارية تماماً، وأن الدعوة لم تُستخدم من قبل. راجع أيضاً الاسم الظاهر واسم المستخدم وكلمة المرور.';
@@ -670,10 +672,8 @@ $('authForm').addEventListener('submit',async e=>{
     userMessage='اسم المستخدم مستخدم بالفعل. اختر اسم مستخدم آخر.';
    }else if(/invalid email/i.test(rawMessage)){
     userMessage='صيغة البريد الإلكتروني غير صحيحة. راجع البريد الذي صدرت إليه الدعوة.';
-   }else if(!rawMessage){
-    userMessage='تعذر إنشاء الحساب. راجع الاسم والبريد ورقم العضوية ورمز الدعوة وكلمة المرور ثم حاول مجدداً.';
    }
-  }else if(!rawMessage){userMessage='تعذر تسجيل الدخول. تحقق من بيانات الدخول والاتصال وحاول مرة أخرى.';}
+  }
   authError(userMessage);
  }finally{
   btn.disabled=false;btn.textContent=defaultLabel;
