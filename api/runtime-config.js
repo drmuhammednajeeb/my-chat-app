@@ -2,7 +2,7 @@
 
 const PRODUCTION_PROJECT_HOST = 'lvkeohpuucuklagvwpnq.supabase.co';
 const LOCAL_DEVELOPMENT_HOSTS = new Set(['localhost', '127.0.0.1']);
-const PREVIEW_HOST_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.supabase\\.co$/;
+const PREVIEW_HOST_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.supabase\.co$/;
 
 function isPublicBrowserKey(value) {
   if (typeof value !== 'string' || !value.trim()) return false;
