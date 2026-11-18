@@ -106,7 +106,7 @@ test('runtime endpoint emits no-store JavaScript and a safe failure payload', ()
     assert.match(body, /BIZMIND_RUNTIME_CONFIG/);
     assert.doesNotMatch(body, /sb_publishable_|service_role/i);
   } finally {
-    for (const key of ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'VERCEL_ENV']) {
+    for (const key of ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_PREVIEW_ALLOWED_HOST', 'VERCEL_ENV']) {
       if (previous[key] === undefined) delete process.env[key];
       else process.env[key] = previous[key];
     }
