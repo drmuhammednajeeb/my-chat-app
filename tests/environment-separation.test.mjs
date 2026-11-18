@@ -16,6 +16,13 @@ test('the browser loads Supabase configuration from the environment-specific run
   assert.match(endpoint, /deployment === 'development'.*PRODUCTION_PROJECT_HOST/s);
   assert.match(endpoint, /deployment === 'production'.*PRODUCTION_PROJECT_HOST/s);
   assert.match(endpoint, /Cache-Control/);
+  assert.match(endpoint, /SUPABASE_PREVIEW_ALLOWED_HOST/);
+  assert.match(endpoint, /parsed\.hostname !== previewAllowedHost/);
+  const worker = read('../service-worker.js');
+  assert.match(worker, /RUNTIME_CONFIG_CACHE/);
+  assert.match(worker, /isCacheableRuntimeConfig/);
+  assert.match(worker, /runtimeConfigPath/);
+  assert.match(worker, /await cache\.match\(request\)/);
 });
 
 test('no local Docker/Supabase endpoint can leak into browser runtime assets', () => {
