@@ -19,7 +19,7 @@ Assign values by Vercel environment:
 | Preview | A separate, disposable/test Supabase project; production host is explicitly rejected |
 | Development | A local Supabase instance or a non-production test project |
 
-Do not assign the production URL or key to Preview or Development. The runtime endpoint also rejects Supabase secret keys and legacy JWT keys carrying the service_role claim. Preview and Development deployments fail closed with HTTP 503 if variables are missing or if the production Supabase host is selected. Local HTTP endpoints and custom ports are accepted only in Development for localhost or 127.0.0.1.
+Do not assign the production URL or key to Preview or Development. The runtime endpoint also rejects Supabase secret keys and legacy JWT keys carrying the service_role claim. Preview deployments fail closed with HTTP 503 unless the exact non-production allowlist host is configured and matches `SUPABASE_URL`. Preview and Development also reject the production host; missing or invalid required variables fail closed. Local HTTP endpoints and custom ports are accepted only in Development for localhost or 127.0.0.1.
 
 Production deployments also fail closed unless the URL points to the approved production project. This prevents a configuration typo from silently redirecting live users to a test database.
 
