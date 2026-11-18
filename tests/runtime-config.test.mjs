@@ -30,9 +30,39 @@ test('production accepts only the approved production project', () => {
   assert.equal(config.error, undefined);
 });
 
+test('development rejects the production Supabase project', () => {
+  const config = resolve({
+    ...base,
+    VERCEL_ENV: 'development',
+    SUPABASE_URL: 'https://lvkeohpuucuklagvwpnq.supabase.co'
+  });
+  assert.match(config.error, /non-production deployments/i);
+});
+
+test('development allows only local HTTP endpoints and non-production HTTPS projects', () => {
+  assert.equal(resolve({
+    ...base,
+    VERCEL_ENV: 'development',
+    SUPABASE_URL: 'http://127.0.0.1:54321'
+  }).environment, 'development');
+  assert.ok(resolve({
+    ...base,
+    VERCEL_ENV: 'development',
+    SUPABASE_URL: 'https://staging-project.supabase.co:8443'
+  }).error);
+});
+
 test('production rejects a staging project', () => {
   const config = resolve({ ...base, VERCEL_ENV: 'production' });
   assert.match(config.error, /approved production project/i);
+});
+
+test('service-role and secret API keys are never exposed to the browser', () => {
+  const payload = Buffer.from(JSON.stringify({ role: 'service_role' })).toString('base64url');
+  const serviceRoleJwt = 'header.' + payload + '.signature';
+  assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: serviceRoleJwt }).error);
+  assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: 'sb_secret_sensitive-value' }).error);
+  assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: 12345 }).error);
 });
 
 test('missing variables fail closed', () => {
