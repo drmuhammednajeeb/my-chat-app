@@ -22,7 +22,7 @@ test('existing email errors use an anti-enumeration response', () => {
 });
 
 test('signup errors map invitation, password, username and email cases', () => {
-  assert.match(toUserMessage({ message: 'Database error saving new user' }, true), /الدعوة السارية/);
+  assert.match(toUserMessage({ message: 'Database error saving new user' }, true), /الدعوة لم تُستخدم/);
   assert.match(toUserMessage({ message: 'Password should be at least 8 characters' }, true), /8 أحرف/);
   assert.match(toUserMessage({ message: 'duplicate key profiles_username' }, true), /اسم المستخدم مستخدم/);
   assert.match(toUserMessage({ message: 'Invalid email' }, true), /صيغة البريد الإلكتروني/);
