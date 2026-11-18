@@ -9,6 +9,7 @@ const resolve = handler.resolveRuntimeConfig;
 const base = {
   VERCEL_ENV: 'preview',
   SUPABASE_URL: 'https://staging-project.supabase.co',
+  SUPABASE_PREVIEW_ALLOWED_HOST: 'staging-project.supabase.co',
   SUPABASE_ANON_KEY: 'header.' + Buffer.from(JSON.stringify({ role: 'anon' })).toString('base64url') + '.signature'
 };
 
@@ -17,6 +18,14 @@ test('preview accepts a separate HTTPS Supabase project', () => {
   assert.equal(config.environment, 'preview');
   assert.equal(config.supabaseUrl, base.SUPABASE_URL);
   assert.equal(config.supabaseAnonKey, base.SUPABASE_ANON_KEY);
+});
+
+test('preview requires an exact non-production host allowlist', () => {
+  const { SUPABASE_PREVIEW_ALLOWED_HOST, ...withoutAllowlist } = base;
+  assert.match(resolve(withoutAllowlist).error, /explicit non-production/i);
+  assert.match(resolve({ ...base, SUPABASE_PREVIEW_ALLOWED_HOST: 'other-project.supabase.co' }).error, /does not match/i);
+  assert.match(resolve({ ...base, SUPABASE_PREVIEW_ALLOWED_HOST: 'lvkeohpuucuklagvwpnq.supabase.co' }).error, /explicit non-production/i);
+  assert.match(resolve({ ...base, SUPABASE_PREVIEW_ALLOWED_HOST: 'https://staging-project.supabase.co' }).error, /explicit non-production/i);
 });
 
 test('preview rejects the production Supabase project', () => {
