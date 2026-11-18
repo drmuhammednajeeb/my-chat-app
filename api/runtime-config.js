@@ -2,6 +2,7 @@
 
 const PRODUCTION_PROJECT_HOST = 'lvkeohpuucuklagvwpnq.supabase.co';
 const LOCAL_DEVELOPMENT_HOSTS = new Set(['localhost', '127.0.0.1']);
+const PREVIEW_HOST_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.supabase\\.co$/;
 
 function isPublicBrowserKey(value) {
   if (typeof value !== 'string' || !value.trim()) return false;
@@ -26,6 +27,9 @@ function resolveRuntimeConfig(env = process.env) {
   const deployment = env.VERCEL_ENV;
   const rawUrl = env.SUPABASE_URL;
   const anonKey = env.SUPABASE_ANON_KEY;
+  const previewAllowedHost = typeof env.SUPABASE_PREVIEW_ALLOWED_HOST === 'string'
+    ? env.SUPABASE_PREVIEW_ALLOWED_HOST.trim().toLowerCase()
+    : '';
 
   if (!['production', 'preview', 'development'].includes(deployment)) {
     return { error: 'Unsupported or missing deployment environment.' };
@@ -65,6 +69,14 @@ function resolveRuntimeConfig(env = process.env) {
     parsed.hostname === PRODUCTION_PROJECT_HOST
   ) {
     return { error: 'Non-production deployments are forbidden from using the production Supabase project.' };
+  }
+  if (deployment === 'preview') {
+    if (!PREVIEW_HOST_PATTERN.test(previewAllowedHost) || previewAllowedHost === PRODUCTION_PROJECT_HOST) {
+      return { error: 'Preview requires an explicit non-production SUPABASE_PREVIEW_ALLOWED_HOST.' };
+    }
+    if (parsed.hostname !== previewAllowedHost) {
+      return { error: 'Preview Supabase host does not match SUPABASE_PREVIEW_ALLOWED_HOST.' };
+    }
   }
 
   return {
