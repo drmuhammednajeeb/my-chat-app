@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 const { toUserMessage } = require('../modules/auth-error-messages.js');
 const index = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const worker = readFileSync(new URL('../service-worker.js', import.meta.url), 'utf8');
 
 test('signup error mapping never exposes server messages', () => {
   const secret = 'duplicate key value violates constraint private_table_secret';
@@ -42,4 +43,9 @@ test('auth request mode is captured and mode controls are locked while pending',
   assert.match(handler, /\$\('loginTab'\)\.disabled=true/);
   assert.match(handler, /\$\('signupTab'\)\.disabled=true/);
   assert.match(handler, /btn\.textContent=state\.authMode==='signup'/);
+});
+
+test('the service worker precaches the auth error helper and advances its cache version', () => {
+  assert.match(worker, /auth-error-messages\.js/);
+  assert.match(worker, /CACHE_VERSION = "v38"/);
 });
