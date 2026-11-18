@@ -1,6 +1,24 @@
 'use strict';
 
 const PRODUCTION_PROJECT_HOST = 'lvkeohpuucuklagvwpnq.supabase.co';
+const LOCAL_DEVELOPMENT_HOSTS = new Set(['localhost', '127.0.0.1']);
+
+function isPublicBrowserKey(value) {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  const key = value.trim();
+  if (/^sb_secret_/i.test(key)) return false;
+
+  const parts = key.split('.');
+  if (parts.length === 3) {
+    try {
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+      if (payload.role === 'service_role') return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
 
 function resolveRuntimeConfig(env = process.env) {
   const deployment = env.VERCEL_ENV;
@@ -10,8 +28,8 @@ function resolveRuntimeConfig(env = process.env) {
   if (!['production', 'preview', 'development'].includes(deployment)) {
     return { error: 'Unsupported or missing deployment environment.' };
   }
-  if (!rawUrl || !anonKey) {
-    return { error: 'Required Supabase environment variables are missing.' };
+  if (typeof rawUrl !== 'string' || !rawUrl.trim() || !isPublicBrowserKey(anonKey)) {
+    return { error: 'Required public Supabase environment variables are missing or invalid.' };
   }
 
   let parsed;
@@ -21,27 +39,36 @@ function resolveRuntimeConfig(env = process.env) {
     return { error: 'SUPABASE_URL is not a valid URL.' };
   }
 
-  if (parsed.protocol !== 'https:' && !(deployment === 'development' && parsed.hostname === '127.0.0.1')) {
+  const isLocalDevelopment =
+    deployment === 'development' && LOCAL_DEVELOPMENT_HOSTS.has(parsed.hostname);
+
+  if (parsed.protocol !== 'https:' && !(isLocalDevelopment && parsed.protocol === 'http:')) {
     return { error: 'Supabase URL must use HTTPS outside local development.' };
   }
   if (parsed.username || parsed.password || parsed.search || parsed.hash || parsed.pathname !== '/') {
     return { error: 'SUPABASE_URL must contain only the project origin.' };
   }
-  if (!parsed.hostname.endsWith('.supabase.co') && !(deployment === 'development' && ['localhost', '127.0.0.1'].includes(parsed.hostname))) {
+  if (parsed.port && !isLocalDevelopment) {
+    return { error: 'Custom Supabase URL ports are allowed only for local development.' };
+  }
+  if (!parsed.hostname.endsWith('.supabase.co') && !isLocalDevelopment) {
     return { error: 'Supabase host is not an approved project host.' };
   }
 
   if (deployment === 'production' && parsed.hostname !== PRODUCTION_PROJECT_HOST) {
     return { error: 'Production deployment is not configured for the approved production project.' };
   }
-  if (deployment === 'preview' && parsed.hostname === PRODUCTION_PROJECT_HOST) {
-    return { error: 'Preview deployments are forbidden from using the production Supabase project.' };
+  if (
+    (deployment === 'preview' || deployment === 'development') &&
+    parsed.hostname === PRODUCTION_PROJECT_HOST
+  ) {
+    return { error: 'Non-production deployments are forbidden from using the production Supabase project.' };
   }
 
   return {
     environment: deployment,
     supabaseUrl: parsed.origin,
-    supabaseAnonKey: anonKey
+    supabaseAnonKey: anonKey.trim()
   };
 }
 
