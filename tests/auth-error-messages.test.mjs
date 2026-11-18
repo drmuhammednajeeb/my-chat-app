@@ -49,3 +49,10 @@ test('the service worker precaches the auth error helper and advances its cache 
   assert.match(worker, /auth-error-messages\.js/);
   assert.match(worker, /CACHE_VERSION = "v38"/);
 });
+
+test('safe local validation messages remain actionable for both auth modes', () => {
+  assert.equal(toUserMessage({ message: 'أدخل البريد الإلكتروني.' }, false), 'أدخل البريد الإلكتروني.');
+  assert.equal(toUserMessage({ message: 'صيغة البريد الإلكتروني غير صحيحة.' }, true), 'صيغة البريد الإلكتروني غير صحيحة.');
+  assert.equal(toUserMessage({ message: 'كلمة المرور يجب ألا تقل عن 8 أحرف.' }, true), 'كلمة المرور يجب ألا تقل عن 8 أحرف.');
+  assert.equal(toUserMessage({ message: 'رمز الدعوة غير صحيح. استخدم الرمز الذي أنشأه مسؤول التطبيق.' }, true), 'رمز الدعوة غير صحيح. استخدم الرمز الذي أنشأه مسؤول التطبيق.');
+});
