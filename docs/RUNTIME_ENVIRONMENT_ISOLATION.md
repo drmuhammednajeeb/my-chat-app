@@ -5,7 +5,7 @@ Vercel serves `/api/runtime-config`, which exposes only the publishable client c
 
 ## Required Vercel environment variables
 
-Configure both variables in **Project Settings → Environment Variables**:
+Configure the following required variables in **Project Settings → Environment Variables**:
 
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY` (the Supabase publishable/anon key only; never a service-role key)
