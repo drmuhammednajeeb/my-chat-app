@@ -61,7 +61,8 @@ test('service-role and secret API keys are never exposed to the browser', () => 
   const payload = Buffer.from(JSON.stringify({ role: 'service_role' })).toString('base64url');
   const serviceRoleJwt = 'header.' + payload + '.signature';
   assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: serviceRoleJwt }).error);
-  assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: 'sb_secret_sensitive-value' }).error);\n  assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: 'not-a-supabase-public-key' }).error);\n  assert.equal(resolve({ ...base, SUPABASE_ANON_KEY: 'sb_publishable_valid-public-key' }).environment, 'preview');
+  assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: 'sb_secret_sensitive-value' }).error);
+  assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: 'not-a-supabase-public-key' }).error);\n  assert.equal(resolve({ ...base, SUPABASE_ANON_KEY: 'sb_publishable_valid-public-key' }).environment, 'preview');
   assert.ok(resolve({ ...base, SUPABASE_ANON_KEY: 12345 }).error);
 });
 
