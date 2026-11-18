@@ -9,6 +9,7 @@ Configure both variables in **Project Settings → Environment Variables**:
 
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY` (the Supabase publishable/anon key only; never a service-role key)
+- `SUPABASE_PREVIEW_ALLOWED_HOST` (Preview only; exact hostname such as `your-test-project.supabase.co`, without protocol or path)
 
 Assign values by Vercel environment:
 
@@ -26,8 +27,8 @@ Production deployments also fail closed unless the URL points to the approved pr
 
 1. Before merging this change, add the existing production URL and publishable key to the Vercel **Production** environment variables. Do not paste either value into GitHub, source files, or chat.
 2. Create or select a separate Supabase test project (do not use the store project). Apply the reviewed migrations to that test project only.
-3. Add that project's URL and publishable key to Vercel **Preview** environment variables.
+3. Add that project's URL, publishable key, and exact hostname in `SUPABASE_PREVIEW_ALLOWED_HOST` to Vercel **Preview** environment variables.
 4. Redeploy Preview and verify `/api/runtime-config` reports a Preview configuration without revealing secrets; then run signup tests only with test invitations and test identities.
 5. Merge only after Production variables and Preview isolation have both been verified.
 
-The endpoint uses `Cache-Control: no-store`. Its response contains only the public browser key. It never returns service-role credentials.
+The endpoint uses `Cache-Control: no-store`. Its response contains only the public browser key. It never returns service-role credentials. The service worker explicitly stores only a validated successful runtime-config response in an origin-scoped, versioned cache; it uses network-first behavior, falls back to that cached public configuration only when the network request fails, and never falls back to stale configuration after an HTTP error such as 503. This preserves cached-shell startup offline without caching authenticated API data or Supabase records.
