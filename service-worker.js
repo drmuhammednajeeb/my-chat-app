@@ -44,6 +44,8 @@ self.addEventListener("install", event => {
       new URL("./modules/status-workspace.js", base).href,
       new URL("./modules/status-workspace.css", base).href
     ]);
+    // Optional until the authentication helper lands from PR #151; absence must not block SW installation.
+    await cache.add(new URL("./modules/auth-error-messages.js", base).href).catch(() => {});
   })());
 });
 
