@@ -12,7 +12,8 @@ test('the browser loads Supabase configuration from the environment-specific run
   assert.doesNotMatch(index, /const\s+SUPABASE_URL\s*=\s*['"]https:\/\//);
   assert.doesNotMatch(index, /const\s+SUPABASE_ANON_KEY\s*=\s*['"][^'"]+['"]/);
   assert.match(endpoint, /VERCEL_ENV/);
-  assert.match(endpoint, /deployment === 'preview'.*PRODUCTION_PROJECT_HOST/s);\n  assert.match(endpoint, /deployment === 'development'.*PRODUCTION_PROJECT_HOST/s);
+  assert.match(endpoint, /deployment === 'preview'.*PRODUCTION_PROJECT_HOST/s);
+  assert.match(endpoint, /deployment === 'development'.*PRODUCTION_PROJECT_HOST/s);
   assert.match(endpoint, /deployment === 'production'.*PRODUCTION_PROJECT_HOST/s);
   assert.match(endpoint, /Cache-Control/);
 });
