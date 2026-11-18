@@ -9,7 +9,7 @@
     if (/already registered|user already exists|already been registered/i.test(raw)) {
       return 'تعذر إكمال التسجيل بهذه البيانات. تحقق من بياناتك أو استخدم استعادة الحساب إذا سبق لك التسجيل.';
     }
-    if (/password.*(weak|short|length)|weak password/i.test(raw)) {
+    if (/password.*(weak|short|length|at least|minimum)|weak password/i.test(raw)) {
       return 'كلمة المرور غير مستوفية للشروط. استخدم 8 أحرف على الأقل.';
     }
     if (/duplicate key|profiles_username|username.*(taken|exists|already)/i.test(raw)) {
