@@ -84,20 +84,28 @@ test('runtime config HTTP errors are not replaced with stale cached configuratio
   assert.match(await failed.text(), /misconfigured/);
 });
 
-test('invalid or secret runtime configuration is never cached for offline use', async () => {
+test('error and secret runtime configuration responses are never cached for offline use', async () => {
+  let online = true;
   let body = 'window.BIZMIND_RUNTIME_CONFIG = {"error":"invalid"};';
-  const harness = createHarness(async () => new Response(body, { status: 200 }));
-  const invalid = await harness.requestRuntimeConfig();
-  assert.equal(invalid.status, 200);
+  const harness = createHarness(async () => {
+    if (!online) throw new TypeError('Network unavailable');
+    return new Response(body, { status: 200 });
+  });
+
+  await harness.requestRuntimeConfig();
+  online = false;
+  const offlineAfterError = await harness.requestRuntimeConfig();
+  assert.equal(offlineAfterError.status, 503);
+  assert.doesNotMatch(await offlineAfterError.text(), /invalid/);
+
+  online = true;
   body = 'window.BIZMIND_RUNTIME_CONFIG = ' + JSON.stringify({
     ...publicConfig,
     supabaseAnonKey: 'sb_secret_do_not_cache'
   }) + ';';
   await harness.requestRuntimeConfig();
-
-  const offlineHarness = createHarness(async () => { throw new TypeError('Network unavailable'); });
-  const offline = await offlineHarness.requestRuntimeConfig();
-  assert.equal(offline.status, 503);
-  assert.doesNotMatch(await offline.text(), /sb_secret_/);
-  assert.ok(harness.stores.size >= 0);
+  online = false;
+  const offlineAfterSecret = await harness.requestRuntimeConfig();
+  assert.equal(offlineAfterSecret.status, 503);
+  assert.doesNotMatch(await offlineAfterSecret.text(), /sb_secret_/);
 });
