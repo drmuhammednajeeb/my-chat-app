@@ -71,7 +71,7 @@ test('forward migration preserves pair serialization, exact-pair reuse, and two-
     "where c.type = 'direct'",
     'cm.user_id = v_user_id',
     'cm.user_id = p_other_user_id',
-    '(select count(*) from public.conversation_members cm',
+    'select count(*) from public.conversation_members cm',
     ') = 2',
     "values ('direct', null, v_user_id)",
     "(v_conversation_id, v_user_id, 'owner')",
