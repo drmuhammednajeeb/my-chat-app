@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
-  "generatedAt": "2026-11-17",
+  "generatedAt": "2026-11-19",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
     "baseBranch": "main",
@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 68,
+    "canonicalCliMigrationFiles": 69,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 20,
@@ -42,7 +42,7 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 6
+    "forwardReconciliationMigrations": 7
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -53,7 +53,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
-    "The 66-file CLI stream contains 62 historical production-ledger migrations plus 4 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+    "The 69-file CLI stream contains 62 historical production-ledger migrations plus 7 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
   ],
   "productionMigrations": [
     {
@@ -1866,19 +1866,31 @@
       "localRuntimeRunId": 44040777235,
       "localRuntimeCommit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
       "productionApplied": false
+    },
+    {
+      "version": "20261119113000",
+      "name": "harden_privileged_rpc_active_membership",
+      "path": "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
+      "gitBlobSha": "f13a526a88839b211b957361a73ee3f0e197c88b",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Require active, verified, email-confirmed membership inside privileged channel and group SECURITY DEFINER RPCs, locking authoritative profile and Auth rows before privileged writes.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 6,
+    "pendingForwardCount": 7,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
     "localRuntimeRunId": 44054041618,
     "localRuntimeCommit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
     "localRuntimeCompletedAt": "2026-11-17T09:18:04Z",
-    "localRuntimeSqlFilesExecuted": 86
+    "localRuntimeSqlFilesExecuted": 87
   },
   "validationEvidence": {
     "runtime": {
@@ -1908,7 +1920,11 @@
       "passed": 101,
       "failed": 0
     },
-    "pendingAdditionalSources": [],
+    "pendingAdditionalSources": [
+      "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
+      "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+      "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+    ],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
