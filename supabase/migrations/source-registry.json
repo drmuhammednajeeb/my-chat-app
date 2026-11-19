@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 68,
+    "canonicalCliMigrationFiles": 69,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 20,
@@ -42,7 +42,7 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 6
+    "forwardReconciliationMigrations": 7
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -53,7 +53,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
-    "The 66-file CLI stream contains 62 historical production-ledger migrations plus 4 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+    "The 69-file CLI stream contains 62 historical production-ledger migrations plus 7 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
   ],
   "productionMigrations": [
     {
@@ -1743,6 +1743,17 @@
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "status": "LOCAL_RUNTIME_PASSED_SUPABASE_MANAGED_ROLE_RESIDUAL_REMAINS"
+    },
+    {
+      "id": "DAG-019",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Production Edge Function logs show 274 HTTP 200 cleanup invocations in the last 24 hours with average execution around 3.2 seconds and maximum around 4.9 seconds, while pg_net records three 5-second timeouts. The forward migration raises the timeout used by future scheduling to 10 seconds without changing the active cron job; verify the scheduler definition in disposable local runtime and retain the separate production reconfiguration approval gate.",
+      "evidence": [
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+        "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
+      ],
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "externalSources": [
@@ -1866,14 +1877,26 @@
       "localRuntimeRunId": 44040777235,
       "localRuntimeCommit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
       "productionApplied": false
+    },
+    {
+      "version": "20261119130000",
+      "name": "increase_message_cleanup_http_timeout",
+      "path": "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+      "gitBlobSha": "44b5926b988533da72234b7b79202ba7c06815f5",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Change the owner-only message cleanup scheduler function so future cron scheduling uses a 10-second pg_net HTTP timeout. The existing cron job is not rescheduled by this migration; an explicit owner-only reconfiguration call is required after production approval.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 6,
+    "pendingForwardCount": 7,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
     "localRuntimeRunId": 44054041618,
     "localRuntimeCommit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
@@ -1908,7 +1931,11 @@
       "passed": 101,
       "failed": 0
     },
-    "pendingAdditionalSources": [],
+    "pendingAdditionalSources": [
+      "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+      "tests/message-auto-cleanup.test.mjs"
+    ],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
