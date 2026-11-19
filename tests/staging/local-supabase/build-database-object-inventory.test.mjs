@@ -57,7 +57,7 @@ test('platform service dependencies are explicit', async () => {
 
 test('all policy definitions after the membership rewrite enforce active membership', async () => {
   const report = await buildObjectInventory();
-  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 20);
+  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 21);
   assert.deepEqual(report.policyCoverage.laterPoliciesMissingActiveMemberGuard, []);
 });
 
