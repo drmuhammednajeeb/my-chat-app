@@ -290,14 +290,23 @@ test('renderer rejects an obsolete request token before starting work', async ()
   assert.equal(calls, 0);
 });
 
-test('poll cadence preserves connected, disconnected and background intervals', () => {
-  const state = { realtimeStatus: 'SUBSCRIBED' }, document = { visibilityState: 'visible' };
-  const delay = vm.runInNewContext('(' + extractFunction('messagePollingDelay') + ')', { state, document });
+test('poll cadence preserves connected, disconnected, background and offline intervals', () => {
+  const state = { realtimeStatus: 'SUBSCRIBED' };
+  const document = { visibilityState: 'visible' };
+  const navigator = { onLine: true };
+  const delay = vm.runInNewContext('(' + extractFunction('messagePollingDelay') + ')', { state, document, navigator });
   assert.equal(delay(), 15000);
   state.realtimeStatus = 'CHANNEL_ERROR';
   assert.equal(delay(), 1200);
   document.visibilityState = 'hidden';
   assert.equal(delay(), 60000);
+  document.visibilityState = 'visible';
+  navigator.onLine = false;
+  assert.equal(delay(), 60000, 'offline browsers must not poll Supabase every 1.2 seconds');
+  navigator.onLine = true;
+  assert.equal(delay(), 1200, 'the online event can resume fast fallback reconciliation');
+  assert.match(source, /window\\.addEventListener\\('offline'/);
+  assert.match(source, /window\\.addEventListener\\('online'/);
 });
 
 test('receipt writes are serialized per conversation in one client session', async () => {
