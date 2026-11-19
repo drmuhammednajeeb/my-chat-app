@@ -65,7 +65,7 @@ The SQL assertion fixture also verifies that the new and replaced SECURITY DEFIN
 
 ## Remaining audit observations
 
-- app_private.enforce_chat_message_reply_parent() is a trigger-returning SECURITY DEFINER function with an authenticated EXECUTE grant. It is not a normal RPC entry point, but its unnecessary direct EXECUTE grant should be reviewed separately against trigger behavior before revocation.
+- app_private.enforce_chat_message_reply_parent() was a trigger-returning SECURITY DEFINER function with an unnecessary authenticated EXECUTE grant. PR #154 now revokes direct PUBLIC/anon/authenticated execution while retaining the existing trigger attachment; the disposable-local message lifecycle and runtime checks must confirm trigger execution remains intact.
 - public.guard_chat_message_content_update() is also a trigger function whose ACL includes anon/authenticated execution. Review trigger-only function ACLs as part of the least-privilege pass; do not revoke until trigger behavior is verified in disposable runtime.
 - RLS and function ACLs are separate layers. This RPC audit does not close the separate table-by-table SELECT/INSERT/UPDATE/DELETE policy audit (remediation item 5).
 
