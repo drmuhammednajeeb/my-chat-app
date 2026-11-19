@@ -1781,7 +1781,7 @@
       "version": "20261112160000",
       "name": "harden_direct_conversation_eligibility",
       "path": "supabase/migrations/20261112160000_harden_direct_conversation_eligibility.sql",
-      "gitBlobSha": "8f39dc4d9f679f01240b1190a1e8c46f8b61d89c",
+      "gitBlobSha": "8056b359084e48e4c3ab3534b78821d5ddfb1373",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Require both direct-conversation participants to satisfy active membership, verified membership-number, valid-format and confirmed-email checks while preserving pair-lock reuse.",
