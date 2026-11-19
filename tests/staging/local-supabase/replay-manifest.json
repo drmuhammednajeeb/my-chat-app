@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 68,
-    "mappedSources": 68,
+    "sqlFiles": 69,
+    "mappedSources": 69,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 20,
@@ -31,13 +31,13 @@
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 66,
+    "executedMappedSources": 67,
     "executedTestOnlySqlFixtures": 20,
-    "executedSqlFiles": 86,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 66,
+    "executedSqlFiles": 87,
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "candidateMappedSources": 67,
     "candidateTestOnlySqlFixtures": 20,
-    "candidateSqlFiles": 86
+    "candidateSqlFiles": 87
   },
   "execution": {
     "enabled": false,
@@ -762,6 +762,17 @@
       "parityNote": "Corrects literal-dot extension validation and moves the exposed RPC behind a public invoker wrapper/private guarded definer helper; post-forward assertions verify regex behavior, security modes, search_path and execute ACLs."
     },
     {
+      "nodeId": "security.privileged-rpc-active-membership-forward",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Adds active-membership and locked authoritative Auth/profile checks inside privileged channel and group RPC implementations. Runtime replay is pending; production remains unchanged."
+    },
+    {
       "nodeId": "security.least-privilege-overlay",
       "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED",
       "testSources": [
@@ -981,6 +992,12 @@
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+    },
+    {
+      "path": "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
@@ -1032,5 +1049,5 @@
     },
     "pendingAdditionalSources": []
   },
-  "reviewState": "LOCAL_REPLAY_PENDING_NEW_CONVERSATION_IMAGE_MIGRATION"
+  "reviewState": "LOCAL_REPLAY_PENDING_PRIVILEGED_RPC_ACTIVE_MEMBERSHIP_MIGRATION"
 }
