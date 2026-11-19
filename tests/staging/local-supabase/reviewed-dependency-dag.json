@@ -1070,7 +1070,7 @@
         "chat.media-upload-path-hardening",
         "chat.profile-status-combined-content-media"
       ],
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PENDING_NEW_RPC_GUARDS",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED",
       "testSource": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
@@ -1083,7 +1083,7 @@
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "The existing overlay and CRUD/RPC fixtures now include inactive-member rejection probes for private-channel creation, invite creation/join, and group ownership transfer. Disposable-local runtime must be rerun before this node can be marked passed. The dedicated replay workflow remains isolated to loopback and destroys its temporary stack."
+      "note": "The existing overlay and CRUD/RPC fixtures include inactive-member rejection probes for channel creation, invite creation/join, image updates, ownership transfer, and inactive target administrators. Disposable-local runtime passed. DAG-016 remains an external Supabase-managed default-ACL review gate."
     },
     {
       "id": "chat.media-and-reactions",
@@ -1372,14 +1372,14 @@
         "security.conversation-image-extension-forward",
         "security.least-privilege-overlay"
       ],
-      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PENDING_NEW_MIGRATION",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
       "testSource": [
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Read-only catalog assertions plus rollback-only authenticated CRUD/RPC checks, including image-extension behavior, function security modes, empty search_path and execute ACLs."
+      "note": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
     },
     {
       "id": "chat.auto-cleanup-100h",
@@ -1478,14 +1478,21 @@
         "membership.base",
         "security.active-membership-rls-forward"
       ],
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
       "testSource": [
         "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
       ],
       "blockedBy": [],
-      "note": "Forward-only hardening for privileged SECURITY DEFINER RPCs. Each mutating path locks the caller's authoritative profile/Auth rows and rejects inactive, unverified, or unconfirmed accounts. Disposable-local runtime verification is pending; no production migration has been applied."
+      "note": "Forward-only hardening for privileged SECURITY DEFINER RPCs. Caller and target eligibility checks, active-membership row locks, administrator mutation locks, and trigger-only ACL revocation passed disposable-local runtime. Production remains unchanged.",
+      "runtimeEvidence": {
+        "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "workflowRunId": 44492915229,
+        "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+        "completedAt": "2026-11-19T09:06:13Z",
+        "sqlFilesExecuted": 87
+      }
     }
   ],
   "explicitEdges": [
