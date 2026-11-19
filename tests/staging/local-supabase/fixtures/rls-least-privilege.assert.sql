@@ -206,8 +206,9 @@ begin
      OR position('membership_number_verified IS TRUE' IN function_definition) = 0
      OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0
      OR position('FOR SHARE OF p, u' IN function_definition) = 0
+     OR position('p.id = p_new_owner' IN function_definition) = 0
      OR position('c.type = ''group''' IN function_definition) = 0 THEN
-    RAISE EXCEPTION 'transfer_group_ownership_impl must validate active caller and group target';
+    RAISE EXCEPTION 'transfer_group_ownership_impl must validate active caller, active target owner, and group target';
   END IF;
 
   IF EXISTS (
