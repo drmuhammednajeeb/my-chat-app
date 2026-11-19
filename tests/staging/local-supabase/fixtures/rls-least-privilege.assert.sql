@@ -220,8 +220,11 @@ begin
   SELECT pg_get_functiondef('app_private.create_channel_invite(uuid)'::regprocedure)
     INTO function_definition;
   IF position('membership_status = ''active''' IN function_definition) = 0
+     OR position('membership_number_verified IS TRUE' IN function_definition) = 0
+     OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0
+     OR position('FOR SHARE OF p, u' IN function_definition) = 0
      OR position('app_private.can_manage_conversation(p_conversation_id)' IN function_definition) = 0 THEN
-    RAISE EXCEPTION 'create_channel_invite must enforce active membership and conversation management';
+    RAISE EXCEPTION 'create_channel_invite must lock active membership and enforce conversation management';
   END IF;
 
   SELECT pg_get_functiondef('app_private.join_channel_by_invite(text)'::regprocedure)
