@@ -39,6 +39,7 @@ jobs:
             tests/workspace-load-race.test.mjs \
             tests/message-auto-cleanup.test.mjs \
             tests/staging/local-supabase/direct-conversation-rpc.test.mjs \
+            tests/staging/local-supabase/direct-conversation-forward-migration.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-guard.test.mjs \
             tests/staging/local-supabase/direct-conversation-eligibility-runtime.test.mjs \
             tests/staging/local-supabase/direct-conversation-concurrency.test.mjs \
