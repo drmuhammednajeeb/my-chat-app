@@ -4,6 +4,7 @@ do $assert$
 declare
   r record;
   storage_policy_issues text;
+  function_definition text;
 begin
   if current_database() <> 'postgres'
      or current_user <> 'postgres'
@@ -165,6 +166,62 @@ begin
   ) then
     raise exception 'An app_private SECURITY DEFINER function has unsafe search_path or execute ACL';
   end if;
+
+  -- Privileged RPC implementations must enforce active membership internally;
+  -- restrictive table RLS is not a substitute for checks inside SECURITY DEFINER code.
+  SELECT pg_get_functiondef('app_private.can_manage_conversation(uuid)'::regprocedure)
+    INTO function_definition;
+  IF position('app_private.is_active_member()' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'can_manage_conversation must require an active member';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.create_private_channel(text,text)'::regprocedure)
+    INTO function_definition;
+  IF position('membership_status = ''active''' IN function_definition) = 0
+     OR position('membership_number_verified IS TRUE' IN function_definition) = 0
+     OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0
+     OR position('FOR SHARE OF p, u' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'create_private_channel must lock and validate active verified membership';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.create_channel_invite(uuid)'::regprocedure)
+    INTO function_definition;
+  IF position('membership_status = ''active''' IN function_definition) = 0
+     OR position('app_private.can_manage_conversation(p_conversation_id)' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'create_channel_invite must enforce active membership and conversation management';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.join_channel_by_invite(text)'::regprocedure)
+    INTO function_definition;
+  IF position('membership_status = ''active''' IN function_definition) = 0
+     OR position('membership_number_verified IS TRUE' IN function_definition) = 0
+     OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0
+     OR position('FOR SHARE OF p, u' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'join_channel_by_invite must lock and validate active verified membership';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.transfer_group_ownership_impl(uuid,uuid)'::regprocedure)
+    INTO function_definition;
+  IF position('membership_status = ''active''' IN function_definition) = 0
+     OR position('membership_number_verified IS TRUE' IN function_definition) = 0
+     OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0
+     OR position('FOR SHARE OF p, u' IN function_definition) = 0
+     OR position('c.type = ''group''' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'transfer_group_ownership_impl must validate active caller and group target';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_proc p
+    WHERE p.oid IN (
+      'public.create_private_channel(text,text)'::regprocedure,
+      'public.create_channel_invite(uuid)'::regprocedure,
+      'public.join_channel_by_invite(text)'::regprocedure,
+      'public.transfer_group_ownership(uuid,uuid)'::regprocedure
+    )
+    AND p.prosecdef
+  ) THEN
+    RAISE EXCEPTION 'Privileged RPC entry points must remain SECURITY INVOKER wrappers';
+  END IF;
 
   -- Storage has its own RLS boundary and bucket-level visibility settings.
   if not exists (
