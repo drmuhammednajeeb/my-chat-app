@@ -30,11 +30,14 @@ SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'
 DO $seed_rpc_channel$
 DECLARE
   v_channel uuid;
+  v_public_channel uuid;
   v_token text;
 BEGIN
   v_channel := public.create_private_channel('Privileged RPC membership probe','');
+  v_public_channel := public.create_channel('Privileged RPC public channel probe','',true);
   v_token := public.create_channel_invite(v_channel);
   PERFORM set_config('app.test.rpc_channel_id',v_channel::text,true);
+  PERFORM set_config('app.test.rpc_public_channel_id',v_public_channel::text,true);
   PERFORM set_config('app.test.rpc_invite_token',v_token,true);
 END;
 $seed_rpc_channel$;
@@ -79,6 +82,16 @@ BEGIN
   IF NOT v_rejected THEN
     RAISE EXCEPTION 'Suspended member was allowed to create a private channel';
   END IF;
+
+  v_rejected := false;
+  BEGIN
+    PERFORM public.create_channel('Should be rejected','',true);
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Suspended member was allowed to create a public channel';
+  END IF;
 END;
 $inactive_invite_join$;
 
@@ -119,6 +132,16 @@ BEGIN
   END;
   IF NOT v_rejected THEN
     RAISE EXCEPTION 'Suspended group owner was allowed to transfer ownership';
+  END IF;
+
+  v_rejected := false;
+  BEGIN
+    PERFORM public.set_conversation_image(v_group,NULL);
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Suspended group owner was allowed to change the conversation image';
   END IF;
 END;
 $inactive_owner_actions$;
