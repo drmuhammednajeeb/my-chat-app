@@ -40,6 +40,7 @@ $seed_rpc_channel$;
 
 -- A suspended user must not join by bearer invite or create a private channel.
 RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 UPDATE public.profiles
 SET membership_status='suspended'
 WHERE id=current_setting('app.test.direct_b_id')::uuid;
@@ -83,6 +84,7 @@ $inactive_invite_join$;
 -- Restore direct_b and suspend the owner. Invite creation and ownership transfer
 -- must both fail before any privileged mutation is made.
 RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 UPDATE public.profiles
 SET membership_status='active'
 WHERE id=current_setting('app.test.direct_b_id')::uuid;
@@ -130,6 +132,7 @@ END;
 $inactive_owner_actions$;
 
 RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 UPDATE public.profiles
 SET membership_status='active'
 WHERE id=current_setting('app.test.direct_a_id')::uuid;
