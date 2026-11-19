@@ -574,7 +574,7 @@ begin
     return next;
   end loop;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION app_private.admin_revoke_member_invite_impl(p_invite_id uuid)
@@ -598,7 +598,7 @@ begin
     raise exception 'الدعوة غير موجودة أو لم تعد سارية';
   end if;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION app_private.admin_set_member_official_number_impl(p_user_id uuid, p_membership_number text)
@@ -634,7 +634,7 @@ begin
     raise exception 'العضو غير موجود';
   end if;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION app_private.admin_update_membership_status_impl(p_user_id uuid, p_status text)
@@ -669,7 +669,7 @@ begin
     raise exception 'العضوية المطلوبة غير موجودة';
   end if;
 end;
-$function$
+$function$;
 
 
 -- Keep the internal RPC boundary explicit; public wrappers remain SECURITY INVOKER.
