@@ -1460,6 +1460,24 @@
         "completedAt": "2026-11-17T09:18:04Z",
         "sqlFilesExecuted": 86
       }
+    },
+    {
+      "id": "security.conversation-avatar-public-channel-read-forward",
+      "source": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql"
+      ],
+      "provides": [
+        "conversation-avatars public-channel reads through SECURITY DEFINER visibility helper without caller-visible conversations subquery"
+      ],
+      "requires": [
+        "chat.profile-status-and-conversation-images",
+        "chat.channel-visibility-avatar-background",
+        "chat.harden-channel-rpc-wrappers"
+      ],
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "testSource": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql"
+      ]
     }
   ],
   "explicitEdges": [
@@ -2342,6 +2360,18 @@
     [
       "security.least-privilege-overlay",
       "test-fixture.forward-hardening-postconditions"
+    ],
+    [
+      "chat.profile-status-and-conversation-images",
+      "security.conversation-avatar-public-channel-read-forward"
+    ],
+    [
+      "chat.channel-visibility-avatar-background",
+      "security.conversation-avatar-public-channel-read-forward"
+    ],
+    [
+      "chat.harden-channel-rpc-wrappers",
+      "security.conversation-avatar-public-channel-read-forward"
     ]
   ],
   "blockers": [
