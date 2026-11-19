@@ -689,6 +689,10 @@ test('seven forward migrations remain outside the production ledger and record e
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44040777235);
       assert.equal(forward?.localRuntimeCommit, 'ee5d57ebea388beb5280e01c0af518b5a36c1ddd');
+    } else if (name === '20261119130000_increase_message_cleanup_http_timeout.sql') {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.productionApplied, false);
+      assert.equal(forward?.localRuntimeRunId, undefined);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
