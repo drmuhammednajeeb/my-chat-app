@@ -475,19 +475,19 @@
       "parityNote": "Changes only the owner-only scheduler function for future 10-second HTTP timeouts; it does not reschedule the active production cron job."
     },
     {
-      "nodeId": "test-fixture.message-auto-cleanup",
-      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "nodeId": "chat.scope-team-admin-overrides",
+      "status": "SOURCE_REVIEWED",
       "testSources": [
-        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+        "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql"
       ],
       "blockedBy": [],
       "parityNote": null
     },
     {
-      "nodeId": "chat.scope-team-admin-overrides",
-      "status": "SOURCE_REVIEWED",
+      "nodeId": "test-fixture.message-auto-cleanup",
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "testSources": [
-        "supabase/migrations/20261107130954_scope_team_admin_overrides_to_group_features.sql"
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
       ],
       "blockedBy": [],
       "parityNote": null
