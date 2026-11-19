@@ -765,9 +765,7 @@
       "nodeId": "security.privileged-rpc-active-membership-forward",
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSources": [
-        "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
-        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
-        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+        "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql"
       ],
       "blockedBy": [],
       "parityNote": "Adds active-membership and locked authoritative Auth/profile checks inside privileged channel and group RPC implementations. Runtime replay is pending; production remains unchanged."
