@@ -1460,6 +1460,32 @@
         "completedAt": "2026-11-17T09:18:04Z",
         "sqlFilesExecuted": 86
       }
+    },
+    {
+      "id": "security.privileged-rpc-active-membership-forward",
+      "source": [
+        "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql"
+      ],
+      "provides": [
+        "active-member enforcement inside private-channel creation and invite RPCs",
+        "active-member enforcement inside invite-based channel join",
+        "active-member and group-target validation inside group ownership transfer",
+        "active-member authorization in can_manage_conversation"
+      ],
+      "requires": [
+        "chat.channels-private",
+        "chat.group-ownership-transfer",
+        "membership.base",
+        "security.active-membership-rls-forward"
+      ],
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSource": [
+        "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+      ],
+      "blockedBy": [],
+      "note": "Forward-only hardening for privileged SECURITY DEFINER RPCs. Each mutating path locks the caller's authoritative profile/Auth rows and rejects inactive, unverified, or unconfirmed accounts. Disposable-local runtime verification is pending; no production migration has been applied."
     }
   ],
   "explicitEdges": [
@@ -2342,6 +2368,22 @@
     [
       "security.least-privilege-overlay",
       "test-fixture.forward-hardening-postconditions"
+    ],
+    [
+      "chat.channels-private",
+      "security.privileged-rpc-active-membership-forward"
+    ],
+    [
+      "chat.group-ownership-transfer",
+      "security.privileged-rpc-active-membership-forward"
+    ],
+    [
+      "membership.base",
+      "security.privileged-rpc-active-membership-forward"
+    ],
+    [
+      "security.active-membership-rls-forward",
+      "security.privileged-rpc-active-membership-forward"
     ]
   ],
   "blockers": [
@@ -2526,6 +2568,17 @@
       ],
       "issue": "Forward migrations 20261112160002 and 20261112160003 passed disposable-local least-privilege, restrictive active-membership RLS, and rollback-only CRUD/RPC tests. Production postgres-owned defaults are addressed by the migration. Supabase-managed supabase_admin defaults remain broad and cannot be changed by postgres because it is not a member of that superuser role; read-only production inspection found zero public relations/functions owned by supabase_admin. Keep production deployment gated on Supabase-level review of this external default-ACL residual.",
       "status": "LOCAL_RUNTIME_PASSED_SUPABASE_MANAGED_ROLE_RESIDUAL_REMAINS"
+    },
+    {
+      "id": "DAG-017",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Read-only production catalog review identified privileged channel and group RPC paths that did not independently enforce active membership despite SECURITY DEFINER execution. The forward migration adds locked profile/Auth eligibility checks and rollback-only runtime tests; keep production deployment blocked until the disposable-local runtime passes and the migration is separately approved.",
+      "evidence": [
+        "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+      ],
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "duplicateProvenance": [],
