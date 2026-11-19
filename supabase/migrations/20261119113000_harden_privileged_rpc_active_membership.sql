@@ -467,7 +467,7 @@ BEGIN
   IF p_image_path IS NOT NULL THEN
     expected_prefix := p_conversation_id::text || '/' || actor::text || '/';
     IF LEFT(p_image_path, LENGTH(expected_prefix)) <> expected_prefix
-       OR p_image_path !~* '\\.(jpg|png|webp)$'
+       OR p_image_path !~* '\.(jpg|png|webp)$'
        OR NOT EXISTS (
          SELECT 1
          FROM storage.objects o
