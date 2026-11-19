@@ -1743,6 +1743,17 @@
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "status": "LOCAL_RUNTIME_PASSED_SUPABASE_MANAGED_ROLE_RESIDUAL_REMAINS"
+    },
+    {
+      "id": "DAG-017",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Read-only production catalog review identified privileged channel and group RPC paths that did not independently enforce active membership despite SECURITY DEFINER execution. The forward migration adds locked caller/target profile and Auth eligibility checks plus rollback-only runtime probes. Keep production deployment blocked until disposable-local runtime passes and the migration is separately approved.",
+      "evidence": [
+        "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+      ],
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "externalSources": [
