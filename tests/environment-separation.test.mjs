@@ -31,7 +31,7 @@ test('the environment contract identifies Vercel as production and rejects GitHu
   assert.match(contract, /Vercel is the approved production host/);
   assert.match(contract, /GitHub Pages is not the production host/);
   assert.match(contract, /SUPABASE_PREVIEW_ALLOWED_HOST/);
-  assert.match(readme, /منصة النشر المعتمدة للمشروع:\s*Vercel/);
+  assert.ok(readme.includes('منصة النشر المعتمدة للمشروع:** Vercel'));
 });
 
 test('no local Docker/Supabase endpoint can leak into browser runtime assets', () => {
