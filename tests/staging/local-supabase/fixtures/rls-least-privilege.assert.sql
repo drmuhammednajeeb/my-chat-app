@@ -200,6 +200,33 @@ begin
     RAISE EXCEPTION 'join_channel_by_invite must lock and validate active verified membership';
   END IF;
 
+  SELECT pg_get_functiondef('app_private.create_channel(text,text,boolean)'::regprocedure)
+    INTO function_definition;
+  IF position('membership_status = ''active''' IN function_definition) = 0
+     OR position('membership_number_verified IS TRUE' IN function_definition) = 0
+     OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0
+     OR position('FOR SHARE OF p, u' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'create_channel must lock and validate active verified membership';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.join_public_channel(uuid)'::regprocedure)
+    INTO function_definition;
+  IF position('membership_status = ''active''' IN function_definition) = 0
+     OR position('membership_number_verified IS TRUE' IN function_definition) = 0
+     OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0
+     OR position('FOR SHARE OF p, u' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'join_public_channel must lock and validate active verified membership';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.set_conversation_image_impl(uuid,text)'::regprocedure)
+    INTO function_definition;
+  IF position('membership_status = ''active''' IN function_definition) = 0
+     OR position('membership_number_verified IS TRUE' IN function_definition) = 0
+     OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0
+     OR position('FOR SHARE OF p, u' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'set_conversation_image_impl must lock and validate active verified membership';
+  END IF;
+
   SELECT pg_get_functiondef('app_private.transfer_group_ownership_impl(uuid,uuid)'::regprocedure)
     INTO function_definition;
   IF position('membership_status = ''active''' IN function_definition) = 0
@@ -215,6 +242,9 @@ begin
     SELECT 1 FROM pg_proc p
     WHERE p.oid IN (
       'public.create_private_channel(text,text)'::regprocedure,
+      'public.create_channel(text,text,boolean)'::regprocedure,
+      'public.join_public_channel(uuid)'::regprocedure,
+      'public.set_conversation_image(uuid,text)'::regprocedure,
       'public.create_channel_invite(uuid)'::regprocedure,
       'public.join_channel_by_invite(text)'::regprocedure,
       'public.transfer_group_ownership(uuid,uuid)'::regprocedure
