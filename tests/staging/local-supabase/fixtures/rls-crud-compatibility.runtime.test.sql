@@ -75,6 +75,23 @@ BEGIN
 
   v_rejected := false;
   BEGIN
+    PERFORM public.join_public_channel(current_setting('app.test.rpc_public_channel_id')::uuid);
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Suspended member was allowed to join a public channel';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=current_setting('app.test.rpc_public_channel_id')::uuid
+      AND user_id=current_setting('app.test.direct_b_id')::uuid
+  ) THEN
+    RAISE EXCEPTION 'Suspended member was inserted into the public channel';
+  END IF;
+
+  v_rejected := false;
+  BEGIN
     PERFORM public.create_private_channel('Should be rejected','');
   EXCEPTION WHEN insufficient_privilege THEN
     v_rejected := true;
