@@ -57,6 +57,10 @@ DECLARE
   v_channel uuid := current_setting('app.test.rpc_channel_id')::uuid;
   v_token text := current_setting('app.test.rpc_invite_token');
 BEGIN
+  IF app_private.lock_active_member() THEN
+    RAISE EXCEPTION 'Suspended member was reported as eligible by lock_active_member';
+  END IF;
+
   BEGIN
     PERFORM public.join_channel_by_invite(v_token);
   EXCEPTION WHEN insufficient_privilege THEN
