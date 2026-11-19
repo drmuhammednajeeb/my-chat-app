@@ -328,26 +328,7 @@ BEGIN
   WHERE p.id = actor
     AND p.membership_status = 'active'
     AND p.membership_number_verified IS TRUE
-    AND p.membership_number ~ '^971[0-9]{9}REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_channel(text, text, boolean) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.join_public_channel(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.set_conversation_image_impl(uuid, text) FROM PUBLIC, anon;
-
-GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_channel(text, text, boolean) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.join_public_channel(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.set_conversation_image_impl(uuid, text) TO authenticated;
-
-COMMIT;
-
+    AND p.membership_number ~ '^971[0-9]{9}$'
     AND u.email_confirmed_at IS NOT NULL
   FOR SHARE OF p, u;
 
@@ -393,20 +374,7 @@ BEGIN
   WHERE p.id = actor
     AND p.membership_status = 'active'
     AND p.membership_number_verified IS TRUE
-    AND p.membership_number ~ '^971[0-9]{9}REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
-
-GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
-
-COMMIT;
-
+    AND p.membership_number ~ '^971[0-9]{9}$'
     AND u.email_confirmed_at IS NOT NULL
   FOR SHARE OF p, u;
 
@@ -455,20 +423,7 @@ BEGIN
   WHERE p.id = actor
     AND p.membership_status = 'active'
     AND p.membership_number_verified IS TRUE
-    AND p.membership_number ~ '^971[0-9]{9}REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
-
-GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
-
-COMMIT;
-
+    AND p.membership_number ~ '^971[0-9]{9}$'
     AND u.email_confirmed_at IS NOT NULL
   FOR SHARE OF p, u;
 
@@ -483,20 +438,7 @@ COMMIT;
   IF p_image_path IS NOT NULL THEN
     expected_prefix := p_conversation_id::text || '/' || actor::text || '/';
     IF LEFT(p_image_path, LENGTH(expected_prefix)) <> expected_prefix
-       OR p_image_path !~* '\\.(jpg|png|webp)REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
-
-GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
-GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
-
-COMMIT;
-
+       OR p_image_path !~* '\\.(jpg|png|webp)$'
        OR NOT EXISTS (
          SELECT 1
          FROM storage.objects o
@@ -530,5 +472,12 @@ GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO auth
 GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
 GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
+
+REVOKE ALL ON FUNCTION app_private.create_channel(text, text, boolean) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.join_public_channel(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.set_conversation_image_impl(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION app_private.create_channel(text, text, boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.join_public_channel(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.set_conversation_image_impl(uuid, text) TO authenticated;
 
 COMMIT;
