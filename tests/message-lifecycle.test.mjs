@@ -305,8 +305,8 @@ test('poll cadence preserves connected, disconnected, background and offline int
   assert.equal(delay(), 60000, 'offline browsers must not poll Supabase every 1.2 seconds');
   navigator.onLine = true;
   assert.equal(delay(), 1200, 'the online event can resume fast fallback reconciliation');
-  assert.match(source, /window\\.addEventListener\\('offline'/);
-  assert.match(source, /window\\.addEventListener\\('online'/);
+  assert.ok(source.includes("window.addEventListener('offline'"));
+  assert.ok(source.includes("window.addEventListener('online'"));
 });
 
 test('receipt writes are serialized per conversation in one client session', async () => {
