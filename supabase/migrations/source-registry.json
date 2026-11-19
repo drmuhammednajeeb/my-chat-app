@@ -1905,28 +1905,23 @@
   },
   "validationEvidence": {
     "runtime": {
-      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 44054041618,
-      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
-      "completedAt": "2026-11-17T09:18:04Z",
+      "workflowRunId": null,
+      "commit": null,
+      "completedAt": null,
       "localOnly": true,
       "sqlFilesExecuted": 86,
       "checks": [
-        "All 86 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
-        "The conversation-image extension validation forward migration executed and its post-forward assertions passed.",
-        "The public set_conversation_image RPC is SECURITY INVOKER; the private implementation retains SECURITY DEFINER with an empty search_path and authenticated-only EXECUTE ACL.",
-        "Storage API RLS runtime passed; synthetic upload, metadata, signed URL, ownership, and deletion probes passed.",
-        "Message auto-cleanup Storage runtime passed: one synthetic expired object was removed and its queue item completed.",
-        "The disposable Supabase stack was stopped and destroyed."
+        "Previous 86-file disposable-local replay passed; the new conversation-avatar public-channel forward migration and expanded Storage API probes remain pending."
       ]
     },
     "audit": {
-      "status": "PASSED",
+      "status": "PENDING",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 44054041833,
-      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
-      "completedAt": "2026-11-17T09:16:31Z",
+      "workflowRunId": null,
+      "commit": null,
+      "completedAt": null,
       "tests": 101,
       "passed": 101,
       "failed": 0
