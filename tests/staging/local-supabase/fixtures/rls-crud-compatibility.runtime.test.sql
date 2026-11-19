@@ -6,6 +6,134 @@ SELECT set_config('app.test.direct_a_id', :'direct_a_id', true);
 SELECT set_config('app.test.direct_b_id', :'direct_b_id', true);
 SET LOCAL statement_timeout = '30s';
 SET LOCAL lock_timeout = '10s';
+-- Seed a synthetic group owned by direct_a with direct_b as an administrator.
+-- This setup runs as the disposable local postgres role before API role switching.
+DO $seed_rpc_group$
+DECLARE
+  v_group uuid;
+  v_user_a uuid := current_setting('app.test.direct_a_id')::uuid;
+  v_user_b uuid := current_setting('app.test.direct_b_id')::uuid;
+BEGIN
+  INSERT INTO public.conversations(type,title,created_by)
+  VALUES ('group','Privileged RPC membership probe',v_user_a)
+  RETURNING id INTO v_group;
+  INSERT INTO public.conversation_members(conversation_id,user_id,role)
+  VALUES (v_group,v_user_a,'owner'),(v_group,v_user_b,'admin');
+  PERFORM set_config('app.test.rpc_group_id',v_group::text,true);
+END;
+$seed_rpc_group$;
+
+-- Create a real private channel and bearer invite as an eligible authenticated owner.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
+DO $seed_rpc_channel$
+DECLARE
+  v_channel uuid;
+  v_token text;
+BEGIN
+  v_channel := public.create_private_channel('Privileged RPC membership probe','');
+  v_token := public.create_channel_invite(v_channel);
+  PERFORM set_config('app.test.rpc_channel_id',v_channel::text,true);
+  PERFORM set_config('app.test.rpc_invite_token',v_token,true);
+END;
+$seed_rpc_channel$;
+
+-- A suspended user must not join by bearer invite or create a private channel.
+RESET ROLE;
+UPDATE public.profiles
+SET membership_status='suspended'
+WHERE id=current_setting('app.test.direct_b_id')::uuid;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_b_id'),true);
+DO $inactive_invite_join$
+DECLARE
+  v_rejected boolean := false;
+  v_channel uuid := current_setting('app.test.rpc_channel_id')::uuid;
+  v_token text := current_setting('app.test.rpc_invite_token');
+BEGIN
+  BEGIN
+    PERFORM public.join_channel_by_invite(v_token);
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Suspended member was allowed to join a channel by invite';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=v_channel
+      AND user_id=current_setting('app.test.direct_b_id')::uuid
+  ) THEN
+    RAISE EXCEPTION 'Suspended member was inserted into the invited channel';
+  END IF;
+
+  v_rejected := false;
+  BEGIN
+    PERFORM public.create_private_channel('Should be rejected','');
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Suspended member was allowed to create a private channel';
+  END IF;
+END;
+$inactive_invite_join$;
+
+-- Restore direct_b and suspend the owner. Invite creation and ownership transfer
+-- must both fail before any privileged mutation is made.
+RESET ROLE;
+UPDATE public.profiles
+SET membership_status='active'
+WHERE id=current_setting('app.test.direct_b_id')::uuid;
+UPDATE public.profiles
+SET membership_status='suspended'
+WHERE id=current_setting('app.test.direct_a_id')::uuid;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
+DO $inactive_owner_actions$
+DECLARE
+  v_rejected boolean := false;
+  v_channel uuid := current_setting('app.test.rpc_channel_id')::uuid;
+  v_group uuid := current_setting('app.test.rpc_group_id')::uuid;
+  v_new_owner uuid := current_setting('app.test.direct_b_id')::uuid;
+BEGIN
+  BEGIN
+    PERFORM public.create_channel_invite(v_channel);
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Suspended channel owner was allowed to create an invite';
+  END IF;
+
+  v_rejected := false;
+  BEGIN
+    PERFORM public.transfer_group_ownership(v_group,v_new_owner);
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Suspended group owner was allowed to transfer ownership';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=v_group AND user_id=current_setting('app.test.direct_a_id')::uuid AND role='owner'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=v_group AND user_id=v_new_owner AND role='admin'
+  ) THEN
+    RAISE EXCEPTION 'Rejected ownership transfer changed group roles';
+  END IF;
+END;
+$inactive_owner_actions$;
+
+RESET ROLE;
+UPDATE public.profiles
+SET membership_status='active'
+WHERE id=current_setting('app.test.direct_a_id')::uuid;
+
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
 
