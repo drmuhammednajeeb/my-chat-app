@@ -200,6 +200,22 @@ begin
     RAISE EXCEPTION 'admin_update_membership_status_impl must lock active administrator membership';
   END IF;
 
+  IF has_function_privilege('anon','app_private.enforce_chat_message_reply_parent()','EXECUTE')
+     OR has_function_privilege('authenticated','app_private.enforce_chat_message_reply_parent()','EXECUTE')
+     OR has_function_privilege('public','app_private.enforce_chat_message_reply_parent()','EXECUTE') THEN
+    RAISE EXCEPTION 'Trigger-only reply-parent SECURITY DEFINER function must not be directly executable by API roles';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger t
+    WHERE t.tgfoid = 'app_private.enforce_chat_message_reply_parent()'::regprocedure
+      AND t.tgrelid = 'public.chat_messages'::regclass
+      AND NOT t.tgisinternal
+  ) THEN
+    RAISE EXCEPTION 'Reply-parent validation trigger must remain attached to chat_messages';
+  END IF;
+
   -- Privileged RPC implementations must enforce active membership internally;
   -- restrictive table RLS is not a substitute for checks inside SECURITY DEFINER code.
   SELECT pg_get_functiondef('app_private.can_manage_conversation(uuid)'::regprocedure)
