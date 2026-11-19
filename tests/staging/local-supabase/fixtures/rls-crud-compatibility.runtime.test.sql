@@ -138,6 +138,49 @@ UPDATE public.profiles
 SET membership_status='active'
 WHERE id=current_setting('app.test.direct_a_id')::uuid;
 
+-- An active owner must not transfer ownership to a suspended administrator.
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+UPDATE public.profiles
+SET membership_status='suspended'
+WHERE id=current_setting('app.test.direct_b_id')::uuid;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
+DO $inactive_new_owner$
+DECLARE
+  v_rejected boolean := false;
+  v_group uuid := current_setting('app.test.rpc_group_id')::uuid;
+  v_new_owner uuid := current_setting('app.test.direct_b_id')::uuid;
+BEGIN
+  BEGIN
+    PERFORM public.transfer_group_ownership(v_group,v_new_owner);
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Active group owner was allowed to transfer ownership to a suspended administrator';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=v_group
+      AND user_id=current_setting('app.test.direct_a_id')::uuid
+      AND role='owner'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=v_group AND user_id=v_new_owner AND role='admin'
+  ) THEN
+    RAISE EXCEPTION 'Rejected transfer to inactive administrator changed group roles';
+  END IF;
+END;
+$inactive_new_owner$;
+
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+UPDATE public.profiles
+SET membership_status='active'
+WHERE id=current_setting('app.test.direct_b_id')::uuid;
+
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
 
