@@ -34,7 +34,7 @@
     "executedMappedSources": 67,
     "executedTestOnlySqlFixtures": 20,
     "executedSqlFiles": 87,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "candidateMappedSources": 67,
     "candidateTestOnlySqlFixtures": 20,
     "candidateSqlFiles": 87
