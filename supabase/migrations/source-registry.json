@@ -1746,14 +1746,14 @@
     },
     {
       "id": "DAG-017",
-      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "Read-only production catalog review identified privileged channel and group RPC paths that did not independently enforce active membership despite SECURITY DEFINER execution. The forward migration adds locked caller/target profile and Auth eligibility checks plus rollback-only runtime probes. Keep production deployment blocked until disposable-local runtime passes and the migration is separately approved.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Production catalog review identified privileged channel and group SECURITY DEFINER write paths that did not independently serialize active membership. The forward migration and rollback-only probes now pass disposable-local runtime. Production remains unchanged pending separate deployment approval.",
       "evidence": [
         "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
       ],
-      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     }
   ],
   "externalSources": [
@@ -1887,8 +1887,12 @@
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Require active, verified, email-confirmed membership inside privileged channel and group SECURITY DEFINER RPCs, locking authoritative profile and Auth rows before privileged writes.",
       "blockedBy": [],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-      "productionApplied": false
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "localRuntimeRunId": 44492915229,
+      "localRuntimeCommit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+      "localRuntimeCompletedAt": "2026-11-19T09:06:13Z",
+      "localRuntimeSqlFilesExecuted": 87
     }
   ],
   "forwardMigrationPolicy": {
@@ -1896,37 +1900,36 @@
     "productionLedgerCount": 62,
     "pendingForwardCount": 7,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
-    "localRuntimeRunId": 44054041618,
-    "localRuntimeCommit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
-    "localRuntimeCompletedAt": "2026-11-17T09:18:04Z",
-    "localRuntimeSqlFilesExecuted": 86
+    "localRuntimeRunId": 44492915229,
+    "localRuntimeCommit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+    "localRuntimeCompletedAt": "2026-11-19T09:06:13Z",
+    "localRuntimeSqlFilesExecuted": 87
   },
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 44054041618,
-      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
-      "completedAt": "2026-11-17T09:18:04Z",
+      "workflowRunId": 44492915229,
+      "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+      "completedAt": "2026-11-19T09:06:13Z",
       "localOnly": true,
-      "sqlFilesExecuted": 86,
+      "sqlFilesExecuted": 87,
       "checks": [
-        "All 86 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
-        "The conversation-image extension validation forward migration executed and its post-forward assertions passed.",
-        "The public set_conversation_image RPC is SECURITY INVOKER; the private implementation retains SECURITY DEFINER with an empty search_path and authenticated-only EXECUTE ACL.",
-        "Storage API RLS runtime passed; synthetic upload, metadata, signed URL, ownership, and deletion probes passed.",
-        "Message auto-cleanup Storage runtime passed: one synthetic expired object was removed and its queue item completed.",
+        "All 87 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
+        "Privileged channel/group RPC active-membership guards, administrator membership locks, target-owner eligibility, and trigger-only function ACL postconditions passed.",
+        "Rollback-only CRUD/RPC probes rejected suspended callers and inactive ownership-transfer targets without mutating role state.",
+        "Storage API probes passed chat-media ownership, private/shared document reads, avatar ownership, and message auto-cleanup checks.",
         "The disposable Supabase stack was stopped and destroyed."
       ]
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 44054041833,
-      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
-      "completedAt": "2026-11-17T09:16:31Z",
+      "workflowRunId": 44492915398,
+      "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+      "completedAt": "2026-11-19T09:03:49Z",
       "tests": 101,
       "passed": 101,
       "failed": 0
