@@ -1424,7 +1424,8 @@
         "post-migration assertions for cleanup queue, 100-hour cutoff, cascades, and worker RPC ACL"
       ],
       "requires": [
-        "chat.auto-cleanup-100h"
+        "chat.auto-cleanup-100h",
+        "security.message-cleanup-http-timeout-forward"
       ],
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "testSource": [
@@ -1474,8 +1475,7 @@
       ],
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "testSource": [
-        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
-        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql"
       ],
       "blockedBy": [],
       "note": "Updates the owner-only scheduler function only. It does not reschedule the existing production cron job; a separate owner-approved configure_message_auto_cleanup call is required after migration approval."
@@ -2365,6 +2365,10 @@
     [
       "chat.auto-cleanup-100h",
       "security.message-cleanup-http-timeout-forward"
+    ],
+    [
+      "security.message-cleanup-http-timeout-forward",
+      "test-fixture.message-auto-cleanup"
     ]
   ],
   "blockers": [
