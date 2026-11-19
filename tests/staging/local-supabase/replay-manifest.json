@@ -465,15 +465,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "test-fixture.message-auto-cleanup",
-      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "testSources": [
-        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": null
-    },
-    {
       "nodeId": "security.message-cleanup-http-timeout-forward",
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSources": [
@@ -482,6 +473,15 @@
       ],
       "blockedBy": [],
       "parityNote": "Changes only the owner-only scheduler function for future 10-second HTTP timeouts; it does not reschedule the active production cron job."
+    },
+    {
+      "nodeId": "test-fixture.message-auto-cleanup",
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": null
     },
     {
       "nodeId": "chat.scope-team-admin-overrides",
