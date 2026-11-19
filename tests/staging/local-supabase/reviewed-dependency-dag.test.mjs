@@ -418,6 +418,7 @@ test('seven forward migrations remain outside the production ledger with explici
     ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
     ['20261113060002_fix_conversation_image_extension_validation.sql', []],
     ['20261117130000_message_auto_cleanup_100h_storage.sql', []],
+    ['20261119113000_harden_privileged_rpc_active_membership.sql', []],
     ['20261119113000_harden_privileged_rpc_active_membership.sql', []]
   ]);
   for (const [name, blockers] of expected) {
@@ -672,6 +673,7 @@ test('seven forward migrations remain outside the production ledger and record e
     ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
     ['20261113060002_fix_conversation_image_extension_validation.sql', []],
     ['20261117130000_message_auto_cleanup_100h_storage.sql', []],
+    ['20261119113000_harden_privileged_rpc_active_membership.sql', []],
     ['20261119113000_harden_privileged_rpc_active_membership.sql', []]
   ]);
   for (const [name, blockers] of expected) {
@@ -681,7 +683,11 @@ test('seven forward migrations remain outside the production ledger and record e
     assert.deepEqual(node.blockedBy, blockers);
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
-    if (name === '20261113060002_fix_conversation_image_extension_validation.sql') {
+    if (name === '20261119113000_harden_privileged_rpc_active_membership.sql') {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.productionApplied, false);
+      assert.equal(forward?.localRuntimeRunId, undefined);
+    } else if (name === '20261113060002_fix_conversation_image_extension_validation.sql') {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44054041618);
       assert.equal(forward?.localRuntimeCommit, 'a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7');
