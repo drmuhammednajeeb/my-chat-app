@@ -468,8 +468,7 @@
       "nodeId": "security.message-cleanup-http-timeout-forward",
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSources": [
-        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
-        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql"
       ],
       "blockedBy": [],
       "parityNote": "Changes only the owner-only scheduler function for future 10-second HTTP timeouts; it does not reschedule the active production cron job."
