@@ -53,7 +53,7 @@ test('no local Docker/Supabase endpoint can leak into browser runtime assets', (
   for (const path of runtimeAssets) {
     const source = read(path);
     for (const pattern of forbidden) {
-      assert.doesNotMatch(source, pattern, \`\${path} contains a local-only endpoint: \${pattern}\`);
+      assert.doesNotMatch(source, pattern, `${path} contains a local-only endpoint: ${pattern}`);
     }
   }
 });
