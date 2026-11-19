@@ -674,6 +674,8 @@ $function$;
 
 -- Keep the internal RPC boundary explicit; public wrappers remain SECURITY INVOKER.
 REVOKE ALL ON FUNCTION app_private.lock_active_member() FROM PUBLIC, anon;
+-- Trigger-only function; authenticated callers must not invoke it as an RPC.
+REVOKE ALL ON FUNCTION app_private.enforce_chat_message_reply_parent() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
