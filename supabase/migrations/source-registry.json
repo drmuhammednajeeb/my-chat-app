@@ -1882,7 +1882,7 @@
       "version": "20261119113000",
       "name": "harden_privileged_rpc_active_membership",
       "path": "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
-      "gitBlobSha": "086215520c0c2d348a471c24598f81da89f51149",
+      "gitBlobSha": "b55d9685c2d8e0f7cb07a44197c0482f1ba7ab27",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Require active, verified, email-confirmed membership inside privileged channel and group SECURITY DEFINER RPCs, locking authoritative profile and Auth rows before privileged writes.",
