@@ -1460,6 +1460,25 @@
         "completedAt": "2026-11-17T09:18:04Z",
         "sqlFilesExecuted": 86
       }
+    },
+    {
+      "id": "security.message-cleanup-http-timeout-forward",
+      "source": [
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql"
+      ],
+      "provides": [
+        "future message-auto-cleanup schedules use a 10-second pg_net HTTP timeout"
+      ],
+      "requires": [
+        "chat.auto-cleanup-100h"
+      ],
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "testSource": [
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+      ],
+      "blockedBy": [],
+      "note": "Updates the owner-only scheduler function only. It does not reschedule the existing production cron job; a separate owner-approved configure_message_auto_cleanup call is required after migration approval."
     }
   ],
   "explicitEdges": [
@@ -2342,6 +2361,10 @@
     [
       "security.least-privilege-overlay",
       "test-fixture.forward-hardening-postconditions"
+    ],
+    [
+      "chat.auto-cleanup-100h",
+      "security.message-cleanup-http-timeout-forward"
     ]
   ],
   "blockers": [
