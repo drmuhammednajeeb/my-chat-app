@@ -120,19 +120,27 @@ BEGIN
   IF NOT v_rejected THEN
     RAISE EXCEPTION 'Suspended group owner was allowed to transfer ownership';
   END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM public.conversation_members
-    WHERE conversation_id=v_group AND user_id=current_setting('app.test.direct_a_id')::uuid AND role='owner'
-  ) OR NOT EXISTS (
-    SELECT 1 FROM public.conversation_members
-    WHERE conversation_id=v_group AND user_id=v_new_owner AND role='admin'
-  ) THEN
-    RAISE EXCEPTION 'Rejected ownership transfer changed group roles';
-  END IF;
 END;
 $inactive_owner_actions$;
 
 RESET ROLE;
+DO $assert_roles_after_inactive_owner$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=current_setting('app.test.rpc_group_id')::uuid
+      AND user_id=current_setting('app.test.direct_a_id')::uuid
+      AND role='owner'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=current_setting('app.test.rpc_group_id')::uuid
+      AND user_id=current_setting('app.test.direct_b_id')::uuid
+      AND role='admin'
+  ) THEN
+    RAISE EXCEPTION 'Rejected ownership transfer changed group roles';
+  END IF;
+END;
+$assert_roles_after_inactive_owner$;
 SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 UPDATE public.profiles
 SET membership_status='active'
@@ -161,21 +169,27 @@ BEGIN
   IF NOT v_rejected THEN
     RAISE EXCEPTION 'Active group owner was allowed to transfer ownership to a suspended administrator';
   END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM public.conversation_members
-    WHERE conversation_id=v_group
-      AND user_id=current_setting('app.test.direct_a_id')::uuid
-      AND role='owner'
-  ) OR NOT EXISTS (
-    SELECT 1 FROM public.conversation_members
-    WHERE conversation_id=v_group AND user_id=v_new_owner AND role='admin'
-  ) THEN
-    RAISE EXCEPTION 'Rejected transfer to inactive administrator changed group roles';
-  END IF;
 END;
 $inactive_new_owner$;
 
 RESET ROLE;
+DO $assert_roles_after_inactive_target$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=current_setting('app.test.rpc_group_id')::uuid
+      AND user_id=current_setting('app.test.direct_a_id')::uuid
+      AND role='owner'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.conversation_members
+    WHERE conversation_id=current_setting('app.test.rpc_group_id')::uuid
+      AND user_id=current_setting('app.test.direct_b_id')::uuid
+      AND role='admin'
+  ) THEN
+    RAISE EXCEPTION 'Rejected transfer to inactive administrator changed group roles';
+  END IF;
+END;
+$assert_roles_after_inactive_target$;
 SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 UPDATE public.profiles
 SET membership_status='active'
