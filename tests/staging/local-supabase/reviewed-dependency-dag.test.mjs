@@ -231,7 +231,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   const canonicalSourceCounts = new Map();
   for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
-  assert.equal(canonicalSourceCounts.size, 68);
+  assert.equal(canonicalSourceCounts.size, 69);
   assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
@@ -406,18 +406,19 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('six forward migrations remain outside the production ledger with explicit runtime status', async () => {
+test('seven forward migrations remain outside the production ledger with explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.forwardMigrations.length, 6);
+  assert.equal(registry.forwardMigrations.length, 7);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
     ['20261112160002_revoke_unsafe_public_default_privileges.sql', ['DAG-016']],
     ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
     ['20261113060002_fix_conversation_image_extension_validation.sql', []],
-    ['20261117130000_message_auto_cleanup_100h_storage.sql', []]
+    ['20261117130000_message_auto_cleanup_100h_storage.sql', []],
+    ['20261119120000_fix_conversation_avatar_public_channel_read.sql', []]
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -434,6 +435,10 @@ test('six forward migrations remain outside the production ledger with explicit 
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44040777235);
       assert.equal(forward?.localRuntimeCommit, 'ee5d57ebea388beb5280e01c0af518b5a36c1ddd');
+    } else if (name.startsWith('20261119120000_')) {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.productionApplied, false);
+      assert.equal(forward?.localRuntimeRunId, undefined);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
@@ -462,8 +467,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 20);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 86);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 86);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 87);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 87);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'chat.auto-cleanup-100h').testSource.includes('tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs'));
@@ -655,18 +660,19 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('six forward migrations remain outside the production ledger and record explicit runtime status', async () => {
+test('seven forward migrations remain outside the production ledger and record explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.forwardMigrations.length, 6);
+  assert.equal(registry.forwardMigrations.length, 7);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
     ['20261112160002_revoke_unsafe_public_default_privileges.sql', ['DAG-016']],
     ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
     ['20261113060002_fix_conversation_image_extension_validation.sql', []],
-    ['20261117130000_message_auto_cleanup_100h_storage.sql', []]
+    ['20261117130000_message_auto_cleanup_100h_storage.sql', []],
+    ['20261119120000_fix_conversation_avatar_public_channel_read.sql', []]
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -709,8 +715,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 20);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 86);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 86);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 87);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 87);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
