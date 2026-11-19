@@ -774,7 +774,7 @@
     },
     {
       "nodeId": "security.least-privilege-overlay",
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PENDING_NEW_RPC_GUARDS",
       "testSources": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
@@ -787,7 +787,7 @@
       "blockedBy": [
         "DAG-016"
       ],
-      "parityNote": null
+      "parityNote": "The existing overlay and CRUD/RPC fixtures now include inactive-member rejection probes for private-channel creation, invite creation/join, and group ownership transfer. Disposable-local runtime must be rerun before this node can be marked passed."
     },
     {
       "nodeId": "test-fixture.forward-hardening-postconditions",
