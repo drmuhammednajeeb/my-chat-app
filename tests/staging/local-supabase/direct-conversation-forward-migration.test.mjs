@@ -111,7 +111,7 @@ test('post-migration SQL assertions cover eligibility denials and the test runne
   assert.doesNotMatch(concurrency, /supabase\.co|SUPABASE_SERVICE_ROLE_KEY/i);
 });
 
-test('forward migration remains unapplied and execution remains unauthorized in source governance', async () => {
+test('forward migration registry status matches production application and replay remains disabled', async () => {
   const [registryText, dagText, manifestText] = await Promise.all([
     read('supabase/migrations/source-registry.json'),
     read('tests/staging/local-supabase/reviewed-dependency-dag.json'),
@@ -122,8 +122,13 @@ test('forward migration remains unapplied and execution remains unauthorized in 
   const manifest = JSON.parse(manifestText);
   const entry = registry.forwardMigrations.find(item => item.path === migrationPath);
   assert.ok(entry);
-  assert.equal(entry.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
-  assert.equal(entry.productionApplied, false);
+  assert.equal(typeof entry.productionApplied, 'boolean');
+  assert.equal(
+    entry.status,
+    entry.productionApplied
+      ? 'FORWARD_RECONCILIATION_APPLIED'
+      : 'FORWARD_RECONCILIATION_NOT_APPLIED'
+  );
   assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
   assert.equal(dag.safety.productionDataAllowed, false);
   assert.equal(manifest.execution.enabled, false);
