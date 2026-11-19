@@ -303,6 +303,221 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $function$;
 
+-- Lock the caller's authoritative membership rows for every privileged channel write.
+CREATE OR REPLACE FUNCTION app_private.create_channel(
+  p_title text,
+  p_description text DEFAULT ''::text,
+  p_is_public boolean DEFAULT false
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+DECLARE
+  actor uuid := (SELECT auth.uid());
+  new_id uuid;
+BEGIN
+  IF actor IS NULL THEN
+    RAISE EXCEPTION 'يجب تسجيل الدخول بحساب عضوية نشط' USING ERRCODE = '28000';
+  END IF;
+
+  PERFORM 1
+  FROM public.profiles p
+  JOIN auth.users u ON u.id = p.id
+  WHERE p.id = actor
+    AND p.membership_status = 'active'
+    AND p.membership_number_verified IS TRUE
+    AND p.membership_number ~ '^971[0-9]{9}REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_channel(text, text, boolean) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.join_public_channel(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.set_conversation_image_impl(uuid, text) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_channel(text, text, boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.join_public_channel(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.set_conversation_image_impl(uuid, text) TO authenticated;
+
+COMMIT;
+
+    AND u.email_confirmed_at IS NOT NULL
+  FOR SHARE OF p, u;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'إنشاء القنوات متاح للأعضاء النشطين الموثقين فقط'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF p_title IS NULL OR char_length(btrim(p_title)) NOT BETWEEN 1 AND 80 THEN
+    RAISE EXCEPTION 'اسم القناة يجب أن يكون بين 1 و80 حرفاً';
+  END IF;
+  IF coalesce(char_length(p_description), 0) > 500 THEN
+    RAISE EXCEPTION 'وصف القناة يتجاوز 500 حرف';
+  END IF;
+
+  INSERT INTO public.conversations(type,title,description,is_public,created_by)
+  VALUES ('channel',btrim(p_title),coalesce(btrim(p_description),''),coalesce(p_is_public,false),actor)
+  RETURNING id INTO new_id;
+
+  INSERT INTO public.conversation_members(conversation_id,user_id,role)
+  VALUES (new_id,actor,'owner');
+
+  RETURN new_id;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION app_private.join_public_channel(p_conversation_id uuid)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+DECLARE
+  actor uuid := (SELECT auth.uid());
+BEGIN
+  IF actor IS NULL THEN
+    RAISE EXCEPTION 'يجب تسجيل الدخول بحساب عضوية نشط' USING ERRCODE = '28000';
+  END IF;
+
+  PERFORM 1
+  FROM public.profiles p
+  JOIN auth.users u ON u.id = p.id
+  WHERE p.id = actor
+    AND p.membership_status = 'active'
+    AND p.membership_number_verified IS TRUE
+    AND p.membership_number ~ '^971[0-9]{9}REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
+
+COMMIT;
+
+    AND u.email_confirmed_at IS NOT NULL
+  FOR SHARE OF p, u;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'الانضمام إلى القنوات متاح للأعضاء النشطين الموثقين فقط'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.conversations c
+    WHERE c.id = p_conversation_id
+      AND c.type = 'channel'
+      AND c.is_public = true
+  ) THEN
+    RAISE EXCEPTION 'القناة غير عامة أو غير متاحة';
+  END IF;
+
+  INSERT INTO public.conversation_members(conversation_id,user_id,role)
+  VALUES (p_conversation_id,actor,'member')
+  ON CONFLICT (conversation_id,user_id) DO NOTHING;
+
+  RETURN p_conversation_id;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION app_private.set_conversation_image_impl(
+  p_conversation_id uuid,
+  p_image_path text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+DECLARE
+  actor uuid := (SELECT auth.uid());
+  expected_prefix text;
+BEGIN
+  IF actor IS NULL THEN
+    RAISE EXCEPTION 'يجب تسجيل الدخول لتغيير صورة المحادثة' USING ERRCODE = '28000';
+  END IF;
+
+  PERFORM 1
+  FROM public.profiles p
+  JOIN auth.users u ON u.id = p.id
+  WHERE p.id = actor
+    AND p.membership_status = 'active'
+    AND p.membership_number_verified IS TRUE
+    AND p.membership_number ~ '^971[0-9]{9}REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
+
+COMMIT;
+
+    AND u.email_confirmed_at IS NOT NULL
+  FOR SHARE OF p, u;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'هذه العملية متاحة للأعضاء النشطين الموثقين فقط' USING ERRCODE = '42501';
+  END IF;
+
+  IF NOT app_private.can_manage_conversation(p_conversation_id) THEN
+    RAISE EXCEPTION 'تغيير الصورة متاح لمالك المحادثة أو مشرفها فقط' USING ERRCODE = '42501';
+  END IF;
+
+  IF p_image_path IS NOT NULL THEN
+    expected_prefix := p_conversation_id::text || '/' || actor::text || '/';
+    IF LEFT(p_image_path, LENGTH(expected_prefix)) <> expected_prefix
+       OR p_image_path !~* '\\.(jpg|png|webp)REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
+
+COMMIT;
+
+       OR NOT EXISTS (
+         SELECT 1
+         FROM storage.objects o
+         WHERE o.bucket_id = 'conversation-avatars'
+           AND o.name = p_image_path
+       ) THEN
+      RAISE EXCEPTION 'مسار صورة المحادثة غير صالح' USING ERRCODE = '22023';
+    END IF;
+  END IF;
+
+  UPDATE public.conversations
+  SET image_path = p_image_path, updated_at = now()
+  WHERE id = p_conversation_id
+    AND type IN ('group','channel');
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'المجموعة أو القناة غير موجودة' USING ERRCODE = 'P0002';
+  END IF;
+END;
+$function$;
+
 -- Keep the internal RPC boundary explicit; public wrappers remain SECURITY INVOKER.
 REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
