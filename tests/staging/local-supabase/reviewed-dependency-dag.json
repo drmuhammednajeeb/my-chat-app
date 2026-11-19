@@ -1477,7 +1477,8 @@
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "testSource": [
         "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql"
-      ]
+      ],
+      "blockedBy": []
     }
   ],
   "explicitEdges": [
