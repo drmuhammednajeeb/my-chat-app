@@ -45,23 +45,27 @@ test('forward migration requires an authenticated, eligible caller and eligible 
   assert.ok(firstWrite > lockStart);
 });
 
-test('membership helper is not mistaken for the full eligibility rule', async () => {
-  const [membershipSql, migration] = await Promise.all([
-    read('supabase/migrations/20261107144109_private_membership_system_20261107.sql'),
+test('canonical membership predicate enforces caller eligibility and is normalized by the later migration', async () => {
+  const [membershipSql, formatSql, migration] = await Promise.all([
+    read('supabase/migrations/20261107152550_official_forever_membership_numbers_manual_verification.sql'),
+    read('supabase/migrations/20261108075913_unify_forever_membership_number_format.sql'),
     read(migrationPath)
   ]);
+
   const start = membershipSql.indexOf('create or replace function app_private.is_active_member()');
   const end = membershipSql.indexOf('$function$;', start);
   assert.ok(start >= 0 && end > start);
   const helper = membershipSql.slice(start, end);
-  assert.match(helper, /p\.membership_status='active'/);
-  assert.match(helper, /u\.email_confirmed_at is not null/);
-  assert.doesNotMatch(helper, /membership_number_verified|membership_number\s*~/i);
 
-  // Verified membership and the official number format are enforced by the
-  // authoritative, locked two-participant query in the forward migration.
-  assert.match(migration, /p\.membership_number_verified IS TRUE/);
-  assert.match(migration, /p\.membership_number ~ '\^971\[0-9\]\{9\}\$'/);
+  assert.match(helper, /p\.membership_status='active'/);
+  assert.match(helper, /p\.membership_number_verified=true/);
+  assert.match(helper, /p\.membership_number\s*~\s*'\^971001\[0-9\]\{6\}\$'/);
+  assert.match(helper, /u\.email_confirmed_at is not null/);
+
+  assert.ok(formatSql.includes("'is_active_member'"));
+  assert.ok(formatSql.includes("v_definition := replace(v_definition, '^971001[0-9]{6}$', '^971[0-9]{9}$');"));
+  assert.match(migration, /if not app_private\.is_active_member\(\) then/);
+  assert.match(migration, /p\.membership_number\s*~\s*'\^971\[0-9\]\{9\}\$'/);
 });
 
 test('forward migration preserves pair serialization, exact-pair reuse, and two-member creation', async () => {
