@@ -34,7 +34,7 @@
     "executedMappedSources": 67,
     "executedTestOnlySqlFixtures": 20,
     "executedSqlFiles": 87,
-    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "candidateMappedSources": 67,
     "candidateTestOnlySqlFixtures": 20,
     "candidateSqlFiles": 87
@@ -763,16 +763,16 @@
     },
     {
       "nodeId": "security.privileged-rpc-active-membership-forward",
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
       "testSources": [
         "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Adds active-membership and locked authoritative Auth/profile checks inside privileged channel and group RPC implementations. Runtime replay is pending; production remains unchanged."
+      "parityNote": "Forward-only hardening for privileged SECURITY DEFINER RPCs. Caller and target eligibility checks, active-membership row locks, administrator mutation locks, and trigger-only ACL revocation passed disposable-local runtime. Production remains unchanged."
     },
     {
       "nodeId": "security.least-privilege-overlay",
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PENDING_NEW_RPC_GUARDS",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
@@ -785,18 +785,18 @@
       "blockedBy": [
         "DAG-016"
       ],
-      "parityNote": "The existing overlay and CRUD/RPC fixtures now include inactive-member rejection probes for private-channel creation, invite creation/join, and group ownership transfer. Disposable-local runtime must be rerun before this node can be marked passed."
+      "parityNote": "The existing overlay and CRUD/RPC fixtures include inactive-member rejection probes for channel creation, invite creation/join, image updates, ownership transfer, and inactive target administrators. Disposable-local runtime passed. DAG-016 remains an external Supabase-managed default-ACL review gate."
     },
     {
       "nodeId": "test-fixture.forward-hardening-postconditions",
-      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PENDING_NEW_MIGRATION",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "parityNote": null
+      "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
     }
   ],
   "duplicateSelection": {
