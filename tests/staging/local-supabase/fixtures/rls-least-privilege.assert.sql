@@ -167,6 +167,39 @@ begin
     raise exception 'An app_private SECURITY DEFINER function has unsafe search_path or execute ACL';
   end if;
 
+  SELECT pg_get_functiondef('app_private.lock_active_member()'::regprocedure)
+    INTO function_definition;
+  IF position('FOR SHARE OF p, u' IN function_definition) = 0
+     OR position('membership_status = ''active''' IN function_definition) = 0
+     OR position('membership_number_verified IS TRUE' IN function_definition) = 0
+     OR position('email_confirmed_at IS NOT NULL' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'lock_active_member must serialize verified active membership';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.admin_create_official_member_invites_impl(jsonb)'::regprocedure)
+    INTO function_definition;
+  IF position('app_private.lock_active_member()' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'admin_create_official_member_invites_impl must lock active administrator membership';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.admin_revoke_member_invite_impl(uuid)'::regprocedure)
+    INTO function_definition;
+  IF position('app_private.lock_active_member()' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'admin_revoke_member_invite_impl must lock active administrator membership';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.admin_set_member_official_number_impl(uuid,text)'::regprocedure)
+    INTO function_definition;
+  IF position('app_private.lock_active_member()' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'admin_set_member_official_number_impl must lock active administrator membership';
+  END IF;
+
+  SELECT pg_get_functiondef('app_private.admin_update_membership_status_impl(uuid,text)'::regprocedure)
+    INTO function_definition;
+  IF position('app_private.lock_active_member()' IN function_definition) = 0 THEN
+    RAISE EXCEPTION 'admin_update_membership_status_impl must lock active administrator membership';
+  END IF;
+
   -- Privileged RPC implementations must enforce active membership internally;
   -- restrictive table RLS is not a substitute for checks inside SECURITY DEFINER code.
   SELECT pg_get_functiondef('app_private.can_manage_conversation(uuid)'::regprocedure)
