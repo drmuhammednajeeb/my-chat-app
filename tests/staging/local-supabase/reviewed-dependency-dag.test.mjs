@@ -359,7 +359,7 @@ test('least-privilege overlay is a final, locally validated, loopback-only SQL f
   assert.match(assertion, /pg_default_acl/);
   const node = JSON.parse(await readFile(dagPath, 'utf8')).nodes.find(item => item.id === 'security.least-privilege-overlay');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PENDING_NEW_RPC_GUARDS');
+  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED');
   assert.ok(node.requires.includes('membership.final-format'));
   assert.ok(node.blockedBy.includes('DAG-016'));
   assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
@@ -418,7 +418,6 @@ test('seven forward migrations remain outside the production ledger with explici
     ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
     ['20261113060002_fix_conversation_image_extension_validation.sql', []],
     ['20261117130000_message_auto_cleanup_100h_storage.sql', []],
-    ['20261119113000_harden_privileged_rpc_active_membership.sql', []],
     ['20261119113000_harden_privileged_rpc_active_membership.sql', []]
   ]);
   for (const [name, blockers] of expected) {
@@ -429,9 +428,10 @@ test('seven forward migrations remain outside the production ledger with explici
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     if (name.startsWith('20261119113000_')) {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 44492915229);
+      assert.equal(forward?.localRuntimeCommit, 'f2b9979075786abd3dbadf6096480c57f38fbeac');
       assert.equal(forward?.productionApplied, false);
-      assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name.startsWith('20261113060002_')) {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44054041618);
@@ -614,7 +614,7 @@ test('least-privilege overlay is a final, locally validated, loopback-only SQL f
   assert.match(assertion, /pg_default_acl/);
   const node = JSON.parse(await readFile(dagPath, 'utf8')).nodes.find(item => item.id === 'security.least-privilege-overlay');
   assert.ok(node);
-  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PENDING_NEW_RPC_GUARDS');
+  assert.equal(node.status, 'TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED');
   assert.ok(node.requires.includes('membership.final-format'));
   assert.ok(node.blockedBy.includes('DAG-016'));
   assert.equal(JSON.parse(await readFile(dagPath, 'utf8')).executionAuthorized, false);
@@ -673,7 +673,6 @@ test('seven forward migrations remain outside the production ledger and record e
     ['20261112160003_enforce_active_membership_rls.sql', ['DAG-016']],
     ['20261113060002_fix_conversation_image_extension_validation.sql', []],
     ['20261117130000_message_auto_cleanup_100h_storage.sql', []],
-    ['20261119113000_harden_privileged_rpc_active_membership.sql', []],
     ['20261119113000_harden_privileged_rpc_active_membership.sql', []]
   ]);
   for (const [name, blockers] of expected) {
@@ -684,9 +683,10 @@ test('seven forward migrations remain outside the production ledger and record e
     const forward = registry.forwardMigrations.find(item => item.path === path);
     assert.equal(forward?.status, 'FORWARD_RECONCILIATION_NOT_APPLIED');
     if (name === '20261119113000_harden_privileged_rpc_active_membership.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 44492915229);
+      assert.equal(forward?.localRuntimeCommit, 'f2b9979075786abd3dbadf6096480c57f38fbeac');
       assert.equal(forward?.productionApplied, false);
-      assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name === '20261113060002_fix_conversation_image_extension_validation.sql') {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44054041618);
