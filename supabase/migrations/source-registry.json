@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 68,
+    "canonicalCliMigrationFiles": 69,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 20,
@@ -42,7 +42,7 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 6
+    "forwardReconciliationMigrations": 7
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -53,7 +53,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
-    "The 66-file CLI stream contains 62 historical production-ledger migrations plus 4 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+    "The 69-file CLI stream contains 62 historical production-ledger migrations plus 7 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
   ],
   "productionMigrations": [
     {
@@ -1743,6 +1743,17 @@
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "status": "LOCAL_RUNTIME_PASSED_SUPABASE_MANAGED_ROLE_RESIDUAL_REMAINS"
+    },
+    {
+      "id": "DAG-018",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Disposable Storage API runtime exposed that the conversation-avatars public-channel SELECT policy's subquery into public.conversations is filtered by the caller's conversations RLS, denying active non-members access to public-channel avatars. The forward policy uses app_private.can_access_channel_avatar() to evaluate visibility under its SECURITY DEFINER boundary; verify public, private-nonmember, and private-member cases in disposable local Supabase.",
+      "evidence": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "externalSources": [
@@ -1866,14 +1877,26 @@
       "localRuntimeRunId": 44040777235,
       "localRuntimeCommit": "ee5d57ebea388beb5280e01c0af518b5a36c1ddd",
       "productionApplied": false
+    },
+    {
+      "version": "20261119120000",
+      "name": "fix_conversation_avatar_public_channel_read",
+      "path": "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+      "gitBlobSha": "ad98f80b6b014ddebcdfb45a3148b1c0219dcef0",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Use the SECURITY DEFINER channel-visibility helper for conversation-avatars SELECT so active non-members can read public-channel avatars without the caller-visible conversations subquery being filtered by conversations RLS; private-channel reads remain membership-scoped.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 6,
+    "pendingForwardCount": 7,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
     "localRuntimeRunId": 44054041618,
     "localRuntimeCommit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
@@ -1908,7 +1931,11 @@
       "passed": 101,
       "failed": 0
     },
-    "pendingAdditionalSources": [],
+    "pendingAdditionalSources": [
+      "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+      "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+      "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+    ],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
