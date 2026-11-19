@@ -271,6 +271,51 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
+  -- Do not transfer ownership to an inactive or unverified administrator.
+  PERFORM 1
+  FROM public.profiles p
+  JOIN auth.users u ON u.id = p.id
+  WHERE p.id = p_new_owner
+    AND p.membership_status = 'active'
+    AND p.membership_number_verified IS TRUE
+    AND p.membership_number ~ '^971[0-9]{9}  UPDATE public.conversation_members
+  SET role = 'admin'
+  WHERE conversation_id = p_conversation_id AND user_id = v_actor;
+  UPDATE public.conversation_members
+  SET role = 'owner'
+  WHERE conversation_id = p_conversation_id AND user_id = p_new_owner;
+  PERFORM set_config('app_private.owner_transfer', 'off', true);
+
+  RETURN true;
+EXCEPTION WHEN OTHERS THEN
+  PERFORM set_config('app_private.owner_transfer', 'off', true);
+  RAISE;
+END;
+$function$;
+
+-- Keep the internal RPC boundary explicit; public wrappers remain SECURITY INVOKER.
+REVOKE ALL ON FUNCTION app_private.can_manage_conversation(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_private_channel(text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.create_channel_invite(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.join_channel_by_invite(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION app_private.can_manage_conversation(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_private_channel(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.create_channel_invite(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.join_channel_by_invite(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION app_private.transfer_group_ownership_impl(uuid, uuid) TO authenticated;
+
+COMMIT;
+
+    AND u.email_confirmed_at IS NOT NULL
+  FOR SHARE OF p, u;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'The new owner must be an active, verified member'
+      USING ERRCODE = '42501';
+  END IF;
+
   PERFORM set_config('app_private.owner_transfer', 'on', true);
   UPDATE public.conversation_members
   SET role = 'admin'
