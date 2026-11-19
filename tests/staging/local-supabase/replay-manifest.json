@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 68,
-    "mappedSources": 68,
+    "sqlFiles": 69,
+    "mappedSources": 69,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 20,
@@ -31,13 +31,13 @@
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 66,
+    "executedMappedSources": 67,
     "executedTestOnlySqlFixtures": 20,
-    "executedSqlFiles": 86,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 66,
+    "executedSqlFiles": 87,
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "candidateMappedSources": 67,
     "candidateTestOnlySqlFixtures": 20,
-    "candidateSqlFiles": 86
+    "candidateSqlFiles": 87
   },
   "execution": {
     "enabled": false,
@@ -436,6 +436,16 @@
       ],
       "blockedBy": [],
       "parityNote": null
+    },
+    {
+      "nodeId": "security.message-cleanup-http-timeout-forward",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Changes only the owner-only scheduler function for future 10-second HTTP timeouts; it does not reschedule the active production cron job."
     },
     {
       "nodeId": "chat.team-admin-group-overrides",
