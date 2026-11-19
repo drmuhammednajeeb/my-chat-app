@@ -7,6 +7,7 @@ SELECT set_config('app.test.direct_b_id', :'direct_b_id', true);
 SET LOCAL statement_timeout = '30s';
 SET LOCAL lock_timeout = '10s';
 -- Seed a synthetic group owned by direct_a with direct_b as an administrator.
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
 -- This setup runs as the disposable local postgres role before API role switching.
 DO $seed_rpc_group$
 DECLARE
