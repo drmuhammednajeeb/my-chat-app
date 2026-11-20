@@ -34,7 +34,7 @@
     "executedMappedSources": 69,
     "executedTestOnlySqlFixtures": 20,
     "executedSqlFiles": 89,
-    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "candidateMappedSources": 69,
     "candidateTestOnlySqlFixtures": 20,
     "candidateSqlFiles": 89
@@ -951,7 +951,7 @@
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
         "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
-      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     }
   ],
   "requiredSourceRecovery": [
@@ -1046,30 +1046,52 @@
       "localRuntimeRunId": 44492915229,
       "localRuntimeCommit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
       "localRuntimeCompletedAt": "2026-11-19T09:06:13Z"
+    },
+    {
+      "path": "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44679419290,
+      "localRuntimeCommit": "10a60154b25a294412e44249402c51d6422378ec",
+      "localRuntimeCompletedAt": "2026-11-20T05:14:12Z"
+    },
+    {
+      "path": "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44680577210,
+      "localRuntimeCommit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+      "localRuntimeCompletedAt": "2026-11-20T05:24:10Z"
     }
   ],
   "validationEvidence": {
     "runtime": {
-      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": null,
-      "commit": null,
-      "completedAt": null,
+      "workflowRunId": 44680577210,
+      "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+      "completedAt": "2026-11-20T05:24:10Z",
       "localOnly": true,
-      "sqlFilesExecuted": null,
+      "sqlFilesExecuted": 89,
       "checks": [
-        "The merged 71-source candidate contains 89 selected SQL sources. Fresh disposable-local replay is required."
+        "All 89 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
+        "The cleanup scheduler migration verified the owner-only SECURITY DEFINER boundary, empty search_path, session_user guard, Vault-backed credentials, and 10-second pg_net timeout.",
+        "The migration did not invoke configure_message_auto_cleanup() or reschedule the active production cron job.",
+        "Least-privilege, Storage RLS, message auto-cleanup Storage API, and cleanup queue probes passed.",
+        "The disposable Supabase stack was stopped and destroyed."
       ]
     },
     "audit": {
-      "status": "PENDING",
+      "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": null,
-      "commit": null,
-      "completedAt": null,
+      "workflowRunId": 44680577133,
+      "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+      "completedAt": "2026-11-20T05:22:31Z",
       "tests": 107,
-      "passed": null,
-      "failed": null
+      "passed": 107,
+      "failed": 0
     },
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
@@ -1090,10 +1112,7 @@
         "the disposable Supabase stack was stopped and destroyed"
       ]
     },
-    "pendingAdditionalSources": [
-      "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
-      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
-    ],
+    "pendingAdditionalSources": [],
     "preMergeMainRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
@@ -1187,5 +1206,5 @@
       "failed": 0
     }
   },
-  "reviewState": "LOCAL_REPLAY_PENDING_MERGED_CLEANUP_TIMEOUT_CANDIDATE"
+  "reviewState": "LOCAL_RUNTIME_PASSED_PRODUCTION_MIGRATION_NOT_APPLIED"
 }
