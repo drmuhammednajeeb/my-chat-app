@@ -439,9 +439,10 @@ test('nine forward migrations remain outside the production ledger with explicit
       assert.equal(forward?.productionApplied, false);
       assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name.startsWith('20261119120000_')) {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 44679419290);
+      assert.equal(forward?.localRuntimeCommit, '10a60154b25a294412e44249402c51d6422378ec');
       assert.equal(forward?.productionApplied, false);
-      assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name.startsWith('20261113060002_')) {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44054041618);
@@ -671,11 +672,11 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('eight forward migrations remain outside the production ledger and record explicit runtime status', async () => {
+test('nine forward migrations remain outside the production ledger and record explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.forwardMigrations.length, 8);
+  assert.equal(registry.forwardMigrations.length, 9);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
@@ -704,9 +705,10 @@ test('eight forward migrations remain outside the production ledger and record e
       assert.equal(forward?.productionApplied, false);
       assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name === '20261119120000_fix_conversation_avatar_public_channel_read.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 44679419290);
+      assert.equal(forward?.localRuntimeCommit, '10a60154b25a294412e44249402c51d6422378ec');
       assert.equal(forward?.productionApplied, false);
-      assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name === '20261113060002_fix_conversation_image_extension_validation.sql') {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44054041618);
@@ -741,8 +743,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 20);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 88);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 88);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 89);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 89);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
