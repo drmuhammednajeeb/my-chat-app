@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.17.3"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.18.2"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -205,11 +205,18 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/voice-recorder.js"></script>
 <script src="./modules/audio-player.js"></script>
 <script src="./modules/app-updater.js"></script>
+<script src="/api/runtime-config"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
-const SUPABASE_URL='https://lvkeohpuucuklagvwpnq.supabase.co';
-const SUPABASE_ANON_KEY='sb_publishable_3OM0vlZU0dkqK4X6aoGZsA_ZBawbYDR';
+const runtimeConfig=window.BIZMIND_RUNTIME_CONFIG;
+if(!runtimeConfig||runtimeConfig.error||!runtimeConfig.supabaseUrl||!runtimeConfig.supabaseAnonKey){
+ console.error('Bizmind runtime configuration unavailable:',runtimeConfig?.error||'missing configuration');
+ document.documentElement.innerHTML='<main style="font-family:system-ui;padding:32px;direction:rtl"><h1>تعذر تشغيل التطبيق بأمان</h1><p>إعدادات الاتصال بهذه البيئة غير مكتملة أو غير صالحة. لم يتم الاتصال بقاعدة البيانات.</p></main>';
+ throw new Error('BIZMIND_RUNTIME_CONFIG_INVALID');
+}
+const SUPABASE_URL=runtimeConfig.supabaseUrl;
+const SUPABASE_ANON_KEY=runtimeConfig.supabaseAnonKey;
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 const __supabaseResource=performance.getEntriesByType('resource').find(entry=>entry.name.includes('supabase.min.js'));
 window.__BIZMIND_BOOT_TIMINGS__={mainScriptStarted:__bootMainScriptStarted,supabaseScriptMs:__supabaseResource?Math.round(__supabaseResource.duration):null,clientReady:performance.now()};
