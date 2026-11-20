@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
-  "generatedAt": "2026-11-19",
+  "generatedAt": "2026-11-20",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
     "baseBranch": "main",
@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 69,
+    "canonicalCliMigrationFiles": 70,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 20,
@@ -42,7 +42,7 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 7
+    "forwardReconciliationMigrations": 8
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -53,7 +53,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
-    "The 69-file CLI stream contains 62 historical production-ledger migrations plus 7 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+    "The 70-file CLI stream contains 62 historical production-ledger migrations plus 8 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
   ],
   "productionMigrations": [
     {
@@ -1754,6 +1754,17 @@
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
       ],
       "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-018",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Disposable Storage API runtime exposed that the conversation-avatars public-channel SELECT policy's subquery into public.conversations is filtered by the caller's conversations RLS, denying active non-members access to public-channel avatars. The forward policy uses app_private.can_access_channel_avatar() to evaluate visibility under its SECURITY DEFINER boundary; verify public, private-nonmember, and private-member cases in disposable local Supabase.",
+      "evidence": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "externalSources": [
@@ -1893,51 +1904,59 @@
       "localRuntimeCommit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
       "localRuntimeCompletedAt": "2026-11-19T09:06:13Z",
       "localRuntimeSqlFilesExecuted": 87
+    },
+    {
+      "version": "20261119120000",
+      "name": "fix_conversation_avatar_public_channel_read",
+      "path": "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+      "gitBlobSha": "ad98f80b6b014ddebcdfb45a3148b1c0219dcef0",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Use the SECURITY DEFINER channel-visibility helper for conversation-avatars SELECT so active non-members can read public-channel avatars without the caller-visible conversations subquery being filtered by conversations RLS; private-channel reads remain membership-scoped.",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 7,
+    "pendingForwardCount": 8,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
-    "localRuntimeRunId": 44492915229,
-    "localRuntimeCommit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
-    "localRuntimeCompletedAt": "2026-11-19T09:06:13Z",
-    "localRuntimeSqlFilesExecuted": 87
+    "localRuntimeRunId": null,
+    "localRuntimeCommit": null,
+    "localRuntimeCompletedAt": null,
+    "localRuntimeSqlFilesExecuted": null
   },
   "validationEvidence": {
     "runtime": {
-      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 44492915229,
-      "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
-      "completedAt": "2026-11-19T09:06:13Z",
+      "workflowRunId": null,
+      "commit": null,
+      "completedAt": null,
       "localOnly": true,
-      "sqlFilesExecuted": 87,
+      "sqlFilesExecuted": null,
       "checks": [
-        "All 87 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
-        "Privileged channel/group RPC active-membership guards, administrator membership locks, target-owner eligibility, and trigger-only function ACL postconditions passed.",
-        "Rollback-only CRUD/RPC probes rejected suspended callers and inactive ownership-transfer targets without mutating role state.",
-        "Storage API probes passed chat-media ownership, private/shared document reads, avatar ownership, and message auto-cleanup checks.",
-        "The disposable Supabase stack was stopped and destroyed."
+        "The merged 70-source candidate contains 88 selected SQL sources. A fresh disposable-local replay is required after combining PR #154 and PR #155."
       ]
     },
     "audit": {
-      "status": "PASSED",
+      "status": "PENDING",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 44492915398,
-      "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
-      "completedAt": "2026-11-19T09:03:49Z",
+      "workflowRunId": null,
+      "commit": null,
+      "completedAt": null,
       "tests": 101,
-      "passed": 101,
-      "failed": 0
+      "passed": null,
+      "failed": null
     },
     "pendingAdditionalSources": [
-      "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
+      "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
       "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
-      "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+      "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
     ],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
@@ -1957,6 +1976,52 @@
         "Storage object and cleanup queue row were both confirmed absent after worker completion",
         "the disposable Supabase stack was stopped and destroyed"
       ]
+    },
+    "preMergeMainRuntime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 44492915229,
+      "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+      "completedAt": "2026-11-19T09:06:13Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 87,
+      "checks": [
+        "All 87 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
+        "Privileged channel/group RPC active-membership guards, administrator membership locks, target-owner eligibility, and trigger-only function ACL postconditions passed.",
+        "Rollback-only CRUD/RPC probes rejected suspended callers and inactive ownership-transfer targets without mutating role state.",
+        "Storage API probes passed chat-media ownership, private/shared document reads, avatar ownership, and message auto-cleanup checks.",
+        "The disposable Supabase stack was stopped and destroyed."
+      ]
+    },
+    "preMergeMainAudit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 44492915398,
+      "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+      "completedAt": "2026-11-19T09:03:49Z",
+      "tests": 101,
+      "passed": 101,
+      "failed": 0
+    },
+    "preMergePr155Runtime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 44495674919,
+      "commit": "ec3485f048b640658da6f9747565e25138b9ff09",
+      "localOnly": true,
+      "sqlFilesExecuted": 87,
+      "note": "Passed on pre-merge PR #155 HEAD; does not validate the combined #154 + #155 tree."
+    },
+    "preMergePr155Audit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 44495674949,
+      "commit": "ec3485f048b640658da6f9747565e25138b9ff09",
+      "tests": 101,
+      "passed": 101,
+      "failed": 0,
+      "note": "Passed on pre-merge PR #155 HEAD; fresh audit required on the merged tree."
     }
-  }
+  },
+  "reviewState": "LOCAL_REPLAY_PENDING_MERGED_STORAGE_AND_PRIVILEGED_RPC_CANDIDATE"
 }

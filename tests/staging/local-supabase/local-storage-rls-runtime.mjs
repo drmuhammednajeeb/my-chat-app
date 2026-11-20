@@ -40,6 +40,8 @@ if (password.length < 32 || !/^[A-Za-z0-9!-]+$/.test(password)) fail('LOCAL_SYNT
 const nonce = randomUUID();
 const uploaded = [];
 let documentId = null;
+let statusId = null;
+const imageConversations = [];
 let conversationId = null;
 let tokenA = null;
 let tokenB = null;
@@ -150,6 +152,14 @@ async function rest(path, token, method = 'GET', body, prefer = null) {
   });
 }
 async function cleanup() {
+  if (statusId && tokenA) {
+    await rest('profile_statuses?id=eq.' + encodeURIComponent(statusId), tokenA, 'DELETE').catch(() => {});
+  }
+  if (tokenA) {
+    for (const id of imageConversations) {
+      await rest('rpc/set_conversation_image', tokenA, 'POST', { p_conversation_id: id, p_image_path: null }).catch(() => {});
+    }
+  }
   if (documentId && tokenA) {
     await rest('conversation_documents?id=eq.' + encodeURIComponent(documentId), tokenA, 'DELETE').catch(() => {});
   }
@@ -178,6 +188,21 @@ try {
   if (!Array.isArray(members) || !members.some(row => row.user_id === userA.id) || !members.some(row => row.user_id === userB.id)) {
     throw new Error('direct conversation RPC did not persist both expected membership rows');
   }
+
+  console.log('STORAGE_PROBE_STEP=create public and private channels for avatar policy tests');
+  const publicChannelResult = assertOk(await rest('rpc/create_channel', tokenA, 'POST', {
+    p_title: 'Storage public channel ' + nonce, p_description: '', p_is_public: true
+  }), 'create public channel for Storage probe');
+  const publicChannelId = typeof publicChannelResult === 'string' ? publicChannelResult : publicChannelResult?.id;
+  if (!publicChannelId || !/^[0-9a-f-]{36}$/i.test(publicChannelId)) throw new Error('public channel RPC returned an invalid UUID');
+  imageConversations.push(publicChannelId);
+
+  const privateChannelResult = assertOk(await rest('rpc/create_private_channel', tokenA, 'POST', {
+    p_title: 'Storage private channel ' + nonce, p_description: ''
+  }), 'create private channel for Storage probe');
+  const privateChannelId = typeof privateChannelResult === 'string' ? privateChannelResult : privateChannelResult?.id;
+  if (!privateChannelId || !/^[0-9a-f-]{36}$/i.test(privateChannelId)) throw new Error('private channel RPC returned an invalid UUID');
+  imageConversations.push(privateChannelId);
 
   // Evaluate each Storage RLS predicate with the same Auth identity before the API upload.
   const diagnosticPath = conversationId + '/' + userA.id + '/policy-probe.bin';
@@ -237,6 +262,7 @@ ROLLBACK;`);
 
   // Chat media: valid uploader folder succeeds; another member cannot impersonate it.
   const pdf = Buffer.from('%PDF-1.4\\n% local RLS runtime probe\\n');
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r4sAAAAASUVORK5CYII=', 'base64');
   const chatPath = conversationId + '/' + userA.id + '/runtime-' + nonce + '.pdf';
   await upload('chat-media', chatPath, pdf, tokenA, false, 'application/pdf');
   assertSigned(await sign('chat-media', chatPath, tokenB), 'conversation member signed read of chat media');
@@ -277,9 +303,64 @@ ROLLBACK;`);
   // Storage may return an empty success for an RLS-filtered DELETE; verify the object still exists.
   assertSigned(await sign('conversation-documents', pdfPath, tokenA), 'document remains after non-owner delete attempt');
 
+  // Conversation avatars: managers upload to their own folder; public channels are readable to active users.
+  const publicConversationAvatarPath = publicChannelId + '/' + userA.id + '/runtime-' + nonce + '.png';
+  await upload('conversation-avatars', publicConversationAvatarPath, pixel, tokenA, false, 'image/png');
+  assertOk(await rest('rpc/set_conversation_image', tokenA, 'POST', {
+    p_conversation_id: publicChannelId, p_image_path: publicConversationAvatarPath
+  }), 'set public conversation avatar');
+  assertSigned(await sign('conversation-avatars', publicConversationAvatarPath, tokenB), 'active non-member reads public channel avatar');
+
+  const privateConversationAvatarPath = privateChannelId + '/' + userA.id + '/runtime-' + nonce + '.png';
+  await upload('conversation-avatars', privateConversationAvatarPath, pixel, tokenA, false, 'image/png');
+  assertOk(await rest('rpc/set_conversation_image', tokenA, 'POST', {
+    p_conversation_id: privateChannelId, p_image_path: privateConversationAvatarPath
+  }), 'set private conversation avatar');
+  assertDenied(await sign('conversation-avatars', privateConversationAvatarPath, tokenB), 'non-member cannot read private conversation avatar');
+
+  // The legacy channel-avatars bucket has its own admin/member policy boundary.
+  const channelAvatarPath = privateChannelId + '/' + userA.id + '/runtime-' + nonce + '.png';
+  await upload('channel-avatars', channelAvatarPath, pixel, tokenA, false, 'image/png');
+  assertDenied(await sign('channel-avatars', channelAvatarPath, tokenB), 'non-member cannot read private channel avatar');
+
+  const invite = assertOk(await rest('rpc/create_channel_invite', tokenA, 'POST', {
+    p_conversation_id: privateChannelId
+  }), 'create private channel invite');
+  assertOk(await rest('rpc/join_channel_by_invite', tokenB, 'POST', { p_token: invite }), 'join private channel by invite');
+  assertSigned(await sign('conversation-avatars', privateConversationAvatarPath, tokenB), 'private channel member reads conversation avatar');
+  assertSigned(await sign('channel-avatars', channelAvatarPath, tokenB), 'private channel member reads channel avatar');
+
+  const channelAvatarSpoof = await fetchWithTimeout(base + objectPath('channel-avatars', channelAvatarPath), {
+    method: 'POST',
+    headers: { apikey: anonKey, Authorization: 'Bearer ' + tokenB, 'Content-Type': 'image/png', 'x-upsert': 'true' },
+    body: Buffer.from('channel-avatar-spoof')
+  }).then(async response => ({ response, text: await response.text() }));
+  assertDenied(channelAvatarSpoof, 'channel avatar uploader-folder spoof');
+
+  // Profile status media: only the owner can upload/delete; active users may read an unexpired status.
+  const statusPath = userA.id + '/' + randomUUID() + '.png';
+  await upload('profile-status-media', statusPath, pixel, tokenA, false, 'image/png');
+  const statusRow = assertOk(await rest('profile_statuses', tokenA, 'POST', {
+    user_id: userA.id, content: 'Storage RLS runtime probe', image_path: statusPath, media_type: 'image'
+  }, 'return=representation'), 'insert profile status metadata');
+  statusId = Array.isArray(statusRow) ? statusRow[0]?.id : statusRow?.id;
+  if (!statusId) throw new Error('profile status insert returned no row ID');
+  assertSigned(await sign('profile-status-media', statusPath, tokenB), 'active member reads unexpired profile status media');
+
+  const statusSpoofPath = userA.id + '/spoof-' + nonce + '.png';
+  const statusSpoof = await fetchWithTimeout(base + objectPath('profile-status-media', statusSpoofPath), {
+    method: 'POST',
+    headers: { apikey: anonKey, Authorization: 'Bearer ' + tokenB, 'Content-Type': 'image/png', 'x-upsert': 'false' },
+    body: pixel
+  }).then(async response => ({ response, text: await response.text() }));
+  assertDenied(statusSpoof, 'cross-user profile-status uploader-folder spoof');
+
+  const foreignStatusDelete = await remove('profile-status-media', statusPath, tokenB);
+  if (foreignStatusDelete.response.status >= 500) throw new Error('non-owner profile-status delete returned a server error');
+  assertSigned(await sign('profile-status-media', statusPath, tokenB), 'profile status remains after non-owner delete attempt');
+
   // Avatar: own upsert succeeds; another user cannot overwrite it; public bucket URL is readable.
   const avatarPath = userA.id + '/runtime-' + nonce + '.png';
-  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r4sAAAAASUVORK5CYII=', 'base64');
   await upload('avatars', avatarPath, pixel, tokenA, true, 'image/png');
   await upload('avatars', avatarPath, pixel, tokenA, true, 'image/png');
   const avatarSpoof = await fetchWithTimeout(base + objectPath('avatars', avatarPath), {
@@ -294,7 +375,8 @@ ROLLBACK;`);
 
   // Owner delete paths must continue to work for each private/public bucket.
   for (const item of [...uploaded].reverse()) {
-    if (item.bucket === 'chat-media' || item.bucket === 'avatars' || item.bucket === 'conversation-documents') {
+    if (item.bucket === 'chat-media' || item.bucket === 'avatars' || item.bucket === 'conversation-documents'
+      || item.bucket === 'conversation-avatars' || item.bucket === 'channel-avatars' || item.bucket === 'profile-status-media') {
       const removed = await remove(item.bucket, item.name, tokenA);
       assertOk(removed, 'owner delete ' + item.bucket + '/' + item.name);
       const index = uploaded.findIndex(entry => entry.bucket === item.bucket && entry.name === item.name);
