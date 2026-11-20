@@ -435,9 +435,10 @@ test('nine forward migrations remain outside the production ledger with explicit
       assert.equal(forward?.localRuntimeCommit, 'f2b9979075786abd3dbadf6096480c57f38fbeac');
       assert.equal(forward?.productionApplied, false);
     } else if (name.startsWith('20261119130000_')) {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 44680577210);
+      assert.equal(forward?.localRuntimeCommit, '70ab8157d11e55fa1453a81d1595088f95dd5361');
       assert.equal(forward?.productionApplied, false);
-      assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name.startsWith('20261119120000_')) {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44679419290);
@@ -701,9 +702,10 @@ test('nine forward migrations remain outside the production ledger and record ex
       assert.equal(forward?.localRuntimeCommit, 'f2b9979075786abd3dbadf6096480c57f38fbeac');
       assert.equal(forward?.productionApplied, false);
     } else if (name === '20261119130000_increase_message_cleanup_http_timeout.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 44680577210);
+      assert.equal(forward?.localRuntimeCommit, '70ab8157d11e55fa1453a81d1595088f95dd5361');
       assert.equal(forward?.productionApplied, false);
-      assert.equal(forward?.localRuntimeRunId, undefined);
     } else if (name === '20261119120000_fix_conversation_avatar_public_channel_read.sql') {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44679419290);

@@ -1532,12 +1532,19 @@
       "requires": [
         "chat.auto-cleanup-100h"
       ],
-      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
       "testSource": [
         "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql"
       ],
       "blockedBy": [],
-      "note": "Updates the owner-only scheduler function only. It does not reschedule the existing production cron job; a separate owner-approved configure_message_auto_cleanup call is required after migration approval."
+      "note": "The owner-only scheduler function passed disposable-local runtime checks for a 10-second pg_net timeout. The migration does not reschedule the active production cron job; a separate owner-approved configure_message_auto_cleanup call remains required after production migration approval.",
+      "runtimeEvidence": {
+        "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "workflowRunId": 44680577210,
+        "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+        "completedAt": "2026-11-20T05:24:10Z",
+        "sqlFilesExecuted": 89
+      }
     }
   ],
   "explicitEdges": [
@@ -2672,7 +2679,7 @@
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
         "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
-      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     }
   ],
   "duplicateProvenance": [],
@@ -2749,26 +2756,30 @@
     }
   ],
   "runtimeEvidence": {
-    "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": null,
-    "commit": null,
-    "completedAt": null,
+    "workflowRunId": 44680577210,
+    "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+    "completedAt": "2026-11-20T05:24:10Z",
     "localOnly": true,
-    "sqlFilesExecuted": null,
+    "sqlFilesExecuted": 89,
     "checks": [
-      "Merged candidate requires a fresh 89-SQL disposable-local replay including the cleanup timeout migration and its postconditions."
+      "All 89 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
+      "The cleanup scheduler migration verified the owner-only SECURITY DEFINER boundary, empty search_path, session_user guard, Vault-backed credentials, and 10-second pg_net timeout.",
+      "The migration did not invoke configure_message_auto_cleanup() or reschedule the active production cron job.",
+      "Least-privilege, Storage RLS, message auto-cleanup Storage API, and cleanup queue probes passed.",
+      "The disposable Supabase stack was stopped and destroyed."
     ]
   },
   "auditEvidence": {
-    "status": "PENDING",
+    "status": "PASSED",
     "workflow": "Local Supabase SQL manifest audit",
-    "workflowRunId": null,
-    "commit": null,
-    "completedAt": null,
+    "workflowRunId": 44680577133,
+    "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+    "completedAt": "2026-11-20T05:22:31Z",
     "tests": 107,
-    "passed": null,
-    "failed": null
+    "passed": 107,
+    "failed": 0
   },
   "previousRuntimeEvidence": {
     "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
