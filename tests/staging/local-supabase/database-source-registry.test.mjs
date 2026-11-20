@@ -9,18 +9,18 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
 const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
-test('production registry preserves 62 ledger versions and separately maps eight forward migrations', async () => {
+test('production registry preserves 62 ledger versions and separately maps nine forward migrations', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
   assert.equal(registry.schemaVersion, 3);
   assert.equal(registry.registryStatus, 'CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 62);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 70);
-  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 8);
-  assert.equal(registry.forwardMigrations.length, 8);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 71);
+  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 9);
+  assert.equal(registry.forwardMigrations.length, 9);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 62);
-  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 8);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 9);
   assert.equal(registry.forwardMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
@@ -36,7 +36,7 @@ test('production registry preserves 62 ledger versions and separately maps eight
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 70);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 71);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
@@ -65,6 +65,12 @@ test('production registry preserves 62 ledger versions and separately maps eight
       assert.equal(migration.localRuntimeCommit, 'f2b9979075786abd3dbadf6096480c57f38fbeac');
       assert.equal(migration.productionApplied, false);
     } else if (migration.version === '20261119120000') {
+      assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(migration.productionApplied, false);
+      assert.equal(migration.localRuntimeRunId, 44679419290);
+      assert.equal(migration.localRuntimeCommit, '10a60154b25a294412e44249402c51d6422378ec');
+      assert.deepEqual(migration.blockedBy, []);
+    } else if (migration.version === '20261119130000') {
       assert.equal(migration.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(migration.productionApplied, false);
       assert.equal(migration.localRuntimeRunId, undefined);
@@ -108,7 +114,7 @@ test('production registry preserves 62 ledger versions and separately maps eight
   assert.equal(registry.safety.productionModified, false);
   assert.equal(registry.safety.sqlExecuted, false);
   assert.equal(registry.safety.pr139Merged, false);
-  for (const id of ['DAG-014', 'DAG-015', 'DAG-016', 'DAG-017', 'DAG-018']) {
+  for (const id of ['DAG-014', 'DAG-015', 'DAG-016', 'DAG-017', 'DAG-018', 'DAG-019']) {
     assert.ok(registry.knownReplayBlockers.some(item => item.id === id));
   }
 });
@@ -116,7 +122,7 @@ test('production registry preserves 62 ledger versions and separately maps eight
 test('every canonical migration closes every explicit transaction block', async () => {
   const directory = path.join(root, 'supabase/migrations');
   const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
-  assert.equal(files.length, 70);
+  assert.equal(files.length, 71);
   for (const name of files) {
     const source = await readFile(path.join(directory, name), 'utf8');
     const begins = (source.match(/^\s*BEGIN\s*;\s*$/gim) ?? []).length;

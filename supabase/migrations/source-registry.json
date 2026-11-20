@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 70,
+    "canonicalCliMigrationFiles": 71,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 20,
@@ -42,7 +42,7 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
-    "forwardReconciliationMigrations": 8
+    "forwardReconciliationMigrations": 9
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -53,7 +53,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
-    "The 70-file CLI stream contains 62 historical production-ledger migrations plus 8 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+    "The 71-file CLI stream contains 62 historical production-ledger migrations plus 9 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
   ],
   "productionMigrations": [
     {
@@ -1757,12 +1757,23 @@
     },
     {
       "id": "DAG-018",
-      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "Disposable Storage API runtime exposed that the conversation-avatars public-channel SELECT policy's subquery into public.conversations is filtered by the caller's conversations RLS, denying active non-members access to public-channel avatars. The forward policy uses app_private.can_access_channel_avatar() to evaluate visibility under its SECURITY DEFINER boundary; verify public, private-nonmember, and private-member cases in disposable local Supabase.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "The conversation-avatars public-channel SELECT policy now delegates visibility to app_private.can_access_channel_avatar(). Public-channel non-member reads and private-channel membership boundaries passed disposable-local Storage API runtime; production remains unchanged until separately approved.",
       "evidence": [
         "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-019",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Production Edge Function logs show 274 HTTP 200 cleanup invocations in the last 24 hours with average execution around 3.2 seconds and maximum around 4.9 seconds, while pg_net records three 5-second timeouts. The forward migration raises the timeout used by future scheduling to 10 seconds without changing the active cron job; verify the scheduler definition in disposable local runtime and retain the separate production reconfiguration approval gate.",
+      "evidence": [
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+        "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
       "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
@@ -1914,6 +1925,22 @@
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Use the SECURITY DEFINER channel-visibility helper for conversation-avatars SELECT so active non-members can read public-channel avatars without the caller-visible conversations subquery being filtered by conversations RLS; private-channel reads remain membership-scoped.",
       "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "localRuntimeRunId": 44679419290,
+      "localRuntimeCommit": "10a60154b25a294412e44249402c51d6422378ec",
+      "localRuntimeCompletedAt": "2026-11-20T05:14:12Z",
+      "localRuntimeSqlFilesExecuted": 88
+    },
+    {
+      "version": "20261119130000",
+      "name": "increase_message_cleanup_http_timeout",
+      "path": "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+      "gitBlobSha": "44b5926b988533da72234b7b79202ba7c06815f5",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Change the owner-only message cleanup scheduler function so future cron scheduling uses a 10-second pg_net HTTP timeout. The existing cron job is not rescheduled by this migration; an explicit owner-only reconfiguration call is required after production approval.",
+      "blockedBy": [],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false
     }
@@ -1921,7 +1948,7 @@
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 8,
+    "pendingForwardCount": 9,
     "executionAuthorized": false,
     "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
@@ -1940,7 +1967,7 @@
       "localOnly": true,
       "sqlFilesExecuted": null,
       "checks": [
-        "The merged 70-source candidate contains 88 selected SQL sources. A fresh disposable-local replay is required after combining PR #154 and PR #155."
+        "The merged 71-source candidate contains 89 selected SQL sources. A fresh disposable-local replay is required after adding the 10-second cleanup timeout migration and postconditions."
       ]
     },
     "audit": {
@@ -1949,14 +1976,13 @@
       "workflowRunId": null,
       "commit": null,
       "completedAt": null,
-      "tests": 101,
+      "tests": 107,
       "passed": null,
       "failed": null
     },
     "pendingAdditionalSources": [
-      "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
-      "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
-      "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
@@ -2021,7 +2047,31 @@
       "passed": 101,
       "failed": 0,
       "note": "Passed on pre-merge PR #155 HEAD; fresh audit required on the merged tree."
+    },
+    "preMergeStorageRuntime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 44679419290,
+      "commit": "10a60154b25a294412e44249402c51d6422378ec",
+      "completedAt": "2026-11-20T05:14:12Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 88,
+      "checks": [
+        "All 88 selected SQL sources replayed successfully in the merged #154 + #155 tree.",
+        "Conversation-avatar public-channel visibility, private-channel membership checks, Storage ownership and cleanup probes passed.",
+        "The disposable Supabase stack was stopped and destroyed."
+      ]
+    },
+    "preMergeStorageAudit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 44679419659,
+      "commit": "10a60154b25a294412e44249402c51d6422378ec",
+      "completedAt": "2026-11-20T05:12:12Z",
+      "tests": 107,
+      "passed": 107,
+      "failed": 0
     }
   },
-  "reviewState": "LOCAL_REPLAY_PENDING_MERGED_STORAGE_AND_PRIVILEGED_RPC_CANDIDATE"
+  "reviewState": "LOCAL_REPLAY_PENDING_MERGED_CLEANUP_TIMEOUT_CANDIDATE"
 }

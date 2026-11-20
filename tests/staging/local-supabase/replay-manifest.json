@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 70,
-    "mappedSources": 70,
+    "sqlFiles": 71,
+    "mappedSources": 71,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 20,
@@ -31,13 +31,13 @@
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 68,
+    "executedMappedSources": 69,
     "executedTestOnlySqlFixtures": 20,
-    "executedSqlFiles": 88,
+    "executedSqlFiles": 89,
     "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 68,
+    "candidateMappedSources": 69,
     "candidateTestOnlySqlFixtures": 20,
-    "candidateSqlFiles": 88
+    "candidateSqlFiles": 89
   },
   "execution": {
     "enabled": false,
@@ -465,6 +465,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "security.message-cleanup-http-timeout-forward",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Changes only the owner-only scheduler function for future 10-second HTTP timeouts; it does not reschedule the active production cron job."
+    },
+    {
       "nodeId": "test-fixture.message-auto-cleanup",
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "testSources": [
@@ -682,7 +691,7 @@
     },
     {
       "nodeId": "security.conversation-avatar-public-channel-read-forward",
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
       "testSources": [
         "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql"
       ],
@@ -924,12 +933,23 @@
     },
     {
       "id": "DAG-018",
-      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "Disposable Storage API runtime exposed that the conversation-avatars public-channel SELECT policy's subquery into public.conversations is filtered by the caller's conversations RLS, denying active non-members access to public-channel avatars. The forward policy uses app_private.can_access_channel_avatar() to evaluate visibility under its SECURITY DEFINER boundary; verify public, private-nonmember, and private-member cases in disposable local Supabase.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "The conversation-avatars public-channel SELECT policy now delegates visibility to app_private.can_access_channel_avatar(). Public-channel non-member reads and private-channel membership boundaries passed disposable-local Storage API runtime; production remains unchanged until separately approved.",
       "evidence": [
         "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-019",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Production Edge Function logs show 274 HTTP 200 cleanup invocations in the last 24 hours with average execution around 3.2 seconds and maximum around 4.9 seconds, while pg_net records three 5-second timeouts. The forward migration raises the timeout used by future scheduling to 10 seconds without changing the active cron job; verify the scheduler definition in disposable local runtime and retain the separate production reconfiguration approval gate.",
+      "evidence": [
+        "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+        "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+        "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
       "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
@@ -952,14 +972,16 @@
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43260183037
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
     },
     {
       "path": "supabase/migrations/20261112160001_harden_chat_media_upload_ownership.sql",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43260183037
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
     },
     {
       "path": "supabase/migrations/20261112160002_revoke_unsafe_public_default_privileges.sql",
@@ -968,7 +990,8 @@
         "DAG-016"
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43260183037
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
     },
     {
       "path": "supabase/migrations/20261112160003_enforce_active_membership_rls.sql",
@@ -977,7 +1000,8 @@
         "DAG-016"
       ],
       "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 43260183037
+      "localRuntimeRunId": 43260183037,
+      "localRuntimeCommit": "ae991c046f7f3d328c31d2d9fae5e07ec9084f2a"
     },
     {
       "path": "tests/staging/local-supabase/fixtures/forward-direct-conversation-eligibility.assert.sql",
@@ -1009,13 +1033,19 @@
       "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
-      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44054041618,
+      "localRuntimeCommit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+      "localRuntimeCompletedAt": "2026-11-17T09:18:04Z"
     },
     {
       "path": "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
-      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44492915229,
+      "localRuntimeCommit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+      "localRuntimeCompletedAt": "2026-11-19T09:06:13Z"
     }
   ],
   "validationEvidence": {
@@ -1028,7 +1058,7 @@
       "localOnly": true,
       "sqlFilesExecuted": null,
       "checks": [
-        "The merged 70-source candidate contains 88 selected SQL sources. Fresh disposable-local replay is required."
+        "The merged 71-source candidate contains 89 selected SQL sources. Fresh disposable-local replay is required."
       ]
     },
     "audit": {
@@ -1037,7 +1067,7 @@
       "workflowRunId": null,
       "commit": null,
       "completedAt": null,
-      "tests": 101,
+      "tests": 107,
       "passed": null,
       "failed": null
     },
@@ -1061,9 +1091,8 @@
       ]
     },
     "pendingAdditionalSources": [
-      "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
-      "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
-      "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
     "preMergeMainRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
@@ -1132,7 +1161,31 @@
       "tests": 101,
       "passed": 101,
       "failed": 0
+    },
+    "preMergeStorageRuntime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 44679419290,
+      "commit": "10a60154b25a294412e44249402c51d6422378ec",
+      "completedAt": "2026-11-20T05:14:12Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 88,
+      "checks": [
+        "All 88 selected SQL sources replayed successfully in the merged #154 + #155 tree.",
+        "Conversation-avatar public-channel visibility, private-channel membership checks, Storage ownership and cleanup probes passed.",
+        "The disposable Supabase stack was stopped and destroyed."
+      ]
+    },
+    "preMergeStorageAudit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 44679419659,
+      "commit": "10a60154b25a294412e44249402c51d6422378ec",
+      "completedAt": "2026-11-20T05:12:12Z",
+      "tests": 107,
+      "passed": 107,
+      "failed": 0
     }
   },
-  "reviewState": "LOCAL_REPLAY_PENDING_MERGED_STORAGE_AND_PRIVILEGED_RPC_CANDIDATE"
+  "reviewState": "LOCAL_REPLAY_PENDING_MERGED_CLEANUP_TIMEOUT_CANDIDATE"
 }
