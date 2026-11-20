@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 69,
-    "mappedSources": 69,
+    "sqlFiles": 70,
+    "mappedSources": 70,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 20,
@@ -31,13 +31,13 @@
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 67,
+    "executedMappedSources": 68,
     "executedTestOnlySqlFixtures": 20,
-    "executedSqlFiles": 87,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 67,
+    "executedSqlFiles": 88,
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "candidateMappedSources": 68,
     "candidateTestOnlySqlFixtures": 20,
-    "candidateSqlFiles": 87
+    "candidateSqlFiles": 88
   },
   "execution": {
     "enabled": false,
@@ -681,6 +681,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "security.conversation-avatar-public-channel-read-forward",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Replaces the caller-visible public.conversations subquery with app_private.can_access_channel_avatar(), preserving public-channel reads while keeping private-channel reads membership-scoped."
+    },
+    {
       "nodeId": "chat.profile-status-combined-content-media",
       "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
       "testSources": [
@@ -912,6 +921,17 @@
         "docs/RLS_LEAST_PRIVILEGE_HARDENING.md"
       ],
       "status": "LOCAL_RUNTIME_PASSED_SUPABASE_MANAGED_ROLE_RESIDUAL_REMAINS"
+    },
+    {
+      "id": "DAG-018",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Disposable Storage API runtime exposed that the conversation-avatars public-channel SELECT policy's subquery into public.conversations is filtered by the caller's conversations RLS, denying active non-members access to public-channel avatars. The forward policy uses app_private.can_access_channel_avatar() to evaluate visibility under its SECURITY DEFINER boundary; verify public, private-nonmember, and private-member cases in disposable local Supabase.",
+      "evidence": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+      ],
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "requiredSourceRecovery": [
@@ -989,42 +1009,37 @@
       "path": "supabase/migrations/20261113060002_fix_conversation_image_extension_validation.sql",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
     },
     {
       "path": "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "blockedBy": [],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
     "runtime": {
-      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 44054041618,
-      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
-      "completedAt": "2026-11-17T09:18:04Z",
+      "workflowRunId": null,
+      "commit": null,
+      "completedAt": null,
       "localOnly": true,
-      "sqlFilesExecuted": 86,
+      "sqlFilesExecuted": null,
       "checks": [
-        "All 86 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
-        "The conversation-image extension validation forward migration executed and its post-forward assertions passed.",
-        "The public set_conversation_image RPC is SECURITY INVOKER; the private implementation retains SECURITY DEFINER with an empty search_path and authenticated-only EXECUTE ACL.",
-        "Storage API RLS runtime passed; synthetic upload, metadata, signed URL, ownership, and deletion probes passed.",
-        "Message auto-cleanup Storage runtime passed: one synthetic expired object was removed and its queue item completed.",
-        "The disposable Supabase stack was stopped and destroyed."
+        "The merged 70-source candidate contains 88 selected SQL sources. Fresh disposable-local replay is required."
       ]
     },
     "audit": {
-      "status": "PASSED",
+      "status": "PENDING",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 44054041833,
-      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
-      "completedAt": "2026-11-17T09:16:31Z",
+      "workflowRunId": null,
+      "commit": null,
+      "completedAt": null,
       "tests": 101,
-      "passed": 101,
-      "failed": 0
+      "passed": null,
+      "failed": null
     },
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
@@ -1045,7 +1060,79 @@
         "the disposable Supabase stack was stopped and destroyed"
       ]
     },
-    "pendingAdditionalSources": []
+    "pendingAdditionalSources": [
+      "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+      "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+      "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
+    ],
+    "preMergeMainRuntime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 44492915229,
+      "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+      "completedAt": "2026-11-19T09:06:13Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 87,
+      "checks": [
+        "All 87 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
+        "Privileged channel/group RPC active-membership guards, administrator membership locks, target-owner eligibility, and trigger-only function ACL postconditions passed.",
+        "Rollback-only CRUD/RPC probes rejected suspended callers and inactive ownership-transfer targets without mutating role state.",
+        "Storage API probes passed chat-media ownership, private/shared document reads, avatar ownership, and message auto-cleanup checks.",
+        "The disposable Supabase stack was stopped and destroyed."
+      ]
+    },
+    "preMergeMainAudit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 44492915398,
+      "commit": "f2b9979075786abd3dbadf6096480c57f38fbeac",
+      "completedAt": "2026-11-19T09:03:49Z",
+      "tests": 101,
+      "passed": 101,
+      "failed": 0
+    },
+    "preMergePr155Runtime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflowRunId": 44495674919,
+      "commit": "ec3485f048b640658da6f9747565e25138b9ff09",
+      "localOnly": true,
+      "sqlFilesExecuted": 87
+    },
+    "preMergePr155Audit": {
+      "status": "PASSED",
+      "workflowRunId": 44495674949,
+      "commit": "ec3485f048b640658da6f9747565e25138b9ff09",
+      "tests": 101,
+      "passed": 101,
+      "failed": 0
+    },
+    "previousManifestRuntime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 44054041618,
+      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+      "completedAt": "2026-11-17T09:18:04Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 86,
+      "checks": [
+        "All 86 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
+        "The conversation-image extension validation forward migration executed and its post-forward assertions passed.",
+        "The public set_conversation_image RPC is SECURITY INVOKER; the private implementation retains SECURITY DEFINER with an empty search_path and authenticated-only EXECUTE ACL.",
+        "Storage API RLS runtime passed; synthetic upload, metadata, signed URL, ownership, and deletion probes passed.",
+        "Message auto-cleanup Storage runtime passed: one synthetic expired object was removed and its queue item completed.",
+        "The disposable Supabase stack was stopped and destroyed."
+      ]
+    },
+    "previousManifestAudit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 44054041833,
+      "commit": "a7f9f89de489f43b5ba4e8f9b548109fe68ed2c7",
+      "completedAt": "2026-11-17T09:16:31Z",
+      "tests": 101,
+      "passed": 101,
+      "failed": 0
+    }
   },
-  "reviewState": "LOCAL_REPLAY_PENDING_PRIVILEGED_RPC_ACTIVE_MEMBERSHIP_MIGRATION"
+  "reviewState": "LOCAL_REPLAY_PENDING_MERGED_STORAGE_AND_PRIVILEGED_RPC_CANDIDATE"
 }

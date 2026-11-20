@@ -306,6 +306,21 @@ begin
     RAISE EXCEPTION 'Privileged RPC entry points must remain SECURITY INVOKER wrappers';
   END IF;
 
+  -- Public conversation-avatar reads must use a SECURITY DEFINER visibility helper;
+  -- a caller-visible conversations subquery is filtered by conversations RLS itself.
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies p
+    WHERE p.schemaname = 'storage'
+      AND p.tablename = 'objects'
+      AND p.policyname = 'Conversation members read conversation avatars'
+      AND p.cmd = 'SELECT'
+      AND position('app_private.can_access_channel_avatar' IN coalesce(p.qual,'')) > 0
+      AND position('FROM conversations' IN upper(coalesce(p.qual,''))) = 0
+  ) THEN
+    RAISE EXCEPTION 'conversation-avatars SELECT policy must use the SECURITY DEFINER public-channel visibility helper';
+  END IF;
+
   -- Storage has its own RLS boundary and bucket-level visibility settings.
   if not exists (
     select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace

@@ -1070,7 +1070,7 @@
         "chat.media-upload-path-hardening",
         "chat.profile-status-combined-content-media"
       ],
-      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED",
+      "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_PENDING_MERGED_STORAGE_RUNTIME",
       "testSource": [
         "tests/staging/local-supabase/fixtures/rls-least-privilege-overlay.test-only.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
@@ -1083,7 +1083,7 @@
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "The existing overlay and CRUD/RPC fixtures include inactive-member rejection probes for channel creation, invite creation/join, image updates, ownership transfer, and inactive target administrators. Disposable-local runtime passed. DAG-016 remains an external Supabase-managed default-ACL review gate."
+      "note": "The fixture now includes conversation-avatar visibility assertions and the Storage runtime probe covers conversation-avatars, profile-status-media, and legacy channel-avatars. Re-run on the merged candidate; DAG-016 remains an external Supabase-managed default-ACL review gate."
     },
     {
       "id": "chat.media-and-reactions",
@@ -1372,14 +1372,14 @@
         "security.conversation-image-extension-forward",
         "security.least-privilege-overlay"
       ],
-      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PASSED",
+      "status": "TEST_ONLY_POST_FORWARD_SECURITY_ASSERTIONS_PENDING_NEW_STORAGE_MIGRATION",
       "testSource": [
         "tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql"
       ],
       "blockedBy": [
         "DAG-016"
       ],
-      "note": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
+      "note": "Previously passed on PR #154 mainline; PR #155 adds Storage policy assertions, so the combined candidate requires a fresh disposable-local replay."
     },
     {
       "id": "chat.auto-cleanup-100h",
@@ -1493,6 +1493,25 @@
         "completedAt": "2026-11-19T09:06:13Z",
         "sqlFilesExecuted": 87
       }
+    },
+    {
+      "id": "security.conversation-avatar-public-channel-read-forward",
+      "source": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql"
+      ],
+      "provides": [
+        "conversation-avatars public-channel reads through SECURITY DEFINER visibility helper without caller-visible conversations subquery"
+      ],
+      "requires": [
+        "chat.profile-status-and-conversation-images",
+        "chat.channel-visibility-avatar-background",
+        "chat.harden-channel-rpc-wrappers"
+      ],
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "testSource": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql"
+      ],
+      "blockedBy": []
     }
   ],
   "explicitEdges": [
@@ -2391,6 +2410,18 @@
     [
       "security.active-membership-rls-forward",
       "security.privileged-rpc-active-membership-forward"
+    ],
+    [
+      "chat.profile-status-and-conversation-images",
+      "security.conversation-avatar-public-channel-read-forward"
+    ],
+    [
+      "chat.channel-visibility-avatar-background",
+      "security.conversation-avatar-public-channel-read-forward"
+    ],
+    [
+      "chat.harden-channel-rpc-wrappers",
+      "security.conversation-avatar-public-channel-read-forward"
     ]
   ],
   "blockers": [
@@ -2578,12 +2609,23 @@
     },
     {
       "id": "DAG-017",
-      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "Read-only production catalog review identified privileged channel and group RPC paths that did not independently enforce active membership despite SECURITY DEFINER execution. The forward migration adds locked profile/Auth eligibility checks and rollback-only runtime tests; keep production deployment blocked until the disposable-local runtime passes and the migration is separately approved.",
+      "severity": "PRODUCTION_DEPLOYMENT_PENDING",
+      "issue": "Production catalog review identified privileged channel and group SECURITY DEFINER write paths that did not independently serialize active membership. The forward migration and rollback-only probes now pass disposable-local runtime. Production remains unchanged pending separate deployment approval.",
       "evidence": [
         "supabase/migrations/20261119113000_harden_privileged_rpc_active_membership.sql",
         "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
         "tests/staging/local-supabase/fixtures/rls-crud-compatibility.runtime.test.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-018",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "Disposable Storage API runtime exposed that the conversation-avatars public-channel SELECT policy's subquery into public.conversations is filtered by the caller's conversations RLS, denying active non-members access to public-channel avatars. The forward policy uses app_private.can_access_channel_avatar() to evaluate visibility under its SECURITY DEFINER boundary; verify public, private-nonmember, and private-member cases in disposable local Supabase.",
+      "evidence": [
+        "supabase/migrations/20261119120000_fix_conversation_avatar_public_channel_read.sql",
+        "tests/staging/local-supabase/fixtures/rls-least-privilege.assert.sql",
+        "tests/staging/local-supabase/local-storage-rls-runtime.mjs"
       ],
       "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
@@ -2596,7 +2638,7 @@
     "productionDataAllowed": false,
     "canonicalSqlMutationAllowed": false,
     "costBearingResourcesAllowed": false,
-    "forwardReconciliationMigrations": 7,
+    "forwardReconciliationMigrations": 8,
     "forwardMigrationExecutionAuthorized": false
   },
   "archiveSources": [
@@ -2662,6 +2704,28 @@
     }
   ],
   "runtimeEvidence": {
+    "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "workflow": "Disposable local Supabase runtime verification",
+    "workflowRunId": null,
+    "commit": null,
+    "completedAt": null,
+    "localOnly": true,
+    "sqlFilesExecuted": null,
+    "checks": [
+      "Merged candidate requires a fresh 88-SQL disposable-local replay; separate pre-merge passes do not establish combined-tree validation."
+    ]
+  },
+  "auditEvidence": {
+    "status": "PENDING",
+    "workflow": "Local Supabase SQL manifest audit",
+    "workflowRunId": null,
+    "commit": null,
+    "completedAt": null,
+    "tests": 101,
+    "passed": null,
+    "failed": null
+  },
+  "previousRuntimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
     "workflowRunId": 44054041618,
@@ -2680,7 +2744,7 @@
       "the disposable Supabase stack was stopped and destroyed"
     ]
   },
-  "auditEvidence": {
+  "previousAuditEvidence": {
     "status": "PASSED",
     "workflow": "Local Supabase SQL manifest audit",
     "workflowRunId": 44054041833,
