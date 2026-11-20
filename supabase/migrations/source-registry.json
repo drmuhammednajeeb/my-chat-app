@@ -1775,7 +1775,7 @@
         "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
         "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
-      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
     }
   ],
   "externalSources": [
@@ -1941,8 +1941,11 @@
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Change the owner-only message cleanup scheduler function so future cron scheduling uses a 10-second pg_net HTTP timeout. The existing cron job is not rescheduled by this migration; an explicit owner-only reconfiguration call is required after production approval.",
       "blockedBy": [],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-      "productionApplied": false
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "localRuntimeRunId": 44680577210,
+      "localRuntimeCommit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+      "localRuntimeCompletedAt": "2026-11-20T05:24:10Z"
     }
   ],
   "forwardMigrationPolicy": {
@@ -1950,40 +1953,41 @@
     "productionLedgerCount": 62,
     "pendingForwardCount": 9,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
-    "localRuntimeRunId": null,
-    "localRuntimeCommit": null,
-    "localRuntimeCompletedAt": null,
-    "localRuntimeSqlFilesExecuted": null
+    "localRuntimeRunId": 44680577210,
+    "localRuntimeCommit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+    "localRuntimeCompletedAt": "2026-11-20T05:24:10Z",
+    "localRuntimeSqlFilesExecuted": 89
   },
   "validationEvidence": {
     "runtime": {
-      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": null,
-      "commit": null,
-      "completedAt": null,
+      "workflowRunId": 44680577210,
+      "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+      "completedAt": "2026-11-20T05:24:10Z",
       "localOnly": true,
-      "sqlFilesExecuted": null,
+      "sqlFilesExecuted": 89,
       "checks": [
-        "The merged 71-source candidate contains 89 selected SQL sources. A fresh disposable-local replay is required after adding the 10-second cleanup timeout migration and postconditions."
+        "All 89 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
+        "The cleanup scheduler migration verified the owner-only SECURITY DEFINER boundary, empty search_path, session_user guard, Vault-backed credentials, and 10-second pg_net timeout.",
+        "The migration did not invoke configure_message_auto_cleanup() or reschedule the active production cron job.",
+        "Least-privilege, Storage RLS, message auto-cleanup Storage API, and cleanup queue probes passed.",
+        "The disposable Supabase stack was stopped and destroyed."
       ]
     },
     "audit": {
-      "status": "PENDING",
+      "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": null,
-      "commit": null,
-      "completedAt": null,
+      "workflowRunId": 44680577133,
+      "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
+      "completedAt": "2026-11-20T05:22:31Z",
       "tests": 107,
-      "passed": null,
-      "failed": null
+      "passed": 107,
+      "failed": 0
     },
-    "pendingAdditionalSources": [
-      "supabase/migrations/20261119130000_increase_message_cleanup_http_timeout.sql",
-      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
-    ],
+    "pendingAdditionalSources": [],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
@@ -2073,5 +2077,5 @@
       "failed": 0
     }
   },
-  "reviewState": "LOCAL_REPLAY_PENDING_MERGED_CLEANUP_TIMEOUT_CANDIDATE"
+  "reviewState": "LOCAL_RUNTIME_PASSED_PRODUCTION_MIGRATION_NOT_APPLIED"
 }
