@@ -4,6 +4,7 @@ DECLARE
   v_reply_delete_action "char";
   v_notification_delete_action "char";
   v_purge_definition text;
+  v_config_definition text;
   v_claim_acl boolean;
   v_queue_rls boolean;
 BEGIN
@@ -83,6 +84,14 @@ BEGIN
 
   IF NOT has_function_privilege('service_role','public.claim_message_cleanup_batch(integer)','EXECUTE') THEN
     RAISE EXCEPTION 'service_role must execute the cleanup worker RPC';
+  END IF;
+  SELECT pg_catalog.pg_get_functiondef('app_private.configure_message_auto_cleanup(text)'::regprocedure)
+  INTO v_config_definition;
+
+  IF position('session_user <> ''postgres''' IN v_config_definition) = 0
+     OR position('timeout_milliseconds := 10000' IN v_config_definition) = 0
+     OR position('message_cleanup_backend_key' IN v_config_definition) = 0 THEN
+    RAISE EXCEPTION 'cleanup scheduler must remain owner-only, Vault-backed, and use a 10-second HTTP timeout';
   END IF;
 END;
 $assert$;

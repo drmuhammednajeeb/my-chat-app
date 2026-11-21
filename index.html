@@ -1565,6 +1565,9 @@ async function loadOlderMessages(){
  }
 }
 function messagePollingDelay(){
+ // Do not repeatedly hit Supabase while the browser reports no network.
+ // The online event below triggers an immediate reconciliation when connectivity returns.
+ if(typeof navigator!=='undefined'&&navigator.onLine===false)return 60000;
  if(document.visibilityState!=='visible')return 60000;
  // Realtime is the primary delivery path. Poll frequently only while its channel
  // is not subscribed; retain a low-frequency reconciliation while healthy.
@@ -1592,7 +1595,15 @@ document.addEventListener('visibilitychange',()=>{
  if(document.visibilityState==='visible')requestImmediateMessageReconciliation('visible');
  else if(state.messagePollTimer)scheduleMessagePolling(state.active.id,state.messagePollGeneration);
 });
-window.addEventListener('online',()=>requestImmediateMessageReconciliation('online'));
+window.addEventListener('offline',()=>{
+ if(state.messagePollTimer){clearTimeout(state.messagePollTimer);state.messagePollTimer=null}
+ $('connectionState').textContent='غير متصل';
+ diagLog('network-offline',{conversationId:state.active?.id||null});
+});
+window.addEventListener('online',()=>{
+ $('connectionState').textContent='جارٍ إعادة الاتصال…';
+ requestImmediateMessageReconciliation('online');
+});
 window.addEventListener('focus',()=>requestImmediateMessageReconciliation('focus'));
 function stopMessagePolling(){
  state.messagePollGeneration++;
