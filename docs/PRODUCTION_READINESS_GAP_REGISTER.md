@@ -58,19 +58,21 @@ The reviewed DAG records historical production observations: 274 HTTP 200 cleanu
 
 **Gate:** Read-only inspect the current cron definition and worker/queue outcomes; prepare a separately approved scheduler change if still needed. Verify Storage object deletion before deleting message rows. No scheduler change was made.
 
-### G-04 — Deployment target documentation conflict (high)
+### G-04 — Deployment target and failover architecture (high)
 
-GitHub Actions records a successful `pages build and deployment` for the #159 merge commit. The current `README.md` describes Vercel as production and GitHub Pages as not being the production path. The #159 commit also has a successful Vercel status context.
+Owner decision recorded on 2026-11-21: GitHub Pages is the canonical production platform at `https://drmuhammednajeeb.github.io/my-chat-app/`; Vercel is standby only. README and `docs/DEPLOYMENT_ARCHITECTURE.md` are aligned to this decision.
 
-This proves that a Pages deployment and a Vercel integration status exist; it does not independently identify the canonical production URL.
+The prior audit showed a successful Pages deployment and a Vercel integration status. Those signals alone did not establish the canonical target; the owner has now designated Pages as primary.
 
-**Gate:** Confirm the canonical production URL/platform. Keep PR #152 blocked until its runtime-config design matches that platform. Do not change deployment settings during this audit.
+**Gate:** Keep Pages as the only automatic production deployment path. Vercel must remain non-authoritative and approval-gated. Before standby activation, verify identical artifact SHA, version, service-worker scope, and production Supabase target. No hosting settings or deployment configuration were changed by this documentation decision.
 
-### G-05 — Runtime environment isolation (high)
+### G-05 — Static runtime environment isolation (high)
 
-PR #152 is Draft and introduces `/api/runtime-config` with Vercel-specific server assumptions. Do not merge until the hosting target is confirmed and production/preview separation is demonstrated end-to-end.
+PR #152's current design is not compatible with the primary GitHub Pages host as written: it requires a same-origin `/api/runtime-config` endpoint and `VERCEL_ENV`. GitHub Pages does not provide that serverless runtime.
 
-**Gate:** Adapt configuration delivery to the confirmed hosting model. Only public publishable/anon credentials may reach browsers; service-role and secret credentials must never be exposed. Prove preview cannot target production data.
+**Approved design direction:** Generate a static `deployment-config.js` inside the build artifact using a protected GitHub Actions Environment. Validate the exact production Supabase host for production artifacts and an explicit non-production allowlist for preview/test artifacts. Reject service-role/secret keys, malformed URLs, local endpoints in deployed artifacts, and any production project in preview. Build once and promote the same immutable artifact to Pages and (only when needed) Vercel standby.
+
+**Gate:** Keep #152 Draft and do not merge as-is. Port its valuable key validation, fail-closed behavior, and environment-isolation tests to the static build-time configuration design on a fresh branch. Verify relative asset paths, manifest scope, and Service Worker scope on both Pages project-path and Vercel root-path origins. Only public publishable/anon credentials may enter browser artifacts. No production variables, secrets, hosting settings, or Supabase state were changed.
 
 ### G-06 — Voice duration not yet in mainline (medium)
 
