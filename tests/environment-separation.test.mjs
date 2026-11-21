@@ -1,45 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
-
-test('the published browser app is pinned to the approved Cloud Supabase project', () => {
+test('browser loads explicit deployment config before initializing Supabase', () => {
   const index = read('../index.html');
-  const declarations = [...index.matchAll(/const\s+SUPABASE_URL\s*=/g)];
-  assert.equal(declarations.length, 1, 'the browser must have exactly one Supabase URL declaration');
-  assert.match(
-    index,
-    /const\s+SUPABASE_URL\s*=\s*'https:\/\/lvkeohpuucuklagvwpnq\.supabase\.co'/,
-    'the deployed app must target the approved Cloud Supabase project'
-  );
+  assert.equal((index.match(/deployment-config\.js/g) || []).length, 1);
+  assert.equal((index.match(/const\s+SUPABASE_URL\s*=/g) || []).length, 1);
+  assert.match(index, /<script src="\.\/deployment-config\.js"><\/script>[\s\S]*?supabase\.min\.js/);
+  assert.match(index, /BizmindRuntimeConfig\.resolve\(window\.__BIZMIND_DEPLOYMENT_CONFIG__\)/);
+  assert.doesNotMatch(index, /const\s+SUPABASE_URL\s*=\s*['"]/);
+  assert.doesNotMatch(index, /const\s+SUPABASE_ANON_KEY\s*=\s*['"]/);
 });
-
-test('no local Docker/Supabase endpoint can leak into browser runtime assets', () => {
-  const runtimeAssets = [
-    '../index.html',
-    '../membership.js',
-    '../service-worker.js',
-    '../manifest.json'
-  ];
-  const forbidden = [
-    /localhost/i,
-    /127\.0\.0\.1/i,
-    /0\.0\.0\.0/i,
-    /host\.docker\.internal/i,
-    /https?:\/\/kong(?::|\/)/i,
-    /supabase\.local/i
-  ];
-
-  for (const path of runtimeAssets) {
-    const source = read(path);
-    for (const pattern of forbidden) {
-      assert.doesNotMatch(source, pattern, `${path} contains a local-only endpoint: ${pattern}`);
-    }
-  }
+test('checked-in config is public production-only and contains no privileged key', () => {
+  const config = read('../deployment-config.js');
+  assert.match(config, /"target":\s*"pages-production"/);
+  assert.match(config, /"expectedSupabaseHost":\s*"lvkeohpuucuklagvwpnq\.supabase\.co"/);
+  assert.match(config, /"supabaseUrl":\s*"https:\/\/lvkeohpuucuklagvwpnq\.supabase\.co"/);
+  assert.doesNotMatch(config, /sb_secret_|service_role|SUPABASE_SERVICE_ROLE_KEY/i);
 });
-
-test('disposable local Supabase runtime is isolated to a temporary GitHub Actions runner', () => {
+test('no local endpoint can leak into browser runtime assets', () => {
+  const assets = ['../index.html','../deployment-config.js','../modules/runtime-config.js','../membership.js','../service-worker.js','../manifest.json'];
+  const forbidden = [/localhost/i,/127\.0\.0\.1/i,/0\.0\.0\.0/i,/host\.docker\.internal/i,/https?:\/\/kong(?::|\/)/i,/supabase\.local/i];
+  for (const path of assets) for (const pattern of forbidden) assert.doesNotMatch(read(path), pattern, `${path} contains a local-only endpoint`);
+});
+test('disposable local Supabase runtime is isolated to a temporary runner', () => {
   const workflow = read('../.github/workflows/disposable-local-supabase-runtime.yml');
   assert.match(workflow, /runs-on:\s*ubuntu-latest/);
   assert.match(workflow, /runner\.temp/);
@@ -49,8 +33,7 @@ test('disposable local Supabase runtime is isolated to a temporary GitHub Action
   assert.match(workflow, /ALLOW_DISPOSABLE_LOCAL_REPLAY:\s*["']1["']/);
   assert.doesNotMatch(workflow, /SUPABASE_URL:\s*\$\{\{\s*secrets\.(?:PROD|PRODUCTION)/i);
 });
-
-test('the SQL manifest audit is source-only and cannot start or reset a local database', () => {
+test('SQL manifest audit is source-only', () => {
   const workflow = read('../.github/workflows/local-supabase-sql-audit.yml');
   assert.match(workflow, /SQL_EXECUTION_AUTHORIZED=false/);
   assert.doesNotMatch(workflow, /supabase\s+(?:start|db\s+reset|db\s+push)/i);
