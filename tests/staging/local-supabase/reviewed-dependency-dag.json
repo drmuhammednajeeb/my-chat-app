@@ -1545,6 +1545,43 @@
         "completedAt": "2026-11-20T05:24:10Z",
         "sqlFilesExecuted": 89
       }
+    },
+    {
+      "id": "membership.signup-name-validation-forward",
+      "source": [
+        "supabase/migrations/20261121120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "provides": [
+        "server-side two- or three-part Arabic/Latin display-name validation before invitation consumption"
+      ],
+      "requires": [
+        "membership.final-format"
+      ],
+      "status": "FORWARD_RECONCILIATION_RUNTIME_VALIDATED_NOT_APPLIED",
+      "testSource": [
+        "supabase/migrations/20261121120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "blockedBy": [],
+      "note": "Forward-only Auth BEFORE INSERT guard. Disposable current-mainline Supabase runtime replay passed in workflow run 44875784557 (91 SQL files, commit fad9a10ccf1b29f3089a02528663c255d67d1e8a). Validation precedes invitation locking and consumption, preserves the official 971 plus nine digits contract and membership_number_verified metadata. No production application is authorized."
+    },
+    {
+      "id": "test-fixture.signup-name-guard",
+      "source": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "provides": [
+        "rollback-only Auth trigger integration assertions for invalid and valid signup names"
+      ],
+      "requires": [
+        "membership.signup-name-validation-forward",
+        "test-fixture.admin-auth-seed"
+      ],
+      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_RUNTIME_PASSED",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "blockedBy": [],
+      "note": "Rollback-only integration assertions passed in disposable current-mainline Supabase runtime run 44875784557. Synthetic .test identities and invitation values only; invalid one-, four-part and numeric names do not consume invitations, while valid Arabic/Latin names normalize correctly."
     }
   ],
   "explicitEdges": [
@@ -2463,6 +2500,18 @@
     [
       "security.message-cleanup-http-timeout-forward",
       "test-fixture.message-auto-cleanup"
+    ],
+    [
+      "membership.final-format",
+      "membership.signup-name-validation-forward"
+    ],
+    [
+      "membership.signup-name-validation-forward",
+      "test-fixture.signup-name-guard"
+    ],
+    [
+      "test-fixture.admin-auth-seed",
+      "test-fixture.signup-name-guard"
     ]
   ],
   "blockers": [
@@ -2690,7 +2739,7 @@
     "productionDataAllowed": false,
     "canonicalSqlMutationAllowed": false,
     "costBearingResourcesAllowed": false,
-    "forwardReconciliationMigrations": 9,
+    "forwardReconciliationMigrations": 10,
     "forwardMigrationExecutionAuthorized": false
   },
   "archiveSources": [
@@ -2758,6 +2807,32 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
+    "workflowRunId": 44875784557,
+    "commit": "fad9a10ccf1b29f3089a02528663c255d67d1e8a",
+    "completedAt": "2026-11-21T06:31:09Z",
+    "localOnly": true,
+    "sqlFilesExecuted": 91,
+    "checks": [
+      "All 91 candidate SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
+      "The signup display-name server-side forward migration executed successfully.",
+      "The signup-name-guard rollback-only integration fixture executed successfully after the explicit synthetic auth admin seed dependency.",
+      "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
+      "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
+    ]
+  },
+  "auditEvidence": {
+    "status": "PASSED",
+    "workflow": "Local Supabase SQL manifest audit",
+    "workflowRunId": 44875784572,
+    "commit": "fad9a10ccf1b29f3089a02528663c255d67d1e8a",
+    "completedAt": "2026-11-21T06:29:45Z",
+    "tests": 107,
+    "passed": 107,
+    "failed": 0
+  },
+  "previousRuntimeEvidence": {
+    "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "workflow": "Disposable local Supabase runtime verification",
     "workflowRunId": 44680577210,
     "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
     "completedAt": "2026-11-20T05:24:10Z",
@@ -2771,7 +2846,7 @@
       "The disposable Supabase stack was stopped and destroyed."
     ]
   },
-  "auditEvidence": {
+  "previousAuditEvidence": {
     "status": "PASSED",
     "workflow": "Local Supabase SQL manifest audit",
     "workflowRunId": 44680577133,
@@ -2780,28 +2855,6 @@
     "tests": 107,
     "passed": 107,
     "failed": 0
-  },
-  "previousRuntimeEvidence": {
-    "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-    "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": null,
-    "commit": null,
-    "completedAt": null,
-    "localOnly": true,
-    "sqlFilesExecuted": null,
-    "checks": [
-      "Merged candidate requires a fresh 88-SQL disposable-local replay; separate pre-merge passes do not establish combined-tree validation."
-    ]
-  },
-  "previousAuditEvidence": {
-    "status": "PENDING",
-    "workflow": "Local Supabase SQL manifest audit",
-    "workflowRunId": null,
-    "commit": null,
-    "completedAt": null,
-    "tests": 101,
-    "passed": null,
-    "failed": null
   },
   "previousStorageRuntime": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",

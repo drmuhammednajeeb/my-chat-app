@@ -3,11 +3,11 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 71,
-    "mappedSources": 71,
+    "sqlFiles": 72,
+    "mappedSources": 72,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 20,
+    "testOnlySqlFixtures": 21,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -28,16 +28,17 @@
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 69,
-    "executedTestOnlySqlFixtures": 20,
-    "executedSqlFiles": 89,
+    "executedMappedSources": 70,
+    "executedTestOnlySqlFixtures": 21,
+    "executedSqlFiles": 91,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 69,
-    "candidateTestOnlySqlFixtures": 20,
-    "candidateSqlFiles": 89
+    "candidateMappedSources": 70,
+    "candidateTestOnlySqlFixtures": 21,
+    "candidateSqlFiles": 91
   },
   "execution": {
     "enabled": false,
@@ -669,6 +670,15 @@
       "parityNote": null
     },
     {
+      "nodeId": "membership.signup-name-validation-forward",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261121120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Current-mainline runtime pending; previous PR #147 evidence is not carried forward."
+    },
+    {
       "nodeId": "test-fixture.direct-chat-runtime",
       "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
       "testSources": [
@@ -697,6 +707,15 @@
       ],
       "blockedBy": [],
       "parityNote": "Replaces the caller-visible public.conversations subquery with app_private.can_access_channel_avatar(), preserving public-channel reads while keeping private-channel reads membership-scoped."
+    },
+    {
+      "nodeId": "test-fixture.signup-name-guard",
+      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_RUNTIME_PENDING",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Synthetic rollback-only signup assertions; current-mainline runtime pending."
     },
     {
       "nodeId": "chat.profile-status-combined-content-media",
@@ -1064,6 +1083,24 @@
       "localRuntimeRunId": 44680577210,
       "localRuntimeCommit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
       "localRuntimeCompletedAt": "2026-11-20T05:24:10Z"
+    },
+    {
+      "path": "supabase/migrations/20261121120000_enforce_signup_display_name_server_side.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44873724263,
+      "localRuntimeCommit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
+      "localRuntimeCompletedAt": "2026-11-21T06:05:13Z"
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
+      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
+      "blockedBy": [],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 44873724263,
+      "localRuntimeCommit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
+      "localRuntimeCompletedAt": "2026-11-21T06:05:13Z"
     }
   ],
   "validationEvidence": {
@@ -1204,7 +1241,33 @@
       "tests": 107,
       "passed": 107,
       "failed": 0
+    },
+    "currentMainlineRuntime": {
+      "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "workflow": "Disposable local Supabase runtime verification",
+      "workflowRunId": 44873724263,
+      "commit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
+      "completedAt": "2026-11-21T06:05:13Z",
+      "localOnly": true,
+      "sqlFilesExecuted": 91,
+      "checks": [
+        "All 91 candidate SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
+        "The signup display-name server-side forward migration executed successfully.",
+        "The signup-name-guard rollback-only integration fixture executed successfully after the explicit synthetic auth admin seed dependency.",
+        "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
+        "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
+      ]
+    },
+    "currentMainlineAudit": {
+      "status": "PASSED",
+      "workflow": "Local Supabase SQL manifest audit",
+      "workflowRunId": 44873724159,
+      "commit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
+      "completedAt": "2026-11-21T06:03:44Z",
+      "tests": 107,
+      "passed": 107,
+      "failed": 0
     }
   },
-  "reviewState": "LOCAL_RUNTIME_PASSED_PRODUCTION_MIGRATION_NOT_APPLIED"
+  "reviewState": "CURRENT_MAINLINE_RUNTIME_VALIDATED_PRODUCTION_UNCHANGED"
 }
