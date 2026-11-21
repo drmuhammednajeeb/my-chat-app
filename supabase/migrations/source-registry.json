@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
-  "generatedAt": "2026-11-20",
+  "generatedAt": "2026-11-21",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
     "baseBranch": "main",
@@ -16,10 +16,10 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 71,
+    "canonicalCliMigrationFiles": 72,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 20,
+    "testOnlyFixtureCount": 21,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -40,9 +40,10 @@
       "tests/staging/local-supabase/fixtures/synthetic-auth-admin-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
-      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
+      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
     ],
-    "forwardReconciliationMigrations": 9
+    "forwardReconciliationMigrations": 10
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -1946,19 +1947,36 @@
       "localRuntimeRunId": 44680577210,
       "localRuntimeCommit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
       "localRuntimeCompletedAt": "2026-11-20T05:24:10Z"
+    },
+    {
+      "version": "20261121120000",
+      "name": "enforce_signup_display_name_server_side",
+      "path": "supabase/migrations/20261121120000_enforce_signup_display_name_server_side.sql",
+      "gitBlobSha": "af1a41d0cbfed3ef6992fbf202de14221ce11066",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Enforce two- or three-part Arabic/Latin signup names in the Auth BEFORE INSERT trigger before invitation consumption; normalize whitespace and preserve the accepted display name while retaining the official Forever membership-number verification contract.",
+      "blockedBy": [],
+      "localRuntimeStatus": "SOURCE_REVIEWED_RUNTIME_PENDING",
+      "productionApplied": false,
+      "validationNote": "Previous PR #147 runtime evidence predates the current mainline and is not reused as validation for this migration on the current branch."
     }
   ],
   "forwardMigrationPolicy": {
-    "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval.",
+    "description": "New forward-only SQL after the 62-version production ledger; these files are not part of the historical production migration history and remain unapplied pending independent local runtime validation and approval. The signup-name forward migration is newly added on the current mainline and remains pending disposable-local runtime validation.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 9,
+    "pendingForwardCount": 10,
     "executionAuthorized": false,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
     "localRuntimeRunId": 44680577210,
     "localRuntimeCommit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
     "localRuntimeCompletedAt": "2026-11-20T05:24:10Z",
-    "localRuntimeSqlFilesExecuted": 89
+    "localRuntimeSqlFilesExecuted": 89,
+    "pendingCurrentMainlineValidation": [
+      "supabase/migrations/20261121120000_enforce_signup_display_name_server_side.sql",
+      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+    ]
   },
   "validationEvidence": {
     "runtime": {
@@ -2077,5 +2095,5 @@
       "failed": 0
     }
   },
-  "reviewState": "LOCAL_RUNTIME_PASSED_PRODUCTION_MIGRATION_NOT_APPLIED"
+  "reviewState": "CURRENT_MAINLINE_RUNTIME_VALIDATION_PENDING_PRODUCTION_UNCHANGED"
 }
