@@ -454,7 +454,9 @@ test('ten forward migrations remain outside the production ledger with explicit 
       assert.equal(forward?.localRuntimeRunId, 44040777235);
       assert.equal(forward?.localRuntimeCommit, 'ee5d57ebea388beb5280e01c0af518b5a36c1ddd');
     } else if (name === '20261121120000_enforce_signup_display_name_server_side.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'SOURCE_REVIEWED_RUNTIME_PENDING');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 44873724263);
+      assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(forward?.productionApplied, false);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
@@ -489,8 +491,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 20);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 89);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 21);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 91);
   assert.equal(manifest.sourceCoverage.candidateSqlFiles, 91);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
