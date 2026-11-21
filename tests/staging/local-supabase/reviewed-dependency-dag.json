@@ -1573,7 +1573,8 @@
         "rollback-only Auth trigger integration assertions for invalid and valid signup names"
       ],
       "requires": [
-        "membership.signup-name-validation-forward"
+        "membership.signup-name-validation-forward",
+        "test-fixture.admin-auth-seed"
       ],
       "status": "TEST_ONLY_SIGNUP_NAME_GUARD_RUNTIME_PENDING",
       "testSource": [
@@ -2506,6 +2507,10 @@
     ],
     [
       "membership.signup-name-validation-forward",
+      "test-fixture.signup-name-guard"
+    ],
+    [
+      "test-fixture.admin-auth-seed",
       "test-fixture.signup-name-guard"
     ]
   ],
