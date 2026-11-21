@@ -122,6 +122,8 @@ self.addEventListener("fetch", event => {
   }
 
   const isShellAsset = url.pathname.endsWith("/manifest.json")
+    || url.pathname.endsWith("/deployment-config.js")
+    || url.pathname.endsWith("/modules/runtime-config.js")
     || url.pathname.endsWith("/icons/ultra-chat.svg");
   if (!isShellAsset) return;
 
