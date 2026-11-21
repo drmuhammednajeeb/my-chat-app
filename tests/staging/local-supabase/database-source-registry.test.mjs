@@ -9,24 +9,24 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
 const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
-test('production registry preserves 62 ledger versions and separately maps nine forward migrations', async () => {
+test('production registry preserves 62 ledger versions and separately maps ten forward migrations', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
   assert.equal(registry.schemaVersion, 3);
   assert.equal(registry.registryStatus, 'CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED');
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 62);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 71);
-  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 9);
-  assert.equal(registry.forwardMigrations.length, 9);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 72);
+  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 10);
+  assert.equal(registry.forwardMigrations.length, 10);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 62);
-  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 9);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 10);
   assert.equal(registry.forwardMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
   assert.equal(registry.sourceFiles.length, 62);
-  assert.equal(registry.sourceSets.testOnlyFixtureCount, 20);
-  assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 20);
+  assert.equal(registry.sourceSets.testOnlyFixtureCount, 21);
+  assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 21);
 
   const versions = registry.productionMigrations.map(item => item.version);
   assert.equal(new Set(versions).size, 62);
@@ -86,6 +86,10 @@ test('production registry preserves 62 ledger versions and separately maps nine 
       assert.equal(migration.localRuntimeRunId, 44040777235);
       assert.equal(migration.localRuntimeCommit, 'ee5d57ebea388beb5280e01c0af518b5a36c1ddd');
       assert.deepEqual(migration.blockedBy, []);
+    } else if (migration.version === '20261121120000') {
+      assert.equal(migration.localRuntimeStatus, 'SOURCE_REVIEWED_RUNTIME_PENDING');
+      assert.equal(migration.productionApplied, false);
+      assert.deepEqual(migration.blockedBy, []);
     } else {
       assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(migration.localRuntimeRunId) && migration.localRuntimeRunId > 0);
@@ -123,7 +127,7 @@ test('production registry preserves 62 ledger versions and separately maps nine 
 test('every canonical migration closes every explicit transaction block', async () => {
   const directory = path.join(root, 'supabase/migrations');
   const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
-  assert.equal(files.length, 71);
+  assert.equal(files.length, 72);
   for (const name of files) {
     const source = await readFile(path.join(directory, name), 'utf8');
     const begins = (source.match(/^\s*BEGIN\s*;\s*$/gim) ?? []).length;
