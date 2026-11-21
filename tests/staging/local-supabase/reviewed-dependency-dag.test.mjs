@@ -475,6 +475,12 @@ test('post-forward runtime assertions are ordered after their matching security 
   assert.ok(hardening.requires.includes('security.active-membership-rls-forward'));
   assert.ok(hardening.requires.includes('security.conversation-image-extension-forward'));
   assert.ok(hardening.requires.includes('security.least-privilege-overlay'));
+  const signupGuard = dag.nodes.find(node => node.id === 'membership.signup-name-validation-forward');
+  const signupAssertions = dag.nodes.find(node => node.id === 'test-fixture.signup-name-guard');
+  assert.ok(signupGuard && signupAssertions);
+  assert.ok(signupAssertions.requires.includes(signupGuard.id));
+  assert.ok(signupAssertions.requires.includes('test-fixture.admin-auth-seed'));
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.admin-auth-seed' && to === signupAssertions.id));
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
   assert.ok(dag.explicitEdges.some(([from, to]) => from === direct.id && to === 'test-fixture.direct-chat-concurrency'));
