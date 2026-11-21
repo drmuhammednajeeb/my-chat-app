@@ -36,7 +36,7 @@ test('production registry preserves 62 ledger versions and separately maps ten f
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 71);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 72);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
