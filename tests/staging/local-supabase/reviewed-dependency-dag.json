@@ -1545,6 +1545,42 @@
         "completedAt": "2026-11-20T05:24:10Z",
         "sqlFilesExecuted": 89
       }
+    },
+    {
+      "id": "membership.signup-name-validation-forward",
+      "source": [
+        "supabase/migrations/20261121120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "provides": [
+        "server-side two- or three-part Arabic/Latin display-name validation before invitation consumption"
+      ],
+      "requires": [
+        "membership.final-format"
+      ],
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSource": [
+        "supabase/migrations/20261121120000_enforce_signup_display_name_server_side.sql"
+      ],
+      "blockedBy": [],
+      "note": "Forward-only Auth BEFORE INSERT guard. Source review confirms name validation precedes invitation locking and consumption, preserves the official 971 plus nine digits contract and membership_number_verified metadata. Runtime replay against the current mainline has not yet been performed; no production application is authorized."
+    },
+    {
+      "id": "test-fixture.signup-name-guard",
+      "source": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "provides": [
+        "rollback-only Auth trigger integration assertions for invalid and valid signup names"
+      ],
+      "requires": [
+        "membership.signup-name-validation-forward"
+      ],
+      "status": "TEST_ONLY_SIGNUP_NAME_GUARD_RUNTIME_PENDING",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      ],
+      "blockedBy": [],
+      "note": "Synthetic .test identities and invitation values only; checks invalid one-, four-part and numeric names do not consume invitations, and valid Arabic/Latin names normalize correctly. Runtime replay against current mainline is pending."
     }
   ],
   "explicitEdges": [
@@ -2463,6 +2499,14 @@
     [
       "security.message-cleanup-http-timeout-forward",
       "test-fixture.message-auto-cleanup"
+    ],
+    [
+      "membership.final-format",
+      "membership.signup-name-validation-forward"
+    ],
+    [
+      "membership.signup-name-validation-forward",
+      "test-fixture.signup-name-guard"
     ]
   ],
   "blockers": [
@@ -2690,7 +2734,7 @@
     "productionDataAllowed": false,
     "canonicalSqlMutationAllowed": false,
     "costBearingResourcesAllowed": false,
-    "forwardReconciliationMigrations": 9,
+    "forwardReconciliationMigrations": 10,
     "forwardMigrationExecutionAuthorized": false
   },
   "archiveSources": [
