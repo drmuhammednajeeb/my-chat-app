@@ -43,7 +43,7 @@ test("submit button is a normal full-width control, not a sticky overlay", () =>
 
 test("service worker cache is invalidated for the corrected auth stylesheet", () => {
   assert.match(sw, /const CACHE_VERSION = "v39";/);
-  assert.match(html, /app-version" content="2026\.11\.17\.2"/);
+  assert.match(html, new RegExp('app-version" content="' + release.version.split(".").join("\\\\.") + '"'));
 });
 
 test("signup requires a two- or three-part real name and normalizes whitespace", () => {
