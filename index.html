@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.17.3"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.18.1"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -205,6 +205,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/voice-recorder.js"></script>
 <script src="./modules/audio-player.js"></script>
 <script src="./modules/app-updater.js"></script>
+<script src="./modules/auth-error-messages.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -627,12 +628,14 @@ $('authForm').addEventListener('submit',async e=>{
  if($('authSubmit').disabled)return;
  $('authError').classList.add('hidden');$('authStatus').hidden=true;
  const email=$('email').value.trim(),password=$('password').value;
- const btn=$('authSubmit'),defaultLabel=state.authMode==='signup'?'إنشاء الحساب':'تسجيل الدخول';
+ const attemptMode=state.authMode;
+ const btn=$('authSubmit');
+ $('loginTab').disabled=true;$('signupTab').disabled=true;
  try{
   if(!email)throw new Error('أدخل البريد الإلكتروني.');
   if(!$('email').checkValidity())throw new Error('صيغة البريد الإلكتروني غير صحيحة.');
   if(!password)throw new Error('أدخل كلمة المرور.');
-  if(state.authMode==='signup'){
+  if(attemptMode==='signup'){
    if(password.length<8)throw new Error('كلمة المرور يجب ألا تقل عن 8 أحرف.');
    const username=slug($('username').value),display=$('displayName').value.trim();
    const membershipNumber=$('membershipNumber').value.trim(),membershipInviteCode=$('membershipInviteCode').value.trim();
@@ -656,9 +659,10 @@ $('authForm').addEventListener('submit',async e=>{
   }
  }catch(err){
   console.error('Authentication flow failed:',err);
-  authError(err.message||'تعذر تسجيل الدخول. تحقق من الاتصال وحاول مرة أخرى.');
+  authError(window.BizmindAuthErrors.toUserMessage(err,attemptMode==='signup'));
  }finally{
-  btn.disabled=false;btn.textContent=defaultLabel;
+  $('loginTab').disabled=false;$('signupTab').disabled=false;
+  btn.disabled=false;btn.textContent=state.authMode==='signup'?'إنشاء الحساب':'تسجيل الدخول';
  }
 });
 $('logoutBtn').onclick=async()=>{const {error}=await supabaseClient.auth.signOut({scope:'local'});if(error){toast('تعذر تسجيل الخروج من هذا الجهاز');console.error(error);return}location.reload()};
