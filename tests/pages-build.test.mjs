@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { buildPagesOutput } from "../scripts/build-pages.mjs";
 
 const COMMIT = "a".repeat(40);
@@ -12,10 +13,11 @@ async function createFixture() {
   const root = await mkdtemp(join(tmpdir(), "bizmind-pages-source-"));
   await mkdir(join(root, "modules"), { recursive: true });
   await mkdir(join(root, "docs"), { recursive: true });
-  await writeFile(join(root, "index.html"), '<script src="./deployment-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="./modules/runtime-config.js"></script><script>const SUPABASE_ANON_KEY=window.__BIZMIND_DEPLOYMENT_CONFIG__.supabaseAnonKey;</script>');
+  await writeFile(join(root, "index.html"), '<script src="./deployment-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="./modules/runtime-config.js"></script><script>const SUPABASE_ANON_KEY=window.__BIZMIND_DEPLOYMENT_CONFIG__.supabaseAnonKey; window.supabase.createClient();</script>');
   await writeFile(join(root, "manifest.json"), JSON.stringify({ start_url: "./", scope: "./" }));
   await writeFile(join(root, "service-worker.js"), 'await cache.addAll(["./index.html"]); if (url.pathname.endsWith("/deployment-config.js")) fetch(request, { cache: "no-store" });');
   await writeFile(join(root, "modules/runtime-config.js"), "/* runtime validator */");
+  await writeFile(join(root, "modules/app-updater.js"), 'navigator.serviceWorker.register(new URL("./service-worker.js", doc.baseURI));');
   await writeFile(join(root, "deployment-config.js"), "DO_NOT_COPY_CHECKED_IN_CONFIG");
   await writeFile(join(root, "docs/private-notes.md"), "source only");
   await writeFile(join(root, ".env"), "SHOULD_NOT_SHIP=true");
@@ -86,5 +88,17 @@ test("Pages build rejects missing commit provenance and invalid browser keys", a
     );
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("actual reviewed repository source satisfies the Pages path and runtime contract", async () => {
+  const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  const output = join(repositoryRoot, "dist", "pages-contract-test-" + process.pid);
+  try {
+    const result = await buildPagesOutput({ rootDirectory: repositoryRoot, outputDirectory: output, env: validEnv() });
+    assert.equal(result.deploymentTarget, "pages-production");
+    assert.equal(result.sourceCommit, COMMIT);
+  } finally {
+    await rm(output, { recursive: true, force: true });
   }
 });
