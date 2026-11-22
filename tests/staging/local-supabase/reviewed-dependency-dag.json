@@ -2789,7 +2789,8 @@
       "issue": "The per-user message visibility, conversation pin and secure-delete forward migration is source-reviewed only. It requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user/device checks before production review. Production remains unchanged.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
       "status": "SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED"
     }
