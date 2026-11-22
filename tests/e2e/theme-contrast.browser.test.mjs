@@ -131,8 +131,13 @@ test('browser: conversation-local themes remain isolated from the global app the
         chatElement.setAttribute('data-group-theme', 'emerald');
         const chat = getComputedStyle(chatElement);
         const groupAccent = chat.getPropertyValue('--accent').trim();
-        const groupAccentText = chat.getPropertyValue('--accent-text').trim();
-        const panel = chat.getPropertyValue('--panel').trim();
+        const sample = document.createElement('span');
+        sample.style.color = 'var(--accent-text)';
+        sample.style.backgroundColor = 'var(--panel)';
+        chatElement.append(sample);
+        const sampleStyles = getComputedStyle(sample);
+        const groupAccentText = sampleStyles.color;
+        const panel = sampleStyles.backgroundColor;
         const bubble = getComputedStyle(document.querySelector('#messages .mine .bubble'));
         const meta = getComputedStyle(document.querySelector('#messages .mine .meta'));
         return {
