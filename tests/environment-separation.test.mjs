@@ -59,6 +59,6 @@ test('Vercel static build is guarded by the explicit environment-aware builder',
   assert.match(builder, /BIZMIND_VERCEL_STANDBY_APPROVED/);
   assert.match(builder, /BIZMIND_STANDBY_RELEASE_SHA/);
   assert.match(generator, /BIZMIND_NONPROD_SUPABASE_HOST/);
-  assert.match(config, /"ignoreCommand":\\s*"node scripts\\/ignore-vercel-deployment\\.mjs"/);
+  assert.match(config, /"ignoreCommand":\s*"node scripts\/ignore-vercel-deployment\.mjs"/);
   assert.match(ignore, /BIZMIND_VERCEL_STANDBY_APPROVED/);
 });
