@@ -79,9 +79,9 @@ jobs:
           config = setTomlValue(config, 'db', 'port', basePort + 1);
           config = setTomlValue(config, 'db', 'shadow_port', basePort + 2);
           config = setTomlValue(config, 'db', 'major_version', 17);
-          config = setTomlValue(config, 'inbucket', 'port', basePort + 3);
-          config = setTomlValue(config, 'inbucket', 'smtp_port', basePort + 4);
-          config = setTomlValue(config, 'inbucket', 'pop3_port', basePort + 5);
+          config = setTomlValue(config, 'local_smtp', 'port', basePort + 3);
+          config = setTomlValue(config, 'local_smtp', 'smtp_port', basePort + 4);
+          config = setTomlValue(config, 'local_smtp', 'pop3_port', basePort + 5);
           config = setTomlValue(config, 'analytics', 'port', basePort + 6);
           fs.writeFileSync(file, config);
           fs.appendFileSync(process.env.GITHUB_ENV, 'RUNTIME_BASE_PORT=' + basePort + '\n');
