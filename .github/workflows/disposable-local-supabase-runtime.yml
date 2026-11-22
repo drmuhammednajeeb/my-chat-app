@@ -59,7 +59,11 @@ jobs:
           const basePort = 20000 + (runId % 30000);
           function setTomlValue(source, section, key, value) {
             const header = '[' + section + ']';
-            const sectionStart = source.indexOf(header);
+            let sectionStart = source.indexOf(header);
+            if (sectionStart < 0) {
+              source += '\n' + header + '\n';
+              sectionStart = source.indexOf(header);
+            }
             if (sectionStart < 0) throw new Error('Missing Supabase config section: ' + section);
             const contentStart = sectionStart + header.length;
             const remainder = source.slice(contentStart);
