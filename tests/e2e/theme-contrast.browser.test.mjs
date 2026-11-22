@@ -163,11 +163,12 @@ test('browser: every custom group accent text meets WCAG AA in light and dark th
         const result = await page.evaluate(groupTheme => {
           const chat = document.querySelector('#chat');
           chat.setAttribute('data-group-theme', groupTheme);
-          const styles = getComputedStyle(chat);
-          return {
-            foreground: styles.getPropertyValue('--accent-text').trim(),
-            background: styles.getPropertyValue('--panel').trim()
-          };
+          const sample = document.createElement('span');
+          sample.style.color = 'var(--accent-text)';
+          sample.style.backgroundColor = 'var(--panel)';
+          chat.append(sample);
+          const styles = getComputedStyle(sample);
+          return { foreground: styles.color, background: styles.backgroundColor };
         }, group);
         assert.ok(result.foreground, theme + ' ' + group + ' accent text token is missing');
         assert.ok(contrast(result.foreground, result.background) >= 4.5, theme + ' ' + group + ' accent text contrast');
