@@ -6,6 +6,8 @@ declare
   v_delete_oid oid;
   v_delete_proconfig text[];
   v_delete_security_definer boolean;
+  v_delete_definition text;
+  v_edit_definition text;
 begin
   select c.relrowsecurity into v_hidden_rls
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
@@ -49,6 +51,23 @@ begin
 
   if v_delete_oid is null then
     raise exception 'public.delete_message_secure(uuid) is missing';
+  end if;
+  v_delete_definition := pg_get_functiondef(v_delete_oid);
+  if position('interval ''15 minutes''' in v_delete_definition) = 0
+     or position('v_message.sender_id <> v_user_id' in v_delete_definition) = 0
+     or position('app_private.is_conversation_member' in v_delete_definition) = 0
+     or position('app.allow_message_delete' in v_delete_definition) = 0 then
+    raise exception 'secure delete must enforce the original 15-minute deadline, author, active membership, and trigger guard';
+  end if;
+
+  select pg_get_functiondef(p.oid) into v_edit_definition
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname = 'edit_message_secure'
+    and pg_get_function_identity_arguments(p.oid) = 'p_message_id uuid, p_new_content text, p_expected_revision integer';
+  if v_edit_definition is null
+     or position('interval ''15 minutes''' in v_edit_definition) = 0
+     or position('p_expected_revision' in v_edit_definition) = 0 then
+    raise exception 'secure edit must retain the original 15-minute deadline and revision guard';
   end if;
   if v_delete_security_definer is distinct from true then
     raise exception 'delete_message_secure must remain SECURITY DEFINER';
