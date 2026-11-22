@@ -3,11 +3,11 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 72,
-    "mappedSources": 72,
+    "sqlFiles": 73,
+    "mappedSources": 73,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 21,
+    "testOnlySqlFixtures": 22,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -29,16 +29,17 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
-      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
     "executedMappedSources": 70,
     "executedTestOnlySqlFixtures": 21,
     "executedSqlFiles": 91,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 70,
-    "candidateTestOnlySqlFixtures": 21,
-    "candidateSqlFiles": 91
+    "localRuntimeStatus": "PENDING_NEW_FORWARD_MIGRATION_RUNTIME_VALIDATION",
+    "candidateMappedSources": 71,
+    "candidateTestOnlySqlFixtures": 22,
+    "candidateSqlFiles": 93
   },
   "execution": {
     "enabled": false,
@@ -834,6 +835,18 @@
         "DAG-016"
       ],
       "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
+    },
+    {
+      "nodeId": "chat.message-visibility-pins-and-delete",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "parityNote": "Adds per-user message hiding and conversation pin records with owner/member RLS, and an invoker-only delete RPC enforcing the 15-minute original-created_at deadline. Not runtime validated and not production applied."
     }
   ],
   "duplicateSelection": {
@@ -971,6 +984,16 @@
         "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
       "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-020",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "The new per-user message visibility, conversation pin and secure-delete migration has source coverage but still requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user/device checks. Do not apply to production until those checks and a separate owner approval pass.",
+      "evidence": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "status": "SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED"
     }
   ],
   "requiredSourceRecovery": [
@@ -983,7 +1006,8 @@
   "safetyNotes": [
     "Candidate order is derived from the reviewed acyclic dependency graph.",
     "Test-only SQL copies and the chat-media upload-path hardening fixture are local-only; they are not production migrations.",
-    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved."
+    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved.",
+    "The message visibility/pin/secure-delete forward migration is a candidate only. It has not been replayed locally or applied to production; execution remains disabled."
   ],
   "forwardReconciliationMigrations": [
     {
@@ -1101,6 +1125,22 @@
       "localRuntimeRunId": 44873724263,
       "localRuntimeCommit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
       "localRuntimeCompletedAt": "2026-11-21T06:05:13Z"
+    },
+    {
+      "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
