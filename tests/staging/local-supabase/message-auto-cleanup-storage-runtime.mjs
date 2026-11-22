@@ -16,13 +16,15 @@ if (!rawApi || !dbUrl || !serviceKey) fail("local API URL, database URL, and ser
 let api;
 try { api = new URL(rawApi); } catch { fail("invalid local Supabase URL"); }
 const host = api.hostname.replace(/^\[|\]$/g, "").toLowerCase();
-if (api.protocol !== "http:" || !["127.0.0.1", "localhost", "::1"].includes(host) || api.port !== "54321") {
+const expectedApiPort = process.env.LOCAL_SUPABASE_EXPECTED_API_PORT || "54321";
+if (api.protocol !== "http:" || !["127.0.0.1", "localhost", "::1"].includes(host) || api.port !== expectedApiPort) {
   fail("refusing non-local Storage API target");
 }
 let database;
 try { database = new URL(dbUrl); } catch { fail("invalid local database URL"); }
 const dbHost = database.hostname.replace(/^\[|\]$/g, "").toLowerCase();
-if (!["127.0.0.1", "localhost", "::1"].includes(dbHost) || database.port !== "54322") {
+const expectedDbPort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || "54322";
+if (!["127.0.0.1", "localhost", "::1"].includes(dbHost) || database.port !== expectedDbPort) {
   fail("refusing non-local database target");
 }
 
