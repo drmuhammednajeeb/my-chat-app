@@ -57,7 +57,12 @@ begin
     raise exception 'delete_message_secure must have an empty search_path';
   end if;
   if has_function_privilege('anon', v_delete_oid, 'EXECUTE')
-     or has_function_privilege('public', v_delete_oid, 'EXECUTE') then
+     or exists (
+       select 1
+       from aclexplode(coalesce((select p.proacl from pg_proc p where p.oid = v_delete_oid),
+                                acldefault('f', (select p.proowner from pg_proc p where p.oid = v_delete_oid)))) acl
+       where acl.grantee = 0 and acl.privilege_type = 'EXECUTE'
+     ) then
     raise exception 'delete_message_secure must not be executable by anon or PUBLIC';
   end if;
   if not has_function_privilege('authenticated', v_delete_oid, 'EXECUTE') then
