@@ -68,7 +68,10 @@ test('legacy stylesheets do not redeclare the global palette', () => {
   for (const css of [appCss, overrides]) {
     assert.doesNotMatch(css, /^:root\s*\{[^}]*--(?:bg|panel|text|muted|accent):/m);
     assert.doesNotMatch(css, /^html\.(?:light|dark)\s*\{[^}]*--(?:bg|panel|text|muted|accent):/m);
+    assert.doesNotMatch(css, /html\.(?:light|dark)\s+(?:body|#app|#auth|\.sidebar|\.chat|\.messages|\.bubble|\.conversation|\.composer)/);
   }
+  assert.match(tokens, /^#chat\.chat\[data-chat-theme="light"\]/m);
+  assert.match(tokens, /^#chat\.chat\[data-chat-theme="dark"\]/m);
 });
 
 test('central token stylesheet loads exactly once in the intended cascade order', () => {
