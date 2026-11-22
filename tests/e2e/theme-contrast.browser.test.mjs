@@ -36,6 +36,8 @@ async function themedPage(theme, width, height, chatTheme = theme) {
   await page.addStyleTag({ content: appCss });
   await page.addStyleTag({ content: themeTokens });
   await page.addStyleTag({ content: overrides });
+  // Let component color transitions settle before sampling computed contrast.
+  await page.waitForTimeout(220);
   return page;
 }
 function parseColor(value) {
