@@ -1782,14 +1782,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "The new per-user message visibility, conversation pin, and 15-minute secure-delete forward migration is source-reviewed only. It requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user/device checks. Production remains unchanged.",
+      "severity": "PRODUCTION_APPROVAL_PENDING",
+      "issue": "Disposable-local PostgreSQL replay, RLS catalog assertions, and authenticated two-user runtime probes passed (run 45076185494). This forward migration remains unapplied to production pending independent review and separate explicit owner approval.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED"
+      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
     }
   ],
   "externalSources": [
@@ -1988,9 +1988,11 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false,
-      "validationNote": "Source-only candidate. Requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user integration checks before any production approval."
+      "validationNote": "Disposable local Supabase replay passed on 2026-11-22 (workflow run 45076185494, candidate commit cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0), including SQL assertions and authenticated two-user runtime probes. Production remains unchanged and execution is not authorized.",
+      "localRuntimeRunId": 45076185494,
+      "localRuntimeCommit": "cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0"
     }
   ],
   "forwardMigrationPolicy": {
