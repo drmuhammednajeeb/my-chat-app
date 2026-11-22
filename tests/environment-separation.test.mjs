@@ -46,7 +46,7 @@ test('runtime configuration is never precached and is fetched with no-store sema
   assert.match(worker, /url\.pathname\.endsWith\("\/deployment-config\.js"\)/);
   assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/);
   assert.match(worker, /Cache-Control", "no-store, max-age=0, must-revalidate"/);
-  assert.match(worker, /CACHE_VERSION = "v41"/);
+  assert.match(worker, /CACHE_VERSION = "v42"/);
 });
 test('Vercel static build is guarded by the explicit environment-aware builder', () => {
   const config = read('../vercel.json');
