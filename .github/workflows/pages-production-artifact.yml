@@ -1,0 +1,108 @@
+name: Pages production artifact preparation
+
+on:
+  pull_request:
+    paths:
+      - "scripts/build-pages.mjs"
+      - "scripts/generate-deployment-config.mjs"
+      - "modules/runtime-config.js"
+      - "deployment-config.js"
+      - "index.html"
+      - "manifest.json"
+      - "service-worker.js"
+      - "tests/pages-build.test.mjs"
+      - ".github/workflows/pages-production-artifact.yml"
+  push:
+    branches:
+      - "feat/static-runtime-config-isolation-20261121"
+    paths:
+      - "scripts/build-pages.mjs"
+      - "scripts/generate-deployment-config.mjs"
+      - "modules/runtime-config.js"
+      - "deployment-config.js"
+      - "index.html"
+      - "manifest.json"
+      - "service-worker.js"
+      - "tests/pages-build.test.mjs"
+      - ".github/workflows/pages-production-artifact.yml"
+  workflow_dispatch:
+    inputs:
+      confirm_production_artifact:
+        description: "Type BUILD-PAGES-ARTIFACT to prepare a candidate only (no deployment)."
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-production-artifact-\${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  contract-tests:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate build script syntax
+        run: node --check scripts/build-pages.mjs
+      - name: Run Pages artifact contract tests
+        run: node --test tests/pages-build.test.mjs tests/runtime-config.test.mjs tests/runtime-config-deployment.test.mjs
+
+  production-preflight:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require the reviewed main branch and explicit candidate confirmation
+        env:
+          SELECTED_REF: \${{ github.ref }}
+          CONFIRMATION: \${{ inputs.confirm_production_artifact }}
+        run: |
+          test "$SELECTED_REF" = "refs/heads/main" || {
+            echo "Blocked: production candidates may only be built from main."
+            exit 1
+          }
+          test "$CONFIRMATION" = "BUILD-PAGES-ARTIFACT" || {
+            echo "Blocked: explicit candidate confirmation is required."
+            exit 1
+          }
+
+  build-production-candidate:
+    needs: production-preflight
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: production-pages
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      BIZMIND_DEPLOYMENT_TARGET: pages-production
+      SUPABASE_URL: \${{ vars.PAGES_PRODUCTION_SUPABASE_URL }}
+      SUPABASE_ANON_KEY: \${{ secrets.PAGES_PRODUCTION_SUPABASE_ANON_KEY }}
+      RELEASE_COMMIT_SHA: \${{ github.sha }}
+    steps:
+      - name: Check out exact main commit
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build and verify Pages candidate (no deployment)
+        run: node scripts/build-pages.mjs
+      - name: Upload review-only candidate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-production-candidate-\${{ github.sha }}
+          path: dist/pages-static/
+          if-no-files-found: error
+          retention-days: 7
