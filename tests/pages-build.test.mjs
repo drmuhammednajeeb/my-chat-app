@@ -12,9 +12,9 @@ async function createFixture() {
   const root = await mkdtemp(join(tmpdir(), "bizmind-pages-source-"));
   await mkdir(join(root, "modules"), { recursive: true });
   await mkdir(join(root, "docs"), { recursive: true });
-  await writeFile(join(root, "index.html"), '<script src="./deployment-config.js"></script><script src="./modules/runtime-config.js"></script>');
+  await writeFile(join(root, "index.html"), '<script src="./deployment-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="./modules/runtime-config.js"></script><script>const SUPABASE_ANON_KEY=window.__BIZMIND_DEPLOYMENT_CONFIG__.supabaseAnonKey;</script>');
   await writeFile(join(root, "manifest.json"), JSON.stringify({ start_url: "./", scope: "./" }));
-  await writeFile(join(root, "service-worker.js"), 'if (url.pathname.endsWith("/deployment-config.js")) fetch(request, { cache: "no-store" });');
+  await writeFile(join(root, "service-worker.js"), 'await cache.addAll(["./index.html"]); if (url.pathname.endsWith("/deployment-config.js")) fetch(request, { cache: "no-store" });');
   await writeFile(join(root, "modules/runtime-config.js"), "/* runtime validator */");
   await writeFile(join(root, "deployment-config.js"), "DO_NOT_COPY_CHECKED_IN_CONFIG");
   await writeFile(join(root, "docs/private-notes.md"), "source only");
