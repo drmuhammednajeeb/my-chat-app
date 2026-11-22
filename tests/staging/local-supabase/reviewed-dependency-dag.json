@@ -1598,6 +1598,7 @@
         "core.base",
         "chat.message-edit-hardening",
         "chat.restore-message-edit-guard",
+        "chat.direct-conversation-rpc",
         "membership.final-format",
         "test-fixture.direct-chat-profiles"
       ],
@@ -2559,6 +2560,10 @@
     ],
     [
       "test-fixture.direct-chat-profiles",
+      "chat.message-visibility-pins-and-delete"
+    ],
+    [
+      "chat.direct-conversation-rpc",
       "chat.message-visibility-pins-and-delete"
     ]
   ],
