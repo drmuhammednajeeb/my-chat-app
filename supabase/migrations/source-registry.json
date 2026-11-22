@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "registryStatus": "CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED",
-  "generatedAt": "2026-11-21",
+  "generatedAt": "2026-11-23",
   "repository": {
     "fullName": "drmuhammednajeeb/my-chat-app",
     "baseBranch": "main",
@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 72,
+    "canonicalCliMigrationFiles": 73,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 21,
@@ -43,7 +43,7 @@
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
     ],
-    "forwardReconciliationMigrations": 10
+    "forwardReconciliationMigrations": 11
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -54,7 +54,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
-    "The 71-file CLI stream contains 62 historical production-ledger migrations plus 9 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+    "The 73-file CLI stream contains 62 historical production-ledger migrations plus 11 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
   ],
   "productionMigrations": [
     {
@@ -1963,20 +1963,37 @@
       "localRuntimeRunId": 44873724263,
       "localRuntimeCommit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
       "localRuntimeCompletedAt": "2026-11-21T06:05:13Z"
+    },
+    {
+      "version": "20261123120000",
+      "name": "message_visibility_pins_and_secure_delete",
+      "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+      "gitBlobSha": "7cea7f3a9ed750491d9e1cdad639e0d5d6685451",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "purpose": "Add per-user hidden-message visibility, per-user conversation pins, and a database-clock-enforced 15-minute author-only soft-delete RPC. Direct authenticated updates can no longer bypass the secure deletion path.",
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "validationNote": "Source-only candidate. Requires SQL manifest audit, disposable-local PostgreSQL replay, RLS CRUD probes, and two-user authenticated integration checks before any production approval."
     }
   ],
   "forwardMigrationPolicy": {
     "description": "New forward-only SQL after the 62-version production ledger; these files are not part of historical production migration history and remain unapplied pending independent review and explicit approval. The signup-name forward migration passed current-mainline disposable local runtime validation.",
     "productionLedgerCount": 62,
-    "pendingForwardCount": 10,
+    "pendingForwardCount": 11,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PRIOR_MAINLINE_RUNTIME_PASSED_NEW_FORWARD_MIGRATION_PENDING",
     "productionApplied": false,
     "localRuntimeRunId": 44873724263,
     "localRuntimeCommit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
     "localRuntimeCompletedAt": "2026-11-21T06:05:13Z",
     "localRuntimeSqlFilesExecuted": 91,
-    "pendingCurrentMainlineValidation": []
+    "pendingCurrentMainlineValidation": [
+      "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql"
+    ]
   },
   "validationEvidence": {
     "runtime": {
@@ -2005,7 +2022,9 @@
       "passed": 107,
       "failed": 0
     },
-    "pendingAdditionalSources": [],
+    "pendingAdditionalSources": [
+      "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql"
+    ],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
@@ -2121,5 +2140,5 @@
       "failed": 0
     }
   },
-  "reviewState": "CURRENT_MAINLINE_RUNTIME_VALIDATED_PRODUCTION_UNCHANGED"
+  "reviewState": "NEW_FORWARD_MIGRATION_PENDING_SOURCE_AND_RUNTIME_VALIDATION"
 }
