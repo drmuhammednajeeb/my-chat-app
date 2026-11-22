@@ -33,7 +33,7 @@ test('light and dark themes define the shared semantic token contract', () => {
   const required = [
     '--bg','--panel','--panel2','--panel3','--line','--text','--muted','--bubble','--mine',
     '--surface-hover','--surface-selected','--surface-selected-text','--surface-row-active',
-    '--surface-row-active-text','--bubble-outgoing-text','--button-primary-bg',
+    '--surface-row-active-text','--bubble-outgoing-text','--bubble-meta','--bubble-status-read','--button-primary-bg',
     '--button-primary-text','--menu-bg','--menu-text','--menu-hover','--overlay-scrim','--focus-ring'
   ];
   for (const scope of [':root', 'html.dark']) {
@@ -50,6 +50,8 @@ test('WCAG AA text contrast is at least 4.5:1 in both themes', () => {
       ['--text','--panel','panel copy'],
       ['--muted','--panel2','secondary labels'],
       ['--bubble-outgoing-text','--mine','outgoing message'],
+      ['--bubble-meta','--mine','outgoing message metadata'],
+      ['--bubble-status-read','--mine','outgoing read status'],
       ['--surface-selected-text','--surface-selected','selected list item'],
       ['--button-primary-text','--button-primary-bg','primary button'],
       ['--menu-text','--menu-bg','menu copy'],
