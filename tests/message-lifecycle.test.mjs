@@ -648,7 +648,8 @@ test('typing events and delayed clears from a previous conversation are ignored'
   assert.match(ui.textContent, /حالي/);
   oldTimer?.();
   assert.match(ui.textContent, /حالي/);
-});\n
+});
+
 test('approved chat design keeps message copy/export and forwarding absent while preserving secure 15-minute actions', async () => {
   const tokens = await readFile(new URL('../styles/theme-tokens.css', import.meta.url), 'utf8');
   assert.match(source, /id="chatInfoBtn"/);
