@@ -53,6 +53,21 @@ BEGIN
     RAISE EXCEPTION 'User A cannot read their own pinned conversation';
   END IF;
 
+  -- The local-hide operation is also bounded by the original send time.
+  v_rejected := false;
+  BEGIN
+    INSERT INTO public.user_hidden_messages(user_id,conversation_id,message_id)
+    VALUES(v_user_a,v_conversation,v_expired_message);
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected OR EXISTS (
+    SELECT 1 FROM public.user_hidden_messages
+    WHERE user_id=v_user_a AND message_id=v_expired_message
+  ) THEN
+    RAISE EXCEPTION 'Delete-for-me accepted a message outside the 15-minute window';
+  END IF;
+
   -- B cannot see or remove A's private state, but can still see the underlying message.
   PERFORM set_config('request.jwt.claim.sub',v_user_b::text,true);
   IF EXISTS (SELECT 1 FROM public.user_hidden_messages WHERE message_id=v_fresh_message) THEN
