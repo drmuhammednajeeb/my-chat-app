@@ -127,17 +127,22 @@ test('browser: conversation-local themes remain isolated from the global app the
     const page = await themedPage(item.global, 1024, 768, item.local);
     try {
       const result = await page.evaluate(() => {
-        const chat = getComputedStyle(document.querySelector('#chat'));
+        const chatElement = document.querySelector('#chat');
+        chatElement.setAttribute('data-group-theme', 'emerald');
+        const chat = getComputedStyle(chatElement);
+        const groupAccent = chat.getPropertyValue('--accent').trim();
         const bubble = getComputedStyle(document.querySelector('#messages .mine .bubble'));
         const meta = getComputedStyle(document.querySelector('#messages .mine .meta'));
         return {
           background: chat.backgroundColor,
+          groupAccent,
           bubbleBackground: bubble.backgroundColor,
           bubbleText: bubble.color,
           meta: meta.color
         };
       });
       assert.equal(result.background, item.expectedBg);
+      assert.equal(result.groupAccent, '#0b9b78', item.local + ' group accent must override local palette');
       assert.equal(result.meta, item.expectedMeta);
       assert.ok(contrast(result.bubbleText, result.bubbleBackground) >= 4.5, item.local + ' local outgoing bubble contrast');
       assert.ok(contrast(result.meta, result.bubbleBackground) >= 4.5, item.local + ' local outgoing metadata contrast');
