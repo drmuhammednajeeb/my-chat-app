@@ -299,115 +299,66 @@ html.dark .new-messages-jump{background:var(--surface-selected);color:var(--surf
 @media(max-width:760px){#messages>.message{max-width:90%}}
 
 
-/* High-contrast visual system — accessible, vivid, and consistent in both themes. */
-
-html.light body,html.light #app,html.light #auth,
-html.dark body,html.dark #app,html.dark #auth{
- color:var(--text);
+/* Semantic theme layer: one rule set serves both global themes.
+   Conversation-local #chat[data-chat-theme] overrides remain intentionally scoped. */
+body,#app,#auth,.chat{color:var(--text)}
+.sidebar,.chat-head,.profile,.auth-card,.conversation,.team-dashboard,.team-kpi,.team-panel,
+.notification-item,.chat-search-result,.group-dialog,.profile-dialog,.workspace-dialog,
+#notificationsPanel,.chat-search-panel{
+ color:var(--text);background:var(--panel);border-color:var(--line)
 }
-html.light .sidebar,html.light .chat,html.light .chat-head,
-html.light .profile,html.light .auth-card,html.light .conversation,
-html.light .team-dashboard,html.light .team-kpi,html.light .notification-item,
-html.light .chat-search-result,html.light .group-dialog,
-html.dark .sidebar,html.dark .chat,html.dark .chat-head,
-html.dark .profile,html.dark .auth-card,html.dark .conversation,
-html.dark .team-dashboard,html.dark .team-kpi,html.dark .notification-item,
-html.dark .chat-search-result,html.dark .group-dialog{
- color:var(--text);
- border-color:var(--line);
+.messages,.composer-wrap{background:var(--bg)}
+.brand,.sidebar-foot,.searchbox,.sidebar-tabs,.composer,.field,
+input,textarea,select,.chat-search-top input{
+ background-color:var(--panel2);color:var(--text);border-color:var(--line)
 }
-html.light .messages,html.light .composer-wrap{background:var(--bg)}
-html.dark .messages,html.dark .composer-wrap{background:var(--bg)}
-html.light .brand,html.light .sidebar-foot,html.light .searchbox,
-html.light .sidebar-tabs,html.light .composer,html.light .field,
-html.light input,html.light textarea,html.light select,
-html.dark .brand,html.dark .sidebar-foot,html.dark .searchbox,
-html.dark .sidebar-tabs,html.dark .composer,html.dark .field,
-html.dark input,html.dark textarea,html.dark select{
- background-color:var(--panel2);
- color:var(--text);
- border-color:var(--line);
+input::placeholder,textarea::placeholder,.composer-hint,.conv-last,.conv-time,
+.profile-info small,.brand p,.chat-title small,.notification-copy span,.notification-copy time{
+ color:var(--muted);opacity:1
 }
-html.light input::placeholder,html.light textarea::placeholder,
-html.light .composer-hint,html.light .conv-last,html.light .conv-time,
-html.light .profile-info small,html.light .brand p,
-html.dark input::placeholder,html.dark textarea::placeholder,
-html.dark .composer-hint,html.dark .conv-last,html.dark .conv-time,
-html.dark .profile-info small,html.dark .brand p{
- color:var(--muted);
- opacity:1;
+.brandmark,.avatar,.conv-avatar,.directory-avatar,.team-member-avatar{
+ background:var(--surface-raised);color:var(--text)
 }
-html.light .bubble,html.light .message:not(.mine) .bubble{
- background:var(--bubble);color:var(--text);border:1px solid var(--line);
+.bubble,.message:not(.mine) .bubble{
+ background:var(--bubble);color:var(--text);border:1px solid var(--line)
 }
-html.light .mine .bubble{background:var(--mine);color:var(--bubble-outgoing-text);border:1px solid var(--bubble-outgoing-border)}
-html.dark .bubble,html.dark .message:not(.mine) .bubble{
- background:var(--bubble);color:var(--text);border:1px solid var(--line);
+.mine .bubble{
+ background:var(--mine);color:var(--bubble-outgoing-text);border:1px solid var(--bubble-outgoing-border)
 }
-html.dark .mine .bubble{background:var(--mine);color:var(--bubble-outgoing-text);border:1px solid var(--bubble-outgoing-border)}
-html.light #messages .meta{color:#475467}
-html.light #messages>.message.mine .meta{color:#285b4c}
-html.dark #messages .meta{color:#bdc9d5}
-html.dark #messages>.message.mine .meta{color:#d8fff2}
-html.light #messages .sender,html.light .typing{color:#006b5b}
-html.dark #messages .sender,html.dark .typing{color:#55e5c3}
-html.light .day-divider,html.light .messages-history-loader{
- background:#fff;color:#344054;border:1px solid #cbd5e1;
+#messages .meta{color:var(--muted)}
+#messages>.message.mine .meta{color:var(--bubble-meta)}
+#messages .sender,.typing,.welcome .welcome-icon,.auto-cleanup-notice i{color:var(--text-accent-strong)}
+.day-divider,.messages-history-loader{
+ background:var(--surface-raised);color:var(--text);border:1px solid var(--line)
 }
-html.dark .day-divider,html.dark .messages-history-loader{
- background:#1b2d3a;color:#e5edf5;border:1px solid #526779;
+.conversation:hover,.sidebar-tab:hover,.iconbtn:hover,.notification-item:hover,
+.chat-search-result:hover,.message-menu-option:hover{
+ background:var(--surface-hover);color:var(--text)
 }
-html.light .conversation:hover,html.light .sidebar-tab:hover,
-html.light .iconbtn:hover,html.light .notification-item:hover,
-html.dark .conversation:hover,html.dark .sidebar-tab:hover,
-html.dark .iconbtn:hover,html.dark .notification-item:hover{
- background:var(--panel3);color:var(--text);
+.conversation.active,.sidebar-tab.active,.directory-filter.active,.custom-list-chip.active{
+ background:var(--surface-selected);color:var(--surface-selected-text);border-color:var(--surface-selected-border)
 }
-html.light .conversation.active,html.light .sidebar-tab.active,
-html.light .directory-filter.active{
- background:#d8f3e9;color:#064f43;border-color:#79bda5;
+.iconbtn,.direct-chat-control,.sidebar-tab,.directory-filter,.custom-list-chip{
+ color:var(--text);border-color:var(--line)
 }
-html.dark .conversation.active,html.dark .sidebar-tab.active,
-html.dark .directory-filter.active{
- background:#174b43;color:#f1fffb;border-color:#39a98d;
+.send,.primary,.group-create,.profile-save-btn,.profile-photo-approve,.team-add-member button{
+ background:var(--button-primary-bg);color:var(--button-primary-text)
 }
-html.light .iconbtn,html.light .direct-chat-control,
-html.light .sidebar-tab,html.light .directory-filter,
-html.dark .iconbtn,html.dark .direct-chat-control,
-html.dark .sidebar-tab,html.dark .directory-filter{
- color:var(--text);border-color:var(--line);
+.send:hover,.primary:hover,.group-create:hover,.profile-save-btn:hover,.team-add-member button:hover{
+ background:var(--button-primary-hover)
 }
-html.light .send,html.light .primary,html.light .group-create{
- background:var(--button-primary-bg);color:var(--button-primary-text);
+.new-messages-jump{
+ background:var(--surface-row-active);color:var(--surface-row-active-text);border-color:var(--surface-row-active-border)
 }
-html.dark .send,html.dark .primary,html.dark .group-create{
- background:var(--button-primary-bg);color:var(--button-primary-text);
+.auth-screen{background:var(--bg)}
+.auth-card,.group-dialog,.profile-dialog,.workspace-dialog{
+ background:var(--panel);color:var(--text);border-color:var(--line)
 }
-html.light .send:hover,html.light .primary:hover,html.light .group-create:hover{
- background:var(--button-primary-hover);
-}
-html.dark .send:hover,html.dark .primary:hover,html.dark .group-create:hover{
- background:var(--button-primary-hover);
-}
-html.light .new-messages-jump{
- background:var(--surface-row-active);color:var(--surface-row-active-text);border-color:var(--surface-row-active-border);
-}
-html.dark .new-messages-jump{
- background:#174b43;color:#eafff8;border-color:#39a98d;
-}
-html.light .auth-card,html.dark .auth-card,
-html.light .group-dialog,html.dark .group-dialog,
-html.light .profile-dialog,html.dark .profile-dialog{
- border-color:var(--line);
-}
-html.light :focus-visible,html.dark :focus-visible{
- outline:3px solid var(--accent);outline-offset:2px;
-}
-html.light button:disabled,html.dark button:disabled{opacity:.58}
-html.light .sectionhead,html.light .custom-lists-heading,
-html.light .message-history-entry small,
-html.dark .sectionhead,html.dark .custom-lists-heading,
-html.dark .message-history-entry small{color:var(--muted)}
+.form-row label,.auth-card h2,.auth-card>p,.auth-note{color:var(--text)}
+.alert{background:var(--danger-bg);color:var(--danger-text);border:1px solid var(--danger-border)}
+:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
+button:disabled{opacity:.58}
+.sectionhead,.custom-lists-heading,.message-history-entry small{color:var(--muted)}
 /* Stronger hierarchy: readable body copy and unmistakable primary labels. */
 html body{font-weight:500}
 #sidebar .brand h1,#sidebar .profile-info strong,
