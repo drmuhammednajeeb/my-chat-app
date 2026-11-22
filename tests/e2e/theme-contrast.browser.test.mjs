@@ -69,7 +69,7 @@ async function inspect(page) {
       const background = ownBackground === 'rgba(0, 0, 0, 0)' || ownBackground === 'transparent'
         ? getComputedStyle(element.closest('.bubble') || element).backgroundColor
         : ownBackground;
-      return { color: css.color, background };
+      return { color: css.color, background, backgroundImage: css.backgroundImage, surfaceToken: css.getPropertyValue('--surface-row-active') };
     };
     return {
       received: style('#messages>.message:not(.mine) .bubble'),
