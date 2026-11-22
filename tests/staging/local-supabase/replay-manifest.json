@@ -458,6 +458,18 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.message-visibility-pins-and-delete",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "parityNote": "Adds per-user message hiding and conversation pin records with owner/member RLS, and an invoker-only delete RPC enforcing the 15-minute original-created_at deadline. Not runtime validated and not production applied."
+    },
+    {
       "nodeId": "test-fixture.local-pg-cron-runtime",
       "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED",
       "testSources": [
@@ -835,18 +847,6 @@
         "DAG-016"
       ],
       "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
-    },
-    {
-      "nodeId": "chat.message-visibility-pins-and-delete",
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
-      "testSources": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
-      ],
-      "blockedBy": [
-        "DAG-020"
-      ],
-      "parityNote": "Adds per-user message hiding and conversation pin records with owner/member RLS, and an invoker-only delete RPC enforcing the 15-minute original-created_at deadline. Not runtime validated and not production applied."
     }
   ],
   "duplicateSelection": {
