@@ -22,7 +22,7 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
     'app_private.is_conversation_member',
     'LOCAL_SYNTHETIC_AUTH_USERS_JSON',
     "endpoint.protocol !== 'http:'",
-    "endpoint.port !== '54321'",
+    "endpoint.port !== expectedApiPort",
     "'127.0.0.1'",
     "'localhost'",
     "'::1'",
