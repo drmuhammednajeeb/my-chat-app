@@ -31,7 +31,7 @@ test("Vercel Preview requires an explicitly allowlisted non-production Supabase 
     ...previewEnv,
     SUPABASE_URL: "https://lvkeohpuucuklagvwpnq.supabase.co",
     BIZMIND_NONPROD_SUPABASE_HOST: "lvkeohpuucuklagvwpnq.supabase.co"
-  }), /non-production allowlist/);
+  }), /non-production Supabase allowlist/);
 });
 
 test("Vercel Production is blocked without explicit standby approval and exact commit pinning", () => {

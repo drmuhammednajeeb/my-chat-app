@@ -1,4 +1,4 @@
-import { cp, mkdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildDeploymentConfig, renderDeploymentConfig } from "./generate-deployment-config.mjs";
@@ -48,10 +48,15 @@ export async function buildVercelOutput(options = {}) {
   await rm(outputDirectory, { recursive: true, force: true });
   await mkdir(dirname(outputDirectory), { recursive: true });
   await mkdir(outputDirectory, { recursive: true });
-  await cp(rootDirectory, outputDirectory, {
-    recursive: true,
-    filter: source => shouldCopyStaticFile(source, rootDirectory)
-  });
+  const entries = await readdir(rootDirectory, { withFileTypes: true });
+  for (const entry of entries) {
+    const source = join(rootDirectory, entry.name);
+    if (!shouldCopyStaticFile(source, rootDirectory)) continue;
+    await cp(source, join(outputDirectory, entry.name), {
+      recursive: true,
+      filter: item => shouldCopyStaticFile(item, rootDirectory)
+    });
+  }
   await writeFile(join(outputDirectory, "deployment-config.js"), renderDeploymentConfig(config), {
     encoding: "utf8",
     mode: 0o644
