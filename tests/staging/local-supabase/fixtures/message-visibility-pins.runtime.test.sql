@@ -195,18 +195,26 @@ BEGIN
     RAISE EXCEPTION 'Secure edit accepted a message outside the 15-minute window';
   END IF;
 
-  -- A's hidden state remains private and B's independent pin remains intact.
+  -- Each participant can still read only their own hidden/pin state after deletion.
   IF NOT EXISTS (
     SELECT 1 FROM public.user_hidden_messages
     WHERE user_id=v_user_a AND message_id=v_fresh_message
   ) OR NOT EXISTS (
     SELECT 1 FROM public.user_conversation_pins
     WHERE user_id=v_user_a AND conversation_id=v_conversation
+  ) THEN
+    RAISE EXCEPTION 'User A hidden/pin state changed unexpectedly after deletion';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub',v_user_b::text,true);
+  IF NOT EXISTS (
+    SELECT 1 FROM public.user_hidden_messages
+    WHERE user_id=v_user_b AND message_id=v_fresh_message
   ) OR NOT EXISTS (
     SELECT 1 FROM public.user_conversation_pins
     WHERE user_id=v_user_b AND conversation_id=v_conversation
   ) THEN
-    RAISE EXCEPTION 'Per-user hidden/pin state changed unexpectedly after deletion';
+    RAISE EXCEPTION 'User B hidden/pin state changed unexpectedly after deletion';
   END IF;
 END;
 $message_visibility_runtime$;
