@@ -301,6 +301,9 @@ input::placeholder,textarea::placeholder,.composer-hint,.conv-last,.conv-time,
 .chat-search-result:hover,.message-menu-option:hover{
  background:var(--surface-hover);color:var(--text)
 }
+#sidebar .conversation.active{
+ background:var(--surface-row-active);color:var(--surface-row-active-text);border-color:var(--surface-row-active-border)
+}
 .conversation.active,.sidebar-tab.active,.directory-filter.active,.custom-list-chip.active{
  background:var(--surface-selected);color:var(--surface-selected-text);border-color:var(--surface-selected-border)
 }
