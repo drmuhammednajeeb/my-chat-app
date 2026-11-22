@@ -2706,7 +2706,7 @@ function updateMessageSelectionToolbar(){const count=state.selectedMessageIds.si
 async function starSelectedMessages(){const ids=[...state.selectedMessageIds];let succeeded=0;for(const id of ids){if(await toggleMessageStar(id,true))succeeded++}toast('تم تمييز '+succeeded+' من '+ids.length+' رسالة');setMessageSelectionMode(false)}
 async function deleteSelectedForMe(){
  const selected=[...state.selectedMessageIds].map(id=>state.messages.find(message=>message.id===id)).filter(canDeleteMessageForMe);let count=0;
- if(!selected.length){toast('لا توجد رسائل محددة ضمن مهلة الحذف البالغة 15 دقيقة');return}
+ if(!selected.length){toast('لا توجد رسائل محددة ضمن مهلة الحذف البالغة 15 دقيقة');setMessageSelectionMode(false);return}
  for(const message of selected){if(await hideMessageForMe(message))count++}
  toast('تم إخفاء '+count+' من '+selected.length+' رسالة من حسابك');setMessageSelectionMode(false);
 }
