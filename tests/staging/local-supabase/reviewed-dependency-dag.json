@@ -2791,7 +2791,7 @@
     {
       "id": "DAG-020",
       "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "The new per-user message visibility, conversation pin and both 15-minute delete modes passed disposable-local PostgreSQL replay and authenticated two-user RLS/runtime probes. Production application remains separately gated by explicit owner approval.",
+      "issue": "The SQL migration and catalog assertions have passed disposable-local replay, but the authenticated two-user fixture for per-user isolation, 15-minute delete-for-me, author-only global delete, direct-update bypass denial, and expired edit/delete rejection is still pending. Production remains unchanged.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
