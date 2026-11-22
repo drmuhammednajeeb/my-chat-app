@@ -69,7 +69,7 @@ async function inspect(page) {
       const background = ownBackground === 'rgba(0, 0, 0, 0)' || ownBackground === 'transparent'
         ? getComputedStyle(element.closest('.bubble') || element).backgroundColor
         : ownBackground;
-      return { color: css.color, background, backgroundImage: css.backgroundImage, surfaceToken: css.getPropertyValue('--surface-row-active') };
+      return { color: css.color, background, backgroundImage: css.backgroundImage, surfaceToken: css.getPropertyValue('--surface-row-active'), matchedSidebarActive: element.matches('#sidebar .conversation.active') };
     };
     return {
       received: style('#messages>.message:not(.mine) .bubble'),
@@ -101,7 +101,7 @@ test('browser: light and dark themes preserve WCAG AA contrast at desktop and mo
           ['messageMenu','message menu'], ['divider','day divider']
         ]) {
           const ratio = contrast(result[key].color, result[key].background);
-          assert.ok(ratio >= 4.5, theme + ' ' + viewport.width + 'px ' + label + ': ' + ratio.toFixed(2) + ':1; fg=' + result[key].color + '; bg=' + result[key].background);
+          assert.ok(ratio >= 4.5, theme + ' ' + viewport.width + 'px ' + label + ': ' + ratio.toFixed(2) + ':1; fg=' + result[key].color + '; bg=' + result[key].background + '; image=' + result[key].backgroundImage + '; surface=' + result[key].surfaceToken + '; matched=' + result[key].matchedSidebarActive);
         }
         assert.ok(result.viewport.documentWidth <= result.viewport.width,
           theme + ' ' + viewport.width + 'px layout overflows to ' + result.viewport.documentWidth + 'px');
