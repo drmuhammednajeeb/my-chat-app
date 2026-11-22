@@ -16,11 +16,11 @@ test('production registry preserves 62 ledger versions and separately maps ten f
   assert.equal(registry.productionDatabase.migrationCount, 62);
   assert.equal(registry.productionMigrations.length, 62);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 62);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 72);
-  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 10);
-  assert.equal(registry.forwardMigrations.length, 10);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 73);
+  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 11);
+  assert.equal(registry.forwardMigrations.length, 11);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 62);
-  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 10);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 11);
   assert.equal(registry.forwardMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
@@ -36,7 +36,7 @@ test('production registry preserves 62 ledger versions and separately maps ten f
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 72);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 73);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
