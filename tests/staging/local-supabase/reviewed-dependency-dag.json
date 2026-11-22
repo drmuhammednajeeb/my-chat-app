@@ -1598,9 +1598,8 @@
         "core.base",
         "chat.message-edit-hardening",
         "chat.restore-message-edit-guard",
-        "chat.direct-conversation-rpc",
         "membership.final-format",
-        "test-fixture.direct-chat-runtime"
+        "test-fixture.direct-chat-profiles"
       ],
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSource": [
@@ -2555,15 +2554,11 @@
       "chat.message-visibility-pins-and-delete"
     ],
     [
-      "chat.direct-conversation-rpc",
-      "chat.message-visibility-pins-and-delete"
-    ],
-    [
       "membership.final-format",
       "chat.message-visibility-pins-and-delete"
     ],
     [
-      "test-fixture.direct-chat-runtime",
+      "test-fixture.direct-chat-profiles",
       "chat.message-visibility-pins-and-delete"
     ]
   ],
