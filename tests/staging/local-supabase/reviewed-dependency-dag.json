@@ -1603,7 +1603,7 @@
         "test-fixture.admin-assertion",
         "test-fixture.direct-chat-profiles"
       ],
-      "status": "FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING",
+      "status": "SECURE_DELETE_ACTIVE_MEMBERSHIP_LOCKING_PENDING_RUNTIME",
       "testSource": [
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
@@ -1611,12 +1611,7 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "note": "Per-user message hiding and conversation pin state, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original message creation. Includes SQL assertions and authenticated two-user isolation, unauthorized-delete, direct-update bypass, and expired edit/delete runtime probes.",
-      "runtimeEvidence": {
-        "workflowRunId": 45076185494,
-        "commit": "cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0",
-        "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
-      }
+      "note": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion."
     }
   ],
   "explicitEdges": [
@@ -2795,14 +2790,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "PRODUCTION_APPROVAL_PENDING",
-      "issue": "Disposable-local PostgreSQL replay, RLS catalog assertions, and authenticated two-user runtime probes passed (run 45076185494). The forward migration remains unapplied to production pending independent review and separate explicit owner approval.",
+      "severity": "LOCAL_RUNTIME_VALIDATION_PENDING",
+      "issue": "Secure-delete active-membership row-lock hardening and the expanded authenticated runtime probes are awaiting a fresh disposable-local Supabase replay. Production remains unchanged and forward migration execution is not authorized.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
+      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "duplicateProvenance": [],
