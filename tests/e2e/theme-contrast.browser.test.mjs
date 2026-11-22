@@ -155,6 +155,27 @@ test('browser: conversation-local themes remain isolated from the global app the
   }
 });
 
+test('browser: every custom group accent text meets WCAG AA in light and dark themes', async () => {
+  for (const theme of ['light', 'dark']) {
+    const page = await themedPage(theme, 1024, 768, theme);
+    try {
+      for (const group of ['emerald', 'blue', 'violet', 'amber', 'rose']) {
+        const result = await page.evaluate(groupTheme => {
+          const chat = document.querySelector('#chat');
+          chat.setAttribute('data-group-theme', groupTheme);
+          const styles = getComputedStyle(chat);
+          return {
+            foreground: styles.getPropertyValue('--accent-text').trim(),
+            background: styles.getPropertyValue('--panel').trim()
+          };
+        }, group);
+        assert.ok(result.foreground, theme + ' ' + group + ' accent text token is missing');
+        assert.ok(contrast(result.foreground, result.background) >= 4.5, theme + ' ' + group + ' accent text contrast');
+      }
+    } finally { await page.close(); }
+  }
+});
+
 test('browser: keyboard focus remains visible and reduced motion removes transitions', async () => {
   const page = await themedPage('light', 390, 844);
   try {
