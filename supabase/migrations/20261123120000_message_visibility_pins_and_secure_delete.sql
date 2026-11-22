@@ -34,7 +34,7 @@ create policy "Users hide messages for themselves"
       select 1
       from public.chat_messages m
       where m.id = message_id
-        and m.conversation_id = conversation_id
+        and m.conversation_id = user_hidden_messages.conversation_id
     )
   );
 
