@@ -16,6 +16,8 @@ function fail(message) {
 }
 let syntheticAuthPassword = null;
 let syntheticAuthIds = null;
+const expectedApiPort = process.env.LOCAL_SUPABASE_EXPECTED_API_PORT || '54321';
+const expectedDbPort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
 
 async function provisionSyntheticDirectChatAuthUsers() {
   const rawApi = process.env.LOCAL_SUPABASE_URL;
@@ -24,7 +26,6 @@ async function provisionSyntheticDirectChatAuthUsers() {
   let api;
   try { api = new URL(rawApi); } catch { fail('invalid LOCAL_SUPABASE_URL for synthetic Auth provisioning'); }
   const apiHost = api.hostname.replace(/^\[|\]$/g, '').toLowerCase();
-  const expectedApiPort = process.env.LOCAL_SUPABASE_EXPECTED_API_PORT || '54321';
   if (api.protocol !== 'http:'
     || !['127.0.0.1', 'localhost', '::1'].includes(apiHost)
     || api.port !== expectedApiPort
@@ -109,7 +110,6 @@ if (!raw) fail('LOCAL_SUPABASE_DB_URL is required');
 let url;
 try { url = new URL(raw); } catch { fail('invalid LOCAL_SUPABASE_DB_URL'); }
 const host = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
-const expectedDbPort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
 if (!['postgres:', 'postgresql:'].includes(url.protocol)
   || !['127.0.0.1', 'localhost', '::1'].includes(host)
   || url.port !== expectedDbPort
