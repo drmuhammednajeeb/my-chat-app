@@ -50,8 +50,8 @@ begin
   if v_delete_oid is null then
     raise exception 'public.delete_message_secure(uuid) is missing';
   end if;
-  if v_delete_security_definer is distinct from false then
-    raise exception 'delete_message_secure must remain SECURITY INVOKER';
+  if v_delete_security_definer is distinct from true then
+    raise exception 'delete_message_secure must remain SECURITY DEFINER';
   end if;
   if not coalesce(v_delete_proconfig @> array['search_path=""'], false) then
     raise exception 'delete_message_secure must have an empty search_path';
