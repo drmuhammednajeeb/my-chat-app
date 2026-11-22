@@ -462,7 +462,9 @@ test('eleven forward migrations remain outside the production ledger with explic
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(forward?.productionApplied, false);
     } else if (name === '20261123120000_message_visibility_pins_and_secure_delete.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 45076185494);
+      assert.equal(forward?.localRuntimeCommit, 'cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0');
       assert.equal(forward?.productionApplied, false);
       assert.deepEqual(forward?.blockedBy, ['DAG-020']);
     } else {
@@ -498,8 +500,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 21);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 91);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 23);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 94);
   assert.equal(manifest.sourceCoverage.candidateSqlFiles, 94);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
@@ -747,7 +749,9 @@ test('eleven forward migrations remain outside the production ledger and record 
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(forward?.productionApplied, false);
     } else if (name === '20261123120000_message_visibility_pins_and_secure_delete.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.localRuntimeRunId, 45076185494);
+      assert.equal(forward?.localRuntimeCommit, 'cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0');
       assert.equal(forward?.productionApplied, false);
       assert.deepEqual(forward?.blockedBy, ['DAG-020']);
     } else {
@@ -775,8 +779,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 21);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 91);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 23);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 94);
   assert.equal(manifest.sourceCoverage.candidateSqlFiles, 94);
 });
 
@@ -792,7 +796,7 @@ test('message visibility, conversation pins and secure deletion remain a gated f
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const node = dag.nodes.find(item => item.id === 'chat.message-visibility-pins-and-delete');
   assert.ok(node);
-  assert.equal(node.status, 'FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING');
+  assert.equal(node.status, 'FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING');
   assert.deepEqual(node.requires, ['core.base', 'chat.message-edit-hardening', 'chat.restore-message-edit-guard', 'membership.final-format', 'test-fixture.admin-profile', 'test-fixture.admin-assertion', 'test-fixture.direct-chat-profiles']);
   assert.ok(node.provides.includes('public.user_hidden_messages'));
   assert.ok(node.provides.includes('public.user_conversation_pins'));
@@ -806,7 +810,7 @@ test('message visibility, conversation pins and secure deletion remain a gated f
   for (const source of node.source) await access(path.join(root, source));
   for (const source of node.testSource) await access(path.join(root, source));
   const blocker = dag.blockers.find(item => item.id === 'DAG-020');
-  assert.equal(blocker.status, 'SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED');
+  assert.equal(blocker.status, 'LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED');
   assert.ok(blocker.evidence.includes(node.source[0]));
   assert.equal(dag.executionAuthorized, false);
 });
