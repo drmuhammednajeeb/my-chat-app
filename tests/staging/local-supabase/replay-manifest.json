@@ -681,19 +681,6 @@
       "parityNote": "Current-mainline runtime pending; previous PR #147 evidence is not carried forward."
     },
     {
-      "nodeId": "chat.message-visibility-pins-and-delete",
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
-      "testSources": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
-      ],
-      "blockedBy": [
-        "DAG-020"
-      ],
-      "parityNote": "Adds per-user hidden-message and conversation-pin records with RLS, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original created_at. SQL assertions and authenticated two-user runtime probes verify isolation, unauthorized deletion, direct-update bypass denial, and expired edit/delete rejection."
-    },
-    {
       "nodeId": "test-fixture.direct-chat-runtime",
       "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
       "testSources": [
@@ -731,6 +718,19 @@
       ],
       "blockedBy": [],
       "parityNote": "Synthetic rollback-only signup assertions; current-mainline runtime pending."
+    },
+    {
+      "nodeId": "chat.message-visibility-pins-and-delete",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+      ],
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "parityNote": "Adds per-user hidden-message and conversation-pin records with RLS, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original created_at. SQL assertions and authenticated two-user runtime probes verify isolation, unauthorized deletion, direct-update bypass denial, and expired edit/delete rejection."
     },
     {
       "nodeId": "chat.profile-status-combined-content-media",
