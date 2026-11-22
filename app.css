@@ -1,6 +1,6 @@
 
 html.auth-booting #auth,html.auth-booting #app{visibility:hidden!important}
-:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--panel2:#17243a;--panel3:#1d2d46;--line:#263852;--text:#edf3fb;--muted:#8da0b8;--accent:#45c5b0;--accent2:#249b8d;--danger:#ef7777;--bubble:#1b2a40;--mine:#146e68;--shadow:0 22px 70px #02081770}
+
 *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI","Tajawal",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
 .app{height:100dvh;width:100%;display:grid;grid-template-columns:340px minmax(0,1fr);max-width:1440px;margin:auto;background:var(--panel);overflow:hidden}
 .sidebar{border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0;background:#0e1929}
@@ -33,23 +33,8 @@ html.auth-booting #auth,html.auth-booting #app{visibility:hidden!important}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
 /* BizmindMakers Chat Pro — WhatsApp-inspired interface refresh */
-:root{
- color-scheme:light;
- --bg:#efeae2;
- --panel:#ffffff;
- --panel2:#f0f2f5;
- --panel3:#e7f5ee;
- --line:#e8e9eb;
- --text:#111b21;
- --muted:#667781;
- --accent:#00a884;
- --accent2:#008f72;
- --danger:#d9534f;
- --bubble:#ffffff;
- --mine:#d9fdd3;
- --shadow:0 2px 12px #0b141a12;
-}
-html,body{background:#d1d7db;color:var(--text)}
+
+html,body{background:var(--bg);color:var(--text)}
 .app{max-width:none;grid-template-columns: minmax(310px,380px) minmax(0,1fr);background:#fff;box-shadow:none}
 .sidebar{background:#fff;border-left:1px solid #e9edef}
 .brand{min-height:72px;padding:14px 20px;background:#f0f2f5;gap:11px}
@@ -179,7 +164,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 /* Runtime diagnostics panel */
 #diagnosticsPanel{position:absolute;z-index:9;top:72px;right:14px;width:min(430px,calc(100% - 28px));max-height:calc(100dvh - 190px);overflow:auto;background:#fff;color:#15232b;border:1px solid #dce3e6;border-radius:14px;box-shadow:0 12px 40px #0b141a30;padding:14px;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;direction:ltr;text-align:left}#diagnosticsPanel[hidden]{display:none!important}#diagnosticsPanel h3{font:700 14px Tajawal,sans-serif;margin:0 0 8px;direction:rtl;text-align:right}#diagnosticsPanel pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;color:#243b46}#debugBtn{font-size:16px}
 /* BizmindMakers Chat Pro — UI polish pass */
-:root{--chat-focus:#00a884;--chat-divider:#e9edef}
+
 *{scrollbar-width:thin;scrollbar-color:#c7d0d5 transparent}
 *::-webkit-scrollbar{width:7px;height:7px}
 *::-webkit-scrollbar-thumb{background:#c7d0d5;border-radius:20px}
@@ -329,8 +314,8 @@ html,body{height:100%;min-height:100%;overflow:hidden}
 
 
 /* Global light theme: all application surfaces inherit the root palette. */
-html.light{color-scheme:light;--bg:#f3f6fa;--panel:#ffffff;--panel2:#f7f9fc;--panel3:#edf2f8;--line:#dce4ee;--text:#182437;--muted:#64748b;--accent:#148b7b;--accent2:#0f766e;--danger:#dc5555;--bubble:#ffffff;--mine:#14776d;--shadow:0 18px 55px #26364b18}
-html.dark{color-scheme:dark}
+
+
 html.light body,html.light #app,html.light #auth{background:var(--bg);color:var(--text)}
 html.light .sidebar,html.light .chat,html.light .chat-head,html.light .composer-wrap,html.light .profile,html.light .auth-card,html.light .group-dialog,html.light .notification-panel,html.light .team-panel,html.light .chat-search-panel{background:var(--panel);color:var(--text);border-color:var(--line)}
 html.light .brand,html.light .sidebar-foot,html.light .sidebar-tabs,html.light .searchbox,html.light .directory-filters,html.light .composer,html.light .field,html.light input,html.light textarea,html.light select{background-color:var(--panel2);color:var(--text);border-color:var(--line)}
@@ -399,7 +384,7 @@ html.light .notification-empty,html.light .team-empty{color:var(--muted)}
 .workspace-modal{position:fixed;inset:0;z-index:140;display:none;place-items:center;padding:12px;background:#07111dcc}.workspace-modal.open{display:grid}.workspace-dialog{width:min(100%,700px);max-height:94dvh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;direction:rtl}.workspace-head{position:sticky;top:0;display:flex;justify-content:space-between;padding:14px;background:var(--panel);border-bottom:1px solid var(--line)}.workspace-head h2{font-size:17px;margin:0}.workspace-head small{font-size:10px;color:var(--muted)}.workspace-head button,.workspace-dialog button{border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);padding:7px 10px;font-size:11px}.workspace-body{padding:12px;display:grid;gap:10px}.workspace-body section{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}.workspace-body h3{font-size:13px;margin:0 0 8px}.workspace-body textarea,.workspace-body input,.workspace-body select{width:100%;padding:8px;margin:4px 0;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font:inherit;font-size:12px}.workspace-body textarea{min-height:70px}.workspace-actions,.workspace-grid{display:flex;gap:7px;flex-wrap:wrap}.workspace-grid label{flex:1;min-width:130px;font-size:10px;color:var(--muted)}.workspace-body button.active{border-color:var(--accent);color:var(--accent)}.workspace-body p{font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere}.workspace-body section>div:not(.workspace-actions){display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.private-reply-quote{border-inline-start:3px solid #16a085}
 
 /* BizmindMakers responsive RTL, layering and modal-spacing correction */
-:root{--chat-font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
 html,body,button,input,textarea,select{font-family:var(--chat-font)}
 #app,#sidebar,.sidebar,.sidebar-tabs,.sidebar-tab,.sectionhead,.directory-list,.conversation-list{min-width:0}
 html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
