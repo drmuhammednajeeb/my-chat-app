@@ -1778,6 +1778,16 @@
         "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
       "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-020",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "The new per-user message visibility, conversation pin, and 15-minute secure-delete forward migration is source-reviewed only. It requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user/device checks. Production remains unchanged.",
+      "evidence": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "status": "SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED"
     }
   ],
   "externalSources": [
