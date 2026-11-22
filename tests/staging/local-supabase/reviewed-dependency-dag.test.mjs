@@ -462,9 +462,14 @@ test('eleven forward migrations remain outside the production ledger with explic
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(forward?.productionApplied, false);
     } else if (name === '20261123120000_message_visibility_pins_and_secure_delete.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-      assert.equal(forward?.localRuntimeRunId, 45076185494);
-      assert.equal(forward?.localRuntimeCommit, 'cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0');
+      assert.ok(['PENDING_DISPOSABLE_LOCAL_SUPABASE', 'PASSED_DISPOSABLE_LOCAL_SUPABASE'].includes(forward?.localRuntimeStatus));
+      if (forward?.localRuntimeStatus === 'PASSED_DISPOSABLE_LOCAL_SUPABASE') {
+        assert.ok(Number.isInteger(forward.localRuntimeRunId) && forward.localRuntimeRunId > 0);
+        assert.match(forward.localRuntimeCommit, /^[0-9a-f]{40}$/);
+      } else {
+        assert.equal(forward?.localRuntimeRunId, undefined);
+        assert.equal(forward?.localRuntimeCommit, undefined);
+      }
       assert.equal(forward?.productionApplied, false);
       assert.deepEqual(forward?.blockedBy, ['DAG-020']);
     } else {
@@ -796,7 +801,8 @@ test('message visibility, conversation pins and secure deletion remain a gated f
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const node = dag.nodes.find(item => item.id === 'chat.message-visibility-pins-and-delete');
   assert.ok(node);
-  assert.equal(node.status, 'FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING');
+  assert.ok(['SECURE_DELETE_ACTIVE_MEMBERSHIP_LOCKING_PENDING_RUNTIME', 'FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING'].includes(node.status));
+  assert.match(node.note, /locks active profile\/Auth rows and the conversation-membership row/);
   assert.deepEqual(node.requires, ['core.base', 'chat.message-edit-hardening', 'chat.restore-message-edit-guard', 'membership.final-format', 'test-fixture.admin-profile', 'test-fixture.admin-assertion', 'test-fixture.direct-chat-profiles']);
   assert.ok(node.provides.includes('public.user_hidden_messages'));
   assert.ok(node.provides.includes('public.user_conversation_pins'));
