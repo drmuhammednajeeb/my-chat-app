@@ -1888,9 +1888,13 @@ function subscribeConversation(){
  }).subscribe();
 }
 async function editMessage(m){beginEditMessage(m)}
+function canDeleteMessageForMe(m){
+ if(!m||m.deleted_at)return false;
+ const createdAt=Date.parse(m.created_at);return Number.isFinite(createdAt)&&Date.now()<=createdAt+15*60*1000;
+}
 function canDeleteMessageForEveryone(m){
  if(!m||m.deleted_at||m.sender_id!==state.user?.id)return false;
- const createdAt=Date.parse(m.created_at);return Number.isFinite(createdAt)&&Date.now()<=createdAt+15*60*1000;
+ return canDeleteMessageForMe(m);
 }
 async function loadHiddenMessageIds(conversationId){
  state.hiddenMessageIds=new Set();
@@ -1900,6 +1904,7 @@ async function loadHiddenMessageIds(conversationId){
  state.hiddenMessageIds=new Set((data||[]).map(row=>row.message_id));return true;
 }
 async function hideMessageForMe(message){
+ if(!canDeleteMessageForMe(message)){toast('حذف الرسالة من حسابك متاح خلال أول 15 دقيقة من إرسالها');return false}
  if(!message?.id||!message.conversation_id||!state.user?.id)return false;
  try{
   const {error}=await supabaseClient.from('user_hidden_messages').insert({user_id:state.user.id,conversation_id:message.conversation_id,message_id:message.id});
@@ -1926,7 +1931,8 @@ function deleteMessage(message){
  const content=document.createElement('div');content.className='message-delete-choice';
  const note=document.createElement('p');note.textContent='اختر مكان حذف الرسالة. حذفها لديك لا يؤثر على بقية المشاركين.';content.append(note);
  const actions=document.createElement('div');actions.className='message-delete-choice-actions';
- const local=document.createElement('button');local.type='button';local.className='message-delete-local';local.textContent='حذف لديّ';
+ const local=document.createElement('button');local.type='button';local.className='message-delete-local';local.textContent='حذف لديّ';local.disabled=!canDeleteMessageForMe(message);
+ local.title=local.disabled?'متاح خلال 15 دقيقة من إرسال الرسالة':'حذف الرسالة من حسابك فقط';
  local.onclick=async()=>{document.querySelector('.message-detail-overlay')?.remove();await hideMessageForMe(message)};
  const everyone=document.createElement('button');everyone.type='button';everyone.className='message-delete-everyone';everyone.textContent='حذف لدى الجميع';everyone.disabled=!canDeleteMessageForEveryone(message);
  everyone.title=everyone.disabled?'متاح لصاحب الرسالة خلال 15 دقيقة من إرسالها':'حذف لدى جميع المشاركين';
@@ -2699,7 +2705,8 @@ function decorateMessageSelection(row,message){
 function updateMessageSelectionToolbar(){const count=state.selectedMessageIds.size;$('messageSelectionCount').textContent=count.toLocaleString('ar-SA')+' محددة'}
 async function starSelectedMessages(){const ids=[...state.selectedMessageIds];let succeeded=0;for(const id of ids){if(await toggleMessageStar(id,true))succeeded++}toast('تم تمييز '+succeeded+' من '+ids.length+' رسالة');setMessageSelectionMode(false)}
 async function deleteSelectedForMe(){
- const selected=[...state.selectedMessageIds].map(id=>state.messages.find(message=>message.id===id)).filter(Boolean);let count=0;
+ const selected=[...state.selectedMessageIds].map(id=>state.messages.find(message=>message.id===id)).filter(canDeleteMessageForMe);let count=0;
+ if(!selected.length){toast('لا توجد رسائل محددة ضمن مهلة الحذف البالغة 15 دقيقة');return}
  for(const message of selected){if(await hideMessageForMe(message))count++}
  toast('تم إخفاء '+count+' من '+selected.length+' رسالة من حسابك');setMessageSelectionMode(false);
 }
