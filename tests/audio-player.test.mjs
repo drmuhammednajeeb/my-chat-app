@@ -71,7 +71,10 @@ test('player source keeps native controls available when custom playback fails',
   assert.ok(source.includes('audio.controls = true;'));
   assert.ok(source.includes('showFallback(error)'));
   assert.ok(styles.includes('.voice-message-player.has-playback-error .voice-player-native-audio'));
-  assert.ok(styles.includes('.voice-player-toggle i{display:block;line-height:1'));
+  assert.ok(styles.includes('.voice-player-glyph-play'));
+  assert.ok(styles.includes('.voice-player-glyph-pause'));
+  assert.ok(!source.includes('ph-play-fill'));
+  assert.ok(!source.includes('ph-pause-fill'));
   assert.ok(styles.includes('.voice-player-timer{justify-self:end'));
   assert.ok(!styles.includes('.message .bubble .voice-message-player audio{display:none}'));
 });
@@ -137,6 +140,8 @@ test('voice player keeps visible controls, loads metadata after attachment, seek
   const waveform = find(player, 'voice-player-waveform');
   const timer = find(player, 'voice-player-timer');
   const audio = find(player, 'voice-player-native-audio');
+  const messageBubble = new FakeElement('div');
+  messageBubble.append(player);
 
   assert.match(button.innerHTML, /voice-player-glyph-play/);
   assert.equal(audio.loadCalls, 0);
