@@ -27,6 +27,7 @@ create policy "Users read own hidden messages"
   on public.user_hidden_messages for select to authenticated
   using (
     user_id = (select auth.uid())
+    and (select app_private.is_active_member())
     and app_private.is_conversation_member(conversation_id)
   );
 
@@ -35,6 +36,7 @@ create policy "Users hide messages for themselves"
   on public.user_hidden_messages for insert to authenticated
   with check (
     user_id = (select auth.uid())
+    and (select app_private.is_active_member())
     and app_private.is_conversation_member(conversation_id)
     and exists (
       select 1
@@ -49,7 +51,8 @@ create policy "Users hide messages for themselves"
 drop policy if exists "Users unhide own messages" on public.user_hidden_messages;
 create policy "Users unhide own messages"
   on public.user_hidden_messages for delete to authenticated
-  using (user_id = (select auth.uid()) and app_private.is_conversation_member(conversation_id));
+  using (user_id = (select auth.uid()) and (select app_private.is_active_member())
+    and app_private.is_conversation_member(conversation_id));
 
 create table if not exists public.user_conversation_pins (
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -75,6 +78,7 @@ create policy "Users read own conversation pins"
   on public.user_conversation_pins for select to authenticated
   using (
     user_id = (select auth.uid())
+    and (select app_private.is_active_member())
     and app_private.is_conversation_member(conversation_id)
   );
 
@@ -83,13 +87,15 @@ create policy "Users pin conversations they belong to"
   on public.user_conversation_pins for insert to authenticated
   with check (
     user_id = (select auth.uid())
+    and (select app_private.is_active_member())
     and app_private.is_conversation_member(conversation_id)
   );
 
 drop policy if exists "Users unpin own conversations" on public.user_conversation_pins;
 create policy "Users unpin own conversations"
   on public.user_conversation_pins for delete to authenticated
-  using (user_id = (select auth.uid()) and app_private.is_conversation_member(conversation_id));
+  using (user_id = (select auth.uid()) and (select app_private.is_active_member())
+    and app_private.is_conversation_member(conversation_id));
 
 -- Replace the legacy direct soft-delete exception with a narrow transaction-local
 -- guard. Message edits continue to use app.allow_message_edit; global deletion
