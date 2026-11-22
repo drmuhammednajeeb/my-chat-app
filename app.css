@@ -247,7 +247,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
 #notificationBell:hover{background:var(--surface-hover);color:var(--accent)}
 #notificationBadge{position:absolute;top:-3px;right:-4px;min-width:18px;height:18px;padding:0 4px;border:2px solid var(--panel);border-radius:12px;background:var(--danger-bg);color:var(--danger-text);font:700 10px/14px system-ui;display:grid;place-items:center}
 #notificationBadge.hidden{display:none!important}
-#notificationsPanel{position:fixed;z-index:30;top:82px;right:18px;width:min(410px,calc(100vw - 24px));max-height:min(620px,calc(100dvh - 100px));display:flex;flex-direction:column;background:#fff;border:1px solid #e3e8eb;border-radius:17px;box-shadow:0 16px 50px #0b141a2c;color:#111b21;overflow:hidden;direction:rtl}
+#notificationsPanel{position:fixed;z-index:30;top:82px;right:18px;width:min(410px,calc(100vw - 24px));max-height:min(620px,calc(100dvh - 100px));display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:17px;box-shadow:var(--menu-shadow);color:var(--text);overflow:hidden;direction:rtl}
 #notificationsPanel.hidden{display:none!important}
 .notification-head{display:flex;align-items:center;gap:10px;padding:15px 16px;border-bottom:1px solid #e9edef}
 .notification-head h2{font-size:16px;margin:0;flex:1}
