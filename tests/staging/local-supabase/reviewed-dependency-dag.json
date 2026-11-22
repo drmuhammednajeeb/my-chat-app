@@ -1597,16 +1597,20 @@
       "requires": [
         "core.base",
         "chat.message-edit-hardening",
-        "chat.restore-message-edit-guard"
+        "chat.restore-message-edit-guard",
+        "chat.direct-conversation-rpc",
+        "membership.final-format",
+        "test-fixture.direct-chat-profiles"
       ],
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSource": [
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
       "blockedBy": [
         "DAG-020"
       ],
-      "note": "Per-user message hiding and conversation pin state, plus author-only global soft-delete enforced by the database clock within 15 minutes of original message creation. Requires disposable-local replay and authenticated RLS/runtime probes."
+      "note": "Per-user message hiding and conversation pin state, plus author-only global soft-delete enforced by the database clock within 15 minutes of original message creation. Includes authenticated two-user isolation, unauthorized-delete, direct-update bypass, and expired edit/delete runtime probes."
     }
   ],
   "explicitEdges": [
@@ -2548,6 +2552,18 @@
     ],
     [
       "chat.restore-message-edit-guard",
+      "chat.message-visibility-pins-and-delete"
+    ],
+    [
+      "chat.direct-conversation-rpc",
+      "chat.message-visibility-pins-and-delete"
+    ],
+    [
+      "membership.final-format",
+      "chat.message-visibility-pins-and-delete"
+    ],
+    [
+      "test-fixture.direct-chat-profiles",
       "chat.message-visibility-pins-and-delete"
     ]
   ],
