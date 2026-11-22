@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.23.1"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.23.2"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -35,6 +35,7 @@
 <link rel="stylesheet" href="./modules/message-reactions.css">
 <link rel="stylesheet" href="./modules/profile-status-and-conversation-images.css">
 <link rel="stylesheet" href="./modules/status-workspace.css">
+<link rel="stylesheet" href="./modules/ai-hub.css">
 
 
 
@@ -108,7 +109,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
   <div id="directorySummary" class="directory-summary hidden"></div>
   <div id="directoryList" class="directory-list hidden" aria-live="polite"></div>
   <button id="loadMoreUsers" class="sidebar-tab hidden" type="button" style="margin:0 12px 12px">عرض المزيد من المستخدمين</button>
-  <div class="sidebar-foot"><span>BizmindMakers Chat Pro 2.0</span><span id="connectionState">جارٍ الاتصال</span></div>
+  <div class="sidebar-foot"><span>BizmindMakers Chat Pro 2.0</span><button id="aiHubOpenBtn" class="ai-hub-open" type="button" aria-haspopup="dialog"><i class="ph ph-sparkle" aria-hidden="true"></i><span>AI Hub</span></button><span id="connectionState">جارٍ الاتصال</span></div>
  </aside>
  <main id="chat" class="chat">
   <section id="statusPage" class="status-page hidden" aria-label="مساحة الحالة" aria-hidden="true" aria-busy="false">
@@ -2903,4 +2904,5 @@ function renderPrivateReplyQuote(messageId,context){const row=Array.from(documen
 <script src="./modules/profile-status-and-conversation-images.js" defer></script>
 <script src="./modules/status-workspace.js" defer></script>
 <script src="./modules/backup-restore.js"></script>
+<script src="./modules/ai-hub.js"></script>
 </body></html>
