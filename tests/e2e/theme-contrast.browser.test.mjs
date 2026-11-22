@@ -26,8 +26,8 @@ const fixture = [
   '<div class="message mine"><div class="bubble"><div class="message-content">رسالة صادرة ',
   '<span class="meta">12:30</span><span class="message-status read"><span class="ticks">✓✓</span></span>',
   '</div></div></div><div class="message-options-menu" id="messageMenu">إجراءات الرسالة</div></section>',
-  '<div class="composer-wrap"><div class="composer"><textarea class="field" aria-label="اكتب رسالة"></textarea>',
-  '<button class="send" type="button">إرسال</button></div></div></main></div></body></html>'
+  '<div class="composer-wrap"><div class="composer"><button class="send" type="button">إرسال</button>',
+  '<textarea class="field" aria-label="اكتب رسالة"></textarea></div></div></main></div></body></html>'
 ].join('');
 
 async function themedPage(theme, width, height, chatTheme = theme) {
@@ -101,7 +101,7 @@ test('browser: light and dark themes preserve WCAG AA contrast at desktop and mo
           ['messageMenu','message menu'], ['divider','day divider']
         ]) {
           const ratio = contrast(result[key].color, result[key].background);
-          assert.ok(ratio >= 4.5, theme + ' ' + viewport.width + 'px ' + label + ': ' + ratio.toFixed(2) + ':1');
+          assert.ok(ratio >= 4.5, theme + ' ' + viewport.width + 'px ' + label + ': ' + ratio.toFixed(2) + ':1; fg=' + result[key].color + '; bg=' + result[key].background);
         }
         assert.ok(result.viewport.documentWidth <= result.viewport.width,
           theme + ' ' + viewport.width + 'px layout overflows to ' + result.viewport.documentWidth + 'px');
