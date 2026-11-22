@@ -1603,7 +1603,7 @@
         "test-fixture.admin-assertion",
         "test-fixture.direct-chat-profiles"
       ],
-      "status": "SECURE_DELETE_ACTIVE_MEMBERSHIP_LOCKING_PENDING_RUNTIME",
+      "status": "FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING",
       "testSource": [
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
@@ -1611,7 +1611,14 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "note": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion."
+      "note": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion.",
+      "runtimeEvidence": {
+        "workflowRunId": 45078684896,
+        "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+        "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "completedAt": "2026-11-22T22:39:11Z",
+        "sqlFilesExecuted": 94
+      }
     }
   ],
   "explicitEdges": [
@@ -2790,14 +2797,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "LOCAL_RUNTIME_VALIDATION_PENDING",
-      "issue": "Secure-delete active-membership row-lock hardening and the expanded authenticated runtime probes are awaiting a fresh disposable-local Supabase replay. Production remains unchanged and forward migration execution is not authorized.",
+      "severity": "PRODUCTION_APPROVAL_PENDING",
+      "issue": "Disposable-local PostgreSQL replay, secure-delete catalog assertions, and authenticated runtime probes passed (run 45078684896, 94 SQL sources). Active author deletion succeeds; suspended, removed-member, non-author, direct-update bypass, and expired-window attempts are rejected. The forward migration remains unapplied to production pending separate explicit owner approval.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
     }
   ],
   "duplicateProvenance": [],
@@ -2876,15 +2883,16 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 44875784557,
-    "commit": "fad9a10ccf1b29f3089a02528663c255d67d1e8a",
-    "completedAt": "2026-11-21T06:31:09Z",
+    "workflowRunId": 45078684896,
+    "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+    "completedAt": "2026-11-22T22:39:11Z",
     "localOnly": true,
-    "sqlFilesExecuted": 91,
+    "sqlFilesExecuted": 94,
     "checks": [
-      "All 91 candidate SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
-      "The signup display-name server-side forward migration executed successfully.",
-      "The signup-name-guard rollback-only integration fixture executed successfully after the explicit synthetic auth admin seed dependency.",
+      "All 94 reviewed SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
+      "The message-visibility and conversation-pins migration executed; its catalog assertions and authenticated runtime fixture passed.",
+      "Authenticated runtime probes confirmed active-author deletion succeeds, while suspended members, removed conversation members, and non-authors are denied without changing the target message.",
+      "Direct chat_messages UPDATE bypass and expired 15-minute deletion attempts were rejected.",
       "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
       "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
     ]
@@ -2892,11 +2900,11 @@
   "auditEvidence": {
     "status": "PASSED",
     "workflow": "Local Supabase SQL manifest audit",
-    "workflowRunId": 44875784572,
-    "commit": "fad9a10ccf1b29f3089a02528663c255d67d1e8a",
-    "completedAt": "2026-11-21T06:29:45Z",
-    "tests": 107,
-    "passed": 107,
+    "workflowRunId": 45078734606,
+    "commit": "3f0bddc1e7d46657ff7acf2c5ecc0c7f66c992de",
+    "completedAt": "2026-11-22T22:37:25Z",
+    "tests": 108,
+    "passed": 108,
     "failed": 0
   },
   "previousRuntimeEvidence": {
