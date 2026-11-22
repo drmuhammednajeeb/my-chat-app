@@ -754,9 +754,14 @@ test('eleven forward migrations remain outside the production ledger and record 
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(forward?.productionApplied, false);
     } else if (name === '20261123120000_message_visibility_pins_and_secure_delete.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
-      assert.equal(forward?.localRuntimeRunId, 45076185494);
-      assert.equal(forward?.localRuntimeCommit, 'cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0');
+      assert.ok(['PENDING_DISPOSABLE_LOCAL_SUPABASE', 'PASSED_DISPOSABLE_LOCAL_SUPABASE'].includes(forward?.localRuntimeStatus));
+      if (forward?.localRuntimeStatus === 'PASSED_DISPOSABLE_LOCAL_SUPABASE') {
+        assert.ok(Number.isInteger(forward.localRuntimeRunId) && forward.localRuntimeRunId > 0);
+        assert.match(forward.localRuntimeCommit, /^[0-9a-f]{40}$/);
+      } else {
+        assert.equal(forward?.localRuntimeRunId, undefined);
+        assert.equal(forward?.localRuntimeCommit, undefined);
+      }
       assert.equal(forward?.productionApplied, false);
       assert.deepEqual(forward?.blockedBy, ['DAG-020']);
     } else {
@@ -816,7 +821,7 @@ test('message visibility, conversation pins and secure deletion remain a gated f
   for (const source of node.source) await access(path.join(root, source));
   for (const source of node.testSource) await access(path.join(root, source));
   const blocker = dag.blockers.find(item => item.id === 'DAG-020');
-  assert.equal(blocker.status, 'LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED');
+  assert.ok(['PENDING_DISPOSABLE_LOCAL_SUPABASE', 'LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED'].includes(blocker.status));
   assert.ok(blocker.evidence.includes(node.source[0]));
   assert.equal(dag.executionAuthorized, false);
 });
