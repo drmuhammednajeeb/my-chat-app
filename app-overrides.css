@@ -286,7 +286,7 @@ html.dark .new-messages-jump{background:var(--surface-selected);color:var(--surf
   color:var(--muted);direction:ltr;vertical-align:baseline;
 }
 #messages>.message.mine .bubble>.meta,
-#messages>.message.mine .message-content>.meta{color:rgba(255,255,255,.6)}
+#messages>.message.mine .message-content>.meta{color:var(--bubble-meta)}
 #messages .bubble>.message-status,
 #messages .message-content>.message-status{
   float:left;display:inline-flex;align-items:center;gap:3px;margin:0 0 0 4px;
@@ -328,6 +328,9 @@ input::placeholder,textarea::placeholder,.composer-hint,.conv-last,.conv-time,
 }
 #messages .meta{color:var(--muted)}
 #messages>.message.mine .meta{color:var(--bubble-meta)}
+#messages .message-status{color:var(--bubble-meta)}
+#messages .message-status.read{color:var(--bubble-status-read)}
+#messages .message-status.delivered{color:var(--bubble-status-delivered)}
 #messages .sender,.typing,.welcome .welcome-icon,.auto-cleanup-notice i{color:var(--text-accent-strong)}
 .day-divider,.messages-history-loader{
  background:var(--surface-raised);color:var(--text);border:1px solid var(--line)
