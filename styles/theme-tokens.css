@@ -1,7 +1,7 @@
 /* Global semantic theme tokens. Conversation-local themes remain scoped to #chat[data-chat-theme]. */
 :root{
  color-scheme:light;--bg:#f3f6fb;--panel:#ffffff;--panel2:#edf2f8;--panel3:#e1eaf3;
- --line:#cbd5e1;--text:#101828;--muted:#475467;--accent:#007f6b;--accent2:#006653;
+ --line:#cbd5e1;--text:#101828;--muted:#475467;--accent:#007f6b;--accent-text:#006b5b;--accent2:#006653;
  --danger:#c4323b;--warning-text:#8a5a00;--bubble-warning-text:#12352a;--archive-action-bg:#0c6b5b;--restore-action-bg:#285b91;--action-on-color:#ffffff;--bubble:#ffffff;--mine:#d1f5e3;--shadow:0 3px 16px #152b4518;
  --chat-font:"Segoe UI",Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;
  --chat-focus:#007f6b;--chat-divider:#cbd5e1;
@@ -16,7 +16,7 @@
 html.light{color-scheme:light}
 html.dark{
  color-scheme:dark;--bg:#08131d;--panel:#101f2b;--panel2:#1b2d3a;--panel3:#294252;
- --line:#405667;--text:#f8fafc;--muted:#bdc9d5;--accent:#39d9b5;--accent2:#22bd9a;
+ --line:#405667;--text:#f8fafc;--muted:#bdc9d5;--accent:#39d9b5;--accent-text:#55e5c3;--accent2:#22bd9a;
  --danger:#ff7b86;--warning-text:#f1c96b;--bubble-warning-text:#ffffff;--archive-action-bg:#0c6b5b;--restore-action-bg:#285b91;--action-on-color:#ffffff;--bubble:#1b2d3a;--mine:#075e50;--shadow:0 3px 18px #0007;
  --chat-focus:#39d9b5;--chat-divider:#405667;
  --surface-hover:#294252;--surface-selected:#174b43;--surface-selected-text:#f1fffb;--surface-selected-border:#39a98d;
@@ -33,7 +33,7 @@ html.dark{
 /* Per-conversation palettes override the global app palette only inside #chat. */
 #chat.chat[data-chat-theme="light"]{
  --bg:#f3f5f8;--panel:#ffffff;--panel2:#f7f8fa;--panel3:#e8edef;--line:#dfe4ec;
- --text:#172033;--muted:#657187;--accent:#007f6b;--accent2:#006653;--danger:#b42318;--warning-text:#8a5a00;--bubble-warning-text:#ffffff;--archive-action-bg:#0c6b5b;--restore-action-bg:#285b91;--action-on-color:#ffffff;
+ --text:#172033;--muted:#657187;--accent:#007f6b;--accent-text:#006b5b;--accent2:#006653;--danger:#b42318;--warning-text:#8a5a00;--bubble-warning-text:#ffffff;--archive-action-bg:#0c6b5b;--restore-action-bg:#285b91;--action-on-color:#ffffff;
  --bubble:#ffffff;--mine:#176d68;--shadow:0 3px 16px #152b4518;--modal-shadow:0 20px 70px rgba(11,20,26,.22);
  --surface-hover:#e9edef;--surface-selected:#e4f1f0;--surface-selected-text:#064f43;--surface-selected-border:#b7ddd5;
  --surface-header:#ffffff;--surface-raised:#ffffff;--surface-row-hover:#f5f6f6;
@@ -46,7 +46,7 @@ html.dark{
 }
 #chat.chat[data-chat-theme="dark"]{
  --bg:#0b1220;--panel:#111c2d;--panel2:#17243a;--panel3:#1d2d46;--line:#263852;
- --text:#edf3fb;--muted:#8da0b8;--accent:#39d9b5;--accent2:#22bd9a;--danger:#ff7b86;--warning-text:#f1c96b;--bubble-warning-text:#ffffff;--archive-action-bg:#0c6b5b;--restore-action-bg:#285b91;--action-on-color:#ffffff;
+ --text:#edf3fb;--muted:#8da0b8;--accent:#39d9b5;--accent-text:#55e5c3;--accent2:#22bd9a;--danger:#ff7b86;--warning-text:#f1c96b;--bubble-warning-text:#ffffff;--archive-action-bg:#0c6b5b;--restore-action-bg:#285b91;--action-on-color:#ffffff;
  --bubble:#1b2a40;--mine:#075e50;--shadow:0 3px 18px #0007;--modal-shadow:0 20px 70px rgba(0,0,0,.62);
  --surface-hover:#1d2d46;--surface-selected:#153c36;--surface-selected-text:#f1fffb;--surface-selected-border:#276b55;
  --surface-header:#111c2d;--surface-raised:#17243a;--surface-row-hover:#17243a;
@@ -64,3 +64,14 @@ html.dark{
 #chat.chat[data-group-theme="violet"]{--accent:#9166d8}
 #chat.chat[data-group-theme="amber"]{--accent:#c58a25}
 #chat.chat[data-group-theme="rose"]{--accent:#d65e80}
+/* Contrast-safe accent text for each custom group palette. */
+#chat.chat[data-chat-theme="light"][data-group-theme="emerald"]{--accent-text:#006b52}
+#chat.chat[data-chat-theme="light"][data-group-theme="blue"]{--accent-text:#1d5fa3}
+#chat.chat[data-chat-theme="light"][data-group-theme="violet"]{--accent-text:#6842a8}
+#chat.chat[data-chat-theme="light"][data-group-theme="amber"]{--accent-text:#7a5000}
+#chat.chat[data-chat-theme="light"][data-group-theme="rose"]{--accent-text:#a42f55}
+#chat.chat[data-chat-theme="dark"][data-group-theme="emerald"]{--accent-text:#55e5c3}
+#chat.chat[data-chat-theme="dark"][data-group-theme="blue"]{--accent-text:#8fc7ff}
+#chat.chat[data-chat-theme="dark"][data-group-theme="violet"]{--accent-text:#c3a6ff}
+#chat.chat[data-chat-theme="dark"][data-group-theme="amber"]{--accent-text:#f3cc78}
+#chat.chat[data-chat-theme="dark"][data-group-theme="rose"]{--accent-text:#ff9bb6}
