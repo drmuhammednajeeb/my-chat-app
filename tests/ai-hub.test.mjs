@@ -37,6 +37,8 @@ test("configuration persists only enabled state and a validated Poe bot URL", ()
   assert.deepEqual(aiHub.readConfig(win, "user-a"), { enabled: true, botUrl: "https://poe.com/MyBot" });
   assert.equal(aiHub.writeConfig(win, "user-a", { enabled: true, botUrl: "https://evil.example/MyBot" }), false);
   assert.deepEqual(aiHub.readConfig(win, "user-b"), { enabled: false, botUrl: "" });
+  assert.equal(aiHub.writeConfig(win, "user-a", { enabled: false, botUrl: "" }), true);
+  assert.deepEqual(aiHub.readConfig(win, "user-a"), { enabled: false, botUrl: "" });
 });
 
 test("prompt actions are explicit and never infer or fetch conversation history", () => {
