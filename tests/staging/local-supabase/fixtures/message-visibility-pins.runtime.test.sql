@@ -258,13 +258,17 @@ END;
 $suspended_member_delete_denied$;
 
 RESET ROLE;
-IF NOT EXISTS (
-  SELECT 1 FROM public.chat_messages
-  WHERE id=current_setting('app.test.suspended_delete_message_id')::uuid
-    AND deleted_at IS NULL
-) THEN
-  RAISE EXCEPTION 'Suspended member changed the message despite authorization denial';
-END IF;
+DO $assert_suspended_member_delete_unchanged$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.chat_messages
+    WHERE id=current_setting('app.test.suspended_delete_message_id')::uuid
+      AND deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Suspended member changed the message despite authorization denial';
+  END IF;
+END;
+$assert_suspended_member_delete_unchanged$;
 UPDATE public.profiles
 SET membership_status='active'
 WHERE id=current_setting('app.test.direct_a_id')::uuid;
@@ -309,12 +313,16 @@ END;
 $removed_member_delete_denied$;
 
 RESET ROLE;
-IF NOT EXISTS (
-  SELECT 1 FROM public.chat_messages
-  WHERE id=current_setting('app.test.removed_member_delete_message_id')::uuid
-    AND deleted_at IS NULL
-) THEN
-  RAISE EXCEPTION 'Removed member changed the message despite authorization denial';
-END IF;
+DO $assert_removed_member_delete_unchanged$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.chat_messages
+    WHERE id=current_setting('app.test.removed_member_delete_message_id')::uuid
+      AND deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Removed member changed the message despite authorization denial';
+  END IF;
+END;
+$assert_removed_member_delete_unchanged$;
 
 ROLLBACK;
