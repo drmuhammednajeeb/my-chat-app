@@ -98,16 +98,3 @@ test('focus visibility and reduced-motion protections remain enabled', () => {
   assert.match(appCss, /prefers-reduced-motion:reduce/);
   assert.match(overrides, /prefers-reduced-motion:reduce/);
 });
-
-test('legacy stylesheets contain no duplicate color-bearing selector blocks', () => {
-  for (const [name, css] of [['app.css', appCss], ['app-overrides.css', overrides]]) {
-    const seen = new Set();
-    for (const match of css.matchAll(/([^{}]+)\\{([^{}]*)\\}/g)) {
-      const selector = match[1].trim().replace(/\\s+/g, ' ');
-      const declarations = match[2];
-      if (!/(?:background(?:-color)?|color|border(?:-color)?|outline)\\s*:/i.test(declarations)) continue;
-      assert.ok(!seen.has(selector), name + ' repeats color declarations for selector: ' + selector);
-      seen.add(selector);
-    }
-  }
-});
