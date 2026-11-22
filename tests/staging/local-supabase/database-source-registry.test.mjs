@@ -27,6 +27,7 @@ test('production registry preserves 62 ledger versions and separately maps eleve
   assert.equal(registry.sourceFiles.length, 62);
   assert.equal(registry.sourceSets.testOnlyFixtureCount, 23);
   assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 23);
+  assert.ok(registry.sourceSets.testOnlyFixturePaths.includes('tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql'));
 
   const versions = registry.productionMigrations.map(item => item.version);
   assert.equal(new Set(versions).size, 62);
