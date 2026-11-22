@@ -1981,18 +1981,16 @@
       "version": "20261123120000",
       "name": "message_visibility_pins_and_secure_delete",
       "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-      "gitBlobSha": "be94fdc5dd236599c2dd4f015a67a5cebbe0f27e",
+      "gitBlobSha": "8d58b81aed2e9799bf411ac26db7239e04ddf558",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Add per-user hidden-message visibility and conversation pins. Every permissive policy independently checks active membership and conversation membership, with a restrictive active-member guard; enforce database-clock 15-minute delete-for-me and author-only delete-for-everyone.",
       "blockedBy": [
         "DAG-020"
       ],
-      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false,
-      "validationNote": "Disposable local Supabase replay passed on 2026-11-22 (workflow run 45076185494, candidate commit cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0), including SQL assertions and authenticated two-user runtime probes. Production remains unchanged and execution is not authorized.",
-      "localRuntimeRunId": 45076185494,
-      "localRuntimeCommit": "cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0"
+      "validationNote": "Secure deletion now locks the caller's active profile/Auth rows and conversation-membership row before locking the message. Runtime validation is pending for active, suspended, removed-member, non-author, and 15-minute cases. Production remains unchanged and execution is not authorized."
     }
   ],
   "forwardMigrationPolicy": {
