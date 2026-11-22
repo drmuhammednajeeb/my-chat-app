@@ -7,7 +7,7 @@
     "mappedSources": 73,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 22,
+    "testOnlySqlFixtures": 23,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -30,7 +30,8 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
-      "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
     "executedMappedSources": 70,
@@ -38,8 +39,8 @@
     "executedSqlFiles": 91,
     "localRuntimeStatus": "PENDING_NEW_FORWARD_MIGRATION_RUNTIME_VALIDATION",
     "candidateMappedSources": 71,
-    "candidateTestOnlySqlFixtures": 22,
-    "candidateSqlFiles": 93
+    "candidateTestOnlySqlFixtures": 23,
+    "candidateSqlFiles": 94
   },
   "execution": {
     "enabled": false,
@@ -458,18 +459,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "chat.message-visibility-pins-and-delete",
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
-      "testSources": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
-      ],
-      "blockedBy": [
-        "DAG-020"
-      ],
-      "parityNote": "Adds per-user message hiding and conversation pin records with owner/member RLS, and an invoker-only delete RPC enforcing the 15-minute original-created_at deadline. Not runtime validated and not production applied."
-    },
-    {
       "nodeId": "test-fixture.local-pg-cron-runtime",
       "status": "TEST_ONLY_LOCAL_PG_CRON_EXECUTION_PROBE_PASSED",
       "testSources": [
@@ -690,6 +679,19 @@
       ],
       "blockedBy": [],
       "parityNote": "Current-mainline runtime pending; previous PR #147 evidence is not carried forward."
+    },
+    {
+      "nodeId": "chat.message-visibility-pins-and-delete",
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+      ],
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "parityNote": "Adds per-user hidden-message and conversation-pin records with RLS, and a database-clock-enforced author-only 15-minute delete RPC. SQL probes verify policy/RPC contracts; an authenticated two-user runtime fixture verifies isolation, author checks, direct-update bypass denial, and expired edit/delete rejection."
     },
     {
       "nodeId": "test-fixture.direct-chat-runtime",
@@ -991,7 +993,8 @@
       "issue": "The new per-user message visibility, conversation pin and secure-delete migration has source coverage but still requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user/device checks. Do not apply to production until those checks and a separate owner approval pass.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
       "status": "SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED"
     }
@@ -1137,6 +1140,14 @@
     {
       "path": "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
       "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
+      "status": "TEST_ONLY_AUTHENTICATED_MULTIUSER_RUNTIME",
       "blockedBy": [
         "DAG-020"
       ],
