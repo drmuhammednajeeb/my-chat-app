@@ -46,11 +46,11 @@ test("message metadata cascades, while separately authored reply messages are pr
 test("the UI displays the exact 100-hour retention notice and keeps media paths for cleanup", () => {
   assert.ok(html.includes("الرسائل والمرفقات تُحذف تلقائياً بعد 100 ساعة من إرسالها تعزيزاً للخصوصية وسرعة الأداء"));
   assert.match(overrides, /\.auto-cleanup-notice/);
-  const start = html.indexOf("async function deleteMessage(m)");
-  const end = html.indexOf("function showAttachmentPreview", start);
+  const start = html.indexOf("async function deleteMessageForEveryone(message)");
+  const end = html.indexOf("function deleteMessage(message)", start);
   assert.ok(start >= 0 && end > start);
   const deleteHandler = html.slice(start, end);
-  assert.match(deleteHandler, /deleted_at:new Date\(\)\.toISOString\(\)/);
+  assert.match(deleteHandler, /rpc\('delete_message_secure'/);
   assert.doesNotMatch(deleteHandler, /attachment_path\s*:\s*null|attachment_type\s*:\s*null/);
 });
 

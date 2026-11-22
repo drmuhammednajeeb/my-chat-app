@@ -2,12 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.22.1"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.23.1"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="./membership.css">
 
@@ -101,7 +101,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
    <button type="button" class="directory-filter active" data-directory-filter="all" aria-pressed="true">الكل</button>
    <button type="button" class="directory-filter" data-directory-filter="online" aria-pressed="false"><span class="filter-online-dot"></span> المتصلون الآن</button>
   </nav>
-  <nav id="workspaceInboxTabs" class="workspace-inbox-tabs"><button type="button" data-workspace-category="all" class="active">الكل</button><button type="button" data-workspace-category="personal">شخصي</button><button type="button" data-workspace-category="work">عمل</button></nav><nav id="chatFilters" class="chat-filters" aria-label="تصفية المحادثات"><button type="button" class="chat-filter active" data-filter="all" aria-pressed="true">الكل</button><button type="button" class="chat-filter" data-filter="unread" aria-pressed="false">غير مقروءة</button><button type="button" class="chat-filter" data-filter="groups" aria-pressed="false">المجموعات</button><button type="button" class="chat-filter" data-filter="archived" aria-pressed="false"><i class="ph ph-archive-box"></i> المؤرشفة</button></nav>
+  <nav id="workspaceInboxTabs" class="workspace-inbox-tabs"><button type="button" data-workspace-category="all" class="active">الكل</button><button type="button" data-workspace-category="personal">شخصي</button><button type="button" data-workspace-category="work">عمل</button></nav><nav id="chatFilters" class="chat-filters" aria-label="تصفية المحادثات"><button type="button" class="chat-filter active" data-filter="all" aria-pressed="true">الكل</button><button type="button" class="chat-filter" data-filter="unread" aria-pressed="false">غير المقروءة</button><button type="button" class="chat-filter" data-filter="favorites" aria-pressed="false">المفضلة</button><button type="button" class="chat-filter" data-filter="groups" aria-pressed="false">المجموعات</button><button type="button" class="chat-filter" data-filter="archived" aria-pressed="false"><i class="ph ph-archive-box"></i> المؤرشفة</button></nav>
   <div class="sectionhead"><button id="directoryBackBtn" class="directory-back-btn hidden" type="button" title="العودة إلى القسم السابق" aria-label="الرجوع إلى القسم السابق"><i class="ph ph-arrow-right" aria-hidden="true"></i><span>الرجوع</span></button><span id="sidebarSectionTitle">المحادثات</span><button id="browseUsersBtn" class="new-group-btn" type="button" title="فتح دليل المستخدمين"><i class="ph ph-user-plus"></i><span>مستخدمون</span></button><button id="newChat" class="new-group-btn hidden" type="button" title="إنشاء مجموعة جديدة"><i class="ph ph-users-three"></i><span>مجموعة جديدة</span></button><button id="createChannelOpen" class="new-group-btn hidden" type="button" title="إنشاء قناة"><i class="ph ph-megaphone"></i><span>قناة جديدة</span></button><button id="refreshDirectory" class="hidden" type="button" title="تحديث دليل المستخدمين" aria-label="تحديث دليل المستخدمين"><i class="ph ph-arrows-clockwise"></i></button></div>
   <nav id="customListsPanel" class="custom-lists-panel hidden" aria-label="قوائم المحادثات"><div class="custom-lists-heading"><strong>قوائمي</strong><button id="createCustomListBtn" type="button" aria-label="إنشاء قائمة جديدة"><i class="ph ph-plus"></i></button></div><div id="customListsItems" class="custom-lists-items"></div></nav><div id="conversationList" class="conversation-list"></div>
   <div id="directoryHelp" class="directory-help hidden">ابحث بالاسم أو اسم المستخدم أو رقم العضوية الرسمية. يمكنك إدخال الرقم بالأرقام العربية أو الإنجليزية.</div>
@@ -121,8 +121,9 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
    <button id="mobileMenu" class="iconbtn mobile-back" title="المحادثات"><i class="ph ph-list"></i></button>
    <button id="chatAvatar" class="avatar profile-open-trigger" type="button" aria-label="عرض الملف الشخصي">U</button>
    <div class="chat-title"><button id="chatProfileOpen" type="button" class="chat-profile-title"><strong id="chatTitle">اختر محادثة</strong></button><small id="chatSub">محادثاتك الخاصة والمجموعات</small></div>
+   <button id="chatInfoBtn" class="iconbtn chat-info-trigger hidden" type="button" aria-label="معلومات المستخدم" title="معلومات المستخدم"><i class="ph ph-info"></i></button>
    <button id="chatHeaderMenuBtn" class="iconbtn chat-header-menu-trigger" type="button" aria-label="خيارات المحادثة" aria-haspopup="true" aria-expanded="false" title="خيارات"><i class="ph ph-dots-three-vertical"></i></button>
-   <div class="head-actions chat-header-menu hidden" id="chatHeaderMenu" role="menu" aria-label="خيارات المحادثة"><button id="appThemeToggle" class="theme-toggle-btn" type="button" title="تبديل سمة التطبيق" aria-label="تبديل سمة التطبيق"><i class="ph ph-sun"></i><span>سمة التطبيق</span></button><button id="conversationWorkspaceBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-briefcase"></i><span>مساحة المحادثة الخاصة</span></button><button id="directShortcutBtn" class="direct-chat-control hidden" type="button" title="إضافة اختصار للمحادثة"><i class="ph ph-push-pin"></i><span>اختصار المحادثة</span></button><button id="directClearBtn" class="direct-chat-control hidden" type="button" title="مسح محتوى الدردشة من طرفك"><i class="ph ph-broom"></i><span>مسح المحادثة من طرفي</span></button><button id="archiveConversationBtn" class="direct-chat-control hidden" type="button" title="أرشفة المحادثة"><i class="ph ph-archive-box"></i><span>أرشفة المحادثة</span></button><button id="groupInfoBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-info"></i><span>معلومات المجموعة</span></button><button id="selectMessagesBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-check-square"></i><span>تحديد الرسائل</span></button><button id="muteNotificationsBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-bell-slash"></i><span>كتم الإشعارات</span></button><button id="notificationSettingsBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-bell-ringing"></i><span>إعدادات الإشعارات</span></button><button id="disappearingBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-timer"></i><span>الرسائل ذاتية الاختفاء</span></button><button id="starredMessagesBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-star"></i><span>الرسائل المميزة بنجمة</span></button><button id="groupThemeBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-palette"></i><span>سمة الدردشة</span></button><button id="favoriteConversationBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-heart"></i><span>إضافة إلى المفضلة</span></button><button id="addToCustomListBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-list-plus"></i><span>إضافة إلى القائمة</span></button><button id="exportConversationBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-export"></i><span>تصدير الدردشة</span></button><button id="closeConversationBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-x-circle"></i><span>إغلاق الدردشة</span></button><button id="clearConversationBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-broom"></i><span>مسح الدردشة من طرفي</span></button><button id="leaveGroupBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-sign-out"></i><span>الخروج من المجموعة</span></button><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i><span>البحث داخل المحادثة</span></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت BizmindMakers Chat Pro" aria-label="تثبيت التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i><span>مشاركة رابط القناة</span></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i><span>تحديث</span></button><button id="debugBtn" class="iconbtn" type="button" title="تشخيص حالة المحادثة" aria-expanded="false"><i class="ph ph-bug"></i><span>تشخيص</span></button></div>
+   <div class="head-actions chat-header-menu hidden" id="chatHeaderMenu" role="menu" aria-label="خيارات المحادثة"><button id="appThemeToggle" class="theme-toggle-btn" type="button" title="تبديل سمة التطبيق" aria-label="تبديل سمة التطبيق"><i class="ph ph-sun"></i><span>سمة التطبيق</span></button><button id="conversationWorkspaceBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-briefcase"></i><span>مساحة المحادثة الخاصة</span></button><button id="directShortcutBtn" class="direct-chat-control hidden" type="button" title="تثبيت المحادثة"><i class="ph ph-push-pin"></i><span>تثبيت المحادثة</span></button><button id="directClearBtn" class="direct-chat-control hidden" type="button" title="مسح محتوى الدردشة من طرفك"><i class="ph ph-broom"></i><span>مسح المحادثة من طرفي</span></button><button id="archiveConversationBtn" class="direct-chat-control hidden" type="button" title="أرشفة المحادثة"><i class="ph ph-archive-box"></i><span>أرشفة المحادثة</span></button><button id="groupInfoBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-info"></i><span>معلومات المجموعة</span></button><button id="selectMessagesBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-check-square"></i><span>تحديد الرسائل</span></button><button id="muteNotificationsBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-bell-slash"></i><span>كتم الإشعارات</span></button><button id="notificationSettingsBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-bell-ringing"></i><span>إعدادات الإشعارات</span></button><button id="disappearingBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-timer"></i><span>الرسائل ذاتية الاختفاء</span></button><button id="starredMessagesBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-star"></i><span>الرسائل المميزة بنجمة</span></button><button id="groupThemeBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-palette"></i><span>سمة الدردشة</span></button><button id="favoriteConversationBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-heart"></i><span>إضافة إلى المفضلة</span></button><button id="addToCustomListBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-list-plus"></i><span>إضافة إلى القائمة</span></button><button id="closeConversationBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-x-circle"></i><span>إغلاق الدردشة</span></button><button id="clearConversationBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-broom"></i><span>مسح الدردشة من طرفي</span></button><button id="leaveGroupBtn" class="direct-chat-control hidden" type="button"><i class="ph ph-sign-out"></i><span>الخروج من المجموعة</span></button><button id="chatSearchBtn" class="iconbtn" type="button" title="البحث داخل المحادثة"><i class="ph ph-magnifying-glass"></i><span>البحث داخل المحادثة</span></button><button id="installAppBtn" class="iconbtn install-app-btn" type="button" title="تثبيت BizmindMakers Chat Pro" aria-label="تثبيت التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><span class="install-app-label">تثبيت التطبيق</span></button><button id="shareChannelBtn" class="iconbtn hidden" type="button" title="مشاركة رابط القناة"><i class="ph ph-link"></i><span>مشاركة رابط القناة</span></button><button id="refreshBtn" class="iconbtn optional" title="تحديث"><i class="ph ph-arrows-clockwise"></i><span>تحديث</span></button><button id="debugBtn" class="iconbtn" type="button" title="تشخيص حالة المحادثة" aria-expanded="false"><i class="ph ph-bug"></i><span>تشخيص</span></button></div>
   </header>
   <div class="auto-cleanup-notice" role="note" aria-label="سياسة الاحتفاظ بالرسائل"><i class="ph ph-timer" aria-hidden="true"></i><span>الرسائل والمرفقات تُحذف تلقائياً بعد 100 ساعة من إرسالها تعزيزاً للخصوصية وسرعة الأداء</span></div>
   <div id="chatSearchPanel" class="chat-search-panel hidden"><div class="chat-search-top"><input id="chatSearchInput" type="search" placeholder="ابحث في رسائل هذه المحادثة…" autocomplete="off"><button id="chatSearchClose" type="button" title="إغلاق البحث"><i class="ph ph-x"></i></button></div><div id="chatSearchResults" class="chat-search-results"><p>اكتب كلمة للبحث داخل المحادثة الحالية.</p></div></div>
@@ -304,7 +305,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),hiddenMessageIds:new Set(),pinnedConversationIds:new Set(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v2';
@@ -957,14 +958,16 @@ function renderConversations(section=state.sidebarView==='groups'?'groups':'dire
   selfRow.innerHTML='<div class="conv-avatar self-chat-avatar"><i class="ph ph-note-pencil"></i></div><div class="conv-copy"><div class="conv-top"><strong>'+esc(state.profile?.display_name||state.profile?.username||'أنا')+' <span class="self-chat-tag">أنا</span></strong><span class="conv-time">'+(selfConversation.last_message?.created_at?time(selfConversation.last_message.created_at):'')+'</span></div><div class="conv-last">'+esc(convPreview(selfConversation)==='ابدأ المحادثة الآن'?'مراسلة نفسك':convPreview(selfConversation))+'</div></div>';
   selfRow.addEventListener('click',()=>openConversation(selfConversation));list.append(selfRow);
  }
- const rows=state.conversations.filter(c=>section==='groups'?c.type==='group'&&!isSelfConversation(c):c.type==='direct').slice().sort((a,b)=>Number(!!state.chatPrefs.get(b.id)?.is_shortcut)-Number(!!state.chatPrefs.get(a.id)?.is_shortcut)).filter(c=>{
+ const showGroups=section==='groups'||state.conversationFilter==='groups';
+ const rows=state.conversations.filter(c=>showGroups?c.type==='group'&&!isSelfConversation(c):c.type==='direct').slice().sort((a,b)=>Number(!!(state.pinnedConversationIds?.has(b.id)||state.chatPrefs.get(b.id)?.is_shortcut))-Number(!!(state.pinnedConversationIds?.has(a.id)||state.chatPrefs.get(a.id)?.is_shortcut))).filter(c=>{
   const pref=state.chatPrefs.get(c.id)||{},archived=!!pref.is_archived;
-  if(section==='groups'&&archived)return false;
-  if(section==='direct'&&(state.conversationFilter==='archived'?!archived:archived))return false;
+  if(showGroups&&archived)return false;
+  if(!showGroups&&(state.conversationFilter==='archived'?!archived:archived))return false;
   const matchesSearch=(convName(c)+' '+convPreview(c)+' '+(otherMember(c)?.username||'')).toLowerCase().includes(q);
   if(state.activeListId==='__favorites__'&&!state.userConversationSettings.get(c.id)?.is_favorite)return false;if(state.activeListId&&state.activeListId!=='__favorites__'&&!state.chatListItems.get(c.id)?.has(state.activeListId))return false;
   const unread=!!(c.last_message&&c.last_message.sender_id!==state.user.id&&c.last_message.created_at&&(!c.last_read_at||new Date(c.last_message.created_at)>new Date(c.last_read_at))&&(!pref.cleared_before||new Date(c.last_message.created_at)>new Date(pref.cleared_before)));
-  const matchesFilter=section==='groups'||state.conversationFilter==='all'||state.conversationFilter==='archived'||(state.conversationFilter==='unread'&&unread);
+  const isFavorite=!!state.userConversationSettings.get(c.id)?.is_favorite;
+  const matchesFilter=showGroups||state.conversationFilter==='all'||state.conversationFilter==='archived'||(state.conversationFilter==='unread'&&unread)||(state.conversationFilter==='favorites'&&isFavorite);
   const category=state.workspaceClassifications.get(c.id)?.category||null;
   const labels=state.workspaceLabelItems.get(c.id)||new Set();const labelMatch=!state.workspaceActiveLabelId||labels.has(state.workspaceActiveLabelId);
   return matchesSearch&&matchesFilter&&(state.workspaceCategory==='all'||category===state.workspaceCategory)&&labelMatch;
@@ -983,7 +986,7 @@ function renderConversations(section=state.sidebarView==='groups'?'groups':'dire
   row.setAttribute('aria-label',convName(c)+(unread?'، توجد رسالة غير مقروءة':''));
   const person=c.type==='direct'?otherMember(c):null;
   const avatar=person?.avatar_url&&/^https:\/\//i.test(person.avatar_url)?'<img src="'+esc(person.avatar_url)+'" alt="" loading="lazy">':c.type==='group'?'<i class="ph ph-users-three"></i>':c.type==='channel'?'<i class="ph ph-megaphone"></i>':esc(initials(convName(c)));
-  row.innerHTML='<div class="conv-avatar">'+avatar+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+(pref.is_shortcut?'<i class="ph ph-push-pin conv-shortcut-mark" title="اختصار مثبت"></i>':'')+(state.userConversationSettings.get(c.id)?.is_favorite?'<i class="ph ph-heart conv-shortcut-mark" title="مفضلة"></i>':'')+(archived?'<i class="ph ph-archive-box conversation-archive-mark" title="مؤرشفة"></i>':'')+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';
+  row.innerHTML='<div class="conv-avatar">'+avatar+'</div><div class="conv-copy"><div class="conv-top"><strong>'+esc(convName(c))+((state.pinnedConversationIds?.has(c.id)||pref.is_shortcut)?'<i class="ph ph-push-pin conv-shortcut-mark" title="محادثة مثبتة"></i>':'')+(state.userConversationSettings.get(c.id)?.is_favorite?'<i class="ph ph-heart conv-shortcut-mark" title="مفضلة"></i>':'')+(archived?'<i class="ph ph-archive-box conversation-archive-mark" title="مؤرشفة"></i>':'')+'</strong><span class="conv-time">'+(c.last_message?.created_at?time(c.last_message.created_at):'')+(unread?'<i class="unread-dot" title="رسالة غير مقروءة"></i>':'')+'</span></div><div class="conv-last">'+esc(convPreview(c))+'</div></div>';
   bindConversationSwipe(shell,row,action,c,archived,list);
   shell.append(action,row);list.append(shell);
  });
@@ -1035,7 +1038,16 @@ async function loadConversations(){
  if(ce){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر قراءة المحادثات');console.error(ce);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url,bio)').in('conversation_id',ids);
  if(me){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
- const {data:latest,error:le}=await supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40));
+ const [latestResult,pinsResult,settingsResult]=await Promise.all([
+  supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40)),
+  supabaseClient.from('user_conversation_pins').select('conversation_id').eq('user_id',state.user.id).in('conversation_id',ids),
+  supabaseClient.from('user_conversation_settings').select('conversation_id,is_muted,notification_tone,is_favorite').eq('user_id',state.user.id).in('conversation_id',ids)
+ ]);
+ const {data:latest,error:le}=latestResult;
+ if(!pinsResult.error)state.pinnedConversationIds=new Set((pinsResult.data||[]).map(row=>row.conversation_id));
+ else console.warn('Conversation pin list unavailable:',pinsResult.error.message);
+ if(!settingsResult.error){state.userConversationSettings ||= new Map();(settingsResult.data||[]).forEach(row=>state.userConversationSettings.set(row.conversation_id,row))}
+ else console.warn('Conversation favorite settings unavailable:',settingsResult.error.message);
  if(le){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر تحميل معاينة الرسائل');console.error(le);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  state.conversations=(convs||[]).map(c=>({...c,last_read_at:state.memberReads[c.id]||null,members:(allMembers||[]).filter(m=>m.conversation_id===c.id).map(m=>({...m,profile:m.profiles})),last_message:(latest||[]).find(m=>m.conversation_id===c.id)}));
  await loadDirectChatPreferences();
@@ -1108,15 +1120,18 @@ async function saveDirectChatPreference(patch){
 function applyDirectChatTheme(){
  const pref=state.activeChatPreference;
  const direct=state.active?.type==='direct';
- /* Theme is global and account-synchronized; conversation preferences remain limited to chat actions. */
- ['directShortcutBtn','directClearBtn'].forEach(id=>$(id).classList.toggle('hidden',!direct));
+ const hasConversation=!!state.active;
+ /* Theme is global and account-synchronized; pins are account-scoped across all conversation types. */
+ $('directShortcutBtn').classList.toggle('hidden',!hasConversation);
+ $('directClearBtn').classList.toggle('hidden',!direct);
  $('archiveConversationBtn').classList.toggle('hidden',!state.active);
  $('archiveConversationBtn').innerHTML=pref?.is_archived?'<i class="ph ph-archive-restore"></i>':'<i class="ph ph-archive-box"></i>';
  $('archiveConversationBtn').title=pref?.is_archived?'إلغاء الأرشفة':'أرشفة المحادثة';
- if(direct){
-  $('directShortcutBtn').classList.toggle('active',!!pref?.is_shortcut);
-  $('directShortcutBtn').innerHTML=pref?.is_shortcut?'<i class="ph ph-push-pin-slash"></i>':'<i class="ph ph-push-pin"></i>';
-  $('directShortcutBtn').title=pref?.is_shortcut?'إزالة الاختصار':'إضافة اختصار للمحادثة';
+ if(hasConversation){
+  const pinned=!!(state.pinnedConversationIds?.has(state.active.id)||pref?.is_shortcut);
+  $('directShortcutBtn').classList.toggle('active',pinned);
+  $('directShortcutBtn').innerHTML=pinned?'<i class="ph ph-push-pin-slash"></i><span>إلغاء التثبيت</span>':'<i class="ph ph-push-pin"></i><span>تثبيت المحادثة</span>';
+  $('directShortcutBtn').title=pinned?'إلغاء تثبيت المحادثة':'تثبيت المحادثة';
  }
 }
 
@@ -1138,9 +1153,23 @@ async function toggleDirectChatTheme(){
  if(await saveDirectChatPreference({theme:next})){applyDirectChatTheme();toast(next==='light'?'تم تفعيل السمة البيضاء لك فقط':'تم تفعيل السمة السوداء لك فقط')}
 }
 async function toggleDirectChatShortcut(){
- if(state.active?.type!=='direct')return;
- const next=!state.activeChatPreference?.is_shortcut;
- if(await saveDirectChatPreference({is_shortcut:next})){applyDirectChatTheme();renderConversations();toast(next?'تمت إضافة المحادثة إلى اختصاراتك':'تمت إزالة المحادثة من اختصاراتك')}
+ const conversation=state.active,userId=state.user?.id;if(!conversation||!userId)return;
+ const pinned=!!(state.pinnedConversationIds?.has(conversation.id)||state.chatPrefs.get(conversation.id)?.is_shortcut);
+ try{
+  if(pinned){
+   if(state.pinnedConversationIds?.has(conversation.id)){
+    const {error}=await supabaseClient.from('user_conversation_pins').delete().eq('user_id',userId).eq('conversation_id',conversation.id);
+    if(error)throw error;state.pinnedConversationIds.delete(conversation.id);
+   }
+   if(conversation.type==='direct'&&state.chatPrefs.get(conversation.id)?.is_shortcut){
+    if(!await saveDirectChatPreference({is_shortcut:false}))throw new Error('تعذر تحديث الاختصار القديم');
+   }
+  }else{
+   const {error}=await supabaseClient.from('user_conversation_pins').insert({user_id:userId,conversation_id:conversation.id});
+   if(error)throw error;state.pinnedConversationIds.add(conversation.id);
+  }
+  applyDirectChatTheme();renderConversations();toast(pinned?'تم إلغاء تثبيت المحادثة':'تم تثبيت المحادثة في أعلى القائمة');
+ }catch(error){console.error('Conversation pin update failed:',error);toast('تعذر تثبيت المحادثة. تحقق من تحديث قاعدة البيانات ثم حاول مجدداً')}
 }
 async function clearDirectChatForMe(){
  if(state.active?.type!=='direct')return;
@@ -1160,7 +1189,7 @@ async function openConversation(c){
  const conversationOpenStarted=performance.now();
  if(voiceRecorder.isActive()){voiceRecorder.cancel();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
+ state.active=c;state.hiddenMessageIds=new Set();messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
  applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
  state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.messagePollOffset=0;state.messagePollOffsetConversationId=c.id;state.newMessageCount=0;updateNewMessagesIndicator();
  $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
@@ -1172,7 +1201,10 @@ async function openConversation(c){
  if(innerWidth<=760)$('sidebar').classList.add('closed');
  // Start the live channel and latest-message fetch before optional settings complete.
  subscribeConversation();subscribeProfileUpdates(c);
- const messageLoadPromise=loadMessages().finally(()=>{if(openToken===state.conversationOpenVersion&&state.active?.id===c.id)startMessagePolling(c.id)});
+ const messageLoadPromise=loadHiddenMessageIds(c.id).then(()=>{
+  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return false;
+  return loadMessages();
+ }).finally(()=>{if(openToken===state.conversationOpenVersion&&state.active?.id===c.id)startMessagePolling(c.id)});
  const starredLoadPromise=loadStarredMessageIds(c.id);
  const settingsLoadPromise=(async()=>{
   if(c.type==='group')await loadGroupSettings(c.id);else state.groupSettings=null;
@@ -1185,7 +1217,7 @@ async function openConversation(c){
  const canPost=(c.type!=='channel'||myRole==='owner'||myRole==='admin')&&!(c.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(myRole));
  $('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));
  $('chatSub').textContent=isSelfConversation(c)?'مساحة شخصية · مراسلة نفسك':c.type==='group'?'مجموعة · '+(c.members||[]).length+' أعضاء':c.type==='channel'?'قناة إعلانات · '+(c.members||[]).length+' مشتركين':'محادثة خاصة';
- $('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';resizeComposer();
+ $('messageInput').disabled=!canPost;$('messageInput').placeholder=c.type==='channel'&&!canPost?'النشر متاح لمشرفي القناة فقط':'اكتب رسالتك هنا…';updateConversationMenu();resizeComposer();
  recordPerf('conversation_open',performance.now()-conversationOpenStarted,{success:true,latestOnly:true});
 }
 
@@ -1200,23 +1232,27 @@ function openChatStickerPicker(){
 }
 function bindMessageGestures(row,message){
  const bubble=row.querySelector('.bubble');if(!bubble||message.deleted_at)return;
- let start=null;
+ let start=null,holdTimer=null,longPressFired=false;
+ const clearHold=()=>{if(holdTimer){clearTimeout(holdTimer);holdTimer=null}};
  bubble.addEventListener('pointerdown',event=>{
   if(event.target.closest('button,a,.reply-quote,.message-menu-wrap'))return;
-  start={x:event.clientX,y:event.clientY,id:event.pointerId};
+  clearHold();longPressFired=false;start={x:event.clientX,y:event.clientY,id:event.pointerId};
+  holdTimer=setTimeout(()=>{if(!start)return;longPressFired=true;start=null;bubble.style.transform='';row.querySelector('.message-menu-trigger')?.click()},520);
  });
  bubble.addEventListener('pointermove',event=>{
   if(!start||start.id!==event.pointerId)return;
   const dx=event.clientX-start.x,dy=event.clientY-start.y;
+  if(Math.abs(dx)>12||Math.abs(dy)>12)clearHold();
   if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)<110)bubble.style.transform='translateX('+Math.max(-78,Math.min(78,dx*.42))+'px)';
  });
  bubble.addEventListener('pointerup',event=>{
+  clearHold();if(longPressFired){longPressFired=false;start=null;bubble.style.transform='';return}
   if(!start)return;
   const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;bubble.style.transform='';
   const rtl=getComputedStyle(document.documentElement).direction==='rtl';
   if(Math.abs(dx)>=58&&Math.abs(dx)>Math.abs(dy)*1.25&&(rtl?dx>0:dx<0))beginReply(message);
  });
- bubble.addEventListener('pointercancel',()=>{start=null;bubble.style.transform=''});
+ bubble.addEventListener('pointercancel',()=>{clearHold();start=null;bubble.style.transform='';longPressFired=false});
 }
 
 function showMessageDetailModal(title,contentNode){
@@ -1256,7 +1292,7 @@ async function openMessageEditHistory(message){
   showMessageDetailModal('سجل تعديلات الرسالة',list);
  }catch(error){console.error('Message edit history load failed:',error);toast('تعذر تحميل سجل التعديلات أو لا تملك صلاحية الاطلاع عليه')}
 }
-function messagePreview(m){if(!m)return 'رسالة غير متاحة';if(m.deleted_at)return 'تم حذف هذه الرسالة';const sticker=decodeChatSticker(m.content);if(sticker)return 'ملصق '+sticker;return String(m.content||(m.attachment_path?'مرفق':'رسالة')).slice(0,180)}
+function messagePreview(m){if(!m)return 'رسالة غير متاحة';if(state.hiddenMessageIds?.has(m.id))return 'رسالة مخفية لديك';if(m.deleted_at)return 'تم حذف هذه الرسالة';const sticker=decodeChatSticker(m.content);if(sticker)return 'ملصق '+sticker;return String(m.content||(m.attachment_path?'مرفق':'رسالة')).slice(0,180)}
 function renderComposerContext(){const privateReply=state.privateReplyPending,target=state.editTarget||state.replyTarget||privateReply,box=$('composerContext');if(!box)return;if(!target){box.classList.add('hidden');$('composerContextText').textContent='';$('attachBtn').disabled=false;$('sendBtn').title='إرسال';$('sendBtn').innerHTML='<i class="ph ph-paper-plane-tilt"></i>';return}box.classList.remove('hidden');$('composerContextLabel').textContent=state.editTarget?'تعديل الرسالة':privateReply?'رد خاص من المجموعة':'الرد على الرسالة';$('composerContextText').textContent=privateReply?privateReply.quotedContent:messagePreview(target);$('sendBtn').title=state.editTarget?'حفظ التعديل':'إرسال الرد';$('sendBtn').innerHTML=state.editTarget?'<i class="ph ph-check"></i>':'<i class="ph ph-paper-plane-tilt"></i>'}
 function beginReply(m){if(!m||m.deleted_at)return;if(state.editTarget)$('messageInput').value='';state.editTarget=null;$('attachBtn').disabled=false;state.replyTarget=m;renderComposerContext();resizeComposer();$('messageInput').focus()}
 function canEditMessage(m){
@@ -1395,6 +1431,7 @@ async function markConversationReceipt(conversationId,markRead=true,requestId=nu
 async function publishTyping(isTyping){if(!state.typingChannel||!state.user)return;const now=Date.now();if(isTyping&&now-state.typingSent<1000)return;state.typingSent=now;try{await state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile?.display_name||'عضو',is_typing:isTyping}})}catch(e){console.debug('Typing broadcast failed',e?.message||e)}}
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
+ if(state.hiddenMessageIds?.has(m.id)){state.messageIds.add(m.id);return true;}
  state.messageRenderPromises ||= new Map();
  const pending=state.messageRenderPromises.get(m.id);
  if(pending){
@@ -1470,7 +1507,8 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
    }
   }
   const meta=document.createElement('span');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · تم تعديلها':'');(bubble.querySelector('.message-content')||bubble).append(meta);renderMessageStatus(m,bubble);
-  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-caret-down"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية';addOption('حذف','ph-trash',()=>deleteMessage(m))}
+  if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-caret-down"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية'}
+  addOption('حذف','ph-trash',()=>deleteMessage(m));
   if(activeConversation?.type==='group'&&m.sender_id!==state.user?.id)addOption('رد خاص','ph-chat-circle-dots',()=>replyPrivatelyToGroupMessage(m));if(m.edited_at&&(m.sender_id===state.user?.id||state.isTeamAdmin))addOption('سجل التعديلات','ph-clock-counter-clockwise',()=>openMessageEditHistory(m));trigger.onclick=event=>{
  event.stopPropagation();const opening=menu.classList.contains('hidden');
  document.querySelectorAll('.message-options-menu').forEach(other=>{if(other!==menu){if(other._closeMenu)other._closeMenu();else other.classList.add('hidden')}});
@@ -1850,18 +1888,56 @@ function subscribeConversation(){
  }).subscribe();
 }
 async function editMessage(m){beginEditMessage(m)}
-async function deleteMessage(m){
- if(m.sender_id!==state.user?.id||m.deleted_at)return;
- if(!confirm('هل تريد حذف هذه الرسالة؟'))return;
+function canDeleteMessageForMe(m){
+ if(!m||m.deleted_at)return false;
+ const createdAt=Date.parse(m.created_at);return Number.isFinite(createdAt)&&Date.now()<=createdAt+15*60*1000;
+}
+function canDeleteMessageForEveryone(m){
+ if(!m||m.deleted_at||m.sender_id!==state.user?.id)return false;
+ return canDeleteMessageForMe(m);
+}
+async function loadHiddenMessageIds(conversationId){
+ state.hiddenMessageIds=new Set();
+ if(!state.user?.id||!conversationId)return true;
+ const {data,error}=await supabaseClient.from('user_hidden_messages').select('message_id').eq('user_id',state.user.id).eq('conversation_id',conversationId);
+ if(error){console.warn('Per-user hidden messages are unavailable until the visibility migration is applied:',error.message);return false}
+ state.hiddenMessageIds=new Set((data||[]).map(row=>row.message_id));return true;
+}
+async function hideMessageForMe(message){
+ if(!canDeleteMessageForMe(message)){toast('حذف الرسالة من حسابك متاح خلال أول 15 دقيقة من إرسالها');return false}
+ if(!message?.id||!message.conversation_id||!state.user?.id)return false;
  try{
-  const {data,error}=await supabaseClient.from('chat_messages')
-   .update({deleted_at:new Date().toISOString(),content:'تم حذف الرسالة'})
-   .eq('id',m.id).eq('sender_id',state.user.id).select('*').single();
+  const {error}=await supabaseClient.from('user_hidden_messages').insert({user_id:state.user.id,conversation_id:message.conversation_id,message_id:message.id});
+  if(error&&error.code!=='23505')throw error;
+  state.hiddenMessageIds ||= new Set();state.hiddenMessageIds.add(message.id);state.messageIds.add(message.id);
+  const row=Array.from(document.querySelectorAll('.message')).find(item=>item.dataset.messageId===message.id);row?.remove();
+  reconcileMessageTimeline($('messages'));renderPinnedBanner();
+  toast('أُخفيت الرسالة من حسابك فقط');return true;
+ }catch(error){console.error('Hide message for me failed:',error);toast('تعذر إخفاء الرسالة. قد تحتاج إلى تحديث قاعدة البيانات');return false}
+}
+async function deleteMessageForEveryone(message){
+ if(!canDeleteMessageForEveryone(message)){toast('حذف الرسالة لدى الجميع متاح لصاحبها خلال أول 15 دقيقة فقط');return false}
+ try{
+  const {data,error}=await supabaseClient.rpc('delete_message_secure',{p_message_id:message.id});
   if(error)throw error;
-  if(!data?.id)throw new Error('لم يتم تأكيد حذف الرسالة');
-  if(state.replyTarget?.id===m.id)cancelComposerContext();
-  handleMessageUpdateRealtime({new:data},data.conversation_id);
- }catch(error){console.error('Message delete failed:',error);toast(error?.message||'تعذر حذف الرسالة')}
+  const deleted=Array.isArray(data)?data[0]:data;
+  if(!deleted?.id)throw new Error('لم يتم تأكيد حذف الرسالة من الخادم');
+  if(state.replyTarget?.id===message.id)cancelComposerContext();
+  handleMessageUpdateRealtime({new:deleted},deleted.conversation_id);return true;
+ }catch(error){console.error('Secure message delete failed:',error);toast(error?.message||'تعذر حذف الرسالة لدى الجميع');return false}
+}
+function deleteMessage(message){
+ if(!message||message.deleted_at)return;
+ const content=document.createElement('div');content.className='message-delete-choice';
+ const note=document.createElement('p');note.textContent='اختر مكان حذف الرسالة. حذفها لديك لا يؤثر على بقية المشاركين.';content.append(note);
+ const actions=document.createElement('div');actions.className='message-delete-choice-actions';
+ const local=document.createElement('button');local.type='button';local.className='message-delete-local';local.textContent='حذف لديّ';local.disabled=!canDeleteMessageForMe(message);
+ local.title=local.disabled?'متاح خلال 15 دقيقة من إرسال الرسالة':'حذف الرسالة من حسابك فقط';
+ local.onclick=async()=>{document.querySelector('.message-detail-overlay')?.remove();await hideMessageForMe(message)};
+ const everyone=document.createElement('button');everyone.type='button';everyone.className='message-delete-everyone';everyone.textContent='حذف لدى الجميع';everyone.disabled=!canDeleteMessageForEveryone(message);
+ everyone.title=everyone.disabled?'متاح لصاحب الرسالة خلال 15 دقيقة من إرسالها':'حذف لدى جميع المشاركين';
+ everyone.onclick=async()=>{if(!confirm('سيتم حذف الرسالة لدى جميع المشاركين ولا يمكن التراجع. هل تريد المتابعة؟'))return;document.querySelector('.message-detail-overlay')?.remove();await deleteMessageForEveryone(message)};
+ actions.append(local,everyone);content.append(actions);showMessageDetailModal('حذف الرسالة',content);
 }
 function showAttachmentPreview(file,label){
  const preview=$('attachmentPreview');preview.replaceChildren();
@@ -2337,17 +2413,17 @@ function resetProfilePhotoSelection(){
  if(status){status.classList.add('hidden');status.textContent=''}
  if(input){input.value='';input.disabled=false}
 }
-function openProfileModal(profile,editable=false){
+function openProfileModal(profile,editable=false,infoPanel=false){
  if(!profile)return;const profileModalStarted=performance.now();profileModalEditable=!!editable;
  resetProfilePhotoSelection();
  $('profileModalTitle').textContent=editable?'ملفي الشخصي':'الملف الشخصي';$('profileModalSubtitle').textContent=editable?'إدارة بيانات حسابك':'معلومات المستخدم';
  $('profileDisplayName').value=profile.display_name||'';$('profileUsername').value=profile.username?'@'+profile.username:'';$('profileBio').value=profile.bio||'';
  renderAvatar($('profileModalAvatar'),profile,'profile-modal-avatar');$('profileDisplayName').readOnly=!editable;$('profileBio').readOnly=!editable;
  $('profilePhotoBtn').classList.toggle('hidden',!editable);$('profileSaveBtn').classList.toggle('hidden',!editable);$('profileReadOnlyNote').classList.toggle('hidden',editable);
- $('profileModal').classList.add('open');$('profileModal').setAttribute('aria-hidden','false');document.body.classList.add('profile-modal-open');recordPerf('profile_modal_open',performance.now()-profileModalStarted);
+ $('profileModal').classList.toggle('conversation-info-mode',!!infoPanel);$('profileModal').classList.add('open');$('profileModal').setAttribute('aria-hidden','false');document.body.classList.add('profile-modal-open');recordPerf('profile_modal_open',performance.now()-profileModalStarted);
 }
 function closeProfileModal(){
- $('profileModal').classList.remove('open');$('profileModal').setAttribute('aria-hidden','true');document.body.classList.remove('profile-modal-open');
+ $('profileModal').classList.remove('open','conversation-info-mode');$('profileModal').setAttribute('aria-hidden','true');document.body.classList.remove('profile-modal-open');
  if(!profilePhotoBusy)resetProfilePhotoSelection();
 }
 document.addEventListener('DOMContentLoaded',()=>{
@@ -2377,6 +2453,7 @@ $('profilePhotoApprove').onclick=async()=>{
 };
 $('chatAvatar').onclick=()=>{if(state.active?.type==='direct')openProfileModal(otherMember(state.active),false)};
 $('chatProfileOpen').onclick=()=>{if(state.active?.type==='direct')openProfileModal(otherMember(state.active),false)};
+$('chatInfoBtn').onclick=()=>{if(state.active?.type==='direct')openProfileModal(otherMember(state.active),false,true)};
 $('profileSaveBtn').onclick=async()=>{
  if(!profileModalEditable||!state.user||profileSaveBusy)return;
  const display=$('profileDisplayName').value.trim(),bio=$('profileBio').value.trim();if(!display)return toast('أدخل الاسم الظاهر');
@@ -2409,11 +2486,12 @@ function ensureGroupModal(){
  <div id="groupManagementBody" class="group-management-body"></div></section></div>
  <div id="starredModal" class="starred-modal" aria-hidden="true"><section class="starred-dialog" role="dialog" aria-modal="true"><header class="starred-head"><h2>الرسائل المميزة بنجمة</h2><button id="starredClose" class="iconbtn" type="button"><i class="ph ph-x"></i></button></header><div id="starredBody" class="starred-body"></div></section></div>
  <div id="customListModal" class="custom-list-modal" aria-hidden="true"><section class="custom-list-dialog" role="dialog" aria-modal="true"><header class="custom-list-head"><h2>إضافة إلى القوائم المخصصة</h2><button id="customListClose" class="iconbtn" type="button"><i class="ph ph-x"></i></button></header><div id="customListBody" class="custom-list-body"></div></section></div>
- <div id="messageSelectionToolbar" class="message-selection-toolbar"><strong id="messageSelectionCount">0 محددة</strong><div class="group-management-row"><button id="starSelectedMessages" type="button">تمييز بنجمة</button><button id="exportSelectedMessages" type="button">تصدير المحدد</button><button id="cancelMessageSelection" type="button">إلغاء</button></div></div>`);
+ <div id="messageSelectionToolbar" class="message-selection-toolbar"><strong id="messageSelectionCount">0 محددة</strong><div class="group-management-row"><button id="starSelectedMessages" type="button">تمييز بنجمة</button><button id="deleteSelectedForMe" type="button">حذف لديّ</button><button id="deleteSelectedForEveryone" type="button">حذف لدى الجميع</button><button id="cancelMessageSelection" type="button">إلغاء</button></div></div>`);
  $('groupManagementClose').onclick=closeGroupManagement;$('groupManagementModal').addEventListener('click',e=>{if(e.target===$('groupManagementModal'))closeGroupManagement()});
  $('starredClose').onclick=()=>{$('starredModal').classList.remove('open');$('starredModal').setAttribute('aria-hidden','true')};$('customListClose').onclick=()=>{$('customListModal').classList.remove('open');$('customListModal').setAttribute('aria-hidden','true')};
  $('cancelMessageSelection').onclick=()=>setMessageSelectionMode(false);
- $('starSelectedMessages').onclick=starSelectedMessages;$('exportSelectedMessages').onclick=exportSelectedMessages;
+ $('starSelectedMessages').onclick=starSelectedMessages;
+ $('deleteSelectedForMe').onclick=deleteSelectedForMe;$('deleteSelectedForEveryone').onclick=deleteSelectedForEveryone;
 }
 function subscribePersonalChatData(){if(!state.user)return;if(state.personalChannel)supabaseClient.removeChannel(state.personalChannel);const uid=state.user.id;state.personalChannel=supabaseClient.channel('personal-chat-data:'+uid).on('postgres_changes',{event:'*',schema:'public',table:'chat_lists',filter:'user_id=eq.'+uid},()=>loadCustomLists().then(renderConversations)).on('postgres_changes',{event:'*',schema:'public',table:'chat_list_items',filter:'user_id=eq.'+uid},()=>loadCustomLists().then(renderConversations)).on('postgres_changes',{event:'*',schema:'public',table:'user_chat_preferences',filter:'user_id=eq.'+uid},async()=>{await loadDirectChatPreferences();renderConversations();updateConversationMenu()}).on('postgres_changes',{event:'*',schema:'public',table:'user_conversation_settings',filter:'user_id=eq.'+uid},p=>{const row=p.eventType==='DELETE'?p.old:p.new;if(row?.conversation_id){if(p.eventType==='DELETE')state.userConversationSettings.delete(row.conversation_id);else state.userConversationSettings.set(row.conversation_id,row);updateConversationMenu();renderConversations()}}).on('postgres_changes',{event:'*',schema:'public',table:'user_message_stars',filter:'user_id=eq.'+uid},()=>{if(state.active?.id)loadStarredMessageIds(state.active.id)})
  .on('postgres_changes',{event:'*',schema:'public',table:'user_conversation_classifications',filter:'user_id=eq.'+uid},async()=>{await loadWorkspaceData();renderConversations()})
@@ -2542,7 +2620,8 @@ function updateConversationMenu(){
  const c=state.active;if(!c)return;
  const group=c.type==='group',role=groupRole(),admin=isGroupAdmin(),settings=state.userConversationSettings.get(c.id)||{};
  const show=(id,visible)=>$(id)?.classList.toggle('hidden',!visible);
- ['groupInfoBtn','selectMessagesBtn','conversationWorkspaceBtn','muteNotificationsBtn','notificationSettingsBtn','disappearingBtn','starredMessagesBtn','groupThemeBtn','favoriteConversationBtn','addToCustomListBtn','exportConversationBtn','closeConversationBtn','clearConversationBtn','leaveGroupBtn'].forEach(id=>show(id,true));
+ ['groupInfoBtn','selectMessagesBtn','conversationWorkspaceBtn','muteNotificationsBtn','notificationSettingsBtn','disappearingBtn','starredMessagesBtn','groupThemeBtn','favoriteConversationBtn','addToCustomListBtn','closeConversationBtn','clearConversationBtn','leaveGroupBtn'].forEach(id=>show(id,true));
+ show('chatInfoBtn',c.type==='direct');
  show('groupInfoBtn',group);show('conversationWorkspaceBtn',true);show('disappearingBtn',group);show('groupThemeBtn',group);show('leaveGroupBtn',group);
  $('muteNotificationsBtn').innerHTML=settings.is_muted?'<i class="ph ph-bell"></i><span>إلغاء كتم الإشعارات</span>':'<i class="ph ph-bell-slash"></i><span>كتم الإشعارات</span>';
  const favorite=!!state.userConversationSettings.get(c.id)?.is_favorite;
@@ -2625,16 +2704,18 @@ function decorateMessageSelection(row,message){
 }
 function updateMessageSelectionToolbar(){const count=state.selectedMessageIds.size;$('messageSelectionCount').textContent=count.toLocaleString('ar-SA')+' محددة'}
 async function starSelectedMessages(){const ids=[...state.selectedMessageIds];let succeeded=0;for(const id of ids){if(await toggleMessageStar(id,true))succeeded++}toast('تم تمييز '+succeeded+' من '+ids.length+' رسالة');setMessageSelectionMode(false)}
-function exportSelectedMessages(){const ids=state.selectedMessageIds,items=state.messages.filter(m=>ids.has(m.id));downloadMessages(items,'messages-selected.txt');setMessageSelectionMode(false)}
-function downloadMessages(messages,filename){
- const content=(messages||[]).map(m=>{const member=(state.active?.members||[]).find(x=>x.user_id===m.sender_id);return '['+new Date(m.created_at).toLocaleString('ar-SA')+'] '+(member?.profile?.display_name||(m.sender_id===state.user.id?'أنت':'عضو'))+': '+(m.deleted_at?'[رسالة محذوفة]':m.content||'[مرفق]')}).join('\n');
- const blob=new Blob(['\ufeff'+content],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+async function deleteSelectedForMe(){
+ const selected=[...state.selectedMessageIds].map(id=>state.messages.find(message=>message.id===id)).filter(canDeleteMessageForMe);let count=0;
+ if(!selected.length){toast('لا توجد رسائل محددة ضمن مهلة الحذف البالغة 15 دقيقة');setMessageSelectionMode(false);return}
+ for(const message of selected){if(await hideMessageForMe(message))count++}
+ toast('تم إخفاء '+count+' من '+selected.length+' رسالة من حسابك');setMessageSelectionMode(false);
 }
-async function exportActiveConversation(){
- const c=state.active;if(!c)return;
- const {data,error}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,created_at,deleted_at').eq('conversation_id',c.id).order('created_at').limit(5000);
- if(error){toast('تعذر تصدير الدردشة');return}
- downloadMessages(data||[],(c.title||convName(c)).replace(/[\\/:*?"<>|]/g,'_')+'.txt');toast('تم تجهيز ملف تصدير الدردشة');
+async function deleteSelectedForEveryone(){
+ const selected=[...state.selectedMessageIds].map(id=>state.messages.find(message=>message.id===id)).filter(canDeleteMessageForEveryone);
+ if(!selected.length){toast('لا توجد رسائل محددة تملك صلاحية حذفها لدى الجميع خلال مهلة 15 دقيقة');return}
+ if(!confirm('سيتم حذف '+selected.length+' رسالة لدى جميع المشاركين. هل تريد المتابعة؟'))return;
+ let count=0;for(const message of selected){if(await deleteMessageForEveryone(message))count++}
+ toast('حُذفت '+count+' من '+selected.length+' رسالة لدى الجميع');setMessageSelectionMode(false);
 }
 async function clearActiveConversation(){
  const c=state.active;if(!c)return;
@@ -2647,7 +2728,7 @@ async function closeActiveConversation(){
  closeChatHeaderMenu();stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
  state.channel=null;state.typingChannel=null;state.active=null;state.messages=[];state.messageIds.clear();state.messageLoadVersion++;
  $('chatTitle').textContent='اختر محادثة';$('chatSub').textContent='محادثاتك الخاصة والمجموعات';$('messages').innerHTML='<div class="welcome"><h2>تم إغلاق الدردشة</h2><p>اختر محادثة أخرى من القائمة.</p></div>';$('messageInput').disabled=true;$('sendBtn').disabled=true;
- if(innerWidth<=760)$('sidebar').classList.remove('closed');renderConversations();
+ if(innerWidth<=760)$('sidebar').classList.remove('closed');$('chatInfoBtn')?.classList.add('hidden');renderConversations();
 }
 async function leaveActiveGroup(){
  const c=state.active;if(c?.type!=='group')return;
@@ -2691,7 +2772,6 @@ function groupMenuActions(){
  $('groupThemeBtn').onclick=()=>openGroupManagement();
  $('favoriteConversationBtn').onclick=toggleFavoriteConversation;
  $('addToCustomListBtn').onclick=openCustomListPicker;
- $('exportConversationBtn').onclick=exportActiveConversation;
  $('closeConversationBtn').onclick=closeActiveConversation;
  $('clearConversationBtn').onclick=clearActiveConversation;
  $('leaveGroupBtn').onclick=leaveActiveGroup;

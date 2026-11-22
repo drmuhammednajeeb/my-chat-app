@@ -9,7 +9,7 @@ import { buildObjectInventory } from './build-database-object-inventory.mjs';
 test('source inventory covers all known SQL files and remains read-only', async () => {
   const report = await buildObjectInventory();
   assert.equal(report.auditMode, 'READ_ONLY_SOURCE_INVENTORY');
-  assert.deepEqual(report.sourceCounts, { migrations: 72, historicalSql: 0, archivedSql: 12, totalSqlFiles: 72, supabaseConfigPresent: false });
+  assert.deepEqual(report.sourceCounts, { migrations: 73, historicalSql: 0, archivedSql: 12, totalSqlFiles: 73, supabaseConfigPresent: false });
   assert.ok(report.inventoryTotals.createdTables > 0);
   assert.ok(report.inventoryTotals.columns > 0);
   assert.ok(report.inventoryTotals.foreignKeys > 0);
@@ -57,7 +57,7 @@ test('platform service dependencies are explicit', async () => {
 
 test('all policy definitions after the membership rewrite enforce active membership', async () => {
   const report = await buildObjectInventory();
-  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 21);
+  assert.equal(report.policyCoverage.policiesAfterMembershipBase.length, 29);
   assert.deepEqual(report.policyCoverage.laterPoliciesMissingActiveMemberGuard, []);
 });
 

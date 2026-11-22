@@ -266,10 +266,11 @@ test('duplicate soft-delete events do not repeatedly replace the tombstone row',
   assert.equal(state.messageIds.has('m1'), true);
 });
 
-test('delete action uses the returned database row and avoids a competing full reload', () => {
-  const remove = extractFunction('deleteMessage');
-  assert.match(remove, /\.select\('\*'\)\.single\(\)/);
-  assert.match(remove, /handleMessageUpdateRealtime\(\{new:data\},data\.conversation_id\)/);
+test('global message deletion uses the secure server RPC and reconciles its returned row without a full reload', () => {
+  const remove = extractFunction('deleteMessageForEveryone');
+  assert.match(remove, /rpc\('delete_message_secure'/);
+  assert.match(remove, /const deleted=Array\.isArray\(data\)\?data\[0\]:data/);
+  assert.match(remove, /handleMessageUpdateRealtime\(\{new:deleted\},deleted\.conversation_id\)/);
   assert.doesNotMatch(remove, /loadMessages\(\)/);
 });
 
@@ -648,4 +649,21 @@ test('typing events and delayed clears from a previous conversation are ignored'
   assert.match(ui.textContent, /حالي/);
   oldTimer?.();
   assert.match(ui.textContent, /حالي/);
+});
+
+test('approved chat design keeps message copy/export and forwarding absent while preserving secure 15-minute actions', async () => {
+  const tokens = await readFile(new URL('../styles/theme-tokens.css', import.meta.url), 'utf8');
+  assert.match(source, /id="chatInfoBtn"/);
+  assert.match(source, /conversation-info-mode/);
+  assert.match(source, /openProfileModal\(otherMember\(state\.active\),false,true\)/);
+  assert.match(overrides, /profile-modal\.conversation-info-mode/);
+  assert.match(tokens, /--chat-font:"IBM Plex Sans Arabic"/);
+  assert.match(source, /rpc\('edit_message_secure'/);
+  assert.match(source, /p_expected_revision:expectedRevision/);
+  assert.match(source, /rpc\('delete_message_secure'/);
+  assert.match(source, /function canDeleteMessageForMe\(m\)/);
+  assert.match(source, /local\.disabled=!canDeleteMessageForMe\(message\)/);
+  assert.match(source, /createdAt\+15\*60\*1000/);
+  assert.doesNotMatch(source, /exportSelectedMessages|exportActiveConversation|exportConversationBtn/);
+  assert.doesNotMatch(source, /نسخ الرسالة|إعادة توجيه الرسالة|forwardMessage/i);
 });

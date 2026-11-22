@@ -3,11 +3,11 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 72,
-    "mappedSources": 72,
+    "sqlFiles": 73,
+    "mappedSources": 73,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 21,
+    "testOnlySqlFixtures": 23,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -29,16 +29,20 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql",
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
-      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql"
+      "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 70,
-    "executedTestOnlySqlFixtures": 21,
-    "executedSqlFiles": 91,
+    "executedMappedSources": 71,
+    "executedTestOnlySqlFixtures": 23,
+    "executedSqlFiles": 94,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 70,
-    "candidateTestOnlySqlFixtures": 21,
-    "candidateSqlFiles": 91
+    "candidateMappedSources": 71,
+    "candidateTestOnlySqlFixtures": 23,
+    "candidateSqlFiles": 94,
+    "localRuntimeRunId": 45078684896,
+    "localRuntimeCommit": "0640be6d42c8548fdf609e7008be706e2dbbaa42"
   },
   "execution": {
     "enabled": false,
@@ -679,6 +683,26 @@
       "parityNote": "Current-mainline runtime pending; previous PR #147 evidence is not carried forward."
     },
     {
+      "nodeId": "chat.message-visibility-pins-and-delete",
+      "status": "FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING",
+      "testSources": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+      ],
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "parityNote": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion.",
+      "runtimeEvidence": {
+        "workflowRunId": 45078684896,
+        "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+        "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "completedAt": "2026-11-22T22:39:11Z",
+        "sqlFilesExecuted": 94
+      }
+    },
+    {
       "nodeId": "test-fixture.direct-chat-runtime",
       "status": "TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED",
       "testSources": [
@@ -971,6 +995,17 @@
         "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
       "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-020",
+      "severity": "PRODUCTION_APPROVAL_PENDING",
+      "issue": "Disposable-local PostgreSQL replay, RLS catalog assertions, and authenticated two-user runtime probes passed (run 45076185494). Do not apply to production until independent review and separate explicit owner approval.",
+      "evidence": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+      ],
+      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
     }
   ],
   "requiredSourceRecovery": [
@@ -983,7 +1018,8 @@
   "safetyNotes": [
     "Candidate order is derived from the reviewed acyclic dependency graph.",
     "Test-only SQL copies and the chat-media upload-path hardening fixture are local-only; they are not production migrations.",
-    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved."
+    "Do not execute until every blocking dependency is resolved and a disposable PostgreSQL replay plan is approved.",
+    "The message visibility/pin/secure-delete forward migration is a candidate only. It has not been replayed locally or applied to production; execution remains disabled."
   ],
   "forwardReconciliationMigrations": [
     {
@@ -1101,33 +1137,61 @@
       "localRuntimeRunId": 44873724263,
       "localRuntimeCommit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
       "localRuntimeCompletedAt": "2026-11-21T06:05:13Z"
+    },
+    {
+      "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeRunId": 45078684896,
+      "localRuntimeCommit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+      "localRuntimeCompletedAt": "2026-11-22T22:39:11Z"
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
+      "status": "TEST_ONLY_AUTHENTICATED_MULTIUSER_RUNTIME",
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 44680577210,
-      "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
-      "completedAt": "2026-11-20T05:24:10Z",
+      "workflowRunId": 45078684896,
+      "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+      "completedAt": "2026-11-22T22:39:11Z",
       "localOnly": true,
-      "sqlFilesExecuted": 89,
+      "sqlFilesExecuted": 94,
       "checks": [
-        "All 89 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
-        "The cleanup scheduler migration verified the owner-only SECURITY DEFINER boundary, empty search_path, session_user guard, Vault-backed credentials, and 10-second pg_net timeout.",
-        "The migration did not invoke configure_message_auto_cleanup() or reschedule the active production cron job.",
-        "Least-privilege, Storage RLS, message auto-cleanup Storage API, and cleanup queue probes passed.",
-        "The disposable Supabase stack was stopped and destroyed."
+        "All 94 reviewed SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
+        "The message-visibility and conversation-pins migration executed; its catalog assertions and authenticated runtime fixture passed.",
+        "Authenticated runtime probes confirmed active-author deletion succeeds, while suspended members, removed conversation members, and non-authors are denied without changing the target message.",
+        "Direct chat_messages UPDATE bypass and expired 15-minute deletion attempts were rejected.",
+        "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
+        "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
       ]
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 44680577133,
-      "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
-      "completedAt": "2026-11-20T05:22:31Z",
-      "tests": 107,
-      "passed": 107,
+      "workflowRunId": 45078734606,
+      "commit": "3f0bddc1e7d46657ff7acf2c5ecc0c7f66c992de",
+      "completedAt": "2026-11-22T22:37:25Z",
+      "tests": 108,
+      "passed": 108,
       "failed": 0
     },
     "previousRuntime": {
@@ -1269,5 +1333,5 @@
       "failed": 0
     }
   },
-  "reviewState": "CURRENT_MAINLINE_RUNTIME_VALIDATED_PRODUCTION_UNCHANGED"
+  "reviewState": "FORWARD_MIGRATION_RUNTIME_VALIDATED_PRODUCTION_UNCHANGED"
 }
