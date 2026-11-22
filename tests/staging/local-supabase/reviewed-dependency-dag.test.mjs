@@ -793,7 +793,7 @@ test('message visibility, conversation pins and secure deletion remain a gated f
   const node = dag.nodes.find(item => item.id === 'chat.message-visibility-pins-and-delete');
   assert.ok(node);
   assert.equal(node.status, 'FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING');
-  assert.deepEqual(node.requires, ['core.base', 'chat.message-edit-hardening', 'chat.restore-message-edit-guard', 'chat.direct-conversation-rpc', 'membership.final-format', 'test-fixture.direct-chat-runtime']);
+  assert.deepEqual(node.requires, ['core.base', 'chat.message-edit-hardening', 'chat.restore-message-edit-guard', 'membership.final-format', 'test-fixture.direct-chat-profiles']);
   assert.ok(node.provides.includes('public.user_hidden_messages'));
   assert.ok(node.provides.includes('public.user_conversation_pins'));
   assert.ok(node.provides.includes('public.delete_message_secure(uuid)'));
