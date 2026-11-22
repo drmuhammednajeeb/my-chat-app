@@ -322,7 +322,7 @@ input::placeholder,textarea::placeholder,.composer-hint,.conv-last,.conv-time,
 }
 .form-row label,.auth-card h2,.auth-card>p,.auth-note{color:var(--text)}
 .alert{background:var(--danger-bg);color:var(--danger-text);border:1px solid var(--danger-border)}
-:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
+:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
 button:disabled{opacity:.58}
 .sectionhead,.custom-lists-heading,.message-history-entry small{color:var(--muted)}
 /* Stronger hierarchy: readable body copy and unmistakable primary labels. */
