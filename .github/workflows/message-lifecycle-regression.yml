@@ -33,4 +33,4 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Run browser integration regression checks
-        run: node --test tests/e2e/message-lifecycle.browser.test.mjs
+        run: node --test tests/e2e/message-lifecycle.browser.test.mjs tests/e2e/theme-contrast.browser.test.mjs
