@@ -1603,7 +1603,7 @@
         "test-fixture.admin-assertion",
         "test-fixture.direct-chat-profiles"
       ],
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "status": "FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING",
       "testSource": [
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
@@ -1611,7 +1611,12 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "note": "Per-user message hiding and conversation pin state, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original message creation. Includes SQL assertions and authenticated two-user isolation, unauthorized-delete, direct-update bypass, and expired edit/delete runtime probes."
+      "note": "Per-user message hiding and conversation pin state, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original message creation. Includes SQL assertions and authenticated two-user isolation, unauthorized-delete, direct-update bypass, and expired edit/delete runtime probes.",
+      "runtimeEvidence": {
+        "workflowRunId": 45076185494,
+        "commit": "cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0",
+        "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
+      }
     }
   ],
   "explicitEdges": [
@@ -2790,14 +2795,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "The SQL migration and catalog assertions have passed disposable-local replay, but the authenticated two-user fixture for per-user isolation, 15-minute delete-for-me, author-only global delete, direct-update bypass denial, and expired edit/delete rejection is still pending. Production remains unchanged.",
+      "severity": "PRODUCTION_APPROVAL_PENDING",
+      "issue": "Disposable-local PostgreSQL replay, RLS catalog assertions, and authenticated two-user runtime probes passed (run 45076185494). The forward migration remains unapplied to production pending independent review and separate explicit owner approval.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED"
+      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
     }
   ],
   "duplicateProvenance": [],
