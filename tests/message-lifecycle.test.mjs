@@ -266,10 +266,11 @@ test('duplicate soft-delete events do not repeatedly replace the tombstone row',
   assert.equal(state.messageIds.has('m1'), true);
 });
 
-test('delete action uses the returned database row and avoids a competing full reload', () => {
-  const remove = extractFunction('deleteMessage');
-  assert.match(remove, /\.select\('\*'\)\.single\(\)/);
-  assert.match(remove, /handleMessageUpdateRealtime\(\{new:data\},data\.conversation_id\)/);
+test('global message deletion uses the secure server RPC and reconciles its returned row without a full reload', () => {
+  const remove = extractFunction('deleteMessageForEveryone');
+  assert.match(remove, /rpc\('delete_message_secure'/);
+  assert.match(remove, /const deleted=Array\.isArray\(data\)\?data\[0\]:data/);
+  assert.match(remove, /handleMessageUpdateRealtime\(\{new:deleted\},deleted\.conversation_id\)/);
   assert.doesNotMatch(remove, /loadMessages\(\)/);
 });
 
