@@ -1988,9 +1988,13 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false,
-      "validationNote": "Secure deletion now locks the caller's active profile/Auth rows and conversation-membership row before locking the message. Runtime validation is pending for active, suspended, removed-member, non-author, and 15-minute cases. Production remains unchanged and execution is not authorized."
+      "validationNote": "Disposable local Supabase replay passed on the PR #165 candidate. The secure delete RPC locks the caller's active profile/Auth rows and conversation-membership row before locking the message; authenticated runtime probes passed for active author, suspended member, removed member, non-author, direct-update bypass, and the 15-minute deadline. Production remains unchanged and execution is not authorized.",
+      "localRuntimeRunId": 45078684896,
+      "localRuntimeCommit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+      "localRuntimeCompletedAt": "2026-11-22T22:39:11Z",
+      "localRuntimeSqlFilesExecuted": 94
     }
   ],
   "forwardMigrationPolicy": {
@@ -2012,32 +2016,31 @@
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 44680577210,
-      "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
-      "completedAt": "2026-11-20T05:24:10Z",
+      "workflowRunId": 45078684896,
+      "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+      "completedAt": "2026-11-22T22:39:11Z",
       "localOnly": true,
-      "sqlFilesExecuted": 89,
+      "sqlFilesExecuted": 94,
       "checks": [
-        "All 89 selected SQL migration and test-fixture sources replayed successfully in a disposable local Supabase stack.",
-        "The cleanup scheduler migration verified the owner-only SECURITY DEFINER boundary, empty search_path, session_user guard, Vault-backed credentials, and 10-second pg_net timeout.",
-        "The migration did not invoke configure_message_auto_cleanup() or reschedule the active production cron job.",
-        "Least-privilege, Storage RLS, message auto-cleanup Storage API, and cleanup queue probes passed.",
-        "The disposable Supabase stack was stopped and destroyed."
+        "All 94 reviewed SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
+        "The message-visibility and conversation-pins migration executed; its catalog assertions and authenticated runtime fixture passed.",
+        "Authenticated runtime probes confirmed active-author deletion succeeds, while suspended members, removed conversation members, and non-authors are denied without changing the target message.",
+        "Direct chat_messages UPDATE bypass and expired 15-minute deletion attempts were rejected.",
+        "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
+        "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
       ]
     },
     "audit": {
       "status": "PASSED",
       "workflow": "Local Supabase SQL manifest audit",
-      "workflowRunId": 44680577133,
-      "commit": "70ab8157d11e55fa1453a81d1595088f95dd5361",
-      "completedAt": "2026-11-20T05:22:31Z",
-      "tests": 107,
-      "passed": 107,
+      "workflowRunId": 45078734606,
+      "commit": "3f0bddc1e7d46657ff7acf2c5ecc0c7f66c992de",
+      "completedAt": "2026-11-22T22:37:25Z",
+      "tests": 108,
+      "passed": 108,
       "failed": 0
     },
-    "pendingAdditionalSources": [
-      "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql"
-    ],
+    "pendingAdditionalSources": [],
     "previousRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
