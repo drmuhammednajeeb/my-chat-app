@@ -777,7 +777,7 @@ test('post-forward runtime assertions are ordered after their matching security 
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 21);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 91);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 93);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 94);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
