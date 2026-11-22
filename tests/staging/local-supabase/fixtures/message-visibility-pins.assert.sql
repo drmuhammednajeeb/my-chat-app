@@ -68,8 +68,12 @@ begin
   if position('interval ''15 minutes''' in v_delete_definition) = 0
      or position('v_message.sender_id <> v_user_id' in v_delete_definition) = 0
      or position('app_private.is_conversation_member' in v_delete_definition) = 0
+     or position('p.membership_status = ''active''' in v_delete_definition) = 0
+     or position('u.email_confirmed_at is not null' in v_delete_definition) = 0
+     or position('for share of p, u' in lower(v_delete_definition)) = 0
+     or position('for share of cm' in lower(v_delete_definition)) = 0
      or position('app.allow_message_delete' in v_delete_definition) = 0 then
-    raise exception 'secure delete must enforce the original 15-minute deadline, author, active membership, and trigger guard';
+    raise exception 'secure delete must enforce author, 15-minute deadline, active confirmed membership, membership/message locks, and trigger guard';
   end if;
 
   select pg_get_functiondef(p.oid) into v_edit_definition
