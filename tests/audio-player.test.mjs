@@ -99,9 +99,9 @@ test('voice player keeps visible controls, loads metadata after attachment, seek
       this.readyState = 0;
       this.loadCalls = 0;
       this.classList = {
-        add: name => { if (!this.className.split(/\\s+/).includes(name)) this.className = (this.className + ' ' + name).trim(); },
+        add: name => { if (!this.className.split(/\s+/).includes(name)) this.className = (this.className + ' ' + name).trim(); },
         toggle: (name, force) => {
-          const names = this.className.split(/\\s+/).filter(Boolean);
+          const names = this.className.split(/\s+/).filter(Boolean);
           const enabled = force === undefined ? !names.includes(name) : !!force;
           this.className = (enabled ? [...new Set([...names, name])] : names.filter(item => item !== name)).join(' ');
           return enabled;
@@ -129,7 +129,7 @@ test('voice player keeps visible controls, loads metadata after attachment, seek
     src: 'https://example.invalid/voice.webm'
   });
   const find = (node, className) => {
-    if (node.className.split(/\\s+/).includes(className)) return node;
+    if (node.className.split(/\s+/).includes(className)) return node;
     for (const child of node.children) {
       const match = find(child, className);
       if (match) return match;
