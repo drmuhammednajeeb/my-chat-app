@@ -1610,7 +1610,7 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "note": "Per-user message hiding and conversation pin state, plus author-only global soft-delete enforced by the database clock within 15 minutes of original message creation. Includes authenticated two-user isolation, unauthorized-delete, direct-update bypass, and expired edit/delete runtime probes."
+      "note": "Per-user message hiding and conversation pin state, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original message creation. Includes SQL assertions and authenticated two-user isolation, unauthorized-delete, direct-update bypass, and expired edit/delete runtime probes."
     }
   ],
   "explicitEdges": [
@@ -2786,7 +2786,7 @@
     {
       "id": "DAG-020",
       "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "The per-user message visibility, conversation pin and secure-delete forward migration is source-reviewed only. It requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user/device checks before production review. Production remains unchanged.",
+      "issue": "The new per-user message visibility, conversation pin and both 15-minute delete modes passed disposable-local PostgreSQL replay and authenticated two-user RLS/runtime probes. Production application remains separately gated by explicit owner approval.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
