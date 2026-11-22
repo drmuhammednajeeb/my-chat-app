@@ -32,7 +32,7 @@ function shouldCopyStaticFile(source, rootDirectory) {
   if (!relativePath) return true;
   const parts = relativePath.split(sep);
   if (EXCLUDED_TOP_LEVEL.has(parts[0])) return false;
-  if (parts.some(part => /^\\.env(?:\\.|$)/.test(part))) return false;
+  if (parts.some(part => /^\.env(?:\.|$)/.test(part))) return false;
   if (relativePath === "deployment-config.js" || relativePath === "vercel.json" ||
       relativePath === "README.md" || relativePath === ".gitignore" || relativePath === ".gitattributes") return false;
   return true;

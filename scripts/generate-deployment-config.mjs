@@ -23,7 +23,7 @@ export function buildDeploymentConfig(env = process.env) {
   let url;
   try { url = new URL(supabaseUrl); } catch { throw new Error("SUPABASE_URL must be a valid URL."); }
   const host = url.hostname.toLowerCase().replace(/\.$/, "");
-  if (url.protocol !== "https:" || !/^[a-z0-9-]+\\.supabase\\.co$/.test(host) || url.username || url.password || url.port || url.search || url.hash || (url.pathname !== "/" && url.pathname !== "")) {
+  if (url.protocol !== "https:" || !/^[a-z0-9-]+\.supabase\.co$/.test(host) || url.username || url.password || url.port || url.search || url.hash || (url.pathname !== "/" && url.pathname !== "")) {
     throw new Error("SUPABASE_URL must be an HTTPS Supabase project origin without credentials or paths.");
   }
   if (!isPublicAnonKey(supabaseAnonKey)) throw new Error("SUPABASE_ANON_KEY must be a public publishable key or an anon-role JWT; secret/service-role keys are forbidden.");
