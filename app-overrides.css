@@ -116,7 +116,7 @@ html,body{font-family:var(--chat-font)}
  background:var(--surface-row-active);color:var(--surface-row-active-text);border-color:var(--surface-row-active-border)
 }
 .welcome h2,.chat-title strong,.profile-info strong,.brand h1,.auth-card h2,.group-dialog h2{color:var(--text)}
-.welcome .welcome-icon{background:var(--surface-selected);color:var(--accent)}
+.welcome .welcome-icon{background:var(--surface-selected);color:var(--accent-text)}
 .notification-head,.chat-search-top{border-bottom:1px solid var(--line)}
 @media(max-width:760px){
  #messages .bubble{font-size:14px;line-height:1.55}
@@ -138,7 +138,7 @@ html,body{font-family:var(--chat-font)}
 
 .custom-lists-panel{padding:5px 13px 10px;border-bottom:1px solid var(--line);flex:none}
 .custom-lists-heading{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:11px;padding:2px 4px 7px}
-.custom-lists-heading button{border:0;background:var(--panel2);color:var(--accent);border-radius:8px;width:28px;height:28px}
+.custom-lists-heading button{border:0;background:var(--panel2);color:var(--accent-text);border-radius:8px;width:28px;height:28px}
 .custom-lists-items{display:flex;gap:6px;flex-wrap:wrap;max-height:112px;overflow:auto}
 .custom-list-chip{border:1px solid var(--line);border-radius:16px;padding:6px 10px;background:var(--panel2);color:var(--text);font-size:11px;display:flex;align-items:center;gap:6px}
 .custom-list-chip.active{background:var(--surface-selected);color:var(--surface-selected-text);border-color:var(--surface-selected-border)}
@@ -167,21 +167,21 @@ html,body{font-family:var(--chat-font)}
 .group-member-actions{display:flex;gap:5px;flex-wrap:wrap}
 .group-member-actions button{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 8px;font-size:10px}
 .group-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;padding:8px 0}
-.group-toggle input{width:18px;height:18px;accent-color:var(--accent)}
+.group-toggle input{width:18px;height:18px;accent-color:var(--accent-text)}
 .group-color-options{display:flex;gap:8px;flex-wrap:wrap}
 .group-color-options button{width:32px;height:32px;border-radius:50%;border:2px solid transparent}
 .group-color-options button[aria-pressed="true"]{outline:2px solid var(--text);outline-offset:2px}
 .message-selection-toolbar{display:none;position:fixed;z-index:95;top:76px;right:12px;left:12px;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--menu-shadow)}
 .message-selection-toolbar.active{display:flex}
 .message-selection-toolbar button{border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);padding:7px 10px;font-size:11px}
-.message-select-check{position:absolute;top:8px;right:8px;z-index:4;width:19px;height:19px;accent-color:var(--accent)}
+.message-select-check{position:absolute;top:8px;right:8px;z-index:4;width:19px;height:19px;accent-color:var(--accent-text)}
 .message.selected-for-action .bubble{outline:2px solid var(--accent);outline-offset:2px}
 .starred-dialog,.custom-list-dialog{width:min(100%,560px)}
 .starred-body,.custom-list-body{padding:12px 16px;max-height:70dvh;overflow:auto}
 .starred-message-row{cursor:pointer;display:block;text-align:right;width:100%;background:transparent;color:var(--text)}
 .starred-message-row strong{display:block;margin-bottom:4px}
 .custom-list-option{justify-content:flex-start}
-.custom-list-option input{accent-color:var(--accent)}
+.custom-list-option input{accent-color:var(--accent-text)}
 .custom-list-option span{flex:1}
 
 @media(max-width:760px){.group-management-dialog{max-height:94dvh}.group-management-body{padding:10px}.group-management-row>*{min-width:100%}}
@@ -197,7 +197,7 @@ html,body{font-family:var(--chat-font)}
 .chat-sticker-option{display:grid;place-items:center;min-width:0;aspect-ratio:1;border:1px solid var(--line);border-radius:13px;background:var(--panel2);font-size:29px;cursor:pointer;touch-action:manipulation;transition:transform .12s,background .12s}
 .chat-sticker-option:hover,.chat-sticker-option:focus-visible{background:var(--hover);transform:scale(1.06);outline:2px solid var(--accent);outline-offset:1px}
 .message-sticker{font-size:clamp(54px,10vw,76px);line-height:1.15;padding:5px 8px;text-align:center;user-select:none}
-.sticker-composer-btn{color:var(--accent)}
+.sticker-composer-btn{color:var(--accent-text)}
 @media(max-width:420px){.chat-sticker-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.chat-sticker-option{font-size:26px}}
 /* Message menu: discreet chevron on desktop hover, reachable on touch and keyboard. */
 .message-menu-wrap{position:absolute;z-index:8;top:4px;width:20px;height:20px;display:flex;align-items:flex-start}
@@ -350,7 +350,7 @@ html body{font-weight:500}
 
 /* Persistent 100-hour message and media retention notice */
 .auto-cleanup-notice{display:flex;align-items:center;gap:9px;flex:0 0 auto;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:12px;font-weight:600;line-height:1.7;text-align:right}
-.auto-cleanup-notice i{flex:none;color:var(--accent);font-size:17px}
+.auto-cleanup-notice i{flex:none;color:var(--accent-text);font-size:17px}
 .auto-cleanup-notice span{min-width:0;overflow-wrap:anywhere}
 @media(max-width:760px){.auto-cleanup-notice{padding:8px 11px;font-size:11px;gap:7px}}
 
