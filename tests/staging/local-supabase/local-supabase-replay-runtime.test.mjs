@@ -10,7 +10,9 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
   const source = await readFile(path.join(root, 'tests/staging/local-supabase/local-supabase-replay-runtime.mjs'), 'utf8');
   for (const token of [
     'ALLOW_DISPOSABLE_LOCAL_REPLAY',
-    "url.port !== '54322'",
+    "url.port !== expectedDbPort",
+    'LOCAL_SUPABASE_EXPECTED_DB_PORT',
+    'LOCAL_SUPABASE_EXPECTED_API_PORT',
     "url.username !== 'postgres'",
     "url.pathname !== '/postgres'",
     "'127.0.0.1'",
@@ -56,7 +58,9 @@ test('runtime workflow uses an isolated temporary project and pinned local CLI o
     'version: 3.0.0',
     'supabase init',
     'supabase start --exclude',
-    'major_version = 17',
+    "setTomlValue(config, 'db', 'major_version', 17)",
+    "setTomlValue(config, 'local_smtp', 'port', basePort + 3)",
+    'RUNTIME_BASE_PORT',
     'LOCAL_SUPABASE_DB_URL',
     'LOCAL_SUPABASE_SERVICE_ROLE_KEY',
     'local-supabase-replay-runtime.mjs',

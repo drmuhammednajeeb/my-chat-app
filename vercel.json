@@ -1,0 +1,25 @@
+{
+  "buildCommand": "node scripts/build-vercel.mjs",
+  "outputDirectory": "dist/vercel-static",
+  "installCommand": "echo 'No dependencies to install'",
+  "headers": [
+    {
+      "source": "/deployment-config.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Vercel-CDN-Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
+  "ignoreCommand": "node scripts/ignore-vercel-deployment.mjs"
+}

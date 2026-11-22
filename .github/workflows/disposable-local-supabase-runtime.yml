@@ -54,12 +54,37 @@ jobs:
           import fs from 'node:fs';
           const file = process.env.RUNTIME_PROJECT_DIR + '/supabase/config.toml';
           let config = fs.readFileSync(file, 'utf8');
-          if (/^major_version\s*=\s*\d+/m.test(config)) {
-            config = config.replace(/^major_version\s*=\s*\d+/m, 'major_version = 17');
-          } else {
-            config += '\n[db]\nmajor_version = 17\n';
+          const runId = Number(process.env.GITHUB_RUN_ID);
+          if (!Number.isSafeInteger(runId) || runId < 1) throw new Error('GITHUB_RUN_ID is required for isolated Supabase ports');
+          const basePort = 20000 + (runId % 30000);
+          function setTomlValue(source, section, key, value) {
+            const header = '[' + section + ']';
+            let sectionStart = source.indexOf(header);
+            if (sectionStart < 0) {
+              source += '\n' + header + '\n';
+              sectionStart = source.indexOf(header);
+            }
+            if (sectionStart < 0) throw new Error('Missing Supabase config section: ' + section);
+            const contentStart = sectionStart + header.length;
+            const remainder = source.slice(contentStart);
+            const nextSectionOffset = remainder.search(/^\[[A-Za-z0-9_.-]+\]\s*$/m);
+            const sectionEnd = nextSectionOffset < 0 ? source.length : contentStart + nextSectionOffset;
+            let body = source.slice(contentStart, sectionEnd);
+            const keyPattern = new RegExp('^\\s*' + key + '\\s*=.*$', 'm');
+            if (keyPattern.test(body)) body = body.replace(keyPattern, key + ' = ' + value);
+            else body += (body.endsWith('\n') ? '' : '\n') + key + ' = ' + value + '\n';
+            return source.slice(0, contentStart) + body + source.slice(sectionEnd);
           }
+          config = setTomlValue(config, 'api', 'port', basePort);
+          config = setTomlValue(config, 'db', 'port', basePort + 1);
+          config = setTomlValue(config, 'db', 'shadow_port', basePort + 2);
+          config = setTomlValue(config, 'db', 'major_version', 17);
+          config = setTomlValue(config, 'local_smtp', 'port', basePort + 3);
+          config = setTomlValue(config, 'local_smtp', 'smtp_port', basePort + 4);
+          config = setTomlValue(config, 'local_smtp', 'pop3_port', basePort + 5);
+          config = setTomlValue(config, 'analytics', 'port', basePort + 6);
           fs.writeFileSync(file, config);
+          fs.appendFileSync(process.env.GITHUB_ENV, 'RUNTIME_BASE_PORT=' + basePort + '\n');
           NODE
 
       - name: Start disposable Supabase and execute the reviewed replay
@@ -84,6 +109,8 @@ jobs:
           echo "::add-mask::$SERVICE_ROLE_KEY"
           export LOCAL_SUPABASE_URL="$API_URL"
           export LOCAL_SUPABASE_DB_URL="$DB_URL"
+          export LOCAL_SUPABASE_EXPECTED_API_PORT="$RUNTIME_BASE_PORT"
+          export LOCAL_SUPABASE_EXPECTED_DB_PORT="$((RUNTIME_BASE_PORT + 1))"
           export LOCAL_SUPABASE_ANON_KEY="$ANON_KEY"
           export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
           cd "$GITHUB_WORKSPACE"

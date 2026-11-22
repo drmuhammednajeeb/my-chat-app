@@ -16,6 +16,8 @@ function fail(message) {
 }
 let syntheticAuthPassword = null;
 let syntheticAuthIds = null;
+const expectedApiPort = process.env.LOCAL_SUPABASE_EXPECTED_API_PORT || '54321';
+const expectedDbPort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
 
 async function provisionSyntheticDirectChatAuthUsers() {
   const rawApi = process.env.LOCAL_SUPABASE_URL;
@@ -26,7 +28,7 @@ async function provisionSyntheticDirectChatAuthUsers() {
   const apiHost = api.hostname.replace(/^\[|\]$/g, '').toLowerCase();
   if (api.protocol !== 'http:'
     || !['127.0.0.1', 'localhost', '::1'].includes(apiHost)
-    || api.port !== '54321'
+    || api.port !== expectedApiPort
     || api.pathname !== '/'
     || api.username || api.password || api.search || api.hash) {
     fail('refusing non-local Auth provisioning target; expected http://loopback:54321');
@@ -110,7 +112,7 @@ try { url = new URL(raw); } catch { fail('invalid LOCAL_SUPABASE_DB_URL'); }
 const host = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
 if (!['postgres:', 'postgresql:'].includes(url.protocol)
   || !['127.0.0.1', 'localhost', '::1'].includes(host)
-  || url.port !== '54322'
+  || url.port !== expectedDbPort
   || url.username !== 'postgres'
   || url.pathname !== '/postgres'
   || url.search || url.hash) {
@@ -168,6 +170,8 @@ if (actualAppOrder[0] !== 'test-fixture.local-platform-preflight') {
 const env = {
   PATH: process.env.PATH ?? '',
   LOCAL_SUPABASE_DB_URL: raw,
+  LOCAL_SUPABASE_EXPECTED_API_PORT: expectedApiPort,
+  LOCAL_SUPABASE_EXPECTED_DB_PORT: expectedDbPort,
   PGCONNECT_TIMEOUT: '5',
   PGOPTIONS: '-c app.test_only_local_replay=enabled -c statement_timeout=60s -c lock_timeout=10s'
 };

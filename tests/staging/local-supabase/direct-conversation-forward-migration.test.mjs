@@ -104,7 +104,8 @@ test('post-migration SQL assertions cover eligibility denials and the test runne
   ]) assert.ok(assertions.includes(label), 'missing SQL runtime assertion: ' + label);
   assert.match(assertions.trimEnd(), /ROLLBACK;$/);
   assert.match(concurrency, /LOCAL_SUPABASE_DB_URL/);
-  assert.match(concurrency, /url\.port !== '54322'/);
+  assert.match(concurrency, /url\.port !== expectedDbPort/);
+  assert.ok(concurrency.includes('LOCAL_SUPABASE_EXPECTED_DB_PORT'));
   assert.match(concurrency, /Refusing non-local database target/);
   assert.match(concurrency, /24 concurrent reversed requests|24 real PostgreSQL sessions/);
   assert.match(concurrency, /40 authenticated transactions concurrently insert distinct messages/);

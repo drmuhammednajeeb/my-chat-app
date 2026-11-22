@@ -17,10 +17,11 @@ function localDatabaseUrl() {
   if (!raw) throw new Error('Set LOCAL_SUPABASE_DB_URL to the disposable local Supabase PostgreSQL URL.');
   const url = new URL(raw);
   const host = url.hostname.replace(/^\[|\]$/g, '');
+  const expectedDbPort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
   if (!['127.0.0.1', 'localhost', '::1'].includes(host) ||
-      url.port !== '54322' || url.username !== 'postgres' || url.pathname !== '/postgres' ||
+      url.port !== expectedDbPort || url.username !== 'postgres' || url.pathname !== '/postgres' ||
       !['postgres:', 'postgresql:'].includes(url.protocol)) {
-    throw new Error('Refusing non-local database target: expected postgres@loopback:54322 only.');
+    throw new Error('Refusing non-local database target: expected postgres@loopback on the configured local database port only.');
   }
   return raw;
 }

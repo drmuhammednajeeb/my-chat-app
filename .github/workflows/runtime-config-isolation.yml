@@ -1,0 +1,55 @@
+name: Runtime configuration isolation
+
+on:
+  pull_request:
+    paths:
+      - "deployment-config.js"
+      - "modules/runtime-config.js"
+      - "scripts/generate-deployment-config.mjs"
+      - "scripts/build-vercel.mjs"
+      - "vercel.json"
+      - "service-worker.js"
+      - "tests/runtime-config*.test.mjs"
+      - "tests/environment-separation.test.mjs"
+      - ".github/workflows/runtime-config-isolation.yml"
+  push:
+    branches:
+      - "feat/static-runtime-config-isolation-20261121"
+    paths:
+      - "deployment-config.js"
+      - "modules/runtime-config.js"
+      - "scripts/generate-deployment-config.mjs"
+      - "scripts/build-vercel.mjs"
+      - "vercel.json"
+      - "service-worker.js"
+      - "tests/runtime-config*.test.mjs"
+      - "tests/environment-separation.test.mjs"
+      - ".github/workflows/runtime-config-isolation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-config-isolation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  runtime-config-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate JavaScript syntax
+        run: |
+          node --check modules/runtime-config.js
+          node --check scripts/generate-deployment-config.mjs
+          node --check scripts/build-vercel.mjs
+          node --check scripts/ignore-vercel-deployment.mjs
+      - name: Run configuration and regression tests
+        run: |
+          node --test tests/runtime-config.test.mjs tests/runtime-config-deployment.test.mjs tests/environment-separation.test.mjs tests/app-updater.test.mjs tests/auth-error-messages.test.mjs tests/auth-signup-viewport.test.mjs
