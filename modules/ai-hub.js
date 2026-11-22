@@ -48,7 +48,7 @@
     try {
       win.localStorage.setItem(storageKey(userId), JSON.stringify({
         enabled: config.enabled === true,
-        botUrl: url.href
+        botUrl: url?.href || ""
       }));
       return true;
     } catch (_) {
@@ -194,7 +194,8 @@
         const prompt = buildPrompt(task.value, source.value);
         if (!prompt) return setStatus("أدخل النص الذي تريد معالجته أولاً.");
         if (!writeConfig(win, userId, config)) return setStatus("تعذر حفظ الإعدادات على هذا الجهاز.");
-        win.open(url.href, "_blank", "noopener,noreferrer");
+        try { win.open(url.href, "_blank", "noopener,noreferrer"); }
+        catch (_) { return setStatus("تعذر فتح نافذة Poe؛ اسمح بالنوافذ المنبثقة ثم أعد المحاولة."); }
         try {
           await win.navigator.clipboard.writeText(prompt);
           setStatus("فُتح Poe ونُسخت التعليمات. الصقها في محادثة البوت لإكمال الطلب.");
