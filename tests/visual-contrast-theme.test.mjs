@@ -102,3 +102,10 @@ test('focus visibility and reduced-motion protections remain enabled', () => {
   assert.match(appCss, /prefers-reduced-motion:reduce/);
   assert.match(overrides, /prefers-reduced-motion:reduce/);
 });
+
+test('legacy application stylesheets do not hard-code UI colors outside semantic tokens', () => {
+  for (const [name, css] of [['app.css', appCss], ['app-overrides.css', overrides]]) {
+    const hardCoded = [...css.matchAll(/(?:background(?:-color)?|color|border(?:-color)?|outline(?:-color)?)\\s*:\\s*(?:#[0-9a-f]{3,8}\\b|rgba?\\(|hsla?\\()/gi)];
+    assert.equal(hardCoded.length, 0, name + ' contains ' + hardCoded.length + ' hard-coded color declarations');
+  }
+});
