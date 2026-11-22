@@ -13,7 +13,8 @@
       "count": 12,
       "execution": "NEVER_EXECUTE"
     },
-    "duplicateActiveCopies": 0
+    "duplicateActiveCopies": 0,
+    "forwardReconciliationMigrations": 11
   },
   "platformNodes": [
     {
@@ -1582,6 +1583,30 @@
       ],
       "blockedBy": [],
       "note": "Rollback-only integration assertions passed in disposable current-mainline Supabase runtime run 44875784557. Synthetic .test identities and invitation values only; invalid one-, four-part and numeric names do not consume invitations, while valid Arabic/Latin names normalize correctly."
+    },
+    {
+      "id": "chat.message-visibility-pins-and-delete",
+      "source": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql"
+      ],
+      "provides": [
+        "public.user_hidden_messages",
+        "public.user_conversation_pins",
+        "public.delete_message_secure(uuid)"
+      ],
+      "requires": [
+        "core.base",
+        "chat.message-edit-hardening",
+        "chat.restore-message-edit-guard"
+      ],
+      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "blockedBy": [
+        "DAG-020"
+      ],
+      "note": "Per-user message hiding and conversation pin state, plus author-only global soft-delete enforced by the database clock within 15 minutes of original message creation. Requires disposable-local replay and authenticated RLS/runtime probes."
     }
   ],
   "explicitEdges": [
@@ -2512,6 +2537,18 @@
     [
       "test-fixture.admin-auth-seed",
       "test-fixture.signup-name-guard"
+    ],
+    [
+      "core.base",
+      "chat.message-visibility-pins-and-delete"
+    ],
+    [
+      "chat.message-edit-hardening",
+      "chat.message-visibility-pins-and-delete"
+    ],
+    [
+      "chat.restore-message-edit-guard",
+      "chat.message-visibility-pins-and-delete"
     ]
   ],
   "blockers": [
@@ -2729,6 +2766,16 @@
         "docs/MESSAGE_CLEANUP_CRON_PGNET_AUDIT_2026-11-19.md"
       ],
       "status": "LOCAL_RUNTIME_PASSED_FORWARD_MIGRATION_NOT_APPLIED_TO_PRODUCTION"
+    },
+    {
+      "id": "DAG-020",
+      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
+      "issue": "The per-user message visibility, conversation pin and secure-delete forward migration is source-reviewed only. It requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user/device checks before production review. Production remains unchanged.",
+      "evidence": [
+        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "status": "SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED"
     }
   ],
   "duplicateProvenance": [],
