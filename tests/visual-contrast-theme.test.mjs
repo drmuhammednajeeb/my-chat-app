@@ -76,6 +76,7 @@ test('legacy stylesheets do not redeclare the global palette', () => {
   }
   assert.match(tokens, /^#chat\.chat\[data-chat-theme="light"\]/m);
   assert.match(tokens, /^#chat\.chat\[data-chat-theme="dark"\]/m);
+  assert.ok(tokens.indexOf('#chat[data-group-theme="emerald"]') > tokens.indexOf('#chat.chat[data-chat-theme="dark"]'), 'group accent overrides must follow conversation-local palettes');
 });
 
 test('central token stylesheet loads exactly once in the intended cascade order', () => {
