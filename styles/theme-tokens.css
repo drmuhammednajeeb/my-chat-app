@@ -1,0 +1,40 @@
+/* Single source of truth for global theme tokens.
+   Component-specific theme rules remain in app.css and app-overrides.css. */
+:root{
+ color-scheme:light;
+ --bg:#f3f6fb;
+ --panel:#ffffff;
+ --panel2:#edf2f8;
+ --panel3:#e1eaf3;
+ --line:#cbd5e1;
+ --text:#101828;
+ --muted:#475467;
+ --accent:#007f6b;
+ --accent2:#006653;
+ --danger:#c4323b;
+ --bubble:#ffffff;
+ --mine:#d1f5e3;
+ --shadow:0 3px 16px #152b4518;
+ --chat-font:"Segoe UI",Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;
+ --chat-focus:#007f6b;
+ --chat-divider:#cbd5e1;
+}
+html.light{color-scheme:light}
+html.dark{
+ color-scheme:dark;
+ --bg:#08131d;
+ --panel:#101f2b;
+ --panel2:#1b2d3a;
+ --panel3:#294252;
+ --line:#405667;
+ --text:#f8fafc;
+ --muted:#bdc9d5;
+ --accent:#39d9b5;
+ --accent2:#22bd9b;
+ --danger:#ff7b86;
+ --bubble:#1b2d3a;
+ --mine:#075e50;
+ --shadow:0 3px 18px #0007;
+ --chat-focus:#39d9b5;
+ --chat-divider:#405667;
+}
