@@ -22,7 +22,7 @@ function shouldCopyStaticFile(source, rootDirectory) {
 
 export async function verifyPagesOutput(outputDirectory) {
   const root = resolve(outputDirectory);
-  const required = ["index.html", "manifest.json", "service-worker.js", "modules/runtime-config.js", "deployment-config.js", ".nojekyll"];
+  const required = ["index.html", "manifest.json", "service-worker.js", "modules/runtime-config.js", "modules/app-updater.js", "deployment-config.js", ".nojekyll"];
   for (const item of required) {
     try { await readFile(join(root, item)); }
     catch { throw new Error("Pages artifact is missing required file: " + item); }
@@ -32,8 +32,10 @@ export async function verifyPagesOutput(outputDirectory) {
   const configScriptPosition = html.indexOf("./deployment-config.js");
   const runtimeScriptPosition = html.indexOf("./modules/runtime-config.js");
   const supabaseClientPosition = html.indexOf("supabase.min.js");
+  const createClientPosition = html.indexOf("createClient(");
   if (configScriptPosition < 0 || runtimeScriptPosition < 0 || supabaseClientPosition < 0 ||
-      configScriptPosition > supabaseClientPosition) {
+      createClientPosition < 0 || configScriptPosition > supabaseClientPosition ||
+      runtimeScriptPosition > createClientPosition) {
     throw new Error("Pages entry point must load generated deployment config before the Supabase client using relative paths.");
   }
   if (/https:\/\/[a-z0-9-]+\.supabase\.co/i.test(html) || /SUPABASE_ANON_KEY\s*=\s*['"]/.test(html)) {
@@ -53,6 +55,10 @@ export async function verifyPagesOutput(outputDirectory) {
   }
 
   const serviceWorker = await readFile(join(root, "service-worker.js"), "utf8");
+  const updater = await readFile(join(root, "modules/app-updater.js"), "utf8");
+  if (!updater.includes('new URL("./service-worker.js", doc.baseURI)')) {
+    throw new Error("Service Worker registration must remain relative to the application base path.");
+  }
   if (!serviceWorker.includes("deployment-config.js") || !serviceWorker.includes('cache: "no-store"')) {
     throw new Error("Service Worker must fetch deployment config network-only with no-store.");
   }
