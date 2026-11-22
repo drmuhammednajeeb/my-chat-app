@@ -301,7 +301,8 @@ html.dark .new-messages-jump{background:var(--surface-selected);color:var(--surf
 
 /* Semantic theme layer: one rule set serves both global themes.
    Conversation-local #chat[data-chat-theme] overrides remain intentionally scoped. */
-body,#app,#auth,.chat{color:var(--text)}
+html,body,#app,.app,.chat,.messages,.composer-wrap{background-color:var(--bg)}
+body,#app,#auth,.chat,.app{color:var(--text)}
 .sidebar,.chat-head,.profile,.auth-card,.conversation,.team-dashboard,.team-kpi,.team-panel,
 .notification-item,.chat-search-result,.group-dialog,.profile-dialog,.workspace-dialog,
 #notificationsPanel,.chat-search-panel{
