@@ -39,3 +39,22 @@ test('SQL manifest audit is source-only', () => {
   assert.doesNotMatch(workflow, /supabase\s+(?:start|db\s+reset|db\s+push)/i);
   assert.doesNotMatch(workflow, /docker\s+(?:run|compose)/i);
 });
+
+test('runtime configuration is never precached and is fetched with no-store semantics', () => {
+  const worker = read('../service-worker.js');
+  assert.doesNotMatch(worker, /new URL\("\.\/deployment-config\.js", base\)\.href/);
+  assert.match(worker, /url\.pathname\.endsWith\("\/deployment-config\.js"\)/);
+  assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/);
+  assert.match(worker, /Cache-Control", "no-store, max-age=0, must-revalidate"/);
+  assert.match(worker, /CACHE_VERSION = "v41"/);
+});
+test('Vercel static build is guarded by the explicit environment-aware builder', () => {
+  const config = read('../vercel.json');
+  const builder = read('../scripts/build-vercel.mjs');
+  assert.match(config, /"buildCommand":\s*"node scripts\/build-vercel\.mjs"/);
+  assert.match(config, /"outputDirectory":\s*"dist\/vercel-static"/);
+  assert.match(builder, /VERCEL_ENV/);
+  assert.match(builder, /BIZMIND_VERCEL_STANDBY_APPROVED/);
+  assert.match(builder, /BIZMIND_STANDBY_RELEASE_SHA/);
+  assert.match(builder, /BIZMIND_NONPROD_SUPABASE_HOST/);
+});

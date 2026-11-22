@@ -64,3 +64,22 @@ test("generator writes the selected target", () => {
     assert.match(content, /sb_publishable_test_key_material/);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
+
+test("publishable keys require the documented safe character set and minimum material", () => {
+  for (const key of ["sb_publishable_short", "sb_publishable_!!!!!!!!!!!!!!!!!", "sb_secret_" + "x".repeat(32)]) {
+    assert.equal(runtime.isPublicAnonKey(key), false);
+  }
+  assert.equal(runtime.isPublicAnonKey(productionKey), true);
+});
+test("legacy JWTs must have a non-none algorithm and anon role", () => {
+  const encode = value => Buffer.from(JSON.stringify(value)).toString("base64url");
+  const jwt = role => encode({ alg: "HS256", typ: "JWT" }) + "." + encode({ role }) + ".c2lnbmF0dXJl";
+  assert.equal(runtime.isPublicAnonKey(jwt("anon")), true);
+  assert.equal(runtime.isPublicAnonKey(jwt("service_role")), false);
+  const unsigned = encode({ alg: "none" }) + "." + encode({ role: "anon" }) + ".c2lnbmF0dXJl";
+  assert.equal(runtime.isPublicAnonKey(unsigned), false);
+});
+test("runtime rejects malformed expected hosts and array-shaped configuration", () => {
+  assert.throws(() => runtime.resolve([]), /missing/);
+  assert.throws(() => runtime.resolve({ target: "preview", supabaseUrl: "https://isolated-test-project.supabase.co", expectedSupabaseHost: "*.supabase.co", supabaseAnonKey: productionKey }), /allowlist/);
+});
