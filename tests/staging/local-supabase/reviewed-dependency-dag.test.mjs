@@ -178,7 +178,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 21);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 22);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
@@ -407,11 +407,11 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('ten forward migrations remain outside the production ledger with explicit runtime status', async () => {
+test('eleven forward migrations remain outside the production ledger with explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.forwardMigrations.length, 10);
+  assert.equal(registry.forwardMigrations.length, 11);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
@@ -422,7 +422,8 @@ test('ten forward migrations remain outside the production ledger with explicit 
     ['20261119113000_harden_privileged_rpc_active_membership.sql', []],
     ['20261119120000_fix_conversation_avatar_public_channel_read.sql', []],
     ['20261119130000_increase_message_cleanup_http_timeout.sql', []],
-    ['20261121120000_enforce_signup_display_name_server_side.sql', []]
+    ['20261121120000_enforce_signup_display_name_server_side.sql', []],
+    ['20261123120000_message_visibility_pins_and_secure_delete.sql', ['DAG-020']]
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -459,6 +460,10 @@ test('ten forward migrations remain outside the production ledger with explicit 
       assert.equal(forward?.localRuntimeRunId, 44873724263);
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(forward?.productionApplied, false);
+    } else if (name === '20261123120000_message_visibility_pins_and_secure_delete.sql') {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.productionApplied, false);
+      assert.deepEqual(forward?.blockedBy, ['DAG-020']);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
@@ -494,7 +499,7 @@ test('post-forward runtime assertions are ordered after their matching security 
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 21);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 91);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 91);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 93);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'chat.auto-cleanup-100h').testSource.includes('tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs'));
@@ -687,7 +692,7 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('ten forward migrations remain outside the production ledger and record explicit runtime status', async () => {
+test('eleven forward migrations remain outside the production ledger and record explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
