@@ -75,3 +75,94 @@ test('player source keeps native controls available when custom playback fails',
   assert.ok(styles.includes('.voice-player-timer{justify-self:end'));
   assert.ok(!styles.includes('.message .bubble .voice-message-player audio{display:none}'));
 });
+
+
+test('voice player keeps visible controls, loads metadata after attachment, seeks and updates remaining time', async () => {
+  class FakeElement {
+    constructor(tagName) {
+      this.tagName = tagName;
+      this.children = [];
+      this.attributes = {};
+      this.dataset = {};
+      this.style = {};
+      this.listeners = new Map();
+      this.className = '';
+      this.textContent = '';
+      this.innerHTML = '';
+      this.paused = true;
+      this.ended = false;
+      this.duration = NaN;
+      this.currentTime = 0;
+      this.readyState = 0;
+      this.loadCalls = 0;
+      this.classList = {
+        add: name => { if (!this.className.split(/\\s+/).includes(name)) this.className = (this.className + ' ' + name).trim(); },
+        toggle: (name, force) => {
+          const names = this.className.split(/\\s+/).filter(Boolean);
+          const enabled = force === undefined ? !names.includes(name) : !!force;
+          this.className = (enabled ? [...new Set([...names, name])] : names.filter(item => item !== name)).join(' ');
+          return enabled;
+        }
+      };
+    }
+    append(...nodes) { this.children.push(...nodes); }
+    setAttribute(name, value) { this.attributes[name] = String(value); }
+    removeAttribute(name) { delete this.attributes[name]; }
+    addEventListener(name, callback) {
+      const callbacks = this.listeners.get(name) || [];
+      callbacks.push(callback);
+      this.listeners.set(name, callbacks);
+    }
+    dispatch(name, event = {}) { for (const callback of this.listeners.get(name) || []) callback(event); }
+    load() { this.loadCalls += 1; }
+    pause() { this.paused = true; this.dispatch('pause'); }
+    play() { this.paused = false; this.dispatch('play'); return Promise.resolve(); }
+    getBoundingClientRect() { return { left: 0, width: 100 }; }
+  }
+
+  const document = { createElement: tag => new FakeElement(tag) };
+  const player = audioPlayer.create({ document }).createPlayer({
+    messageId: 'voice-player-ui',
+    src: 'https://example.invalid/voice.webm'
+  });
+  const find = (node, className) => {
+    if (node.className.split(/\\s+/).includes(className)) return node;
+    for (const child of node.children) {
+      const match = find(child, className);
+      if (match) return match;
+    }
+    return null;
+  };
+  const button = find(player, 'voice-player-toggle');
+  const waveform = find(player, 'voice-player-waveform');
+  const timer = find(player, 'voice-player-timer');
+  const audio = find(player, 'voice-player-native-audio');
+
+  assert.match(button.innerHTML, /voice-player-glyph-play/);
+  assert.equal(audio.loadCalls, 0);
+  await Promise.resolve();
+  assert.equal(audio.loadCalls, 1);
+
+  audio.duration = 90;
+  audio.readyState = 1;
+  audio.dispatch('loadedmetadata');
+  assert.equal(timer.textContent, '01:30');
+
+  button.dispatch('click');
+  await Promise.resolve();
+  assert.match(button.innerHTML, /voice-player-glyph-pause/);
+  audio.currentTime = 20;
+  audio.dispatch('timeupdate');
+  assert.equal(timer.textContent, '01:10');
+
+  waveform.dispatch('click', { clientX: 75 });
+  assert.equal(audio.currentTime, 67.5);
+  assert.equal(timer.textContent, '00:22');
+
+  audio.ended = true;
+  audio.paused = true;
+  audio.currentTime = 90;
+  audio.dispatch('ended');
+  assert.match(button.innerHTML, /voice-player-glyph-play/);
+  assert.equal(timer.textContent, '01:30');
+});
