@@ -49,6 +49,7 @@ test('WCAG AA text contrast is at least 4.5:1 in both themes', () => {
       ['--text','--bg','body copy'],
       ['--text','--panel','panel copy'],
       ['--muted','--panel2','secondary labels'],
+      ['--accent-text','--panel','accent text'],
       ['--bubble-outgoing-text','--mine','outgoing message'],
       ['--bubble-meta','--mine','outgoing message metadata'],
       ['--bubble-status-read','--mine','outgoing read status'],
