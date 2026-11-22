@@ -19,7 +19,7 @@
     "canonicalCliMigrationFiles": 73,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 22,
+    "testOnlyFixtureCount": 23,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -42,7 +42,8 @@
       "tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql",
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
-      "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
     ],
     "forwardReconciliationMigrations": 11
   },
@@ -1988,7 +1989,7 @@
       ],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false,
-      "validationNote": "Source-only candidate. Requires SQL manifest audit, disposable-local PostgreSQL replay, RLS CRUD probes, and two-user authenticated integration checks before any production approval."
+      "validationNote": "Source-only candidate. Requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user integration checks before any production approval."
     }
   ],
   "forwardMigrationPolicy": {
