@@ -42,7 +42,7 @@ html,body{background:var(--bg);color:var(--text)}
 .brand p{color:var(--muted);font-size:11px}
 .profile{margin:0;padding:12px 17px 13px;border:0;border-radius:0;border-bottom:1px solid var(--line);background:var(--panel)}
 
-.iconbtn{width:39px;height:39px;border:0;border-radius:50%;background:transparent;color:#54656f}
+.iconbtn{width:39px;height:39px;border:0;border-radius:50%;background:var(--panel2);color:var(--muted)}
 
 .searchbox{margin:10px 12px 8px}
 .searchbox input{border:0;border-radius:9px;background:var(--panel2);color:var(--text);padding:11px 40px 11px 13px}
@@ -108,7 +108,7 @@ button,.conversation,.iconbtn{ -webkit-tap-highlight-color:transparent}
  .messages{padding-left:clamp(30px,7vw,110px);padding-right:clamp(30px,7vw,110px)}
 }
 @media(max-width:760px){
- html,body{background:#fff}
+ html,body{background:var(--bg)}
  .app{grid-template-columns:1fr}
  .sidebar{background:var(--panel);box-shadow:0 0 0 1px var(--line)}
  .sidebar.closed{transform:translateX(105%)}
