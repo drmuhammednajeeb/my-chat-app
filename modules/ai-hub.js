@@ -44,7 +44,7 @@
 
   function writeConfig(win, userId, config) {
     const url = validatePoeUrl(config?.botUrl);
-    if (!userId || !url) return false;
+    if (!userId || (config?.enabled === true && !url)) return false;
     try {
       win.localStorage.setItem(storageKey(userId), JSON.stringify({
         enabled: config.enabled === true,
