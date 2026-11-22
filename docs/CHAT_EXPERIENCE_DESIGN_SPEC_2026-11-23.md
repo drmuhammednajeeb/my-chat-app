@@ -78,7 +78,7 @@ Conversation pins and favorites are distinct: pin controls ordering; favorite is
 - The database clock is authoritative. Client-side countdown/disabled state is presentation only.
 - The secure edit RPC locks the message, checks active membership, ownership, conversation type, deadline, and expected revision, then writes the edit-history record and updates the message atomically.
 - Edited messages display an edited marker; original send time remains unchanged.
-- “Delete for me” creates a per-user visibility override and does not delete the message for other participants.
+- “Delete for me” creates a per-user visibility override and does not delete the message for other participants; it is allowed only within 15 minutes from original message creation, enforced by RLS using the database clock.
 - “Delete for everyone” is author-only and allowed only within 15 minutes from original message creation; the database clock and secure RPC enforce the deadline.
 - Deleted-for-everyone messages become a tombstone; no direct table update may bypass the secure RPC.
 - Multi-message deletion applies the same permission checks independently to each selected message.
