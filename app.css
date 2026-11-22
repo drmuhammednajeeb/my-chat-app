@@ -522,3 +522,14 @@ html[dir="rtl"] .sidebar,html[dir="rtl"] #sidebar{direction:rtl}
  .directory-status{display:none}
  .directory-message-btn{grid-column:3;grid-row:1;padding:7px 9px;min-height:32px}
 }
+
+
+/* Conversation-local theme tokens for outgoing message metadata. */
+#chat.chat[data-chat-theme="light"]{
+ --bubble-meta:#f2fffb;--bubble-status-read:#a8ffe6;--bubble-status-delivered:#e1fff5;
+ --bubble-outgoing-text:#ffffff;--bubble-outgoing-border:#2a827a;
+}
+#chat.chat[data-chat-theme="dark"]{
+ --mine:#075e50;--bubble-meta:#d8fff2;--bubble-status-read:#55e5c3;--bubble-status-delivered:#d8fff2;
+ --bubble-outgoing-text:#f4fffb;--bubble-outgoing-border:#168c73;
+}
