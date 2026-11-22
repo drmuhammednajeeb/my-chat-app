@@ -94,7 +94,9 @@ test('production registry preserves 62 ledger versions and separately maps eleve
       assert.equal(migration.productionApplied, false);
       assert.deepEqual(migration.blockedBy, []);
     } else if (migration.version === '20261123120000') {
-      assert.equal(migration.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(migration.localRuntimeRunId, 45076185494);
+      assert.equal(migration.localRuntimeCommit, 'cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0');
       assert.equal(migration.productionApplied, false);
       assert.deepEqual(migration.blockedBy, ['DAG-020']);
     } else {
