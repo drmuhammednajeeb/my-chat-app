@@ -115,6 +115,8 @@ BEGIN
     UPDATE public.chat_messages
     SET deleted_at=clock_timestamp(),content='تم حذف الرسالة'
     WHERE id=v_fresh_message;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    v_rejected := v_count = 0;
   EXCEPTION WHEN OTHERS THEN
     v_rejected := true;
   END;
@@ -161,9 +163,12 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM public.user_hidden_messages
     WHERE user_id=v_user_a AND message_id=v_fresh_message
-  ) OR EXISTS (
+  ) OR NOT EXISTS (
     SELECT 1 FROM public.user_conversation_pins
     WHERE user_id=v_user_a AND conversation_id=v_conversation
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.user_conversation_pins
+    WHERE user_id=v_user_b AND conversation_id=v_conversation
   ) THEN
     RAISE EXCEPTION 'Per-user hidden/pin state changed unexpectedly after deletion';
   END IF;
