@@ -11,6 +11,8 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
   for (const token of [
     'ALLOW_DISPOSABLE_LOCAL_REPLAY',
     "url.port !== expectedDbPort",
+    'LOCAL_SUPABASE_EXPECTED_DB_PORT',
+    'LOCAL_SUPABASE_EXPECTED_API_PORT',
     "url.username !== 'postgres'",
     "url.pathname !== '/postgres'",
     "'127.0.0.1'",
