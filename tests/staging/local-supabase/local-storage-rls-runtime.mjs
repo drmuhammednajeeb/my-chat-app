@@ -19,13 +19,14 @@ const anonKey = required('LOCAL_SUPABASE_ANON_KEY');
 let endpoint;
 try { endpoint = new URL(base); } catch { fail('invalid LOCAL_SUPABASE_URL'); }
 const host = endpoint.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+const expectedApiPort = process.env.LOCAL_SUPABASE_EXPECTED_API_PORT || '54321';
 if (endpoint.protocol !== 'http:'
   || !['127.0.0.1', 'localhost', '::1'].includes(host)
-  || endpoint.port !== '54321'
+  || endpoint.port !== expectedApiPort
   || endpoint.pathname !== '/'
   || endpoint.username || endpoint.password
   || endpoint.search || endpoint.hash) {
-  fail('refusing non-local API target; expected http://loopback:54321 without credentials/query/hash');
+  fail('refusing non-local API target; expected the configured local HTTP API port without credentials/query/hash');
 }
 
 const rawSyntheticIds = required('LOCAL_SYNTHETIC_AUTH_USERS_JSON');
@@ -51,9 +52,10 @@ function localDatabaseProbe(sql) {
   let db;
   try { db = new URL(rawDb); } catch { fail('invalid LOCAL_SUPABASE_DB_URL'); }
   const dbHost = db.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  const expectedDbPort = process.env.LOCAL_SUPABASE_EXPECTED_DB_PORT || '54322';
   if (!['postgres:', 'postgresql:'].includes(db.protocol)
     || !['127.0.0.1', 'localhost', '::1'].includes(dbHost)
-    || db.port !== '54322'
+    || db.port !== expectedDbPort
     || db.username !== 'postgres'
     || db.pathname !== '/postgres'
     || db.search || db.hash) {
