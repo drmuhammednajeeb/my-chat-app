@@ -14,12 +14,12 @@ before(async () => { browser = await chromium.launch({ headless: true }); });
 after(async () => { await browser?.close(); });
 
 const fixture = [
-  '<!doctype html><html class="THEME" data-theme="THEME"><head><meta charset="utf-8"></head><body>',
+  '<!doctype html><html class="__ROOT_THEME__" data-theme="__ROOT_THEME__"><head><meta charset="utf-8"></head><body>',
   '<div id="app" class="app"><aside id="sidebar" class="sidebar">',
   '<div class="brand"><div class="brandmark">BZ</div><h1>Bizmind Makers</h1></div>',
   '<div class="conversation active"><div class="conv-top"><strong>محادثة تجريبية</strong></div></div>',
   '<div class="custom-list-chip active">قائمة محددة</div></aside>',
-  '<main id="chat" class="chat" data-chat-theme="CHAT_THEME"><header class="chat-head">',
+  '<main id="chat" class="chat" data-chat-theme="__CHAT_THEME__"><header class="chat-head">',
   '<div class="chat-header-menu" id="headerMenu"><div>خيارات المحادثة</div></div></header>',
   '<section class="messages" id="messages"><div class="day-divider">اليوم</div>',
   '<div class="message"><div class="bubble">رسالة واردة</div></div>',
@@ -32,7 +32,7 @@ const fixture = [
 
 async function themedPage(theme, width, height, chatTheme = theme) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
-  await page.setContent(fixture.replaceAll('THEME', theme).replace('CHAT_THEME', chatTheme));
+  await page.setContent(fixture.replaceAll('__ROOT_THEME__', theme).replace('__CHAT_THEME__', chatTheme));
   await page.addStyleTag({ content: appCss });
   await page.addStyleTag({ content: themeTokens });
   await page.addStyleTag({ content: overrides });
@@ -65,7 +65,11 @@ async function inspect(page) {
       const element = document.querySelector(selector);
       if (!element) throw new Error('Missing fixture element ' + selector);
       const css = getComputedStyle(element);
-      return { color: css.color, background: css.backgroundColor };
+      const ownBackground = css.backgroundColor;
+      const background = ownBackground === 'rgba(0, 0, 0, 0)' || ownBackground === 'transparent'
+        ? getComputedStyle(element.closest('.bubble') || element).backgroundColor
+        : ownBackground;
+      return { color: css.color, background };
     };
     return {
       received: style('#messages>.message:not(.mine) .bubble'),
