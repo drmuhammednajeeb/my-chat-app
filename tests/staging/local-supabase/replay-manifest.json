@@ -691,7 +691,7 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "parityNote": "Adds per-user hidden-message and conversation-pin records with RLS, and a database-clock-enforced author-only 15-minute delete RPC. SQL probes verify policy/RPC contracts; an authenticated two-user runtime fixture verifies isolation, author checks, direct-update bypass denial, and expired edit/delete rejection."
+      "parityNote": "Adds per-user hidden-message and conversation-pin records with RLS, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original created_at. SQL assertions and authenticated two-user runtime probes verify isolation, unauthorized deletion, direct-update bypass denial, and expired edit/delete rejection."
     },
     {
       "nodeId": "test-fixture.direct-chat-runtime",
