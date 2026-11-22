@@ -130,7 +130,7 @@ $function$;
 create or replace function public.delete_message_secure(p_message_id uuid)
 returns public.chat_messages
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $function$
 declare
