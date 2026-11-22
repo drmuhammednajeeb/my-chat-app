@@ -63,12 +63,12 @@ jobs:
             if (sectionStart < 0) throw new Error('Missing Supabase config section: ' + section);
             const contentStart = sectionStart + header.length;
             const remainder = source.slice(contentStart);
-            const nextSectionOffset = remainder.search(/^\\[[A-Za-z0-9_.-]+\\]\\s*$/m);
+            const nextSectionOffset = remainder.search(/^\[[A-Za-z0-9_.-]+\]\s*$/m);
             const sectionEnd = nextSectionOffset < 0 ? source.length : contentStart + nextSectionOffset;
             let body = source.slice(contentStart, sectionEnd);
             const keyPattern = new RegExp('^\\s*' + key + '\\s*=.*$', 'm');
             if (keyPattern.test(body)) body = body.replace(keyPattern, key + ' = ' + value);
-            else body += (body.endsWith('\\n') ? '' : '\\n') + key + ' = ' + value + '\\n';
+            else body += (body.endsWith('\n') ? '' : '\n') + key + ' = ' + value + '\n';
             return source.slice(0, contentStart) + body + source.slice(sectionEnd);
           }
           config = setTomlValue(config, 'api', 'port', basePort);
@@ -80,7 +80,7 @@ jobs:
           config = setTomlValue(config, 'inbucket', 'pop3_port', basePort + 5);
           config = setTomlValue(config, 'analytics', 'port', basePort + 6);
           fs.writeFileSync(file, config);
-          fs.appendFileSync(process.env.GITHUB_ENV, 'RUNTIME_BASE_PORT=' + basePort + '\\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'RUNTIME_BASE_PORT=' + basePort + '\n');
           NODE
 
       - name: Start disposable Supabase and execute the reviewed replay
