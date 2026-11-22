@@ -35,6 +35,8 @@ create policy "Users hide messages for themselves"
       from public.chat_messages m
       where m.id = message_id
         and m.conversation_id = user_hidden_messages.conversation_id
+        and m.deleted_at is null
+        and clock_timestamp() <= m.created_at + interval '15 minutes'
     )
   );
 
