@@ -29,11 +29,15 @@ export async function verifyPagesOutput(outputDirectory) {
   }
 
   const html = await readFile(join(root, "index.html"), "utf8");
-  if (!html.includes("./deployment-config.js") || !html.includes("./modules/runtime-config.js")) {
-    throw new Error("Pages entry point must load generated deployment config and runtime validation using relative paths.");
+  const configScriptPosition = html.indexOf("./deployment-config.js");
+  const runtimeScriptPosition = html.indexOf("./modules/runtime-config.js");
+  const supabaseClientPosition = html.indexOf("supabase.min.js");
+  if (configScriptPosition < 0 || runtimeScriptPosition < 0 || supabaseClientPosition < 0 ||
+      configScriptPosition > supabaseClientPosition) {
+    throw new Error("Pages entry point must load generated deployment config before the Supabase client using relative paths.");
   }
-  if (/https:\/\/[a-z0-9-]+\.supabase\.co/i.test(html) || /SUPABASE_ANON_KEY\s*=/.test(html)) {
-    throw new Error("Supabase runtime credentials must not be embedded in index.html.");
+  if (/https:\/\/[a-z0-9-]+\.supabase\.co/i.test(html) || /SUPABASE_ANON_KEY\s*=\s*['"]/.test(html)) {
+    throw new Error("Supabase runtime credentials must not be hardcoded in index.html.");
   }
 
   const configText = await readFile(join(root, "deployment-config.js"), "utf8");
@@ -52,8 +56,9 @@ export async function verifyPagesOutput(outputDirectory) {
   if (!serviceWorker.includes("deployment-config.js") || !serviceWorker.includes('cache: "no-store"')) {
     throw new Error("Service Worker must fetch deployment config network-only with no-store.");
   }
-  if (/cache\.addAll\([\s\S]*?deployment-config\.js/.test(serviceWorker)) {
-    throw new Error("Generated deployment config must never be precached.");
+  const precacheBlocks = [...serviceWorker.matchAll(/cache\.addAll\(\[([\s\S]*?)\]\);/g)];
+  if (!precacheBlocks.length || precacheBlocks.some(match => match[1].includes("deployment-config.js"))) {
+    throw new Error("Service Worker must not precache generated deployment config.");
   }
 
   const metadata = JSON.parse(await readFile(join(root, "release-metadata.json"), "utf8"));
