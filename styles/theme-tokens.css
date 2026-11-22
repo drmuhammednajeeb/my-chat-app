@@ -3,7 +3,7 @@
  color-scheme:light;--bg:#f3f6fb;--panel:#ffffff;--panel2:#edf2f8;--panel3:#e1eaf3;
  --line:#cbd5e1;--text:#101828;--muted:#475467;--accent:#007f6b;--accent-text:#006b5b;--accent2:#006653;
  --danger:#c4323b;--warning-text:#8a5a00;--bubble-warning-text:#12352a;--archive-action-bg:#0c6b5b;--restore-action-bg:#285b91;--action-on-color:#ffffff;--bubble:#ffffff;--mine:#d1f5e3;--shadow:0 3px 16px #152b4518;
- --chat-font:"Segoe UI",Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;
+ --chat-font:"IBM Plex Sans Arabic","Tajawal",Roboto,"Helvetica Neue",Arial,sans-serif;
  --chat-focus:#007f6b;--chat-divider:#cbd5e1;
  --surface-hover:#e1eaf3;--surface-selected:#d8f3e9;--surface-selected-text:#064f43;--surface-selected-border:#79bda5;
  --surface-header:#edf2f8;--surface-raised:#e1eaf3;--surface-row-hover:#edf2f8;
