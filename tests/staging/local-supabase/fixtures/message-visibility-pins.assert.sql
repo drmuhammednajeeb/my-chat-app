@@ -8,6 +8,7 @@ declare
   v_delete_security_definer boolean;
   v_delete_definition text;
   v_edit_definition text;
+  v_hidden_insert_check text;
 begin
   select c.relrowsecurity into v_hidden_rls
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
@@ -30,6 +31,17 @@ begin
       and cmd = 'INSERT'
   ) then
     raise exception 'per-user hidden-message INSERT policy is missing';
+  end if;
+
+  select with_check into v_hidden_insert_check
+  from pg_policies
+  where schemaname = 'public' and tablename = 'user_hidden_messages'
+    and policyname = 'Users hide messages for themselves';
+  if v_hidden_insert_check is null
+     or position('clock_timestamp()' in lower(v_hidden_insert_check)) = 0
+     or position('created_at' in lower(v_hidden_insert_check)) = 0
+     or position('deleted_at' in lower(v_hidden_insert_check)) = 0 then
+    raise exception 'delete-for-me policy must enforce the database-clock 15-minute window and reject deleted messages';
   end if;
 
   if not exists (
