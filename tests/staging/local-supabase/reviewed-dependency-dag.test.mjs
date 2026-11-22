@@ -696,7 +696,7 @@ test('eleven forward migrations remain outside the production ledger and record 
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 62);
-  assert.equal(registry.forwardMigrations.length, 10);
+  assert.equal(registry.forwardMigrations.length, 11);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
@@ -707,7 +707,8 @@ test('eleven forward migrations remain outside the production ledger and record 
     ['20261119113000_harden_privileged_rpc_active_membership.sql', []],
     ['20261119120000_fix_conversation_avatar_public_channel_read.sql', []],
     ['20261119130000_increase_message_cleanup_http_timeout.sql', []],
-    ['20261121120000_enforce_signup_display_name_server_side.sql', []]
+    ['20261121120000_enforce_signup_display_name_server_side.sql', []],
+    ['20261123120000_message_visibility_pins_and_secure_delete.sql', ['DAG-020']]
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -744,6 +745,10 @@ test('eleven forward migrations remain outside the production ledger and record 
       assert.equal(forward?.localRuntimeRunId, 44873724263);
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(forward?.productionApplied, false);
+    } else if (name === '20261123120000_message_visibility_pins_and_secure_delete.sql') {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(forward?.productionApplied, false);
+      assert.deepEqual(forward?.blockedBy, ['DAG-020']);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
@@ -771,7 +776,7 @@ test('post-forward runtime assertions are ordered after their matching security 
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 21);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 91);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 91);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 93);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
