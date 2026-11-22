@@ -154,15 +154,50 @@ set search_path = ''
 as $function$
 declare
   v_user_id uuid := (select auth.uid());
+  v_conversation_id uuid;
   v_message public.chat_messages;
   v_deleted public.chat_messages;
   v_previous_setting text := current_setting('app.allow_message_delete', true);
 begin
   if v_user_id is null then
-    raise exception 'Authentication required';
+    raise exception 'Authentication required' using errcode = '28000';
   end if;
   if p_message_id is null then
-    raise exception 'Message ID is required';
+    raise exception 'Message ID is required' using errcode = '22023';
+  end if;
+
+  -- Resolve the target conversation first, then lock eligibility rows in a
+  -- stable order before locking the message. A concurrent suspension or
+  -- membership removal must serialize with this privileged write.
+  select m.conversation_id
+  into v_conversation_id
+  from public.chat_messages m
+  where m.id = p_message_id;
+
+  if not found then
+    raise exception 'Message not found' using errcode = 'P0002';
+  end if;
+
+  perform 1
+  from public.profiles p
+  join auth.users u on u.id = p.id
+  where p.id = v_user_id
+    and p.membership_status = 'active'
+    and u.email_confirmed_at is not null
+  for share of p, u;
+
+  if not found then
+    raise exception 'Active membership is required' using errcode = '42501';
+  end if;
+
+  perform 1
+  from public.conversation_members cm
+  where cm.conversation_id = v_conversation_id
+    and cm.user_id = v_user_id
+  for share of cm;
+
+  if not found or not app_private.is_conversation_member(v_conversation_id) then
+    raise exception 'You are not an active member of this conversation' using errcode = '42501';
   end if;
 
   select *
@@ -172,19 +207,19 @@ begin
   for update;
 
   if not found then
-    raise exception 'Message not found';
+    raise exception 'Message not found' using errcode = 'P0002';
+  end if;
+  if v_message.conversation_id is distinct from v_conversation_id then
+    raise exception 'Message conversation changed during authorization' using errcode = '40001';
   end if;
   if v_message.sender_id <> v_user_id then
-    raise exception 'You can only delete your own message for everyone';
-  end if;
-  if not app_private.is_conversation_member(v_message.conversation_id) then
-    raise exception 'You are not an active member of this conversation';
+    raise exception 'You can only delete your own message for everyone' using errcode = '42501';
   end if;
   if v_message.deleted_at is not null then
-    raise exception 'Message is already deleted';
+    raise exception 'Message is already deleted' using errcode = '22023';
   end if;
   if clock_timestamp() > v_message.created_at + interval '15 minutes' then
-    raise exception 'The 15-minute delete window has expired';
+    raise exception 'The 15-minute delete window has expired' using errcode = '22023';
   end if;
 
   perform set_config('app.allow_message_delete', 'on', true);
