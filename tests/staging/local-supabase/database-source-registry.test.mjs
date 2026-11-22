@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
 const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
-test('production registry preserves 62 ledger versions and separately maps ten forward migrations', async () => {
+test('production registry preserves 62 ledger versions and separately maps eleven forward migrations', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
   assert.equal(registry.schemaVersion, 3);
   assert.equal(registry.registryStatus, 'CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED');
@@ -92,6 +92,10 @@ test('production registry preserves 62 ledger versions and separately maps ten f
       assert.equal(migration.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(migration.productionApplied, false);
       assert.deepEqual(migration.blockedBy, []);
+    } else if (migration.version === '20261123120000') {
+      assert.equal(migration.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+      assert.equal(migration.productionApplied, false);
+      assert.deepEqual(migration.blockedBy, ['DAG-020']);
     } else {
       assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(migration.localRuntimeRunId) && migration.localRuntimeRunId > 0);
@@ -129,7 +133,7 @@ test('production registry preserves 62 ledger versions and separately maps ten f
 test('every canonical migration closes every explicit transaction block', async () => {
   const directory = path.join(root, 'supabase/migrations');
   const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
-  assert.equal(files.length, 72);
+  assert.equal(files.length, 73);
   for (const name of files) {
     const source = await readFile(path.join(directory, name), 'utf8');
     const begins = (source.match(/^\s*BEGIN\s*;\s*$/gim) ?? []).length;
