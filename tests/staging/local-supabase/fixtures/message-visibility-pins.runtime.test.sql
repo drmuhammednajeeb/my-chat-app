@@ -20,23 +20,21 @@ WHERE id IN (
   current_setting('app.test.direct_a_id')::uuid,
   current_setting('app.test.direct_b_id')::uuid
 );
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', current_setting('app.test.direct_a_id'), true);
+
 DO $seed_message_visibility_conversation$
 DECLARE
   v_conversation uuid;
-  v_user_a uuid := current_setting('app.test.direct_a_id')::uuid;
   v_user_b uuid := current_setting('app.test.direct_b_id')::uuid;
 BEGIN
-  INSERT INTO public.conversations(type,title,created_by)
-  VALUES ('group','Message visibility runtime probe',v_user_a)
-  RETURNING id INTO v_conversation;
-  INSERT INTO public.conversation_members(conversation_id,user_id,role)
-  VALUES (v_conversation,v_user_a,'owner'),(v_conversation,v_user_b,'member');
+  v_conversation := public.get_or_create_direct_conversation(v_user_b);
+  IF v_conversation IS NULL THEN
+    RAISE EXCEPTION 'Eligible synthetic users could not create a direct conversation';
+  END IF;
   PERFORM set_config('app.test.message_visibility_conversation_id',v_conversation::text,true);
 END;
 $seed_message_visibility_conversation$;
-
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claim.sub', current_setting('app.test.direct_a_id'), true);
 
 DO $message_visibility_runtime$
 DECLARE
