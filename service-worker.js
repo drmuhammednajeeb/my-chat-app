@@ -3,7 +3,7 @@
  * Never cache Supabase/API requests, authenticated data, or user messages.
  */
 const CACHE_PREFIX = "ultra-chat-pro";
-const CACHE_VERSION = "v40";
+const CACHE_VERSION = "v41";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const CDN_CACHE = `${CACHE_PREFIX}-cdn-${CACHE_VERSION}`;
 const CDN_ORIGINS = new Set([
@@ -20,7 +20,6 @@ self.addEventListener("install", event => {
     await cache.addAll([
       new URL("./", base).href,
       new URL("./manifest.json", base).href,
-      new URL("./deployment-config.js", base).href,
       new URL("./modules/runtime-config.js", base).href,
       new URL("./icon-192.png", base).href,
       new URL("./icon-512.png", base).href,
@@ -121,8 +120,23 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  if (url.pathname.endsWith("/deployment-config.js")) {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(request, { cache: "no-store" });
+        if (!response || !response.ok) return response;
+        const headers = new Headers(response.headers);
+        headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+        headers.set("Pragma", "no-cache");
+        return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+      } catch (_) {
+        return new Response("", { status: 503, statusText: "Runtime configuration unavailable", headers: { "Cache-Control": "no-store" } });
+      }
+    })());
+    return;
+  }
+
   const isShellAsset = url.pathname.endsWith("/manifest.json")
-    || url.pathname.endsWith("/deployment-config.js")
     || url.pathname.endsWith("/modules/runtime-config.js")
     || url.pathname.endsWith("/icons/ultra-chat.svg");
   if (!isShellAsset) return;

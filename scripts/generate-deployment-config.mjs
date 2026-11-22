@@ -5,11 +5,14 @@ const PRODUCTION_TARGETS = new Set(["pages-production", "vercel-standby"]);
 const NON_PRODUCTION_TARGETS = new Set(["preview", "test"]);
 function isPublicAnonKey(value) {
   if (typeof value !== "string" || !value || value.trim() !== value || /^(sb_secret_|service_role)/i.test(value)) return false;
-  if (value.startsWith("sb_publishable_")) return value.length >= 24;
+  if (value.startsWith("sb_publishable_")) return /^sb_publishable_[A-Za-z0-9_-]{20,128}$/.test(value);
   const parts = value.split(".");
-  if (parts.length !== 3 || !parts[1]) return false;
-  try { return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"))?.role === "anon"; }
-  catch { return false; }
+  if (parts.length !== 3 || !parts.every(part => /^[A-Za-z0-9_-]+$/.test(part))) return false;
+  try {
+    const header = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8"));
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    return header.alg !== "none" && payload.role === "anon";
+  } catch { return false; }
 }
 export function buildDeploymentConfig(env = process.env) {
   const target = String(env.BIZMIND_DEPLOYMENT_TARGET || "");
@@ -20,7 +23,7 @@ export function buildDeploymentConfig(env = process.env) {
   let url;
   try { url = new URL(supabaseUrl); } catch { throw new Error("SUPABASE_URL must be a valid URL."); }
   const host = url.hostname.toLowerCase().replace(/\.$/, "");
-  if (url.protocol !== "https:" || !host.endsWith(".supabase.co") || url.username || url.password || url.port || url.search || url.hash || (url.pathname !== "/" && url.pathname !== "")) {
+  if (url.protocol !== "https:" || !/^[a-z0-9-]+\\.supabase\\.co$/.test(host) || url.username || url.password || url.port || url.search || url.hash || (url.pathname !== "/" && url.pathname !== "")) {
     throw new Error("SUPABASE_URL must be an HTTPS Supabase project origin without credentials or paths.");
   }
   if (!isPublicAnonKey(supabaseAnonKey)) throw new Error("SUPABASE_ANON_KEY must be a public publishable key or an anon-role JWT; secret/service-role keys are forbidden.");
