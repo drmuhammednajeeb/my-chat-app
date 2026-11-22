@@ -75,7 +75,7 @@
       playButton.type = "button";
       playButton.className = "voice-player-toggle";
       playButton.setAttribute("aria-label", "تشغيل الرسالة الصوتية");
-      playButton.innerHTML = '<i class="ph ph-play-fill" aria-hidden="true"></i>';
+      playButton.innerHTML = '<span class="voice-player-glyph voice-player-glyph-play" aria-hidden="true">▶</span>';
 
       const waveform = documentRef.createElement("div");
       waveform.className = "voice-player-waveform";
@@ -148,8 +148,8 @@
         wrapper.classList.toggle("is-playing", playing);
         if (!fallbackVisible) playButton.disabled = false;
         playButton.innerHTML = playing
-          ? '<i class="ph ph-pause-fill" aria-hidden="true"></i>'
-          : '<i class="ph ph-play-fill" aria-hidden="true"></i>';
+          ? '<span class="voice-player-glyph voice-player-glyph-pause" aria-hidden="true">Ⅱ</span>'
+          : '<span class="voice-player-glyph voice-player-glyph-play" aria-hidden="true">▶</span>';
         playButton.dataset.playbackState = playing ? "playing" : "paused";
         playButton.setAttribute("aria-pressed", playing ? "true" : "false");
         playButton.setAttribute("aria-label", playing ? "إيقاف الرسالة الصوتية مؤقتاً" : "تشغيل الرسالة الصوتية");
@@ -284,8 +284,13 @@
         audio.load();
       };
       render();
-      // Explicit load initialises metadata for dynamically-created media elements.
-      try { audio.load(); } catch (_) {}
+      // Load only after the caller has had a chance to attach the player to the message DOM.
+      // Some browsers do not reliably initialise metadata for detached media elements.
+      Promise.resolve().then(() => {
+        if (destroyed) return;
+        try { audio.load(); } catch (_) {}
+        render();
+      });
       return wrapper;
     }
 
