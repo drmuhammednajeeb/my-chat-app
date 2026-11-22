@@ -11,7 +11,7 @@ test('message time and delivery status are rendered inside the text flow', () =>
   assert.ok(styles.includes('#messages .message-content>.meta'));
   assert.ok(styles.includes('#messages .message-content>.message-status'));
   assert.ok(styles.includes('float:left'));
-  assert.ok(styles.includes('color:rgba(255,255,255,.6)'));
+  assert.ok(styles.includes('color:var(--bubble-meta)'));
   assert.ok(styles.includes('font-size:11px'));
 });
 
