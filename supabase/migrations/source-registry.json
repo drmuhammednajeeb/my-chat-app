@@ -1969,10 +1969,10 @@
       "version": "20261123120000",
       "name": "message_visibility_pins_and_secure_delete",
       "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-      "gitBlobSha": "7cea7f3a9ed750491d9e1cdad639e0d5d6685451",
+      "gitBlobSha": "3949c59f3e84dd73fa3c54bdb5f01e5c91beec69",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
-      "purpose": "Add per-user hidden-message visibility, per-user conversation pins, and a database-clock-enforced 15-minute author-only soft-delete RPC. Direct authenticated updates can no longer bypass the secure deletion path.",
+      "purpose": "Add per-user hidden-message visibility, per-user conversation pins, and a database-clock-enforced 15-minute author-only soft-delete RPC. The RPC is SECURITY DEFINER with an empty search_path and explicit author/member checks; direct authenticated updates cannot bypass it.",
       "blockedBy": [
         "DAG-020"
       ],
