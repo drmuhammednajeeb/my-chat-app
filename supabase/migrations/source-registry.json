@@ -1981,10 +1981,10 @@
       "version": "20261123120000",
       "name": "message_visibility_pins_and_secure_delete",
       "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-      "gitBlobSha": "47dc9711281ca937bf93028224f1b8613ad24aa0",
+      "gitBlobSha": "be94fdc5dd236599c2dd4f015a67a5cebbe0f27e",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
-      "purpose": "Add per-user hidden-message visibility and conversation pins, both protected by restrictive active-membership RLS plus owner/member policies; enforce database-clock 15-minute delete-for-me and author-only delete-for-everyone.",
+      "purpose": "Add per-user hidden-message visibility and conversation pins. Every permissive policy independently checks active membership and conversation membership, with a restrictive active-member guard; enforce database-clock 15-minute delete-for-me and author-only delete-for-everyone.",
       "blockedBy": [
         "DAG-020"
       ],
