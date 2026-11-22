@@ -34,13 +34,15 @@
       "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 70,
-    "executedTestOnlySqlFixtures": 21,
-    "executedSqlFiles": 91,
-    "localRuntimeStatus": "PENDING_NEW_FORWARD_MIGRATION_RUNTIME_VALIDATION",
+    "executedMappedSources": 71,
+    "executedTestOnlySqlFixtures": 23,
+    "executedSqlFiles": 94,
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "candidateMappedSources": 71,
     "candidateTestOnlySqlFixtures": 23,
-    "candidateSqlFiles": 94
+    "candidateSqlFiles": 94,
+    "localRuntimeRunId": 45076185494,
+    "localRuntimeCommit": "cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0"
   },
   "execution": {
     "enabled": false,
@@ -682,7 +684,7 @@
     },
     {
       "nodeId": "chat.message-visibility-pins-and-delete",
-      "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
+      "status": "FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING",
       "testSources": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
@@ -691,7 +693,12 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "parityNote": "Adds per-user hidden-message and conversation-pin records with RLS, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original created_at. SQL assertions and authenticated two-user runtime probes verify isolation, unauthorized deletion, direct-update bypass denial, and expired edit/delete rejection."
+      "parityNote": "Adds per-user hidden-message and conversation-pin records with RLS, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone from original created_at. SQL assertions and authenticated two-user runtime probes verify isolation, unauthorized deletion, direct-update bypass denial, and expired edit/delete rejection.",
+      "runtimeEvidence": {
+        "workflowRunId": 45076185494,
+        "commit": "cf8f0d6410310f5b127e9503c2fbdb8dc922f3a0",
+        "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
+      }
     },
     {
       "nodeId": "test-fixture.direct-chat-runtime",
@@ -989,14 +996,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "FORWARD_RECONCILIATION_RUNTIME_PENDING",
-      "issue": "The new per-user message visibility, conversation pin and secure-delete migration has source coverage but still requires disposable-local PostgreSQL replay, RLS CRUD probes, and authenticated two-user/device checks. Do not apply to production until those checks and a separate owner approval pass.",
+      "severity": "PRODUCTION_APPROVAL_PENDING",
+      "issue": "Disposable-local PostgreSQL replay, RLS catalog assertions, and authenticated two-user runtime probes passed (run 45076185494). Do not apply to production until independent review and separate explicit owner approval.",
       "evidence": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED"
+      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
     }
   ],
   "requiredSourceRecovery": [
@@ -1320,5 +1327,5 @@
       "failed": 0
     }
   },
-  "reviewState": "CURRENT_MAINLINE_RUNTIME_VALIDATED_PRODUCTION_UNCHANGED"
+  "reviewState": "FORWARD_MIGRATION_RUNTIME_VALIDATED_PRODUCTION_UNCHANGED"
 }
