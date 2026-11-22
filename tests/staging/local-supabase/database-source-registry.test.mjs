@@ -25,8 +25,8 @@ test('production registry preserves 62 ledger versions and separately maps eleve
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
   assert.equal(registry.sourceFiles.length, 62);
-  assert.equal(registry.sourceSets.testOnlyFixtureCount, 22);
-  assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 22);
+  assert.equal(registry.sourceSets.testOnlyFixtureCount, 23);
+  assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 23);
 
   const versions = registry.productionMigrations.map(item => item.version);
   assert.equal(new Set(versions).size, 62);
