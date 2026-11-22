@@ -28,12 +28,7 @@ html.dark{
  --overlay-scrim:rgba(0,0,0,.78);--danger-bg:rgba(255,123,134,.14);--danger-text:#ff9ca5;--danger-border:#7f3b48;--modal-shadow:0 20px 70px rgba(0,0,0,.62);
 }
 
-/* Per-group accent variants; scoped to the selected conversation only. */
-#chat[data-group-theme="emerald"]{--accent:#0b9b78}
-#chat[data-group-theme="blue"]{--accent:#3688d8}
-#chat[data-group-theme="violet"]{--accent:#9166d8}
-#chat[data-group-theme="amber"]{--accent:#c58a25}
-#chat[data-group-theme="rose"]{--accent:#d65e80}
+
 
 /* Per-conversation palettes override the global app palette only inside #chat. */
 #chat.chat[data-chat-theme="light"]{
@@ -62,3 +57,10 @@ html.dark{
  --menu-bg:#111c2d;--menu-text:#edf3fb;--menu-hover:#1d2d46;--menu-icon:#8da0b8;--menu-shadow:0 12px 34px #0007;
  --overlay-scrim:rgba(0,0,0,.78);--danger-bg:rgba(255,123,134,.14);--danger-text:#ff9ca5;--danger-border:#7f3b48;
 }
+
+/* Per-group accent variants; scoped to the selected conversation only. */
+#chat[data-group-theme="emerald"]{--accent:#0b9b78}
+#chat[data-group-theme="blue"]{--accent:#3688d8}
+#chat[data-group-theme="violet"]{--accent:#9166d8}
+#chat[data-group-theme="amber"]{--accent:#c58a25}
+#chat[data-group-theme="rose"]{--accent:#d65e80}
