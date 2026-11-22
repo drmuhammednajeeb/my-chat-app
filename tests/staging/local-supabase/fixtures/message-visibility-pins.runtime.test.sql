@@ -221,6 +221,7 @@ END;
 $message_visibility_runtime$;
 
 -- A suspended member must not invoke the SECURITY DEFINER delete path.
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
 DO $seed_suspended_member_delete_probe$
 DECLARE
   v_id uuid;
@@ -236,6 +237,7 @@ END;
 $seed_suspended_member_delete_probe$;
 
 RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 UPDATE public.profiles
 SET membership_status='suspended'
 WHERE id=current_setting('app.test.direct_a_id')::uuid;
@@ -269,6 +271,7 @@ BEGIN
   END IF;
 END;
 $assert_suspended_member_delete_unchanged$;
+SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 UPDATE public.profiles
 SET membership_status='active'
 WHERE id=current_setting('app.test.direct_a_id')::uuid;
