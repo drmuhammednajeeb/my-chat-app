@@ -1600,7 +1600,7 @@
         "chat.restore-message-edit-guard",
         "chat.direct-conversation-rpc",
         "membership.final-format",
-        "test-fixture.direct-chat-profiles"
+        "test-fixture.direct-chat-runtime"
       ],
       "status": "FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING",
       "testSource": [
@@ -2563,7 +2563,7 @@
       "chat.message-visibility-pins-and-delete"
     ],
     [
-      "test-fixture.direct-chat-profiles",
+      "test-fixture.direct-chat-runtime",
       "chat.message-visibility-pins-and-delete"
     ]
   ],
