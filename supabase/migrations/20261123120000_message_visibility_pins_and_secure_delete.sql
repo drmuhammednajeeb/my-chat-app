@@ -16,6 +16,12 @@ alter table public.user_hidden_messages enable row level security;
 revoke all on table public.user_hidden_messages from public, anon, authenticated;
 grant select, insert, delete on table public.user_hidden_messages to authenticated;
 
+-- Match the repository-wide non-bypassable active-membership boundary.
+create policy "Require active membership for all API operations"
+  on public.user_hidden_messages as restrictive for all to authenticated
+  using ((select app_private.is_active_member()))
+  with check ((select app_private.is_active_member()));
+
 drop policy if exists "Users read own hidden messages" on public.user_hidden_messages;
 create policy "Users read own hidden messages"
   on public.user_hidden_messages for select to authenticated
@@ -58,6 +64,11 @@ create index if not exists user_conversation_pins_user_order_idx
 alter table public.user_conversation_pins enable row level security;
 revoke all on table public.user_conversation_pins from public, anon, authenticated;
 grant select, insert, delete on table public.user_conversation_pins to authenticated;
+
+create policy "Require active membership for all API operations"
+  on public.user_conversation_pins as restrictive for all to authenticated
+  using ((select app_private.is_active_member()))
+  with check ((select app_private.is_active_member()));
 
 drop policy if exists "Users read own conversation pins" on public.user_conversation_pins;
 create policy "Users read own conversation pins"
