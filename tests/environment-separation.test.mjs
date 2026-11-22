@@ -52,10 +52,13 @@ test('Vercel static build is guarded by the explicit environment-aware builder',
   const config = read('../vercel.json');
   const builder = read('../scripts/build-vercel.mjs');
   const generator = read('../scripts/generate-deployment-config.mjs');
+  const ignore = read('../scripts/ignore-vercel-deployment.mjs');
   assert.match(config, /"buildCommand":\s*"node scripts\/build-vercel\.mjs"/);
   assert.match(config, /"outputDirectory":\s*"dist\/vercel-static"/);
   assert.match(builder, /VERCEL_ENV/);
   assert.match(builder, /BIZMIND_VERCEL_STANDBY_APPROVED/);
   assert.match(builder, /BIZMIND_STANDBY_RELEASE_SHA/);
   assert.match(generator, /BIZMIND_NONPROD_SUPABASE_HOST/);
+  assert.match(config, /"ignoreCommand":\\s*"node scripts\\/ignore-vercel-deployment\\.mjs"/);
+  assert.match(ignore, /BIZMIND_VERCEL_STANDBY_APPROVED/);
 });

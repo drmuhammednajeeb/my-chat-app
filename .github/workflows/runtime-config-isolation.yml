@@ -49,6 +49,7 @@ jobs:
           node --check modules/runtime-config.js
           node --check scripts/generate-deployment-config.mjs
           node --check scripts/build-vercel.mjs
+          node --check scripts/ignore-vercel-deployment.mjs
       - name: Run configuration and regression tests
         run: |
           node --test tests/runtime-config.test.mjs tests/runtime-config-deployment.test.mjs tests/environment-separation.test.mjs tests/app-updater.test.mjs tests/auth-error-messages.test.mjs tests/auth-signup-viewport.test.mjs

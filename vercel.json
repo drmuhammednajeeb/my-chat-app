@@ -20,5 +20,6 @@
         }
       ]
     }
-  ]
+  ],
+  "ignoreCommand": "node scripts/ignore-vercel-deployment.mjs"
 }

@@ -70,3 +70,16 @@ test("Vercel output replaces the checked-in production config and excludes sourc
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("Vercel ignore gate skips Preview without isolated credentials and standby without approval", async () => {
+  const { shouldBuildVercelDeployment } = await import("../scripts/ignore-vercel-deployment.mjs");
+  assert.equal(shouldBuildVercelDeployment({ VERCEL_ENV: "preview" }), false);
+  assert.equal(shouldBuildVercelDeployment({
+    VERCEL_ENV: "preview",
+    SUPABASE_URL: "https://isolated-preview-project.supabase.co",
+    SUPABASE_ANON_KEY: publicKey,
+    BIZMIND_NONPROD_SUPABASE_HOST: "isolated-preview-project.supabase.co"
+  }), true);
+  assert.equal(shouldBuildVercelDeployment({ ...productionEnv, BIZMIND_VERCEL_STANDBY_APPROVED: "false" }), false);
+  assert.equal(shouldBuildVercelDeployment(productionEnv), true);
+});
