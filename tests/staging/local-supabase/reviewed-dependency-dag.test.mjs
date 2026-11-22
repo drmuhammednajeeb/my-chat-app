@@ -775,3 +775,22 @@ test('direct-conversation stress executes once after the forward eligibility mig
   assert.ok(runner.includes("node.nodeId === 'test-fixture.direct-chat-concurrency' && !postForwardConcurrencyExecuted"));
   assert.match(runner, /post-forward-concurrency/);
 });
+
+
+test('message visibility, conversation pins and secure deletion remain a gated forward migration', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'chat.message-visibility-pins-and-delete');
+  assert.ok(node);
+  assert.equal(node.status, 'FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING');
+  assert.deepEqual(node.requires, ['core.base', 'chat.message-edit-hardening', 'chat.restore-message-edit-guard']);
+  assert.ok(node.provides.includes('public.user_hidden_messages'));
+  assert.ok(node.provides.includes('public.user_conversation_pins'));
+  assert.ok(node.provides.includes('public.delete_message_secure(uuid)'));
+  assert.ok(node.blockedBy.includes('DAG-020'));
+  for (const source of node.source) await access(path.join(root, source));
+  for (const source of node.testSource) await access(path.join(root, source));
+  const blocker = dag.blockers.find(item => item.id === 'DAG-020');
+  assert.equal(blocker.status, 'SOURCE_REVIEWED_RUNTIME_PENDING_PRODUCTION_UNCHANGED');
+  assert.ok(blocker.evidence.includes(node.source[0]));
+  assert.equal(dag.executionAuthorized, false);
+});
