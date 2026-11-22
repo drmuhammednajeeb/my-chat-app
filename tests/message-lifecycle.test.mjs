@@ -648,4 +648,18 @@ test('typing events and delayed clears from a previous conversation are ignored'
   assert.match(ui.textContent, /حالي/);
   oldTimer?.();
   assert.match(ui.textContent, /حالي/);
+});\n
+test('approved chat design keeps message copy/export and forwarding absent while preserving secure 15-minute actions', async () => {
+  const tokens = await readFile(new URL('../styles/theme-tokens.css', import.meta.url), 'utf8');
+  assert.match(source, /id="chatInfoBtn"/);
+  assert.match(source, /conversation-info-mode/);
+  assert.match(source, /openProfileModal\(otherMember\(state\.active\),false,true\)/);
+  assert.match(overrides, /profile-modal\.conversation-info-mode/);
+  assert.match(tokens, /--chat-font:"IBM Plex Sans Arabic"/);
+  assert.match(source, /rpc\('edit_message_secure'/);
+  assert.match(source, /p_expected_revision:expectedRevision/);
+  assert.match(source, /rpc\('delete_message_secure'/);
+  assert.match(source, /createdAt\+15\*60\*1000/);
+  assert.doesNotMatch(source, /exportSelectedMessages|exportActiveConversation|exportConversationBtn/);
+  assert.doesNotMatch(source, /نسخ الرسالة|إعادة توجيه الرسالة|forwardMessage/i);
 });
