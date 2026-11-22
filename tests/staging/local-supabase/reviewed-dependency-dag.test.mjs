@@ -178,12 +178,13 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 22);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 23);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
     'tests/staging/local-supabase/fixtures/synthetic-direct-chat-auth-before-membership.sql',
-    'tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql'
+    'tests/staging/local-supabase/fixtures/synthetic-direct-chat-profiles-after-membership.sql',
+    'tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(fixture), 'SQL fixture missing from replay coverage: ' + fixture);
   assert.equal(manifest.blockers.find(item => item.id === 'DAG-002')?.severity, 'RESOLVED_FOR_LOCAL_REPLAY');
   for (const fixture of [
@@ -499,7 +500,7 @@ test('post-forward runtime assertions are ordered after their matching security 
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 21);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 91);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 93);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 94);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'chat.auto-cleanup-100h').testSource.includes('tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs'));
@@ -792,10 +793,15 @@ test('message visibility, conversation pins and secure deletion remain a gated f
   const node = dag.nodes.find(item => item.id === 'chat.message-visibility-pins-and-delete');
   assert.ok(node);
   assert.equal(node.status, 'FORWARD_RECONCILIATION_SOURCE_REVIEWED_RUNTIME_PENDING');
-  assert.deepEqual(node.requires, ['core.base', 'chat.message-edit-hardening', 'chat.restore-message-edit-guard']);
+  assert.deepEqual(node.requires, ['core.base', 'chat.message-edit-hardening', 'chat.restore-message-edit-guard', 'chat.direct-conversation-rpc', 'membership.final-format', 'test-fixture.direct-chat-profiles']);
   assert.ok(node.provides.includes('public.user_hidden_messages'));
   assert.ok(node.provides.includes('public.user_conversation_pins'));
   assert.ok(node.provides.includes('public.delete_message_secure(uuid)'));
+  assert.ok(node.testSource.includes('tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql'));
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const replayNode = manifest.candidateNodeOrder.find(item => item.nodeId === node.id);
+  assert.ok(replayNode?.testSources.includes('tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql'));
+  assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes('tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql'));
   assert.ok(node.blockedBy.includes('DAG-020'));
   for (const source of node.source) await access(path.join(root, source));
   for (const source of node.testSource) await access(path.join(root, source));
