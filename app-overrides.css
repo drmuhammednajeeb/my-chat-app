@@ -64,19 +64,8 @@
 @media(max-width:760px){.chat-header-menu{top:55px;left:8px}.message-options-menu{min-width:148px}}
 
 /* Unified WhatsApp-inspired global theme and typography */
-:root{--chat-font: "Segoe UI",Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif}
-html.light{
- color-scheme:light;
- --bg:#efeae2;--panel:#ffffff;--panel2:#f0f2f5;--panel3:#e9edef;
- --line:#e9edef;--text:#111b21;--muted:#667781;--accent:#00a884;--accent2:#008f72;
- --danger:#d9534f;--bubble:#ffffff;--mine:#d9fdd3;--shadow:0 2px 12px #0b141a12;
-}
-html.dark{
- color-scheme:dark;
- --bg:#0b141a;--panel:#111b21;--panel2:#202c33;--panel3:#2a3942;
- --line:#2a3942;--text:#e9edef;--muted:#8696a0;--accent:#00a884;--accent2:#00a884;
- --danger:#f15c6d;--bubble:#202c33;--mine:#005c4b;--shadow:0 2px 16px #0005;
-}
+
+
 html,body,#app,#auth,.app,.sidebar,.chat,.chat-head,.messages,.composer-wrap,.composer,
 .profile,.auth-card,.group-dialog,.notification-panel,.team-panel,.chat-search-panel,
 .conversation,.notification-item,.chat-search-result,.diagnostics-panel,#diagnosticsPanel{
@@ -311,38 +300,7 @@ html.dark .new-messages-jump{background:#153c36;color:#b8f3d6;border-color:#276b
 
 
 /* High-contrast visual system — accessible, vivid, and consistent in both themes. */
-html.light{
- color-scheme:light;
- --bg:#f3f6fb;
- --panel:#ffffff;
- --panel2:#edf2f8;
- --panel3:#e1eaf3;
- --line:#cbd5e1;
- --text:#101828;
- --muted:#475467;
- --accent:#007f6b;
- --accent2:#006653;
- --danger:#c4323b;
- --bubble:#ffffff;
- --mine:#d1f5e3;
- --shadow:0 3px 16px #152b4518;
-}
-html.dark{
- color-scheme:dark;
- --bg:#08131d;
- --panel:#101f2b;
- --panel2:#1b2d3a;
- --panel3:#294252;
- --line:#405667;
- --text:#f8fafc;
- --muted:#bdc9d5;
- --accent:#39d9b5;
- --accent2:#22bd9b;
- --danger:#ff7b86;
- --bubble:#1b2d3a;
- --mine:#075e50;
- --shadow:0 3px 18px #0007;
-}
+
 html.light body,html.light #app,html.light #auth,
 html.dark body,html.dark #app,html.dark #auth{
  color:var(--text);
