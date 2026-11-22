@@ -216,8 +216,105 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'User B hidden/pin state changed unexpectedly after deletion';
   END IF;
+
 END;
 $message_visibility_runtime$;
 
+-- A suspended member must not invoke the SECURITY DEFINER delete path.
+DO $seed_suspended_member_delete_probe$
+DECLARE
+  v_id uuid;
+BEGIN
+  INSERT INTO public.chat_messages(conversation_id,sender_id,content)
+  VALUES (
+    current_setting('app.test.message_visibility_conversation_id')::uuid,
+    current_setting('app.test.direct_a_id')::uuid,
+    'Suspended member secure-delete probe'
+  ) RETURNING id INTO v_id;
+  PERFORM set_config('app.test.suspended_delete_message_id',v_id::text,true);
+END;
+$seed_suspended_member_delete_probe$;
+
 RESET ROLE;
+UPDATE public.profiles
+SET membership_status='suspended'
+WHERE id=current_setting('app.test.direct_a_id')::uuid;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
+DO $suspended_member_delete_denied$
+DECLARE
+  v_rejected boolean := false;
+BEGIN
+  BEGIN
+    PERFORM public.delete_message_secure(current_setting('app.test.suspended_delete_message_id')::uuid);
+  EXCEPTION WHEN OTHERS THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Suspended member executed secure delete';
+  END IF;
+END;
+$suspended_member_delete_denied$;
+
+RESET ROLE;
+IF NOT EXISTS (
+  SELECT 1 FROM public.chat_messages
+  WHERE id=current_setting('app.test.suspended_delete_message_id')::uuid
+    AND deleted_at IS NULL
+) THEN
+  RAISE EXCEPTION 'Suspended member changed the message despite authorization denial';
+END IF;
+UPDATE public.profiles
+SET membership_status='active'
+WHERE id=current_setting('app.test.direct_a_id')::uuid;
+
+-- A user whose conversation_members row has been removed must also be denied.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
+DO $seed_removed_member_delete_probe$
+DECLARE
+  v_id uuid;
+BEGIN
+  INSERT INTO public.chat_messages(conversation_id,sender_id,content)
+  VALUES (
+    current_setting('app.test.message_visibility_conversation_id')::uuid,
+    current_setting('app.test.direct_a_id')::uuid,
+    'Removed member secure-delete probe'
+  ) RETURNING id INTO v_id;
+  PERFORM set_config('app.test.removed_member_delete_message_id',v_id::text,true);
+END;
+$seed_removed_member_delete_probe$;
+
+RESET ROLE;
+DELETE FROM public.conversation_members
+WHERE conversation_id=current_setting('app.test.message_visibility_conversation_id')::uuid
+  AND user_id=current_setting('app.test.direct_a_id')::uuid;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
+DO $removed_member_delete_denied$
+DECLARE
+  v_rejected boolean := false;
+BEGIN
+  BEGIN
+    PERFORM public.delete_message_secure(current_setting('app.test.removed_member_delete_message_id')::uuid);
+  EXCEPTION WHEN OTHERS THEN
+    v_rejected := true;
+  END;
+  IF NOT v_rejected THEN
+    RAISE EXCEPTION 'Removed conversation member executed secure delete';
+  END IF;
+END;
+$removed_member_delete_denied$;
+
+RESET ROLE;
+IF NOT EXISTS (
+  SELECT 1 FROM public.chat_messages
+  WHERE id=current_setting('app.test.removed_member_delete_message_id')::uuid
+    AND deleted_at IS NULL
+) THEN
+  RAISE EXCEPTION 'Removed member changed the message despite authorization denial';
+END IF;
+
 ROLLBACK;
