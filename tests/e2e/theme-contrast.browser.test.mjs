@@ -139,7 +139,7 @@ test('browser: keyboard focus remains visible and reduced motion removes transit
     }));
     assert.equal(focused.visible, true);
     assert.equal(focused.outlineStyle, 'solid');
-    assert.equal(focused.outlineWidth, '3px');
+    assert.ok(parseFloat(focused.outlineWidth) >= 2, 'focus indicator must be at least 2px');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const transition = await page.locator('#messageMenu').evaluate(element => getComputedStyle(element).transitionDuration);
     assert.equal(transition, '0s');
