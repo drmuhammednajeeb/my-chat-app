@@ -661,6 +661,8 @@ test('approved chat design keeps message copy/export and forwarding absent while
   assert.match(source, /rpc\('edit_message_secure'/);
   assert.match(source, /p_expected_revision:expectedRevision/);
   assert.match(source, /rpc\('delete_message_secure'/);
+  assert.match(source, /function canDeleteMessageForMe\(m\)/);
+  assert.match(source, /local\.disabled=!canDeleteMessageForMe\(message\)/);
   assert.match(source, /createdAt\+15\*60\*1000/);
   assert.doesNotMatch(source, /exportSelectedMessages|exportActiveConversation|exportConversationBtn/);
   assert.doesNotMatch(source, /نسخ الرسالة|إعادة توجيه الرسالة|forwardMessage/i);
