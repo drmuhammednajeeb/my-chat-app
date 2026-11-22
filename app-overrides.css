@@ -2,7 +2,7 @@
 /* Swipe-to-reply and message interaction styling */
 .profile-avatar-edit{cursor:pointer;position:relative;outline-offset:3px}
 .profile-avatar-edit:hover{box-shadow:0 0 0 3px #00a88435}
-.profile-avatar-edit:after{content:"كاميرا";position:absolute;inset:auto 0 0;background:#102a28c9;color:#fff;text-align:center;font-size:8px;padding:2px 0;opacity:0;transition:opacity .16s}
+.profile-avatar-edit:after{content:"كاميرا";position:absolute;inset:auto 0 0;background:var(--menu-bg);color:var(--menu-text);text-align:center;font-size:8px;padding:2px 0;opacity:0;transition:opacity .16s}
 .profile-avatar-edit:hover:after,.profile-avatar-edit:focus-visible:after{opacity:1}
 .message .bubble{touch-action:pan-y;transition:transform .16s ease}
 @media(max-width:760px){.profile-avatar-edit:after{opacity:1}}
@@ -33,10 +33,10 @@
 .conversation-swipe-action.restore-action{left:0;background:linear-gradient(145deg,#3979b8,#285b91)}
 .conversation.swipe-conversation{position:relative;z-index:2;margin:0;border-radius:14px;min-height:68px;background:var(--sidebar,var(--bg));transform:translateX(0);transition:transform .24s cubic-bezier(.2,.8,.2,1),background .18s ease;will-change:transform;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .conversation.swipe-conversation:hover{background:var(--panel2)}
-.conversation.swipe-conversation.active{background:#1b3344}
+.conversation.swipe-conversation.active{background:var(--surface-row-active);color:var(--surface-row-active-text)}
 .conversation-swipe-shell.swipe-open .swipe-conversation{cursor:grab}
 .conversation-swipe-shell.is-archived .swipe-conversation{background:var(--sidebar,var(--bg))}
-.conversation-swipe-shell.is-archived .swipe-conversation.active{background:#1b3344}
+.conversation-swipe-shell.is-archived .swipe-conversation.active{background:var(--surface-row-active);color:var(--surface-row-active-text)}
 @media(prefers-reduced-motion:reduce){.conversation.swipe-conversation,.conversation-swipe-action{transition:none}}
 
 /* WhatsApp-style contextual menus: keep chat chrome clean until requested. */
@@ -47,7 +47,7 @@
 .chat-header-menu.hidden{display:none!important}
 .chat-header-menu>button{width:100%;min-height:42px;display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:9px 11px;border:0;border-radius:8px;background:transparent;color:var(--menu-text);text-align:right;font-size:13px}
 .chat-header-menu>button:hover{background:var(--menu-hover)}
-.chat-header-menu>button i,.chat-header-menu>button svg{width:20px;height:20px;flex:none;font-size:18px;color:#667781}
+.chat-header-menu>button i,.chat-header-menu>button svg{width:20px;height:20px;flex:none;font-size:18px;color:var(--menu-icon)}
 .chat-header-menu>button.hidden{display:none!important}
 .chat-header-menu .direct-chat-control{height:auto;border:0;border-radius:8px;background:transparent;justify-content:flex-start}
 .chat-header-menu .install-app-btn{width:100%;min-width:0;padding:9px 11px}
@@ -57,7 +57,7 @@
 .message-menu-option{width:100%;min-height:36px;display:flex;align-items:center;gap:10px;padding:7px 10px;border:0;border-radius:7px;background:transparent;color:var(--menu-text);text-align:right;font-size:12px}
 .message-menu-option:hover{background:var(--menu-hover)}
 .message-menu-option:disabled{opacity:.48;cursor:not-allowed}
-.message-menu-option i{font-size:16px;color:#667781}
+.message-menu-option i{font-size:16px;color:var(--menu-icon)}
 .message-menu-option:last-child{color:var(--danger)}
 .message-menu-option:last-child i{color:var(--danger)}
 
@@ -157,7 +157,7 @@ html,body{font-family:var(--chat-font)}
 .group-management-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .group-management-row>*{flex:1;min-width:130px}
 .group-management-btn{border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:var(--panel);color:var(--text);font-size:12px;font-weight:700}
-.group-management-btn.primary{background:var(--accent);color:#fff;border:0;margin:0}
+.group-management-btn.primary{background:var(--button-primary-bg);color:var(--button-primary-text);border:0;margin:0}
 .group-management-btn.danger{color:var(--danger)}
 .group-member-row,.group-event-row,.starred-message-row,.custom-list-option{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px;border-bottom:1px solid var(--line);font-size:12px}
 .group-member-row:last-child,.group-event-row:last-child,.starred-message-row:last-child{border-bottom:0}
