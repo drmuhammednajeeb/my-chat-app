@@ -17,14 +17,15 @@ const fixture = [
   '<!doctype html><html class="__ROOT_THEME__" data-theme="__ROOT_THEME__"><head><meta charset="utf-8"></head><body>',
   '<div id="app" class="app"><aside id="sidebar" class="sidebar">',
   '<div class="brand"><div class="brandmark">BZ</div><h1>Bizmind Makers</h1></div>',
-  '<div class="conversation active"><div class="conv-top"><strong>محادثة تجريبية</strong></div></div>',
+  '<div class="conversation active"><div class="conv-top"><strong>محادثة تجريبية</strong></div><span class="conversation-archive-mark">مؤرشفة</span></div>',
+  '<div class="conversation-swipe-action archive-action">أرشفة</div><div class="conversation-swipe-action restore-action">استعادة</div>',
   '<div class="custom-list-chip active">قائمة محددة</div></aside>',
   '<main id="chat" class="chat" data-chat-theme="__CHAT_THEME__"><header class="chat-head">',
   '<div class="chat-header-menu" id="headerMenu"><div>خيارات المحادثة</div></div></header>',
   '<section class="messages" id="messages"><div class="day-divider">اليوم</div>',
   '<div class="message"><div class="bubble">رسالة واردة</div></div>',
   '<div class="message mine"><div class="bubble"><div class="message-content">رسالة صادرة ',
-  '<span class="meta">12:30</span><span class="message-status read"><span class="ticks">✓✓</span></span>',
+  '<span class="message-pinned-mark">مثبتة</span><span class="meta">12:30</span><span class="message-status read"><span class="ticks">✓✓</span></span>',
   '</div></div></div><div class="message-options-menu" id="messageMenu">إجراءات الرسالة</div></section>',
   '<div class="composer-wrap"><div class="composer"><button class="send" type="button">إرسال</button>',
   '<textarea class="field" aria-label="اكتب رسالة"></textarea></div></div></main></div></body></html>'
@@ -84,6 +85,9 @@ async function inspect(page) {
       headerMenu: style('.chat-header-menu'),
       messageMenu: style('.message-options-menu'),
       divider: style('.day-divider'),
+      pinnedMarker: style('.message-pinned-mark'),
+      archiveAction: style('.conversation-swipe-action.archive-action'),
+      restoreAction: style('.conversation-swipe-action.restore-action'),
       viewport: { width: innerWidth, documentWidth: document.documentElement.scrollWidth }
     };
   });
@@ -100,7 +104,9 @@ test('browser: light and dark themes preserve WCAG AA contrast at desktop and mo
           ['outgoingMeta','outgoing timestamp'], ['outgoingStatus','outgoing read status'],
           ['selectedConversation','selected conversation'], ['selectedList','selected custom list'],
           ['primaryButton','primary action'], ['headerMenu','header menu'],
-          ['messageMenu','message menu'], ['divider','day divider']
+          ['messageMenu','message menu'], ['divider','day divider'],
+          ['pinnedMarker','pinned message marker'], ['archiveAction','archive swipe action'],
+          ['restoreAction','restore swipe action']
         ]) {
           const ratio = contrast(result[key].color, result[key].background);
           assert.ok(ratio >= 4.5, theme + ' ' + viewport.width + 'px ' + label + ': ' + ratio.toFixed(2) + ':1; fg=' + result[key].color + '; bg=' + result[key].background + '; image=' + result[key].backgroundImage + '; surface=' + result[key].surfaceToken + '; matched=' + result[key].matchedSidebarActive);
