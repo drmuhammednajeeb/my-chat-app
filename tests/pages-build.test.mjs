@@ -103,16 +103,17 @@ test("actual reviewed repository source satisfies the Pages path and runtime con
   }
 });
 
+
 test("Pages artifact workflow preserves executable GitHub Actions expressions and production gates", async () => {
   const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   const workflow = await readFile(join(repositoryRoot, ".github", "workflows", "pages-production-artifact.yml"), "utf8");
-  assert.doesNotMatch(workflow, /\\\\\$\\{\\{/);
-  assert.match(workflow, /SELECTED_REF:\\s*\\$\\{\\{\\s*github\\.ref\\s*\\}\\}/);
-  assert.match(workflow, /CONFIRMATION:\\s*\\$\\{\\{\\s*inputs\\.confirm_production_artifact\\s*\\}\\}/);
-  assert.match(workflow, /SUPABASE_URL:\\s*\\$\\{\\{\\s*vars\\.PAGES_PRODUCTION_SUPABASE_URL\\s*\\}\\}/);
-  assert.match(workflow, /SUPABASE_ANON_KEY:\\s*\\$\\{\\{\\s*secrets\\.PAGES_PRODUCTION_SUPABASE_ANON_KEY\\s*\\}\\}/);
-  assert.match(workflow, /test "\\$SELECTED_REF" = "refs\\/heads\\/main"/);
-  assert.match(workflow, /test "\\$CONFIRMATION" = "BUILD-PAGES-ARTIFACT"/);
+  assert.doesNotMatch(workflow, /\\\$\{\{/);
+  assert.match(workflow, /SELECTED_REF:\s*\$\{\{\s*github\.ref\s*\}\}/);
+  assert.match(workflow, /CONFIRMATION:\s*\$\{\{\s*inputs\.confirm_production_artifact\s*\}\}/);
+  assert.match(workflow, /SUPABASE_URL:\s*\$\{\{\s*vars\.PAGES_PRODUCTION_SUPABASE_URL\s*\}\}/);
+  assert.match(workflow, /SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.PAGES_PRODUCTION_SUPABASE_ANON_KEY\s*\}\}/);
+  assert.match(workflow, /test "\$SELECTED_REF" = "refs\/heads\/main"/);
+  assert.match(workflow, /test "\$CONFIRMATION" = "BUILD-PAGES-ARTIFACT"/);
   assert.match(workflow, /Upload review-only candidate artifact/);
-  assert.doesNotMatch(workflow, /actions\\/deploy-pages|peaceiris\\/actions-gh-pages/);
+  assert.doesNotMatch(workflow, /actions\/deploy-pages|peaceiris\/actions-gh-pages/);
 });
