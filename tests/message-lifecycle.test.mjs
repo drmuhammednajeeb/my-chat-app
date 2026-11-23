@@ -335,6 +335,25 @@ test('cancelled older-history loading rolls back only its own rows and protects 
   run(newerState, 'c1', new Set(['old-2']), new Set(['old-2']), newerArea, 7);
   assert.deepEqual(newerState.messages.map(message => message.id), ['recent-2']);
   assert.deepEqual(newerRemoved, [], 'a newer render owner must retain control of the DOM');
+  const committedState = {
+    active: { id: 'c1' },
+    messages: [{ id: 'old-3' }, { id: 'recent-3' }],
+    messageIds: new Set(['old-3', 'recent-3']),
+    messageTimelineRenderOwner: null,
+    messageTimelineCommitVersion: 9
+  };
+  const committedRemoved = [];
+  const committedArea = {
+    querySelectorAll() {
+      return [{
+        dataset: { messageId: 'old-3' },
+        remove() { committedRemoved.push('old-3'); }
+      }];
+    }
+  };
+  run(committedState, 'c1', new Set(['old-3']), new Set(['old-3']), committedArea, 7);
+  assert.deepEqual(committedState.messages.map(message => message.id), ['old-3', 'recent-3']);
+  assert.deepEqual(committedRemoved, [], 'a newer committed timeline must never be rolled back by an older request');
 });
 
 test('message reconciliation preserves explicitly loaded history across short and empty fetches and keeps newer realtime edits', () => {
