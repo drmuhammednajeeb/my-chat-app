@@ -274,15 +274,19 @@ test('global message deletion uses the secure server RPC and reconciles its retu
   assert.doesNotMatch(remove, /loadMessages\(\)/);
 });
 
-test('message loader reconciles the latest server page without treating it as the complete history', () => {
+test('message loader reconciles the latest server page while preserving explicitly loaded history', () => {
   const load = extractFunction('loadMessages');
-  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
-  assert.match(loaderSource, /function mergeWindow\(currentRows, fetchedRows, conversationId, clearedBefore, compare\)/);
-  assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
-  assert.doesNotMatch(loaderSource, /slice\(-100\)/);
+  const older = extractFunction('loadOlderMessages');
+  const open = extractFunction('openConversation');
+  assert.match(load, /window\\.BizmindMessageLoader\\.loadMessages/);
+  assert.match(loaderSource, /function mergeWindow\\(currentRows, fetchedRows, conversationId, syncStartedAt, clearedBefore, compare, loadedHistoryIds\\)/);
+  assert.match(loaderSource, /isAfterClear\\(row, clearedBefore\\)/);
+  assert.match(older, /state\\.loadedHistoryIds\\.add\\(message\\.id\\)/);
+  assert.match(open, /state\\.loadedHistoryIds=new Set\\(\\)/);
+  assert.doesNotMatch(loaderSource, /slice\\(-100\\)/);
 });
 
-test('message reconciliation preserves all loaded history across short and empty fetches and keeps newer realtime edits', () => {
+test('message reconciliation preserves explicitly loaded history across short and empty fetches and keeps newer realtime edits', () => {
   const context = {};
   vm.runInNewContext(loaderSource, context);
   const mergeWindow = context.BizmindMessageLoader.mergeWindow;
@@ -293,16 +297,21 @@ test('message reconciliation preserves all loaded history across short and empty
     created_at: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString()
   }));
   const shortLatestPage = current.slice(-20).reverse();
+  const loadedHistoryIds = new Set(current.map(row => row.id));
+  const syncStartedAt = '2026-01-01T00:00:00.000Z';
 
-  const shortResult = mergeWindow(current, shortLatestPage, 'c1', null, compare);
-  assert.equal(shortResult.length, 140, 'a short latest page must not discard previously loaded history');
+  const shortResult = mergeWindow(current, shortLatestPage, 'c1', syncStartedAt, null, compare, loadedHistoryIds);
+  assert.equal(shortResult.length, 140, 'a short latest page must not discard explicitly loaded history');
   assert.deepEqual(shortResult.map(row => row.id), current.map(row => row.id));
 
-  const emptyResult = mergeWindow(current, [], 'c1', null, compare);
-  assert.equal(emptyResult.length, 140, 'an empty reconciliation page must not erase the loaded transcript');
+  const emptyResult = mergeWindow(current, [], 'c1', syncStartedAt, null, compare, loadedHistoryIds);
+  assert.equal(emptyResult.length, 140, 'an empty reconciliation page must not erase explicitly loaded history');
+
+  const untrackedStale = mergeWindow([current[0]], shortLatestPage, 'c1', syncStartedAt, null, compare, new Set());
+  assert.equal(untrackedStale.length, 20, 'untracked stale model rows must not be mistaken for loaded history');
 
   const clearBoundary = current[59].created_at;
-  const clearedResult = mergeWindow(current, [], 'c1', clearBoundary, compare);
+  const clearedResult = mergeWindow(current, [], 'c1', syncStartedAt, clearBoundary, compare, loadedHistoryIds);
   assert.equal(clearedResult.length, 80, 'per-user cleared-before boundary must still exclude old messages');
   assert.ok(clearedResult.every(row => row.created_at > clearBoundary));
 
@@ -316,7 +325,7 @@ test('message reconciliation preserves all loaded history across short and empty
     edited_at: '2026-01-06T23:00:00.000Z',
     content: 'stale database snapshot'
   };
-  const versionResult = mergeWindow([realtimeEdited], [staleFetched], 'c1', null, compare);
+  const versionResult = mergeWindow([realtimeEdited], [staleFetched], 'c1', syncStartedAt, null, compare, new Set());
   assert.equal(versionResult[0].content, 'new realtime content', 'a newer realtime revision must win over an older fetch snapshot');
 });
 
