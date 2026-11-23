@@ -278,12 +278,12 @@ test('message loader reconciles the latest server page while preserving explicit
   const load = extractFunction('loadMessages');
   const older = extractFunction('loadOlderMessages');
   const open = extractFunction('openConversation');
-  assert.match(load, /window\\.BizmindMessageLoader\\.loadMessages/);
-  assert.match(loaderSource, /function mergeWindow\\(currentRows, fetchedRows, conversationId, syncStartedAt, clearedBefore, compare, loadedHistoryIds\\)/);
-  assert.match(loaderSource, /isAfterClear\\(row, clearedBefore\\)/);
-  assert.match(older, /state\\.loadedHistoryIds\\.add\\(message\\.id\\)/);
-  assert.match(open, /state\\.loadedHistoryIds=new Set\\(\\)/);
-  assert.doesNotMatch(loaderSource, /slice\\(-100\\)/);
+  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
+  assert.match(loaderSource, /function mergeWindow\(currentRows, fetchedRows, conversationId, syncStartedAt, clearedBefore, compare, loadedHistoryIds\)/);
+  assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
+  assert.match(older, /state\.loadedHistoryIds\.add\(message\.id\)/);
+  assert.match(open, /state\.loadedHistoryIds=new Set\(\)/);
+  assert.doesNotMatch(loaderSource, /slice\(-100\)/);
 });
 
 test('message reconciliation preserves explicitly loaded history across short and empty fetches and keeps newer realtime edits', () => {
