@@ -46,9 +46,12 @@ DECLARE
   v_content text;
   v_count integer;
   v_rejected boolean;
+  v_sqlstate text;
+  v_error text;
+  v_attachment_path text := v_conversation::text || '/' || v_user_a::text || '/runtime-attachment.png';
 BEGIN
-  INSERT INTO public.chat_messages(conversation_id,sender_id,content)
-  VALUES(v_conversation,v_user_a,'Message visibility runtime probe')
+  INSERT INTO public.chat_messages(conversation_id,sender_id,content,attachment_path,attachment_type)
+  VALUES(v_conversation,v_user_a,'Message visibility runtime probe',v_attachment_path,'image/png')
   RETURNING id INTO v_fresh_message;
 
   INSERT INTO public.chat_messages(conversation_id,sender_id,content,created_at)
@@ -162,13 +165,52 @@ BEGIN
     RAISE EXCEPTION 'Direct message UPDATE bypassed secure deletion';
   END IF;
 
-  -- Return to A: the author may delete within 15 minutes using the database clock.
+  -- Return to A and prove the message owner cannot bypass the secure RPC.
+  -- The owner passes the UPDATE RLS policy; the trigger itself must reject the write.
   PERFORM set_config('request.jwt.claim.sub',v_user_a::text,true);
+  v_rejected := false;
+  v_sqlstate := null;
+  v_error := null;
+  BEGIN
+    UPDATE public.chat_messages
+    SET deleted_at=clock_timestamp(),content='تم حذف الرسالة'
+    WHERE id=v_fresh_message;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    IF v_count = 0 THEN
+      RAISE EXCEPTION 'Owner direct UPDATE did not reach the message row; RLS may have hidden it';
+    END IF;
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE, v_error = MESSAGE_TEXT;
+    v_rejected := v_sqlstate = 'P0001'
+      AND v_error LIKE 'Message content can only change through secure edit or delete operations%';
+  END;
+  IF NOT v_rejected OR EXISTS (
+    SELECT 1 FROM public.chat_messages WHERE id=v_fresh_message AND deleted_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'Message owner bypassed secure deletion with a direct UPDATE (SQLSTATE %, error %)',v_sqlstate,v_error;
+  END IF;
+
+  -- The authorized RPC must tombstone the message and detach its media path.
   v_deleted := public.delete_message_secure(v_fresh_message);
   IF v_deleted.id IS DISTINCT FROM v_fresh_message
      OR v_deleted.deleted_at IS NULL
-     OR v_deleted.content IS DISTINCT FROM 'تم حذف الرسالة' THEN
-    RAISE EXCEPTION 'Author secure deletion did not return the expected tombstone';
+     OR v_deleted.content IS DISTINCT FROM 'تم حذف الرسالة'
+     OR v_deleted.attachment_path IS NOT NULL
+     OR v_deleted.attachment_type IS NOT NULL THEN
+    RAISE EXCEPTION 'Author secure deletion did not return the expected media-free tombstone';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM app_private.message_cleanup_queue
+    WHERE item_kind='orphan' AND storage_path=v_attachment_path
+      AND status='pending'
+  ) THEN
+    RAISE EXCEPTION 'Deleted message attachment was not queued for retryable Storage cleanup';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.chat_messages
+    WHERE id=v_fresh_message AND attachment_path=v_attachment_path
+  ) THEN
+    RAISE EXCEPTION 'Deleted message still references its private attachment';
   END IF;
 
   -- Both edit and global deletion must reject a message older than 15 minutes.
