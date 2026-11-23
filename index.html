@@ -1554,7 +1554,7 @@ function rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHis
  const newerTimelineAlreadyCommitted=Number(state.messageTimelineCommitVersion)>requestId;
  const newerRenderOwnsTimeline=!!state.messageTimelineRenderOwner&&state.messageTimelineRenderOwner!==requestId;
  // A newer owner controls both model and DOM. Never roll back only one layer.
- if(newerTimelineAlreadyCommitted||newerRenderOwnsTimeline)return true;
+ if(newerTimelineAlreadyCommitted||newerRenderOwnsTimeline)return false;
  const before=state.messages||[];
  const removedIds=new Set();
  state.messages=before.filter(message=>{
@@ -1639,22 +1639,24 @@ async function loadOlderMessages(){
  }catch(error){
   console.error('Older message loading failed:',error);
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
-   rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);
-   const restored=new Map(originalMessages.map(message=>[message.id,message]));
-   for(const message of state.messages||[]){
-    if(!originalMessageIdSet.has(message.id))restored.set(message.id,message);
+   const rollbackApplied=rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);
+   if(rollbackApplied){
+    const restored=new Map(originalMessages.map(message=>[message.id,message]));
+    for(const message of state.messages||[]){
+     if(!originalMessageIdSet.has(message.id))restored.set(message.id,message);
+    }
+    state.messages=Array.from(restored.values()).sort((a,b)=>compareMessagesChronologically(a,b));
+    state.hasMoreMessages=originalHasMore;
+    state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
+    state.isLoadingMessages=false;area.style.overflowAnchor='';
+    reconcileMessageTimeline(area);
+    toast('تعذر تحميل الرسائل الأقدم؛ احتفظنا بالمحادثة الحالية دون فقد الرسائل.');
    }
-   state.messages=Array.from(restored.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-   state.hasMoreMessages=originalHasMore;
-   state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
-   state.isLoadingMessages=false;area.style.overflowAnchor='';
-   reconcileMessageTimeline(area);
-   toast('تعذر تحميل الرسائل الأقدم؛ احتفظنا بالمحادثة الحالية دون فقد الرسائل.');
   }
   return false;
  }finally{
   if(state.loadingOlderRequestId===requestId){
-   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId&&Number(state.messageTimelineCommitVersion)<=requestId&&state.messageTimelineRenderOwner!==state.messageLoadVersion)reconcileMessageTimeline(area)}
+   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId&&Number(state.messageTimelineCommitVersion)<=requestId&&(!state.messageTimelineRenderOwner||state.messageTimelineRenderOwner===requestId))reconcileMessageTimeline(area)}
    state.loadingOlderMessages=false;state.loadingOlderRequestId=null;
    if(requestId===state.messageLoadVersion&&state.active?.id===conversationId)state.isLoadingMessages=false;
    area.style.overflowAnchor='';

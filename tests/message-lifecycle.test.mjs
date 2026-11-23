@@ -284,6 +284,9 @@ test('message loader reconciles the latest server page while preserving explicit
   assert.match(older, /older\.forEach\(message=>state\.loadedHistoryIds\.add\(message\.id\)\)/);
   assert.match(open, /state\.loadedHistoryIds=new Set\(\)/);
   assert.match(older, /rollbackCancelledOlderHistory\(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds\)/);
+  assert.match(older, /const rollbackApplied=rollbackCancelledOlderHistory/);
+  assert.match(older, /if\\(rollbackApplied\\)\\{/);
+  assert.match(older, /messageTimelineRenderOwner===requestId/);
   assert.match(loaderSource, /state\.messageTimelineCommitVersion = requestId/);
   assert.doesNotMatch(loaderSource, /slice\(-100\)/);
 });
@@ -333,7 +336,7 @@ test('cancelled older-history loading rolls back only its own rows and protects 
       }];
     }
   };
-  run(newerState, 'c1', new Set(['old-2']), new Set(['old-2']), newerArea, 7);
+  assert.equal(run(newerState, 'c1', new Set(['old-2']), new Set(['old-2']), newerArea, 7), false, 'a newer render owner must reject rollback');
   assert.deepEqual(newerState.messages.map(message => message.id), ['old-2', 'recent-2']);
   assert.deepEqual(newerRemoved, [], 'a newer render owner must retain both model and DOM');
   assert.ok(newerState.messageIds.has('old-2'), 'the newer timeline owner retains model IDs as well');
@@ -353,7 +356,7 @@ test('cancelled older-history loading rolls back only its own rows and protects 
       }];
     }
   };
-  run(committedState, 'c1', new Set(['old-3']), new Set(['old-3']), committedArea, 7);
+  assert.equal(run(committedState, 'c1', new Set(['old-3']), new Set(['old-3']), committedArea, 7), false, 'a newer committed timeline must reject rollback');
   assert.deepEqual(committedState.messages.map(message => message.id), ['old-3', 'recent-3']);
   assert.deepEqual(committedRemoved, [], 'a newer committed timeline must never be rolled back by an older request');
 });
