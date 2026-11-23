@@ -302,7 +302,7 @@ test('message reconciliation preserves explicitly loaded history across short an
 
   const shortResult = mergeWindow(current, shortLatestPage, 'c1', syncStartedAt, null, compare, loadedHistoryIds);
   assert.equal(shortResult.length, 140, 'a short latest page must not discard explicitly loaded history');
-  assert.deepEqual(shortResult.map(row => row.id), current.map(row => row.id));
+  assert.deepEqual(Array.from(shortResult, row => row.id), current.map(row => row.id));
 
   const emptyResult = mergeWindow(current, [], 'c1', syncStartedAt, null, compare, loadedHistoryIds);
   assert.equal(emptyResult.length, 140, 'an empty reconciliation page must not erase explicitly loaded history');
