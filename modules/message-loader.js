@@ -179,6 +179,7 @@
         state.messages,
         fetchedRows,
         conversationId,
+        syncStartedAt,
         clearedBefore,
         compare,
         state.loadedHistoryIds
@@ -223,6 +224,7 @@
         messages.concat(state.messages || []),
         fetchedRows,
         conversationId,
+        syncStartedAt,
         clearedBefore,
         compare,
         state.loadedHistoryIds
