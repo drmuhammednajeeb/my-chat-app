@@ -2,7 +2,74 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import reactions from '../modules/message-reactions.js';
 
-test('reaction options stay aligned with the existing database constraint', () => {
+function fakeReactionDatabase(initialRows = [], options = {}) {
+  const rows = new Map(initialRows.map(row => [row.message_id + ':' + row.user_id, { ...row }]));
+  const calls = [];
+  let failedInserts = Number(options.failedInserts || 0);
+  const client = {
+    from(table) {
+      assert.equal(table, 'message_reactions');
+      return {
+        insert(payload) {
+          calls.push({ kind: 'insert', payload: { ...payload } });
+          if (failedInserts > 0) {
+            failedInserts -= 1;
+            return Promise.resolve({ error: new Error('insert denied') });
+          }
+          const key = payload.message_id + ':' + payload.user_id;
+          if (rows.has(key)) return Promise.resolve({ error: Object.assign(new Error('duplicate key'), { code: '23505' }) });
+          rows.set(key, { ...payload });
+          return Promise.resolve({ error: null });
+        },
+        delete() {
+          const filters = [];
+          const query = {
+            eq(key, value) { filters.push([key, value]); return this; },
+            then(resolve, reject) {
+              calls.push({ kind: 'delete', filters: filters.slice() });
+              const messageId = filters.find(([key]) => key === 'message_id')?.[1];
+              const userId = filters.find(([key]) => key === 'user_id')?.[1];
+              rows.delete(messageId + ':' + userId);
+              return Promise.resolve({ error: null }).then(resolve, reject);
+            }
+          };
+          return query;
+        },
+        select() {
+          const filters = [];
+          return {
+            eq(key, value) { filters.push([key, value]); return this; },
+            maybeSingle() {
+              const messageId = filters.find(([key]) => key === 'message_id')?.[1];
+              const userId = filters.find(([key]) => key === 'user_id')?.[1];
+              return Promise.resolve({ data: rows.get(messageId + ':' + userId) || null, error: null });
+            }
+          };
+        }
+      };
+    }
+  };
+  return { client, rows, calls };
+}
+
+function createHarness(database, initialRows = [], notices = []) {
+  const state = {
+    user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 4,
+    reactions: new Map(initialRows.length ? [['m1', initialRows.map(row => ({ ...row }))]] : [])
+  };
+  const document = {
+    querySelectorAll: () => [],
+    addEventListener() {},
+    documentElement: { dir: 'rtl' }
+  };
+  const api = reactions.create({
+    state, supabaseClient: database.client, document,
+    toast: value => notices.push(value)
+  });
+  return { state, api };
+}
+
+test('reaction options stay aligned with the production database constraint', () => {
   assert.deepEqual(reactions.REACTION_OPTIONS.map(item => item.type), ['like', 'heart']);
   assert.deepEqual(reactions.REACTION_OPTIONS.map(item => item.emoji), ['👍', '❤️']);
 });
@@ -38,46 +105,53 @@ test('realtime insert and update replace one member row; delete is idempotent', 
   }, 'c1'), []);
 });
 
-test('optimistic toggle persists add, change and remove with one reaction per user', async () => {
-  const writes = [];
-  const state = { user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 4, reactions: new Map() };
-  const supabaseClient = {
-    from(table) {
-      assert.equal(table, 'message_reactions');
-      return {
-        upsert(payload, options) { writes.push({ kind: 'upsert', payload, options }); return Promise.resolve({ error: null }); },
-        delete() {
-          const query = { filters: [], eq(key, value) { this.filters.push([key, value]); return this; }, then(resolve, reject) { return Promise.resolve({ error: null }).then(resolve, reject); } };
-          return query;
-        }
-      };
-    }
-  };
-  const document = { querySelectorAll: () => [], addEventListener() {}, documentElement: { dir: 'rtl' } };
-  const api = reactions.create({ state, supabaseClient, document, toast() {} });
+test('add, switch and remove use only INSERT and DELETE privileges', async () => {
+  const database = fakeReactionDatabase();
+  const { state, api } = createHarness(database);
   const message = { id: 'm1', conversation_id: 'c1' };
+
   assert.equal(await api.toggle(message, 'like'), true);
   assert.equal(state.reactions.get('m1')[0].reaction_type, 'like');
   assert.equal(await api.toggle(message, 'heart'), true);
   assert.equal(state.reactions.get('m1')[0].reaction_type, 'heart');
   assert.equal(await api.toggle(message, 'heart'), true);
   assert.equal(state.reactions.has('m1'), false);
-  assert.equal(writes.length, 2);
-  assert.equal(writes[0].options.onConflict, 'message_id,user_id');
+
+  assert.deepEqual(database.calls.map(call => call.kind), ['insert', 'delete', 'insert', 'delete']);
+  assert.equal(database.rows.size, 0);
+  assert.equal(database.calls.some(call => call.kind === 'upsert'), false);
 });
 
-test('failed persistence rolls back only the current user and preserves other members', async () => {
-  const state = {
-    user: { id: 'u1' }, active: { id: 'c1' }, messageLoadVersion: 9,
-    reactions: new Map([['m1', [{ message_id: 'm1', user_id: 'u2', reaction_type: 'heart' }]]])
+test('failed reaction switch restores the previous persisted reaction', async () => {
+  const previous = {
+    conversation_id: 'c1', message_id: 'm1', user_id: 'u1', reaction_type: 'like'
   };
-  const supabaseClient = {
-    from() { return { upsert() { return Promise.resolve({ error: new Error('offline') }); } }; }
-  };
-  const document = { querySelectorAll: () => [], addEventListener() {}, documentElement: { dir: 'rtl' } };
+  const database = fakeReactionDatabase([previous], { failedInserts: 1 });
   const notices = [];
-  const api = reactions.create({ state, supabaseClient, document, toast: value => notices.push(value) });
-  assert.equal(await api.toggle({ id: 'm1', conversation_id: 'c1' }, 'like'), false);
-  assert.deepEqual(state.reactions.get('m1').map(row => [row.user_id, row.reaction_type]), [['u2', 'heart']]);
+  const { state, api } = createHarness(database, [previous], notices);
+
+  assert.equal(await api.toggle({ id: 'm1', conversation_id: 'c1' }, 'heart'), false);
+  assert.equal(database.rows.get('m1:u1')?.reaction_type, 'like');
+  assert.equal(state.reactions.get('m1')[0].reaction_type, 'like');
+  assert.equal(database.calls.map(call => call.kind).join(','), 'delete,insert,insert');
   assert.equal(notices.length, 1);
+});
+
+test('failed first insert leaves no optimistic reaction behind', async () => {
+  const database = fakeReactionDatabase([], { failedInserts: 1 });
+  const notices = [];
+  const { state, api } = createHarness(database, [], notices);
+
+  assert.equal(await api.toggle({ id: 'm1', conversation_id: 'c1' }, 'like'), false);
+  assert.equal(state.reactions.has('m1'), false);
+  assert.equal(database.rows.size, 0);
+  assert.equal(notices.length, 1);
+});
+
+test('stale conversation cannot mutate a different conversation', async () => {
+  const database = fakeReactionDatabase();
+  const { state, api } = createHarness(database);
+  state.active = { id: 'c2' };
+  assert.equal(await api.toggle({ id: 'm1', conversation_id: 'c1' }, 'like'), false);
+  assert.equal(database.calls.length, 0);
 });
