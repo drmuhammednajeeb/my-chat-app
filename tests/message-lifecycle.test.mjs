@@ -285,7 +285,7 @@ test('message loader reconciles the latest server page while preserving explicit
   assert.match(open, /state\.loadedHistoryIds=new Set\(\)/);
   assert.match(older, /rollbackCancelledOlderHistory\(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds\)/);
   assert.match(older, /const rollbackApplied=rollbackCancelledOlderHistory/);
-  assert.match(older, /if\\(rollbackApplied\\)\\{/);
+  assert.match(older, /if\(rollbackApplied\)\{/);
   assert.match(older, /messageTimelineRenderOwner===requestId/);
   assert.match(loaderSource, /state\.messageTimelineCommitVersion = requestId/);
   assert.doesNotMatch(loaderSource, /slice\(-100\)/);
