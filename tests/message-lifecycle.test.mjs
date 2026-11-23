@@ -599,6 +599,7 @@ test('failed older-history batch restores the original transcript and pagination
   let renderCount = 0;
   const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
     state, document, supabaseClient, $: () => area, console,
+    rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')'),
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
     loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
     messageReactions: { load: async () => true },
