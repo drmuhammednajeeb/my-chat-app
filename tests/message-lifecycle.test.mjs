@@ -274,13 +274,50 @@ test('global message deletion uses the secure server RPC and reconciles its retu
   assert.doesNotMatch(remove, /loadMessages\(\)/);
 });
 
-test('message loader reconciles the authoritative window and preserves valid realtime/history rows', () => {
+test('message loader reconciles the latest server page without treating it as the complete history', () => {
   const load = extractFunction('loadMessages');
-  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
-  assert.match(loaderSource, /const fetchedIds = new Set\(fetchedRows\.map\(row => row\.id\)\)/);
-  assert.match(loaderSource, /isOlderLoadedHistory = fetchedRows\.length === 50/);
-  assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
-  assert.match(loaderSource, /arrivedDuringEmptyFetch/);
+  assert.match(load, /window\\.BizmindMessageLoader\\.loadMessages/);
+  assert.match(loaderSource, /function mergeWindow\\(currentRows, fetchedRows, conversationId, clearedBefore, compare\\)/);
+  assert.match(loaderSource, /isAfterClear\\(row, clearedBefore\\)/);
+  assert.doesNotMatch(loaderSource, /slice\\(-100\\)/);
+});
+
+test('message reconciliation preserves all loaded history across short and empty fetches and keeps newer realtime edits', () => {
+  const context = {};
+  vm.runInNewContext(loaderSource, context);
+  const mergeWindow = context.BizmindMessageLoader.mergeWindow;
+  const compare = (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at) || String(a.id).localeCompare(String(b.id));
+  const current = Array.from({ length: 140 }, (_, index) => ({
+    id: 'm' + String(index + 1).padStart(3, '0'),
+    conversation_id: 'c1',
+    created_at: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString()
+  }));
+  const shortLatestPage = current.slice(-20).reverse();
+
+  const shortResult = mergeWindow(current, shortLatestPage, 'c1', null, compare);
+  assert.equal(shortResult.length, 140, 'a short latest page must not discard previously loaded history');
+  assert.deepEqual(shortResult.map(row => row.id), current.map(row => row.id));
+
+  const emptyResult = mergeWindow(current, [], 'c1', null, compare);
+  assert.equal(emptyResult.length, 140, 'an empty reconciliation page must not erase the loaded transcript');
+
+  const clearBoundary = current[59].created_at;
+  const clearedResult = mergeWindow(current, [], 'c1', clearBoundary, compare);
+  assert.equal(clearedResult.length, 80, 'per-user cleared-before boundary must still exclude old messages');
+  assert.ok(clearedResult.every(row => row.created_at > clearBoundary));
+
+  const realtimeEdited = {
+    ...current[139],
+    edited_at: '2026-01-02T00:00:00.000Z',
+    content: 'new realtime content'
+  };
+  const staleFetched = {
+    ...current[139],
+    edited_at: '2026-01-01T00:00:00.000Z',
+    content: 'stale database snapshot'
+  };
+  const versionResult = mergeWindow([realtimeEdited], [staleFetched], 'c1', null, compare);
+  assert.equal(versionResult[0].content, 'new realtime content', 'a newer realtime revision must win over an older fetch snapshot');
 });
 
 test('renderer rejects an obsolete request token before starting work', async () => {
