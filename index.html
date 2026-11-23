@@ -1639,16 +1639,12 @@ async function loadOlderMessages(){
  }catch(error){
   console.error('Older message loading failed:',error);
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
+   rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);
    const restored=new Map(originalMessages.map(message=>[message.id,message]));
    for(const message of state.messages||[]){
-    if(originalMessageIdSet.has(message.id)||!olderIds.has(message.id))restored.set(message.id,message);
+    if(!originalMessageIdSet.has(message.id))restored.set(message.id,message);
    }
    state.messages=Array.from(restored.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-   renderedHistoryIds.forEach(id=>{
-    Array.from(area.querySelectorAll('.message')).filter(node=>node.dataset.messageId===id).forEach(node=>node.remove());
-    state.messageIds.delete(id);
-   });
-   olderIds.forEach(id=>{if(!originalLoadedHistoryIds.has(id))state.loadedHistoryIds.delete(id)});
    state.hasMoreMessages=originalHasMore;
    state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
    state.isLoadingMessages=false;area.style.overflowAnchor='';
