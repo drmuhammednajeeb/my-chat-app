@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.23.1"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.23.3"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -1189,7 +1189,7 @@ async function openConversation(c){
  const conversationOpenStarted=performance.now();
  if(voiceRecorder.isActive()){voiceRecorder.cancel();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.hiddenMessageIds=new Set();messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
+ state.active=c;state.hiddenMessageIds=new Set();state.loadedHistoryIds=new Set();messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
  applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
  state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.messagePollOffset=0;state.messagePollOffsetConversationId=c.id;state.newMessageCount=0;updateNewMessagesIndicator();
  $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
@@ -1549,6 +1549,28 @@ async function loadMessages(){
  });
 }
 function compareMessagesChronologically(a,b){const timeDiff=new Date(a.created_at)-new Date(b.created_at);if(timeDiff)return timeDiff;const aid=String(a.id||''),bid=String(b.id||'');return aid<bid?-1:aid>bid?1:0}
+function rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds){
+ if(state.active?.id!==conversationId)return false;
+ const newerTimelineAlreadyCommitted=Number(state.messageTimelineCommitVersion)>requestId;
+ const newerRenderOwnsTimeline=!!state.messageTimelineRenderOwner&&state.messageTimelineRenderOwner!==requestId;
+ // A newer owner controls both model and DOM. Never roll back only one layer.
+ if(newerTimelineAlreadyCommitted||newerRenderOwnsTimeline)return false;
+ const before=state.messages||[];
+ const removedIds=new Set();
+ state.messages=before.filter(message=>{
+  if(!olderIds.has(message.id)||originalMessageIdSet?.has(message.id))return true;
+  // A newer realtime replacement is not owned by this history request.
+  if(requestRowsById?.get(message.id)!==message)return true;
+  removedIds.add(message.id);
+  return false;
+ });
+ removedIds.forEach(id=>{
+  Array.from(area.querySelectorAll('.message')).filter(node=>node.dataset.messageId===id).forEach(node=>node.remove());
+  state.messageIds.delete(id);
+  if(!originalLoadedHistoryIds?.has(id))state.loadedHistoryIds?.delete(id);
+ });
+ return true;
+}
 async function loadOlderMessages(){
  const conversationId=state.active?.id,area=$('messages');
  if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
@@ -1561,7 +1583,9 @@ async function loadOlderMessages(){
  const oldTop=area.scrollTop;
  const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
  const originalFirstChild=loader.nextSibling;
- let olderIds=new Set(),renderedHistoryIds=new Set();
+ let olderIds=new Set(),renderedHistoryIds=new Set(),requestRowsById=new Map();
+ state.loadedHistoryIds ||= new Set();
+ const originalLoadedHistoryIds=new Set(state.loadedHistoryIds);
  try{
   const cursorFilter='created_at.lt.'+oldest.created_at+',and(created_at.eq.'+oldest.created_at+',id.lt.'+oldest.id+')';
   let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(cursorFilter);
@@ -1572,6 +1596,7 @@ async function loadOlderMessages(){
   const older=(data||[]).slice().reverse();
   if(!older.length){state.hasMoreMessages=false;return false}
   olderIds=new Set(older.map(message=>message.id));
+  requestRowsById=new Map(older.map(message=>[message.id,message]));
   const replyIds=[...new Set(older.map(m=>m.reply_to).filter(id=>id&&!state.messages.some(x=>x.id===id)))];
   const replyTask=replyIds.length?supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds):Promise.resolve({data:[],error:null});
   const [, , , replyResult]=await Promise.all([
@@ -1580,22 +1605,25 @@ async function loadOlderMessages(){
    messageReactions.load(conversationId,older,requestId),
    replyTask
   ]);
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);return false;}
   if(replyResult?.error)console.warn('Older reply metadata unavailable:',replyResult.error.message);
   else (replyResult?.data||[]).forEach(parent=>state.replyMessages.set(parent.id,parent));
+  // Mark the page as retained before yielding to asynchronous rendering. A concurrent
+  // reconciliation must treat these in-flight rows as loaded history.
+  older.forEach(message=>state.loadedHistoryIds.add(message.id));
   const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
   state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
   state.hasMoreMessages=older.length===50;
   state.isLoadingMessages=true;state.batchRenderingMessages=true;state.batchRenderingConversationId=conversationId;area.style.overflowAnchor='none';
   const beforeRenderNodes=new Set(Array.from(area.childNodes));
   for(const message of older){
-   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);return false;}
    if(state.messageIds.has(message.id))continue;
    if(!originalMessageIdSet.has(message.id))renderedHistoryIds.add(message.id);
    const rendered=await renderMessage(message,conversationId,requestId);
    if(!rendered&&!state.messageIds.has(message.id))throw new Error('Older message rendering did not complete');
   }
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);return false;}
   state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area);
   const addedSet=new Set(Array.from(area.querySelectorAll('.message')).filter(node=>olderIds.has(node.dataset.messageId)&&!beforeRenderNodes.has(node)));
   addedSet.forEach(node=>{const previous=node.previousElementSibling;if(previous?.classList.contains('day-divider')&&!beforeRenderNodes.has(previous))addedSet.add(previous)});
@@ -1611,25 +1639,24 @@ async function loadOlderMessages(){
  }catch(error){
   console.error('Older message loading failed:',error);
   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
-   const restored=new Map(originalMessages.map(message=>[message.id,message]));
-   for(const message of state.messages||[]){
-    if(originalMessageIdSet.has(message.id)||!olderIds.has(message.id))restored.set(message.id,message);
+   const rollbackApplied=rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);
+   if(rollbackApplied){
+    const restored=new Map(originalMessages.map(message=>[message.id,message]));
+    for(const message of state.messages||[]){
+     if(!originalMessageIdSet.has(message.id))restored.set(message.id,message);
+    }
+    state.messages=Array.from(restored.values()).sort((a,b)=>compareMessagesChronologically(a,b));
+    state.hasMoreMessages=originalHasMore;
+    state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
+    state.isLoadingMessages=false;area.style.overflowAnchor='';
+    reconcileMessageTimeline(area);
+    toast('تعذر تحميل الرسائل الأقدم؛ احتفظنا بالمحادثة الحالية دون فقد الرسائل.');
    }
-   state.messages=Array.from(restored.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-   renderedHistoryIds.forEach(id=>{
-    Array.from(area.querySelectorAll('.message')).filter(node=>node.dataset.messageId===id).forEach(node=>node.remove());
-    state.messageIds.delete(id);
-   });
-   state.hasMoreMessages=originalHasMore;
-   state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
-   state.isLoadingMessages=false;area.style.overflowAnchor='';
-   reconcileMessageTimeline(area);
-   toast('تعذر تحميل الرسائل الأقدم؛ احتفظنا بالمحادثة الحالية دون فقد الرسائل.');
   }
   return false;
  }finally{
   if(state.loadingOlderRequestId===requestId){
-   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId)reconcileMessageTimeline(area)}
+   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId&&Number(state.messageTimelineCommitVersion)<=requestId&&(!state.messageTimelineRenderOwner||state.messageTimelineRenderOwner===requestId))reconcileMessageTimeline(area)}
    state.loadingOlderMessages=false;state.loadingOlderRequestId=null;
    if(requestId===state.messageLoadVersion&&state.active?.id===conversationId)state.isLoadingMessages=false;
    area.style.overflowAnchor='';

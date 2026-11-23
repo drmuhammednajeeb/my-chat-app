@@ -32,25 +32,43 @@
     return Number.isFinite(created) && Number.isFinite(boundary) && created > boundary;
   }
 
-  function mergeWindow(currentRows, fetchedRows, conversationId, syncStartedAt, clearedBefore, compare) {
-    const fetchedIds = new Set(fetchedRows.map(row => row.id));
-    const newestFetched = fetchedRows[0] || null;
-    const oldestFetched = fetchedRows[fetchedRows.length - 1] || null;
+  function messageRevisionTime(message) {
+    const values = [message?.updated_at, message?.edited_at, message?.deleted_at]
+      .map(value => Date.parse(value || ''))
+      .filter(Number.isFinite);
+    return values.length ? Math.max(...values) : (Date.parse(message?.created_at || '') || 0);
+  }
+
+  function mergeWindow(currentRows, fetchedRows, conversationId, syncStartedAt, clearedBefore, compare, loadedHistoryIds) {
+    const fetchedIds = new Set((fetchedRows || []).map(row => row.id));
+    const newestFetched = fetchedRows?.[0] || null;
+    const oldestFetched = fetchedRows?.[fetchedRows.length - 1] || null;
+    const loadedHistory = loadedHistoryIds && typeof loadedHistoryIds.has === 'function' ? loadedHistoryIds : new Set();
     const merged = new Map();
 
     for (const row of currentRows || []) {
       if (!row || row.conversation_id !== conversationId || !isAfterClear(row, clearedBefore)) continue;
       const isFetched = fetchedIds.has(row.id);
       const isNewerRealtime = !!newestFetched && compare(row, newestFetched) > 0;
-      const isOlderLoadedHistory = fetchedRows.length === 50 && !!oldestFetched && compare(row, oldestFetched) < 0;
+      const isExplicitlyLoadedHistory = loadedHistory.has(row.id);
+      const isOlderLoadedHistory = fetchedRows?.length === 50 && !!oldestFetched && compare(row, oldestFetched) < 0;
       const arrivedDuringEmptyFetch = !newestFetched && Date.parse(row.created_at) >= Date.parse(syncStartedAt);
-      if (isFetched || isNewerRealtime || isOlderLoadedHistory || arrivedDuringEmptyFetch) merged.set(row.id, row);
+      if (isFetched || isNewerRealtime || isExplicitlyLoadedHistory || isOlderLoadedHistory || arrivedDuringEmptyFetch) {
+        merged.set(row.id, row);
+      }
     }
 
-    for (const row of fetchedRows) merged.set(row.id, row);
-    return Array.from(merged.values()).sort(compare).slice(-100);
-  }
+    // Refresh from the server, but do not overwrite a newer realtime edit or
+    // tombstone that arrived while the request was in flight.
+    for (const row of fetchedRows || []) {
+      if (!row || row.conversation_id !== conversationId || !isAfterClear(row, clearedBefore)) continue;
+      const existing = merged.get(row.id);
+      if (existing && messageRevisionTime(existing) > messageRevisionTime(row)) continue;
+      merged.set(row.id, row);
+    }
 
+    return Array.from(merged.values()).sort(compare);
+  }
   function loadMessages(deps) {
     const state = deps?.state;
     const requestedConversationId = state?.active?.id;
@@ -163,7 +181,8 @@
         conversationId,
         syncStartedAt,
         clearedBefore,
-        compare
+        compare,
+        state.loadedHistoryIds
       );
 
       // Reply parents and auxiliary metadata are enrichments, never prerequisites
@@ -207,7 +226,8 @@
         conversationId,
         syncStartedAt,
         clearedBefore,
-        compare
+        compare,
+        state.loadedHistoryIds
       );
       if (!isCurrent()) return false;
 
@@ -268,6 +288,7 @@
 
       if (!isCurrent()) { rollbackOwnedRender(); return false; }
       state.messageTimelineConversationId = conversationId;
+      state.messageTimelineCommitVersion = requestId;
       state.messageTimelineRenderOwner = null;
       state.hasMoreMessages = fetchedRows.length === 50;
       state.messagePollLastCheckedAt = syncStartedAt;
@@ -322,5 +343,5 @@
     }
   }
 
-  root.BizmindMessageLoader = Object.freeze({ loadMessages });
+  root.BizmindMessageLoader = Object.freeze({ loadMessages, mergeWindow });
 })(typeof window !== 'undefined' ? window : globalThis);

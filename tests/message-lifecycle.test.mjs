@@ -274,13 +274,217 @@ test('global message deletion uses the secure server RPC and reconciles its retu
   assert.doesNotMatch(remove, /loadMessages\(\)/);
 });
 
-test('message loader reconciles the authoritative window and preserves valid realtime/history rows', () => {
+test('message loader reconciles the latest server page while preserving explicitly loaded history', () => {
   const load = extractFunction('loadMessages');
+  const older = extractFunction('loadOlderMessages');
+  const open = extractFunction('openConversation');
   assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
-  assert.match(loaderSource, /const fetchedIds = new Set\(fetchedRows\.map\(row => row\.id\)\)/);
-  assert.match(loaderSource, /isOlderLoadedHistory = fetchedRows\.length === 50/);
+  assert.match(loaderSource, /function mergeWindow\(currentRows, fetchedRows, conversationId, syncStartedAt, clearedBefore, compare, loadedHistoryIds\)/);
   assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
-  assert.match(loaderSource, /arrivedDuringEmptyFetch/);
+  assert.match(older, /older\.forEach\(message=>state\.loadedHistoryIds\.add\(message\.id\)\)/);
+  assert.match(open, /state\.loadedHistoryIds=new Set\(\)/);
+  assert.match(older, /rollbackCancelledOlderHistory\(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds\)/);
+  assert.match(older, /const rollbackApplied=rollbackCancelledOlderHistory/);
+  assert.match(older, /if\(rollbackApplied\)\{/);
+  assert.match(older, /messageTimelineRenderOwner===requestId/);
+  assert.match(loaderSource, /state\.messageTimelineCommitVersion = requestId/);
+  assert.doesNotMatch(loaderSource, /slice\(-100\)/);
+});
+
+test('cancelled older-history loading rolls back only its own rows and protects a newer render owner', () => {
+  const rollback = extractFunction('rollbackCancelledOlderHistory');
+  const removed = [];
+  const area = {
+    querySelectorAll() {
+      return [{
+        dataset: { messageId: 'old-1' },
+        remove() { removed.push('old-1'); }
+      }];
+    }
+  };
+  const state = {
+    active: { id: 'c1' },
+    messages: [
+      { id: 'old-1', conversation_id: 'c1' },
+      { id: 'recent-1', conversation_id: 'c1' },
+      { id: 'realtime-1', conversation_id: 'c1' }
+    ],
+    messageIds: new Set(['old-1', 'recent-1', 'realtime-1']),
+    messageTimelineRenderOwner: null
+  };
+  const run = vm.runInNewContext('(' + rollback + ')', {});
+  assert.equal(run(state, 'c1', new Set(['old-1']), new Set(['old-1']), area, 7, new Set(), new Map([['old-1', state.messages[0]]]), new Set()), true);
+  assert.deepEqual(state.messages.map(message => message.id), ['recent-1', 'realtime-1']);
+  assert.equal(state.messageIds.has('old-1'), false);
+  assert.deepEqual(removed, ['old-1']);
+
+  const newerState = {
+    ...state,
+    messages: [
+      { id: 'old-2', conversation_id: 'c1' },
+      { id: 'recent-2', conversation_id: 'c1' }
+    ],
+    messageIds: new Set(['old-2', 'recent-2']),
+    messageTimelineRenderOwner: 8
+  };
+  const newerRemoved = [];
+  const newerArea = {
+    querySelectorAll() {
+      return [{
+        dataset: { messageId: 'old-2' },
+        remove() { newerRemoved.push('old-2'); }
+      }];
+    }
+  };
+  assert.equal(run(newerState, 'c1', new Set(['old-2']), new Set(['old-2']), newerArea, 7), false, 'a newer render owner must reject rollback');
+  assert.deepEqual(newerState.messages.map(message => message.id), ['old-2', 'recent-2']);
+  assert.deepEqual(newerRemoved, [], 'a newer render owner must retain both model and DOM');
+  assert.ok(newerState.messageIds.has('old-2'), 'the newer timeline owner retains model IDs as well');
+  const committedState = {
+    active: { id: 'c1' },
+    messages: [{ id: 'old-3' }, { id: 'recent-3' }],
+    messageIds: new Set(['old-3', 'recent-3']),
+    messageTimelineRenderOwner: null,
+    messageTimelineCommitVersion: 9
+  };
+  const committedRemoved = [];
+  const committedArea = {
+    querySelectorAll() {
+      return [{
+        dataset: { messageId: 'old-3' },
+        remove() { committedRemoved.push('old-3'); }
+      }];
+    }
+  };
+  assert.equal(run(committedState, 'c1', new Set(['old-3']), new Set(['old-3']), committedArea, 7), false, 'a newer committed timeline must reject rollback');
+  assert.deepEqual(committedState.messages.map(message => message.id), ['old-3', 'recent-3']);
+  assert.deepEqual(committedRemoved, [], 'a newer committed timeline must never be rolled back by an older request');
+});
+
+test('message reconciliation preserves explicitly loaded history across short and empty fetches and keeps newer realtime edits', () => {
+  const context = {};
+  vm.runInNewContext(loaderSource, context);
+  const mergeWindow = context.BizmindMessageLoader.mergeWindow;
+  const compare = (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at) || String(a.id).localeCompare(String(b.id));
+  const current = Array.from({ length: 140 }, (_, index) => ({
+    id: 'm' + String(index + 1).padStart(3, '0'),
+    conversation_id: 'c1',
+    created_at: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString()
+  }));
+  const shortLatestPage = current.slice(-20).reverse();
+  const loadedHistoryIds = new Set(current.map(row => row.id));
+  const syncStartedAt = '2026-01-01T00:00:00.000Z';
+
+  const shortResult = mergeWindow(current, shortLatestPage, 'c1', syncStartedAt, null, compare, loadedHistoryIds);
+  assert.equal(shortResult.length, 140, 'a short latest page must not discard explicitly loaded history');
+  assert.deepEqual(Array.from(shortResult, row => row.id), current.map(row => row.id));
+
+  const emptyResult = mergeWindow(current, [], 'c1', syncStartedAt, null, compare, loadedHistoryIds);
+  assert.equal(emptyResult.length, 140, 'an empty reconciliation page must not erase explicitly loaded history');
+
+  const untrackedStale = mergeWindow([current[0]], shortLatestPage, 'c1', syncStartedAt, null, compare, new Set());
+  assert.equal(untrackedStale.length, 20, 'untracked stale model rows must not be mistaken for loaded history');
+
+  const clearBoundary = current[59].created_at;
+  const clearedResult = mergeWindow(current, [], 'c1', syncStartedAt, clearBoundary, compare, loadedHistoryIds);
+  assert.equal(clearedResult.length, 80, 'per-user cleared-before boundary must still exclude old messages');
+  assert.ok(clearedResult.every(row => row.created_at > clearBoundary));
+
+  const realtimeEdited = {
+    ...current[139],
+    edited_at: '2026-01-07T00:00:00.000Z',
+    content: 'new realtime content'
+  };
+  const staleFetched = {
+    ...current[139],
+    edited_at: '2026-01-06T23:00:00.000Z',
+    content: 'stale database snapshot'
+  };
+  const versionResult = mergeWindow([realtimeEdited], [staleFetched], 'c1', syncStartedAt, null, compare, new Set());
+  assert.equal(versionResult[0].content, 'new realtime content', 'a newer realtime revision must win over an older fetch snapshot');
+
+  const realtimeDeleted = {
+    ...current[139],
+    deleted_at: '2026-01-07T00:00:00.000Z',
+    content: 'deleted tombstone'
+  };
+  const staleLiveSnapshot = {
+    ...current[139],
+    deleted_at: null,
+    content: 'old live content'
+  };
+  const tombstoneResult = mergeWindow([realtimeDeleted], [staleLiveSnapshot], 'c1', syncStartedAt, null, compare, new Set());
+  assert.equal(tombstoneResult[0].content, 'deleted tombstone', 'a newer delete tombstone must not be resurrected by a stale fetch');
+});
+
+test('in-flight older history is protected from reconciliation and safely removed only when cancelled', async () => {
+  const context = {};
+  vm.runInNewContext(loaderSource, context);
+  const mergeWindow = context.BizmindMessageLoader.mergeWindow;
+  const original = { id: 'm3', conversation_id: 'c1', created_at: '2026-01-03T00:00:00Z' };
+  const older = [
+    { id: 'm2', conversation_id: 'c1', created_at: '2026-01-02T00:00:00Z' },
+    { id: 'm1', conversation_id: 'c1', created_at: '2026-01-01T00:00:00Z' }
+  ];
+  const nodes = [{ className: 'message', dataset: { messageId: 'm3' }, getBoundingClientRect: () => ({ top: 10, bottom: 30 }), remove() { area.children = area.children.filter(node => node !== this); } }];
+  const area = {
+    children: nodes, style: {}, scrollTop: 0, scrollHeight: 100, clientHeight: 100,
+    get childNodes() { return this.children; },
+    getBoundingClientRect: () => ({ top: 0 }),
+    querySelectorAll(selector) { return selector === '.message' ? this.children.filter(node => node.className === 'message') : []; },
+    prepend(node) { this.children.unshift(node); node.parent = this; },
+    insertBefore(node) { this.children.unshift(...(node.children || [])); }
+  };
+  const state = {
+    active: { id: 'c1' }, messageLoadVersion: 4, loadingOlderMessages: false,
+    hasMoreMessages: true, messages: [original], messageIds: new Set(['m3']),
+    loadedHistoryIds: new Set(), replyMessages: new Map(), pinnedMessages: new Map(),
+    messageTimelineCommitVersion: 0, messageTimelineRenderOwner: null
+  };
+  let releaseRender, renderStarted;
+  const started = new Promise(resolve => { renderStarted = resolve; });
+  const renderGate = new Promise(resolve => { releaseRender = resolve; });
+  const supabaseClient = { from: () => ({
+    select() { return this; }, eq() { return this; }, or() { return this; },
+    order() { return this; }, limit() { return Promise.resolve({ data: older, error: null }); }
+  }) };
+  const document = {
+    createElement: () => ({
+      className: '', textContent: '', parent: null,
+      get nextSibling() { const i = this.parent.children.indexOf(this); return this.parent.children[i + 1] || null; },
+      remove() { if (this.parent) this.parent.children = this.parent.children.filter(node => node !== this); }
+    }),
+    createDocumentFragment: () => ({ children: [], append(node) { this.children.push(node); } })
+  };
+  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
+    state, document, supabaseClient, $: () => area, console,
+    rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')'),
+    compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
+    loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
+    messageReactions: { load: async () => true }, reconcileMessageTimeline() {}, toast() {},
+    renderMessage: async message => {
+      const node = { className: 'message', dataset: { messageId: message.id }, remove() { area.children = area.children.filter(item => item !== this); } };
+      area.children.push(node); state.messageIds.add(message.id);
+      renderStarted();
+      await renderGate;
+      return true;
+    }
+  });
+  const pending = loadOlder();
+  await started;
+  assert.deepEqual([...state.loadedHistoryIds].sort(), ['m1', 'm2'], 'IDs must be registered before the first asynchronous render');
+  const compare = (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at);
+  const reconciled = mergeWindow(state.messages, [original], 'c1', '2026-01-01T00:00:00Z', null, compare, state.loadedHistoryIds);
+  assert.equal(reconciled.length, 3, 'concurrent reconciliation must retain the in-flight historical page');
+
+  state.messageLoadVersion = 5;
+  releaseRender();
+  assert.equal(await pending, false);
+  assert.equal(state.messages.length, 1, 'cancel rollback removes only rows owned by the cancelled request');
+  assert.equal(state.messages[0].id, 'm3');
+  assert.deepEqual([...state.loadedHistoryIds], [], 'cancelled request IDs must not remain marked as loaded');
+  assert.deepEqual(area.querySelectorAll('.message').map(node => node.dataset.messageId), ['m3']);
+  assert.deepEqual([...state.messageIds], ['m3']);
 });
 
 test('renderer rejects an obsolete request token before starting work', async () => {
@@ -399,6 +603,7 @@ test('failed older-history batch restores the original transcript and pagination
   let renderCount = 0;
   const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
     state, document, supabaseClient, $: () => area, console,
+    rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')'),
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
     loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
     messageReactions: { load: async () => true },
@@ -430,7 +635,7 @@ test('older-history rendering is transactional and releases only its own loading
   assert.match(older, /originalHasMore=state\.hasMoreMessages/);
   assert.match(older, /renderedHistoryIds\.add\(message\.id\)/);
   assert.match(older, /state\.hasMoreMessages=originalHasMore/);
-  assert.match(older, /state\.messageIds\.delete\(id\)/);
+  assert.match(extractFunction('rollbackCancelledOlderHistory'), /state\.messageIds\.delete\(id\)/);
   assert.match(older, /state\.loadingOlderRequestId===requestId/);
   assert.match(older, /state\.loadingOlderMessages=false/);
 });

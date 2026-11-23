@@ -34,6 +34,7 @@ function extractFunction(name) {
 
 const sendSource = extractFunction('sendMessage');
 const renderSource = extractFunction('renderMessage');
+const rollbackSource = extractFunction('rollbackCancelledOlderHistory');
 let browser;
 
 before(async () => { browser = await chromium.launch({ headless: true }); });
@@ -297,6 +298,47 @@ test('browser: same-ID render requests serialize and retry using the newest in-m
 });
 
 
+
+test('browser: cancelled history rollback keeps model and DOM under a newer timeline owner', async () => {
+  const page = await newPage();
+  try {
+    await page.setContent('<!doctype html><html><body><div id="messages"><div class="message" data-message-id="old-1"></div><div class="message" data-message-id="recent-1"></div></div></body></html>');
+    const result = await page.evaluate(({ source }) => {
+      const area = document.getElementById('messages');
+      const state = {
+        active: { id: 'c1' },
+        messages: [{ id: 'old-1' }, { id: 'recent-1' }],
+        messageIds: new Set(['old-1', 'recent-1']),
+        loadedHistoryIds: new Set(['old-1']),
+        messageTimelineRenderOwner: 8,
+        messageTimelineCommitVersion: 0
+      };
+      const rollback = new Function('return (' + source + ');')();
+      rollback(state, 'c1', new Set(['old-1']), new Set(['old-1']), area, 7,
+        new Set(), new Map([['old-1', state.messages[0]]]), new Set());
+      const protectedState = {
+        model: state.messages.map(message => message.id),
+        dom: [...area.querySelectorAll('.message')].map(node => node.dataset.messageId),
+        ids: [...state.messageIds]
+      };
+      state.messageTimelineRenderOwner = null;
+      rollback(state, 'c1', new Set(['old-1']), new Set(['old-1']), area, 9,
+        new Set(), new Map([['old-1', state.messages[0]]]), new Set());
+      return {
+        protectedState,
+        rolledBack: state.messages.map(message => message.id),
+        remainingDom: [...area.querySelectorAll('.message')].map(node => node.dataset.messageId)
+      };
+    }, { source: rollbackSource });
+    assert.deepEqual(result.protectedState, {
+      model: ['old-1', 'recent-1'],
+      dom: ['old-1', 'recent-1'],
+      ids: ['old-1', 'recent-1']
+    });
+    assert.deepEqual(result.rolledBack, ['recent-1']);
+    assert.deepEqual(result.remainingDom, ['recent-1']);
+  } finally { await page.close(); }
+});
 
 test('isolated voice recorder completes two consecutive browser record/send cycles', async () => {
   const page = await browser.newPage();
