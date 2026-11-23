@@ -284,6 +284,7 @@ test('message loader reconciles the latest server page while preserving explicit
   assert.match(older, /state\.loadedHistoryIds\.add\(message\.id\)/);
   assert.match(open, /state\.loadedHistoryIds=new Set\(\)/);
   assert.match(older, /rollbackCancelledOlderHistory\(state,conversationId,olderIds,renderedHistoryIds,area,requestId\)/);
+  assert.match(loaderSource, /state\.messageTimelineCommitVersion = requestId/);
   assert.doesNotMatch(loaderSource, /slice\(-100\)/);
 });
 
