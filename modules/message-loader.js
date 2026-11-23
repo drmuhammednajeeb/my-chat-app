@@ -288,6 +288,7 @@
 
       if (!isCurrent()) { rollbackOwnedRender(); return false; }
       state.messageTimelineConversationId = conversationId;
+      state.messageTimelineCommitVersion = requestId;
       state.messageTimelineRenderOwner = null;
       state.hasMoreMessages = fetchedRows.length === 50;
       state.messagePollLastCheckedAt = syncStartedAt;
