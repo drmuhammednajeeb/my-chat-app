@@ -240,33 +240,87 @@
       const row = findMessageRow(message.id);
       if (row) render(row, message);
 
-      try {
-        let result;
-        if (removing) {
-          result = await supabaseClient.from("message_reactions").delete()
-            .eq("conversation_id", conversationId)
-            .eq("message_id", message.id)
-            .eq("user_id", userId);
-        } else {
-          result = await supabaseClient.from("message_reactions").upsert({
-            conversation_id: conversationId,
-            message_id: message.id,
-            user_id: userId,
-            reaction_type: reactionType
-          }, { onConflict: "message_id,user_id" });
-        }
+      const payload = {
+        conversation_id: conversationId,
+        message_id: message.id,
+        user_id: userId,
+        reaction_type: reactionType
+      };
+      const readOwnReaction = async () => {
+        const result = await supabaseClient.from("message_reactions")
+          .select("conversation_id,message_id,user_id,reaction_type")
+          .eq("conversation_id", conversationId)
+          .eq("message_id", message.id)
+          .eq("user_id", userId)
+          .maybeSingle();
         if (result?.error) throw result.error;
+        return result?.data || null;
+      };
+      const insertReaction = async value => {
+        const result = await supabaseClient.from("message_reactions").insert(value);
+        if (result?.error) throw result.error;
+      };
+      const deleteOwnReaction = async () => {
+        const result = await supabaseClient.from("message_reactions").delete()
+          .eq("conversation_id", conversationId)
+          .eq("message_id", message.id)
+          .eq("user_id", userId);
+        if (result?.error) throw result.error;
+      };
+
+      try {
+        // The authenticated role intentionally has INSERT/DELETE but not UPDATE.
+        // Avoid PostgREST upsert (ON CONFLICT DO UPDATE), which requires UPDATE
+        // privilege even when the caller expects a first-time insert.
+        if (ownBefore) await deleteOwnReaction();
+        if (!removing) await insertReaction(payload);
         return true;
       } catch (error) {
+        let persisted = null;
+        let verificationError = null;
+        try {
+          persisted = await readOwnReaction();
+        } catch (readError) {
+          verificationError = readError;
+        }
+
+        // A network error can arrive after Postgres committed the write.
+        if ((!removing && persisted?.reaction_type === reactionType)
+          || (removing && !persisted)) {
+          if (isCurrent(conversationId, requestId)) {
+            const latest = rowsFor(message.id).filter(item => item.user_id !== userId);
+            if (persisted) latest.push(persisted);
+            if (latest.length) state.reactions.set(message.id, latest);
+            else state.reactions.delete(message.id);
+            const activeRow = findMessageRow(message.id);
+            if (activeRow) render(activeRow, message);
+          }
+          return true;
+        }
+
+        // If changing an existing reaction failed after its DELETE committed,
+        // restore the previous value using INSERT (never UPDATE/upsert).
+        if (ownBefore && !persisted) {
+          try {
+            await insertReaction(ownBefore);
+            persisted = ownBefore;
+          } catch (restoreError) {
+            console.error("Previous message reaction could not be restored:", restoreError?.message || restoreError);
+            try { persisted = await readOwnReaction(); } catch (readError) { verificationError ||= readError; }
+          }
+        }
+
         if (isCurrent(conversationId, requestId)) {
           const latest = rowsFor(message.id).filter(item => item.user_id !== userId);
-          if (ownBefore) latest.push(ownBefore);
+          if (persisted) latest.push(persisted);
+          else if (verificationError && ownBefore) latest.push(ownBefore);
           if (latest.length) state.reactions.set(message.id, latest);
           else state.reactions.delete(message.id);
           const activeRow = findMessageRow(message.id);
           if (activeRow) render(activeRow, message);
         }
         console.error("Message reaction failed:", error?.message || error);
+        if (verificationError) console.warn("Message reaction outcome could not be verified:", verificationError?.message || verificationError);
         toast("تعذر حفظ التفاعل. أُعيدت الحالة السابقة؛ حاول مجدداً");
         return false;
       } finally {
