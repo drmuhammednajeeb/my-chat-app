@@ -11,7 +11,7 @@ const appCss = await readFile(new URL('../app.css', import.meta.url), 'utf8');
 const voiceSource = await readFile(new URL('../modules/voice-recorder.js', import.meta.url), 'utf8');
 
 function extractFunction(name) {
-  const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\(');
+  const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
   const match = pattern.exec(source);
   assert.ok(match, 'Function not found: ' + name);
   const start = match.index;
