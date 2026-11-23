@@ -693,7 +693,7 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "parityNote": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion.",
+      "parityNote": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, owner-side direct-update trigger rejection, attachment detachment into the retryable Storage cleanup queue, and expired deletion. Chat-media SELECT requires an active conversation member and a live chat_messages attachment reference; previously issued signed URLs remain valid until expiry or physical Storage removal.",
       "runtimeEvidence": {
         "workflowRunId": 45078684896,
         "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
