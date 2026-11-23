@@ -334,8 +334,9 @@ test('cancelled older-history loading rolls back only its own rows and protects 
     }
   };
   run(newerState, 'c1', new Set(['old-2']), new Set(['old-2']), newerArea, 7);
-  assert.deepEqual(newerState.messages.map(message => message.id), ['recent-2']);
-  assert.deepEqual(newerRemoved, [], 'a newer render owner must retain control of the DOM');
+  assert.deepEqual(newerState.messages.map(message => message.id), ['old-2', 'recent-2']);
+  assert.deepEqual(newerRemoved, [], 'a newer render owner must retain both model and DOM');
+  assert.ok(newerState.messageIds.has('old-2'), 'the newer timeline owner retains model IDs as well');
   const committedState = {
     active: { id: 'c1' },
     messages: [{ id: 'old-3' }, { id: 'recent-3' }],
@@ -398,6 +399,87 @@ test('message reconciliation preserves explicitly loaded history across short an
   };
   const versionResult = mergeWindow([realtimeEdited], [staleFetched], 'c1', syncStartedAt, null, compare, new Set());
   assert.equal(versionResult[0].content, 'new realtime content', 'a newer realtime revision must win over an older fetch snapshot');
+
+  const realtimeDeleted = {
+    ...current[139],
+    deleted_at: '2026-01-07T00:00:00.000Z',
+    content: 'deleted tombstone'
+  };
+  const staleLiveSnapshot = {
+    ...current[139],
+    deleted_at: null,
+    content: 'old live content'
+  };
+  const tombstoneResult = mergeWindow([realtimeDeleted], [staleLiveSnapshot], 'c1', syncStartedAt, null, compare, new Set());
+  assert.equal(tombstoneResult[0].content, 'deleted tombstone', 'a newer delete tombstone must not be resurrected by a stale fetch');
+});
+
+test('in-flight older history is protected from reconciliation and safely removed only when cancelled', async () => {
+  const context = {};
+  vm.runInNewContext(loaderSource, context);
+  const mergeWindow = context.BizmindMessageLoader.mergeWindow;
+  const original = { id: 'm3', conversation_id: 'c1', created_at: '2026-01-03T00:00:00Z' };
+  const older = [
+    { id: 'm2', conversation_id: 'c1', created_at: '2026-01-02T00:00:00Z' },
+    { id: 'm1', conversation_id: 'c1', created_at: '2026-01-01T00:00:00Z' }
+  ];
+  const nodes = [{ className: 'message', dataset: { messageId: 'm3' }, remove() { area.children = area.children.filter(node => node !== this); } }];
+  const area = {
+    children: nodes, style: {}, scrollTop: 0, scrollHeight: 100, clientHeight: 100,
+    get childNodes() { return this.children; },
+    getBoundingClientRect: () => ({ top: 0 }),
+    querySelectorAll(selector) { return selector === '.message' ? this.children.filter(node => node.className === 'message') : []; },
+    prepend(node) { this.children.unshift(node); node.parent = this; },
+    insertBefore(node) { this.children.unshift(...(node.children || [])); }
+  };
+  const state = {
+    active: { id: 'c1' }, messageLoadVersion: 4, loadingOlderMessages: false,
+    hasMoreMessages: true, messages: [original], messageIds: new Set(['m3']),
+    loadedHistoryIds: new Set(), replyMessages: new Map(), pinnedMessages: new Map(),
+    messageTimelineCommitVersion: 0, messageTimelineRenderOwner: null
+  };
+  let releaseRender, renderStarted;
+  const started = new Promise(resolve => { renderStarted = resolve; });
+  const renderGate = new Promise(resolve => { releaseRender = resolve; });
+  const supabaseClient = { from: () => ({
+    select() { return this; }, eq() { return this; }, or() { return this; },
+    order() { return this; }, limit() { return Promise.resolve({ data: older, error: null }); }
+  }) };
+  const document = {
+    createElement: () => ({
+      className: '', textContent: '', parent: null,
+      get nextSibling() { const i = this.parent.children.indexOf(this); return this.parent.children[i + 1] || null; },
+      remove() { if (this.parent) this.parent.children = this.parent.children.filter(node => node !== this); }
+    }),
+    createDocumentFragment: () => ({ children: [], append(node) { this.children.push(node); } })
+  };
+  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
+    state, document, supabaseClient, $: () => area, console,
+    compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
+    loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
+    messageReactions: { load: async () => true }, reconcileMessageTimeline() {}, toast() {},
+    renderMessage: async message => {
+      const node = { className: 'message', dataset: { messageId: message.id }, remove() { area.children = area.children.filter(item => item !== this); } };
+      area.children.push(node); state.messageIds.add(message.id);
+      renderStarted();
+      await renderGate;
+      return true;
+    }
+  });
+  const pending = loadOlder();
+  await started;
+  assert.deepEqual([...state.loadedHistoryIds].sort(), ['m1', 'm2'], 'IDs must be registered before the first asynchronous render');
+  const compare = (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at);
+  const reconciled = mergeWindow(state.messages, [original], 'c1', '2026-01-01T00:00:00Z', null, compare, state.loadedHistoryIds);
+  assert.equal(reconciled.length, 3, 'concurrent reconciliation must retain the in-flight historical page');
+
+  state.messageLoadVersion = 5;
+  releaseRender();
+  assert.equal(await pending, false);
+  assert.deepEqual(state.messages.map(row => row.id), ['m3'], 'cancel rollback removes only rows owned by the cancelled request');
+  assert.deepEqual([...state.loadedHistoryIds], [], 'cancelled request IDs must not remain marked as loaded');
+  assert.deepEqual(area.querySelectorAll('.message').map(node => node.dataset.messageId), ['m3']);
+  assert.deepEqual([...state.messageIds], ['m3']);
 });
 
 test('renderer rejects an obsolete request token before starting work', async () => {
