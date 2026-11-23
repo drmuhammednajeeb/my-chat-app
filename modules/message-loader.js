@@ -39,15 +39,23 @@
     return values.length ? Math.max(...values) : (Date.parse(message?.created_at || '') || 0);
   }
 
-  function mergeWindow(currentRows, fetchedRows, conversationId, clearedBefore, compare) {
+  function mergeWindow(currentRows, fetchedRows, conversationId, syncStartedAt, clearedBefore, compare, loadedHistoryIds) {
+    const fetchedIds = new Set((fetchedRows || []).map(row => row.id));
+    const newestFetched = fetchedRows?.[0] || null;
+    const oldestFetched = fetchedRows?.[fetchedRows.length - 1] || null;
+    const loadedHistory = loadedHistoryIds instanceof Set ? loadedHistoryIds : new Set();
     const merged = new Map();
 
-    // A latest-page query is not a complete history query. Preserve every
-    // already-loaded row for this conversation so a short or empty page
-    // cannot erase older pages the user explicitly loaded by scrolling.
     for (const row of currentRows || []) {
       if (!row || row.conversation_id !== conversationId || !isAfterClear(row, clearedBefore)) continue;
-      merged.set(row.id, row);
+      const isFetched = fetchedIds.has(row.id);
+      const isNewerRealtime = !!newestFetched && compare(row, newestFetched) > 0;
+      const isExplicitlyLoadedHistory = loadedHistory.has(row.id);
+      const isOlderLoadedHistory = fetchedRows?.length === 50 && !!oldestFetched && compare(row, oldestFetched) < 0;
+      const arrivedDuringEmptyFetch = !newestFetched && Date.parse(row.created_at) >= Date.parse(syncStartedAt);
+      if (isFetched || isNewerRealtime || isExplicitlyLoadedHistory || isOlderLoadedHistory || arrivedDuringEmptyFetch) {
+        merged.set(row.id, row);
+      }
     }
 
     // Refresh from the server, but do not overwrite a newer realtime edit or
@@ -61,7 +69,6 @@
 
     return Array.from(merged.values()).sort(compare);
   }
-
   function loadMessages(deps) {
     const state = deps?.state;
     const requestedConversationId = state?.active?.id;
@@ -173,7 +180,8 @@
         fetchedRows,
         conversationId,
         clearedBefore,
-        compare
+        compare,
+        state.loadedHistoryIds
       );
 
       // Reply parents and auxiliary metadata are enrichments, never prerequisites
@@ -216,7 +224,8 @@
         fetchedRows,
         conversationId,
         clearedBefore,
-        compare
+        compare,
+        state.loadedHistoryIds
       );
       if (!isCurrent()) return false;
 
