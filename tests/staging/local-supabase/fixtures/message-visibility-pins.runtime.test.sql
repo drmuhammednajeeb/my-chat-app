@@ -199,13 +199,7 @@ BEGIN
      OR v_deleted.attachment_type IS NOT NULL THEN
     RAISE EXCEPTION 'Author secure deletion did not return the expected media-free tombstone';
   END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM app_private.message_cleanup_queue
-    WHERE item_kind='orphan' AND storage_path=v_attachment_path
-      AND status='pending'
-  ) THEN
-    RAISE EXCEPTION 'Deleted message attachment was not queued for retryable Storage cleanup';
-  END IF;
+  PERFORM set_config('app.test.message_visibility_attachment_path',v_attachment_path,true);
   IF EXISTS (
     SELECT 1 FROM public.chat_messages
     WHERE id=v_fresh_message AND attachment_path=v_attachment_path
@@ -261,6 +255,25 @@ BEGIN
 
 END;
 $message_visibility_runtime$;
+
+-- Inspect the private queue as the disposable database owner, never as an API role.
+RESET ROLE;
+DO $assert_deleted_attachment_queued$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM app_private.message_cleanup_queue
+    WHERE item_kind='orphan'
+      AND storage_path=current_setting('app.test.message_visibility_attachment_path')
+      AND status='pending'
+  ) THEN
+    RAISE EXCEPTION 'Deleted message attachment was not queued for retryable Storage cleanup';
+  END IF;
+END;
+$assert_deleted_attachment_queued$;
+
+-- Continue authorization probes as the authenticated synthetic member.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
 
 -- A suspended member must not invoke the SECURITY DEFINER delete path.
 SELECT set_config('request.jwt.claim.sub',current_setting('app.test.direct_a_id'),true);
