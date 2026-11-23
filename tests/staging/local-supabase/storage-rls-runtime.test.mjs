@@ -49,6 +49,19 @@ test('Storage RLS runtime probe is restricted to the disposable local API', asyn
   assert.doesNotMatch(replay, /method: 'PUT'/);
 });
 
+test('secure message deletion detaches media and blocks subsequent signed reads for other members', async () => {
+  const source = await readFile(path.join(root, 'tests/staging/local-supabase/local-storage-rls-runtime.mjs'), 'utf8');
+  for (const token of [
+    'secure-delete attachment message',
+    'other conversation member signed read before secure deletion',
+    'author secure-delete RPC',
+    'other conversation member signed read after secure deletion',
+    'attachment_path !== null',
+    'message_cleanup_queue',
+    'STORAGE_SECURE_DELETE_ATTACHMENT_PROBE=PASSED'
+  ]) assert.ok(source.includes(token), 'missing secure-delete Storage runtime assertion: ' + token);
+});
+
 test('Storage runtime probe checks uploader ownership, private/shared reads, upsert, and cleanup', async () => {
   const source = await readFile(path.join(root, 'tests/staging/local-supabase/local-storage-rls-runtime.mjs'), 'utf8');
   for (const token of [
