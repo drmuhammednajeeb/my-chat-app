@@ -423,7 +423,7 @@ test('in-flight older history is protected from reconciliation and safely remove
     { id: 'm2', conversation_id: 'c1', created_at: '2026-01-02T00:00:00Z' },
     { id: 'm1', conversation_id: 'c1', created_at: '2026-01-01T00:00:00Z' }
   ];
-  const nodes = [{ className: 'message', dataset: { messageId: 'm3' }, remove() { area.children = area.children.filter(node => node !== this); } }];
+  const nodes = [{ className: 'message', dataset: { messageId: 'm3' }, getBoundingClientRect: () => ({ top: 10, bottom: 30 }), remove() { area.children = area.children.filter(node => node !== this); } }];
   const area = {
     children: nodes, style: {}, scrollTop: 0, scrollHeight: 100, clientHeight: 100,
     get childNodes() { return this.children; },
@@ -455,6 +455,7 @@ test('in-flight older history is protected from reconciliation and safely remove
   };
   const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
     state, document, supabaseClient, $: () => area, console,
+    rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')'),
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
     loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
     messageReactions: { load: async () => true }, reconcileMessageTimeline() {}, toast() {},
