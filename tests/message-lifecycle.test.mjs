@@ -308,12 +308,12 @@ test('message reconciliation preserves all loaded history across short and empty
 
   const realtimeEdited = {
     ...current[139],
-    edited_at: '2026-01-02T00:00:00.000Z',
+    edited_at: '2026-01-07T00:00:00.000Z',
     content: 'new realtime content'
   };
   const staleFetched = {
     ...current[139],
-    edited_at: '2026-01-01T00:00:00.000Z',
+    edited_at: '2026-01-06T23:00:00.000Z',
     content: 'stale database snapshot'
   };
   const versionResult = mergeWindow([realtimeEdited], [staleFetched], 'c1', null, compare);
