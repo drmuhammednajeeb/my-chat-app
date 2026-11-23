@@ -477,7 +477,8 @@ test('in-flight older history is protected from reconciliation and safely remove
   state.messageLoadVersion = 5;
   releaseRender();
   assert.equal(await pending, false);
-  assert.deepEqual(state.messages.map(row => row.id), ['m3'], 'cancel rollback removes only rows owned by the cancelled request');
+  assert.equal(state.messages.length, 1, 'cancel rollback removes only rows owned by the cancelled request');
+  assert.equal(state.messages[0].id, 'm3');
   assert.deepEqual([...state.loadedHistoryIds], [], 'cancelled request IDs must not remain marked as loaded');
   assert.deepEqual(area.querySelectorAll('.message').map(node => node.dataset.messageId), ['m3']);
   assert.deepEqual([...state.messageIds], ['m3']);
