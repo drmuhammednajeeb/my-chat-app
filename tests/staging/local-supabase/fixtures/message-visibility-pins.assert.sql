@@ -53,6 +53,18 @@ begin
     raise exception 'per-user conversation-pin INSERT policy is missing';
   end if;
 
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname = 'Conversation members read chat media'
+      and cmd = 'SELECT'
+      and qual ilike '%chat_messages%'
+      and qual ilike '%attachment_path%'
+      and qual ilike '%deleted_at%'
+  ) then
+    raise exception 'chat-media reads must require a live chat_messages attachment reference';
+  end if;
+
   select p.oid, p.proconfig, p.prosecdef
   into v_delete_oid, v_delete_proconfig, v_delete_security_definer
   from pg_proc p
