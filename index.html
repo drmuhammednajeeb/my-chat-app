@@ -1549,6 +1549,18 @@ async function loadMessages(){
  });
 }
 function compareMessagesChronologically(a,b){const timeDiff=new Date(a.created_at)-new Date(b.created_at);if(timeDiff)return timeDiff;const aid=String(a.id||''),bid=String(b.id||'');return aid<bid?-1:aid>bid?1:0}
+function rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId){
+ if(state.active?.id!==conversationId)return false;
+ state.messages=(state.messages||[]).filter(message=>!olderIds.has(message.id));
+ const newerRenderOwnsTimeline=!!state.messageTimelineRenderOwner&&state.messageTimelineRenderOwner!==requestId;
+ if(!newerRenderOwnsTimeline){
+  renderedHistoryIds.forEach(id=>{
+   Array.from(area.querySelectorAll('.message')).filter(node=>node.dataset.messageId===id).forEach(node=>node.remove());
+   state.messageIds.delete(id);
+  });
+ }
+ return true;
+}
 async function loadOlderMessages(){
  const conversationId=state.active?.id,area=$('messages');
  if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
@@ -1580,7 +1592,7 @@ async function loadOlderMessages(){
    messageReactions.load(conversationId,older,requestId),
    replyTask
   ]);
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId);return false;}
   if(replyResult?.error)console.warn('Older reply metadata unavailable:',replyResult.error.message);
   else (replyResult?.data||[]).forEach(parent=>state.replyMessages.set(parent.id,parent));
   const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
@@ -1589,13 +1601,13 @@ async function loadOlderMessages(){
   state.isLoadingMessages=true;state.batchRenderingMessages=true;state.batchRenderingConversationId=conversationId;area.style.overflowAnchor='none';
   const beforeRenderNodes=new Set(Array.from(area.childNodes));
   for(const message of older){
-   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId);return false;}
    if(state.messageIds.has(message.id))continue;
    if(!originalMessageIdSet.has(message.id))renderedHistoryIds.add(message.id);
    const rendered=await renderMessage(message,conversationId,requestId);
    if(!rendered&&!state.messageIds.has(message.id))throw new Error('Older message rendering did not complete');
   }
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
+  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId);return false;}
   state.loadedHistoryIds ||= new Set();older.forEach(message=>state.loadedHistoryIds.add(message.id));
   state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area);
   const addedSet=new Set(Array.from(area.querySelectorAll('.message')).filter(node=>olderIds.has(node.dataset.messageId)&&!beforeRenderNodes.has(node)));
@@ -1630,7 +1642,7 @@ async function loadOlderMessages(){
   return false;
  }finally{
   if(state.loadingOlderRequestId===requestId){
-   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId)reconcileMessageTimeline(area)}
+   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId&&state.messageTimelineRenderOwner!==state.messageLoadVersion)reconcileMessageTimeline(area)}
    state.loadingOlderMessages=false;state.loadingOlderRequestId=null;
    if(requestId===state.messageLoadVersion&&state.active?.id===conversationId)state.isLoadingMessages=false;
    area.style.overflowAnchor='';
