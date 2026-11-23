@@ -11,7 +11,7 @@ const appCss = await readFile(new URL('../app.css', import.meta.url), 'utf8');
 const voiceSource = await readFile(new URL('../modules/voice-recorder.js', import.meta.url), 'utf8');
 
 function extractFunction(name) {
-  const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
+  const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\(');
   const match = pattern.exec(source);
   assert.ok(match, 'Function not found: ' + name);
   const start = match.index;
@@ -276,10 +276,10 @@ test('global message deletion uses the secure server RPC and reconciles its retu
 
 test('message loader reconciles the latest server page without treating it as the complete history', () => {
   const load = extractFunction('loadMessages');
-  assert.match(load, /window\\.BizmindMessageLoader\\.loadMessages/);
-  assert.match(loaderSource, /function mergeWindow\\(currentRows, fetchedRows, conversationId, clearedBefore, compare\\)/);
-  assert.match(loaderSource, /isAfterClear\\(row, clearedBefore\\)/);
-  assert.doesNotMatch(loaderSource, /slice\\(-100\\)/);
+  assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
+  assert.match(loaderSource, /function mergeWindow\(currentRows, fetchedRows, conversationId, clearedBefore, compare\)/);
+  assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
+  assert.doesNotMatch(loaderSource, /slice\(-100\)/);
 });
 
 test('message reconciliation preserves all loaded history across short and empty fetches and keeps newer realtime edits', () => {
