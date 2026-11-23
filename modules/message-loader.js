@@ -43,7 +43,7 @@
     const fetchedIds = new Set((fetchedRows || []).map(row => row.id));
     const newestFetched = fetchedRows?.[0] || null;
     const oldestFetched = fetchedRows?.[fetchedRows.length - 1] || null;
-    const loadedHistory = loadedHistoryIds instanceof Set ? loadedHistoryIds : new Set();
+    const loadedHistory = loadedHistoryIds && typeof loadedHistoryIds.has === 'function' ? loadedHistoryIds : new Set();
     const merged = new Map();
 
     for (const row of currentRows || []) {
