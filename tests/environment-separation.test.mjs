@@ -58,8 +58,8 @@ test('Vercel production follows every main commit while Preview remains isolated
   assert.match(config.buildCommand, /BIZMIND_STANDBY_RELEASE_SHA/);
   assert.match(config.buildCommand, /VERCEL_GIT_COMMIT_SHA/);
   assert.equal(config.outputDirectory, 'dist/vercel-static');
+  assert.match(config.ignoreCommand, /VERCEL_ENV/);
   assert.match(config.ignoreCommand, /scripts\/ignore-vercel-deployment\.mjs/);
-  assert.match(config.ignoreCommand, /scripts\\/ignore-vercel-deployment\\.mjs/);
   assert.match(builder, /VERCEL_ENV/);
   assert.match(builder, /BIZMIND_VERCEL_STANDBY_APPROVED/);
   assert.match(builder, /BIZMIND_STANDBY_RELEASE_SHA/);
