@@ -1990,7 +1990,7 @@
       ],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false,
-      "validationNote": "The original PR #165 candidate passed an earlier disposable-local replay. This revision additionally detaches deleted attachments into the retryable Storage cleanup queue, restricts chat-media reads to active members with a live message attachment reference, and corrects the owner-side direct UPDATE probe. A fresh disposable-local runtime replay is required for this revised blob. Production remains unchanged and execution is not authorized."
+      "validationNote": "The original PR #165 candidate passed an earlier disposable-local replay. This revision additionally detaches deleted attachments into the retryable Storage cleanup queue, restricts chat-media reads to active members with a live message attachment reference, and corrects the owner-side direct UPDATE probe. A fresh disposable-local runtime replay is required for this revised blob. Production remains unchanged and execution is not authorized. The repository inventory baseline now counts the additional active-member chat-media SELECT policy; this branch tip requires a fresh complete CI and disposable-local replay."
     }
   ],
   "forwardMigrationPolicy": {
