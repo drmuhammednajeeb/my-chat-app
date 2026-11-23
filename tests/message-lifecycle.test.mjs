@@ -283,7 +283,58 @@ test('message loader reconciles the latest server page while preserving explicit
   assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
   assert.match(older, /state\.loadedHistoryIds\.add\(message\.id\)/);
   assert.match(open, /state\.loadedHistoryIds=new Set\(\)/);
+  assert.match(older, /rollbackCancelledOlderHistory\(state,conversationId,olderIds,renderedHistoryIds,area,requestId\)/);
   assert.doesNotMatch(loaderSource, /slice\(-100\)/);
+});
+
+test('cancelled older-history loading rolls back only its own rows and protects a newer render owner', () => {
+  const rollback = extractFunction('rollbackCancelledOlderHistory');
+  const removed = [];
+  const area = {
+    querySelectorAll() {
+      return [{
+        dataset: { messageId: 'old-1' },
+        remove() { removed.push('old-1'); }
+      }];
+    }
+  };
+  const state = {
+    active: { id: 'c1' },
+    messages: [
+      { id: 'old-1', conversation_id: 'c1' },
+      { id: 'recent-1', conversation_id: 'c1' },
+      { id: 'realtime-1', conversation_id: 'c1' }
+    ],
+    messageIds: new Set(['old-1', 'recent-1', 'realtime-1']),
+    messageTimelineRenderOwner: null
+  };
+  const run = vm.runInNewContext('(' + rollback + ')', {});
+  assert.equal(run(state, 'c1', new Set(['old-1']), new Set(['old-1']), area, 7), true);
+  assert.deepEqual(state.messages.map(message => message.id), ['recent-1', 'realtime-1']);
+  assert.equal(state.messageIds.has('old-1'), false);
+  assert.deepEqual(removed, ['old-1']);
+
+  const newerState = {
+    ...state,
+    messages: [
+      { id: 'old-2', conversation_id: 'c1' },
+      { id: 'recent-2', conversation_id: 'c1' }
+    ],
+    messageIds: new Set(['old-2', 'recent-2']),
+    messageTimelineRenderOwner: 8
+  };
+  const newerRemoved = [];
+  const newerArea = {
+    querySelectorAll() {
+      return [{
+        dataset: { messageId: 'old-2' },
+        remove() { newerRemoved.push('old-2'); }
+      }];
+    }
+  };
+  run(newerState, 'c1', new Set(['old-2']), new Set(['old-2']), newerArea, 7);
+  assert.deepEqual(newerState.messages.map(message => message.id), ['recent-2']);
+  assert.deepEqual(newerRemoved, [], 'a newer render owner must retain control of the DOM');
 });
 
 test('message reconciliation preserves explicitly loaded history across short and empty fetches and keeps newer realtime edits', () => {
