@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node scripts/build-vercel.mjs",
+  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then BIZMIND_VERCEL_STANDBY_APPROVED=true BIZMIND_STANDBY_RELEASE_SHA=\"$VERCEL_GIT_COMMIT_SHA\" node scripts/build-vercel.mjs; else node scripts/build-vercel.mjs; fi",
   "outputDirectory": "dist/vercel-static",
   "installCommand": "echo 'No dependencies to install'",
   "headers": [
@@ -21,5 +21,5 @@
       ]
     }
   ],
-  "ignoreCommand": "node scripts/ignore-vercel-deployment.mjs"
+  "ignoreCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then echo \"VERCEL_DEPLOYMENT_ALLOWED=main auto-sync\"; exit 1; else node scripts/ignore-vercel-deployment.mjs; fi"
 }

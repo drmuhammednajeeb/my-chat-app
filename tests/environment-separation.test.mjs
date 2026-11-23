@@ -48,17 +48,21 @@ test('runtime configuration is never precached and is fetched with no-store sema
   assert.match(worker, /Cache-Control", "no-store, max-age=0, must-revalidate"/);
   assert.match(worker, /CACHE_VERSION = "v42"/);
 });
-test('Vercel static build is guarded by the explicit environment-aware builder', () => {
-  const config = read('../vercel.json');
+test('Vercel production follows every main commit while Preview remains isolated', () => {
+  const config = JSON.parse(read('../vercel.json'));
   const builder = read('../scripts/build-vercel.mjs');
   const generator = read('../scripts/generate-deployment-config.mjs');
   const ignore = read('../scripts/ignore-vercel-deployment.mjs');
-  assert.match(config, /"buildCommand":\s*"node scripts\/build-vercel\.mjs"/);
-  assert.match(config, /"outputDirectory":\s*"dist\/vercel-static"/);
+  assert.match(config.buildCommand, /VERCEL_ENV/);
+  assert.match(config.buildCommand, /BIZMIND_VERCEL_STANDBY_APPROVED=true/);
+  assert.match(config.buildCommand, /BIZMIND_STANDBY_RELEASE_SHA/);
+  assert.match(config.buildCommand, /VERCEL_GIT_COMMIT_SHA/);
+  assert.equal(config.outputDirectory, 'dist/vercel-static');
+  assert.match(config.ignoreCommand, /VERCEL_ENV/);
+  assert.match(config.ignoreCommand, /scripts\/ignore-vercel-deployment\.mjs/);
   assert.match(builder, /VERCEL_ENV/);
   assert.match(builder, /BIZMIND_VERCEL_STANDBY_APPROVED/);
   assert.match(builder, /BIZMIND_STANDBY_RELEASE_SHA/);
   assert.match(generator, /BIZMIND_NONPROD_SUPABASE_HOST/);
-  assert.match(config, /"ignoreCommand":\s*"node scripts\/ignore-vercel-deployment\.mjs"/);
   assert.match(ignore, /BIZMIND_VERCEL_STANDBY_APPROVED/);
 });
