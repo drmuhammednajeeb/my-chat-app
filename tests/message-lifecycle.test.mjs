@@ -55,7 +55,10 @@ test('message reactions are restored through an isolated realtime module and cac
   assert.match(source, /messageReactions\.render\(row,m\)/);
   assert.match(source, /messageReactions\.handleRealtime\(p,id\)/);
   assert.match(reactionSource, /from\("message_reactions"\)/);
-  assert.match(reactionSource, /onConflict: "message_id,user_id"/);
+  assert.match(reactionSource, /\.insert\(value\)/);
+  assert.match(reactionSource, /\.delete\(\)/);
+  assert.doesNotMatch(reactionSource, /\.upsert\(/);
+  assert.match(reactionSource, /readOwnReaction/);
   assert.match(reactionSource, /applyRealtimeEvent/);
   assert.match(reactionStyles, /\.message-reaction-picker/);
   assert.match(reactionStyles, /\.message-reactions/);
