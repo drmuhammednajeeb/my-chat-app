@@ -310,7 +310,7 @@ test('cancelled older-history loading rolls back only its own rows and protects 
     messageTimelineRenderOwner: null
   };
   const run = vm.runInNewContext('(' + rollback + ')', {});
-  assert.equal(run(state, 'c1', new Set(['old-1']), new Set(['old-1']), area, 7), true);
+  assert.equal(run(state, 'c1', new Set(['old-1']), new Set(['old-1']), area, 7, new Set(), new Map([['old-1', state.messages[0]]]), new Set()), true);
   assert.deepEqual(state.messages.map(message => message.id), ['recent-1', 'realtime-1']);
   assert.equal(state.messageIds.has('old-1'), false);
   assert.deepEqual(removed, ['old-1']);
