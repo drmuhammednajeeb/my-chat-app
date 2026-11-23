@@ -206,6 +206,47 @@ try {
   if (!privateChannelId || !/^[0-9a-f-]{36}$/i.test(privateChannelId)) throw new Error('private channel RPC returned an invalid UUID');
   imageConversations.push(privateChannelId);
 
+  // Prove chat-media is readable while a live message references it, then denied
+  // immediately after the author invokes the secure delete RPC.
+  const secureDeleteAttachment = conversationId + '/' + userA.id + '/' + nonce + '-secure-delete.png';
+  await upload('chat-media', secureDeleteAttachment,
+    new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), tokenA, false, 'image/png');
+  const trackedUploadIndex = uploaded.findIndex(item => item.bucket === 'chat-media' && item.name === secureDeleteAttachment);
+  const insertedMessage = assertOk(await rest('chat_messages?select=id,attachment_path', tokenA, 'POST', {
+    conversation_id: conversationId,
+    sender_id: userA.id,
+    content: 'Secure delete Storage policy runtime probe',
+    attachment_path: secureDeleteAttachment,
+    attachment_type: 'image/png'
+  }, 'return=representation'), 'insert secure-delete attachment message');
+  const secureDeleteMessage = Array.isArray(insertedMessage) ? insertedMessage[0] : insertedMessage;
+  if (!secureDeleteMessage?.id || secureDeleteMessage.attachment_path !== secureDeleteAttachment) {
+    throw new Error('secure-delete attachment message was not persisted with its Storage path');
+  }
+  assertSigned(await sign('chat-media', secureDeleteAttachment, tokenB),
+    'other conversation member signed read before secure deletion');
+  assertOk(await rest('rpc/delete_message_secure', tokenA, 'POST', {
+    p_message_id: secureDeleteMessage.id
+  }), 'author secure-delete RPC');
+  const deniedAfterDelete = await sign('chat-media', secureDeleteAttachment, tokenB);
+  assertDenied(deniedAfterDelete, 'other conversation member signed read after secure deletion');
+  const detachedMessage = assertOk(await rest(
+    'chat_messages?id=eq.' + encodeURIComponent(secureDeleteMessage.id) + '&select=deleted_at,attachment_path',
+    tokenB
+  ), 'read secure-delete tombstone as other member');
+  if (!Array.isArray(detachedMessage) || detachedMessage.length !== 1
+    || !detachedMessage[0].deleted_at || detachedMessage[0].attachment_path !== null) {
+    throw new Error('secure deletion did not detach the attachment from the visible tombstone');
+  }
+  const escapedAttachment = secureDeleteAttachment.replaceAll("'", "''");
+  const queuedAttachment = localDatabaseProbe(
+    "SELECT count(*) FROM app_private.message_cleanup_queue " +
+    "WHERE item_kind = 'orphan' AND storage_path = '" + escapedAttachment + "' AND status = 'pending';"
+  );
+  if (queuedAttachment !== '1') throw new Error('secure-delete attachment was not queued for the retryable Storage worker');
+  if (trackedUploadIndex >= 0) uploaded.splice(trackedUploadIndex, 1); // The subsequent cleanup worker owns physical removal.
+  console.log('STORAGE_SECURE_DELETE_ATTACHMENT_PROBE=PASSED');
+
   // Evaluate each Storage RLS predicate with the same Auth identity before the API upload.
   const diagnosticPath = conversationId + '/' + userA.id + '/policy-probe.bin';
   const diagnostic = localDatabaseProbe(`BEGIN;
