@@ -1552,8 +1552,9 @@ function compareMessagesChronologically(a,b){const timeDiff=new Date(a.created_a
 function rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId){
  if(state.active?.id!==conversationId)return false;
  state.messages=(state.messages||[]).filter(message=>!olderIds.has(message.id));
+ const newerTimelineAlreadyCommitted=Number(state.messageTimelineCommitVersion)>requestId;
  const newerRenderOwnsTimeline=!!state.messageTimelineRenderOwner&&state.messageTimelineRenderOwner!==requestId;
- if(!newerRenderOwnsTimeline){
+ if(!newerTimelineAlreadyCommitted&&!newerRenderOwnsTimeline){
   renderedHistoryIds.forEach(id=>{
    Array.from(area.querySelectorAll('.message')).filter(node=>node.dataset.messageId===id).forEach(node=>node.remove());
    state.messageIds.delete(id);
@@ -1642,7 +1643,7 @@ async function loadOlderMessages(){
   return false;
  }finally{
   if(state.loadingOlderRequestId===requestId){
-   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId&&state.messageTimelineRenderOwner!==state.messageLoadVersion)reconcileMessageTimeline(area)}
+   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId&&Number(state.messageTimelineCommitVersion)<=requestId&&state.messageTimelineRenderOwner!==state.messageLoadVersion)reconcileMessageTimeline(area)}
    state.loadingOlderMessages=false;state.loadingOlderRequestId=null;
    if(requestId===state.messageLoadVersion&&state.active?.id===conversationId)state.isLoadingMessages=false;
    area.style.overflowAnchor='';
