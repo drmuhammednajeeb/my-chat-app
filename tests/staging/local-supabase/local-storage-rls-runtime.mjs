@@ -308,7 +308,21 @@ ROLLBACK;`);
   const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r4sAAAAASUVORK5CYII=', 'base64');
   const chatPath = conversationId + '/' + userA.id + '/runtime-' + nonce + '.pdf';
   await upload('chat-media', chatPath, pdf, tokenA, false, 'application/pdf');
-  assertSigned(await sign('chat-media', chatPath, tokenB), 'conversation member signed read of chat media');
+  // chat-media SELECT is intentionally reference-bound: an uploaded object alone
+  // is not readable. Persist a live message reference before testing member reads.
+  const chatMediaMessageResult = assertOk(await rest('chat_messages?select=id,attachment_path', tokenA, 'POST', {
+    conversation_id: conversationId,
+    sender_id: userA.id,
+    content: 'Chat media member-read runtime probe',
+    attachment_path: chatPath,
+    attachment_type: 'application/pdf'
+  }, 'return=representation'), 'insert chat-media read-policy message');
+  const chatMediaMessage = Array.isArray(chatMediaMessageResult) ? chatMediaMessageResult[0] : chatMediaMessageResult;
+  if (!chatMediaMessage?.id || chatMediaMessage.attachment_path !== chatPath) {
+    throw new Error('chat-media read-policy message was not persisted with its Storage path');
+  }
+  assertSigned(await sign('chat-media', chatPath, tokenB),
+    'conversation member signed read of chat media with live message reference');
   const spoofPath = conversationId + '/' + userA.id + '/spoof-' + nonce + '.bin';
   const spoof = await fetchWithTimeout(base + objectPath('chat-media', spoofPath), {
     method: 'POST',
