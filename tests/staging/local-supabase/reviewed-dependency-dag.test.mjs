@@ -840,5 +840,7 @@ test('production migration ledger and disposable replay evidence remain internal
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 97);
   assert.equal(manifest.sourceCoverage.candidateSqlFiles, 97);
   assert.equal(dag.nodes.find(node => node.id === 'chat.message-visibility-foreign-key-indexes')?.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
-  assert.doesNotMatch(JSON.stringify(dag.runtimeEvidence.checks) + JSON.stringify(manifest.validationEvidence.runtime.checks), /\\b94\\b/);
+  const runtimeEvidenceText = JSON.stringify(dag.runtimeEvidence.checks) + JSON.stringify(manifest.validationEvidence.runtime.checks);
+  assert.deepEqual(dag.runtimeEvidence.checks, manifest.validationEvidence.runtime.checks);
+  assert.equal(runtimeEvidenceText.includes('94 reviewed SQL'), false);
 });
