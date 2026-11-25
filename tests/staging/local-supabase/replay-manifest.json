@@ -854,8 +854,7 @@
       "nodeId": "chat.message-visibility-foreign-key-indexes",
       "status": "PRODUCTION_APPLIED_RUNTIME_PENDING",
       "testSources": [
-        "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+        "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql"
       ],
       "blockedBy": [],
       "parityNote": "Additive leading-column indexes for the three per-user table foreign keys; production migration 20261125230631 is applied and the disposable replay is pending."
