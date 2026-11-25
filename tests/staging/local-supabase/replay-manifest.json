@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 74,
-    "mappedSources": 74,
+    "sqlFiles": 75,
+    "mappedSources": 75,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 23,
@@ -34,13 +34,13 @@
       "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 72,
+    "executedMappedSources": 73,
     "executedTestOnlySqlFixtures": 23,
-    "executedSqlFiles": 95,
+    "executedSqlFiles": 96,
     "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 72,
+    "candidateMappedSources": 73,
     "candidateTestOnlySqlFixtures": 23,
-    "candidateSqlFiles": 95,
+    "candidateSqlFiles": 96,
     "localRuntimeRunId": null,
     "localRuntimeCommit": null
   },
@@ -858,6 +858,14 @@
         "DAG-016"
       ],
       "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
+    },
+    {
+      "nodeId": "chat.latest-visible-conversation-previews",
+      "status": "FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION",
+      "testSources": [
+        "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
+      ],
+      "blockedBy": []
     }
   ],
   "duplicateSelection": {
@@ -1149,6 +1157,14 @@
       "status": "TEST_ONLY_POST_PRODUCTION_ASSERTION",
       "blockedBy": [],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
+    },
+    {
+      "version": "20261125231500",
+      "path": "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql",
+      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+      "productionApplied": false,
+      "blockedBy": []
     }
   ],
   "validationEvidence": {
@@ -1199,7 +1215,8 @@
       ]
     },
     "pendingAdditionalSources": [
-      "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql"
+      "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql",
+      "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
     ],
     "preMergeMainRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
@@ -1320,5 +1337,5 @@
       "failed": 0
     }
   },
-  "reviewState": "PR165_PRODUCTION_APPLIED_SOURCE_SYNC_AND_INDEX_RUNTIME_PENDING"
+  "reviewState": "PR165_PRODUCTION_APPLIED_PREVIEW_PRIVACY_FIX_RUNTIME_PENDING"
 }
