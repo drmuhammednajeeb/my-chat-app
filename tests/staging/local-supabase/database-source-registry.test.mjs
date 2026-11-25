@@ -25,8 +25,8 @@ test('production registry records applied PR165 migrations and eleven pending fo
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
   assert.equal(registry.sourceFiles.length, 64);
-  assert.equal(registry.sourceSets.testOnlyFixtureCount, 23);
-  assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 23);
+  assert.equal(registry.sourceSets.testOnlyFixtureCount, 24);
+  assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 24);
   assert.ok(registry.sourceSets.testOnlyFixturePaths.includes('tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql'));
 
   const versions = registry.productionMigrations.map(item => item.version);
