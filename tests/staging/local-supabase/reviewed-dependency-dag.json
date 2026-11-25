@@ -2595,6 +2595,10 @@
     [
       "test-fixture.admin-assertion",
       "chat.message-visibility-pins-and-delete"
+    ],
+    [
+      "chat.message-visibility-pins-and-delete",
+      "chat.message-visibility-foreign-key-indexes"
     ]
   ],
   "blockers": [
