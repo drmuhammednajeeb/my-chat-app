@@ -19,7 +19,7 @@
     "canonicalCliMigrationFiles": 75,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 23,
+    "testOnlyFixtureCount": 24,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -43,7 +43,8 @@
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
-      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
     ],
     "forwardReconciliationMigrations": 11,
     "unresolvedProductionEntries": 2
