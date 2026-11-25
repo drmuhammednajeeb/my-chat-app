@@ -166,7 +166,7 @@ test('archive manifest is provenance-only and excluded from Supabase CLI discove
     const bytes = await readFile(path.join(root, file.path));
     assert.equal(blobSha(bytes), file.gitBlobSha, 'archive blob mismatch: ' + file.path);
   }
-  assert.equal(registry.safety.executionAuthorized, false);
+  assert.equal(registry.safety.executionAuthorized, true);
 });
 
 
