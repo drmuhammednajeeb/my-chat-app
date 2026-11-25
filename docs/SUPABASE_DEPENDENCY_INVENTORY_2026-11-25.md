@@ -39,3 +39,19 @@
 - Docker tests in hosted CI are ephemeral and do not constitute a persistent backend deployment.
 - GitHub Pages is static hosting; the independent API requires a separate host/runtime.
 - Findings above are source observations, not evidence of a live production test.
+
+
+## Supplemental static inspection (main, 2026-11-25)
+
+The following bounded scan was performed against the same main baseline. Search-hit counts are approximate and include possible false positives; they must not be treated as unique call counts or a security verdict.
+
+- `index.html` is 2,933 lines. Search hits: `.from(` 123, `.rpc(` 11, `.storage` 8, `.channel(` 6, `.auth.` 10, `.functions.` 0.
+- `modules/message-loader.js` (348 lines): direct `chat_messages` query calls; timeline loading/reconciliation.
+- `modules/message-reactions.js` (434 lines): `message_reactions` reads/inserts/deletes; provider-coupled persistence.
+- `modules/profile-status-and-conversation-images.js` (266 lines): `conversation-avatars` Storage signed URLs, uploads/removals; `set_conversation_image` RPC; realtime/auth hooks.
+- `modules/status-workspace.js` (128 lines): `profile_statuses` plus media operations and realtime/auth hooks.
+- `modules/backup-restore.js` (529 lines): multi-table personal-data export/import, Storage downloads/uploads, and settings RPC.
+- `modules/voice-recorder.js` (459 lines): recorder lifecycle is provider-neutral; app-level send/upload integration remains coupled.
+- `modules/runtime-config.js` (71 lines): explicit Supabase host/key/target validation; must be replaced when the backend provider changes.
+
+These observations expand the earlier inventory but do **not** close the full inventory task: inline scripts, every RPC, SQL object, trigger, RLS/policy, bucket, edge function, and realtime topic still need traced mapping and tests.
