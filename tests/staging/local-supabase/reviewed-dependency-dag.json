@@ -14,7 +14,8 @@
       "execution": "NEVER_EXECUTE"
     },
     "duplicateActiveCopies": 0,
-    "forwardReconciliationMigrations": 10
+    "forwardReconciliationMigrations": 11,
+    "canonicalCliMigrationFiles": 75
   },
   "platformNodes": [
     {
@@ -1637,6 +1638,25 @@
       ],
       "blockedBy": [],
       "note": "Additive FK-leading indexes required for efficient cascade checks and to close the unindexed-foreign-key advisor findings discovered immediately after production activation."
+    },
+    {
+      "id": "chat.latest-visible-conversation-previews",
+      "source": [
+        "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
+      ],
+      "provides": [
+        "public.get_latest_visible_conversation_previews(uuid[])"
+      ],
+      "requires": [
+        "chat.message-visibility-foreign-key-indexes"
+      ],
+      "status": "FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "blockedBy": [],
+      "note": "RLS-invoker RPC returns the latest non-deleted message per conversation while excluding rows hidden by auth.uid(); used by the global conversation-list preview path."
     }
   ],
   "explicitEdges": [
@@ -2599,6 +2619,10 @@
     [
       "chat.message-visibility-pins-and-delete",
       "chat.message-visibility-foreign-key-indexes"
+    ],
+    [
+      "chat.message-visibility-foreign-key-indexes",
+      "chat.latest-visible-conversation-previews"
     ]
   ],
   "blockers": [
@@ -2979,5 +3003,5 @@
     "passed": 107,
     "failed": 0
   },
-  "reviewState": "PR165_PRODUCTION_APPLIED_SOURCE_SYNC_AND_INDEX_RUNTIME_PENDING"
+  "reviewState": "PR165_PRODUCTION_APPLIED_PREVIEW_PRIVACY_FIX_RUNTIME_PENDING"
 }
