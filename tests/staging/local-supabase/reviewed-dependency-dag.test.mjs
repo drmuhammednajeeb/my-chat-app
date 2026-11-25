@@ -408,11 +408,11 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('eleven forward migrations remain outside the production ledger with explicit runtime status', async () => {
+test('ten forward migrations remain outside the production ledger with explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
-  assert.equal(registry.productionMigrations.length, 64);
-  assert.equal(registry.forwardMigrations.length, 11);
+  assert.equal(registry.productionMigrations.length, 65);
+  assert.equal(registry.forwardMigrations.length, 10);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
@@ -424,7 +424,6 @@ test('eleven forward migrations remain outside the production ledger with explic
     ['20261119120000_fix_conversation_avatar_public_channel_read.sql', []],
     ['20261119130000_increase_message_cleanup_http_timeout.sql', []],
     ['20261121120000_enforce_signup_display_name_server_side.sql', []],
-    ['20261125231500_latest_visible_conversation_previews.sql', []],
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -460,9 +459,6 @@ test('eleven forward migrations remain outside the production ledger with explic
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44873724263);
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
-      assert.equal(forward?.productionApplied, false);
-    } else if (name === '20261125231500_latest_visible_conversation_previews.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.productionApplied, false);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
@@ -692,11 +688,11 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('eleven forward migrations remain outside the production ledger and record explicit runtime status', async () => {
+test('ten forward migrations remain outside the production ledger and record explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
-  assert.equal(registry.productionMigrations.length, 64);
-  assert.equal(registry.forwardMigrations.length, 11);
+  assert.equal(registry.productionMigrations.length, 65);
+  assert.equal(registry.forwardMigrations.length, 10);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
@@ -743,9 +739,6 @@ test('eleven forward migrations remain outside the production ledger and record 
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44873724263);
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
-      assert.equal(forward?.productionApplied, false);
-    } else if (name === '20261125231500_latest_visible_conversation_previews.sql') {
-      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.productionApplied, false);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
@@ -807,16 +800,17 @@ test('message visibility, conversation pins and secure deletion are applied and 
   assert.ok(blocker.evidence.includes(node.source[0]));
 });
 
-test('latest visible conversation previews remain caller-RLS scoped and pending runtime validation', async () => {
+test('latest visible conversation previews are production-applied and caller-RLS scoped', async () => {
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const node = dag.nodes.find(item => item.id === 'chat.latest-visible-conversation-previews');
   assert.ok(node);
-  assert.equal(node.status, 'FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION');
+  assert.equal(node.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
   assert.deepEqual(node.blockedBy ?? [], []);
-  assert.ok(node.requires.includes('chat.message-visibility-foreign-key-indexes'));
-  const migration = registry.forwardMigrations.find(item => item.version === '20261125231500');
-  assert.equal(migration?.productionApplied, false);
-  assert.equal(migration?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
-  assert.match(migration?.purpose ?? '', /excluding rows hidden by the authenticated caller/);
+  assert.equal(node.source[0], 'supabase/migrations/20261125232617_latest_visible_conversation_previews.sql');
+  const applied = registry.productionMigrations.find(item => item.version === '20261125232617');
+  assert.equal(applied?.name, 'latest_visible_conversation_previews');
+  assert.equal(applied?.path, node.source[0]);
+  assert.equal(applied?.mappingStatus, 'APPLIED_VIA_SUPABASE_MCP');
+  assert.equal(dag.runtimeEvidence.sqlFilesExecuted, 97);
 });
