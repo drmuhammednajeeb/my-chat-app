@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 73,
-    "mappedSources": 73,
+    "sqlFiles": 74,
+    "mappedSources": 74,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 23,
@@ -34,15 +34,15 @@
       "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
-    "executedMappedSources": 71,
+    "executedMappedSources": 72,
     "executedTestOnlySqlFixtures": 23,
-    "executedSqlFiles": 94,
-    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 71,
+    "executedSqlFiles": 95,
+    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "candidateMappedSources": 72,
     "candidateTestOnlySqlFixtures": 23,
-    "candidateSqlFiles": 94,
-    "localRuntimeRunId": 45078684896,
-    "localRuntimeCommit": "0640be6d42c8548fdf609e7008be706e2dbbaa42"
+    "candidateSqlFiles": 95,
+    "localRuntimeRunId": null,
+    "localRuntimeCommit": null
   },
   "execution": {
     "enabled": false,
@@ -684,15 +684,13 @@
     },
     {
       "nodeId": "chat.message-visibility-pins-and-delete",
-      "status": "FORWARD_RECONCILIATION_RUNTIME_PENDING_PRODUCTION_APPROVAL_PENDING",
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
       "testSources": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "blockedBy": [
-        "DAG-020"
-      ],
+      "blockedBy": [],
       "parityNote": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; revised runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, owner-side direct-update trigger rejection, attachment detachment into the retryable Storage cleanup queue, and expired deletion. Chat-media SELECT requires an active conversation member and a live chat_messages attachment reference; previously issued signed URLs remain valid until expiry or physical Storage removal. Fresh disposable-local replay pending for this revised source blob."
     },
     {
@@ -851,6 +849,16 @@
         "DAG-016"
       ],
       "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
+    },
+    {
+      "nodeId": "chat.message-visibility-foreign-key-indexes",
+      "status": "PRODUCTION_APPLIED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Additive leading-column indexes for the three per-user table foreign keys; production migration 20261125230631 is applied and the disposable replay is pending."
     }
   ],
   "duplicateSelection": {
@@ -991,14 +999,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "PRODUCTION_APPROVAL_PENDING",
-      "issue": "Disposable-local PostgreSQL replay, RLS catalog assertions, and authenticated two-user runtime probes passed (run 45076185494). Do not apply to production until independent review and separate explicit owner approval.",
+      "severity": "RESOLVED_PRODUCTION_APPLIED",
+      "issue": "Owner approval was granted and the migration was applied to production as 20261125230604. Runtime replay passed on the reviewed source; repository source synchronization and the additional FK-index migration are being validated.",
       "evidence": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED"
     }
   ],
   "requiredSourceRecovery": [
@@ -1132,17 +1140,6 @@
       "localRuntimeCompletedAt": "2026-11-21T06:05:13Z"
     },
     {
-      "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
-      "blockedBy": [
-        "DAG-020"
-      ],
-      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-      "localRuntimeRunId": 45078684896,
-      "localRuntimeCommit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
-      "localRuntimeCompletedAt": "2026-11-22T22:39:11Z"
-    },
-    {
       "path": "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
       "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
       "blockedBy": [
@@ -1206,7 +1203,9 @@
         "the disposable Supabase stack was stopped and destroyed"
       ]
     },
-    "pendingAdditionalSources": [],
+    "pendingAdditionalSources": [
+      "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql"
+    ],
     "preMergeMainRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
@@ -1326,5 +1325,5 @@
       "failed": 0
     }
   },
-  "reviewState": "FORWARD_MIGRATION_RUNTIME_VALIDATED_PRODUCTION_UNCHANGED"
+  "reviewState": "PR165_PRODUCTION_APPLIED_SOURCE_SYNC_AND_INDEX_RUNTIME_PENDING"
 }
