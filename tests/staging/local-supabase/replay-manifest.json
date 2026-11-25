@@ -733,6 +733,15 @@
       "parityNote": "Synthetic rollback-only signup assertions; current-mainline runtime pending."
     },
     {
+      "nodeId": "chat.message-visibility-foreign-key-indexes",
+      "status": "PRODUCTION_APPLIED_RUNTIME_PENDING",
+      "testSources": [
+        "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Additive leading-column indexes for the three per-user table foreign keys; production migration 20261125230631 is applied and the disposable replay is pending."
+    },
+    {
       "nodeId": "chat.profile-status-combined-content-media",
       "status": "CANONICAL_SOURCE_RECOVERED_NOT_EXECUTED",
       "testSources": [
@@ -849,15 +858,6 @@
         "DAG-016"
       ],
       "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
-    },
-    {
-      "nodeId": "chat.message-visibility-foreign-key-indexes",
-      "status": "PRODUCTION_APPLIED_RUNTIME_PENDING",
-      "testSources": [
-        "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "Additive leading-column indexes for the three per-user table foreign keys; production migration 20261125230631 is applied and the disposable replay is pending."
     }
   ],
   "duplicateSelection": {
