@@ -408,7 +408,7 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('ten forward migrations remain outside the production ledger with explicit runtime status', async () => {
+test('eleven forward migrations remain outside the production ledger with explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 64);
@@ -424,6 +424,7 @@ test('ten forward migrations remain outside the production ledger with explicit 
     ['20261119120000_fix_conversation_avatar_public_channel_read.sql', []],
     ['20261119130000_increase_message_cleanup_http_timeout.sql', []],
     ['20261121120000_enforce_signup_display_name_server_side.sql', []],
+    ['20261125231500_latest_visible_conversation_previews.sql', []],
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -459,6 +460,9 @@ test('ten forward migrations remain outside the production ledger with explicit 
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44873724263);
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
+      assert.equal(forward?.productionApplied, false);
+    } else if (name === '20261125231500_latest_visible_conversation_previews.sql') {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.productionApplied, false);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
@@ -688,7 +692,7 @@ test('chat composer media allowlists are checked against the archived proposal, 
 });
 
 
-test('ten forward migrations remain outside the production ledger and record explicit runtime status', async () => {
+test('eleven forward migrations remain outside the production ledger and record explicit runtime status', async () => {
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 64);
@@ -739,6 +743,9 @@ test('ten forward migrations remain outside the production ledger and record exp
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.localRuntimeRunId, 44873724263);
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
+      assert.equal(forward?.productionApplied, false);
+    } else if (name === '20261125231500_latest_visible_conversation_previews.sql') {
+      assert.equal(forward?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(forward?.productionApplied, false);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
