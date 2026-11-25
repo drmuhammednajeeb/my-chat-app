@@ -10,6 +10,9 @@ on:
       - "index.html"
       - "manifest.json"
       - "service-worker.js"
+      - "modules/auth-light.js"
+      - "modules/auth-light.css"
+      - "tests/auth-light.test.mjs"
       - "tests/pages-build.test.mjs"
       - ".github/workflows/pages-production-artifact.yml"
   push:
@@ -23,6 +26,9 @@ on:
       - "index.html"
       - "manifest.json"
       - "service-worker.js"
+      - "modules/auth-light.js"
+      - "modules/auth-light.css"
+      - "tests/auth-light.test.mjs"
       - "tests/pages-build.test.mjs"
       - ".github/workflows/pages-production-artifact.yml"
   workflow_dispatch:
@@ -53,8 +59,10 @@ jobs:
           node-version: 22
       - name: Validate build script syntax
         run: node --check scripts/build-pages.mjs
+      - name: Validate smart login module syntax
+        run: node --check modules/auth-light.js
       - name: Run Pages artifact contract tests
-        run: node --test tests/pages-build.test.mjs tests/runtime-config.test.mjs tests/runtime-config-deployment.test.mjs
+        run: node --test tests/pages-build.test.mjs tests/runtime-config.test.mjs tests/runtime-config-deployment.test.mjs tests/auth-light.test.mjs
 
   production-preflight:
     if: github.event_name == 'workflow_dispatch'

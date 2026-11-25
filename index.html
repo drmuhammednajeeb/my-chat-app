@@ -51,6 +51,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 @media(prefers-reduced-motion:reduce){#boot-screen .boot-spinner{animation:none;border-top-color:#55cdb8}}
 </style>
 <link rel="stylesheet" href="./app-overrides.css">
+<link rel="stylesheet" href="./modules/auth-light.css">
 <link rel="stylesheet" href="./modules/app-updater.css">
 </head>
 <body>
@@ -209,6 +210,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/audio-player.js"></script>
 <script src="./modules/app-updater.js"></script>
 <script src="./modules/auth-error-messages.js"></script>
+<script src="./modules/auth-light.js"></script>
 <script src="./modules/runtime-config.js"></script>
 <script>
 'use strict';
@@ -474,7 +476,7 @@ $('messageInput').addEventListener('input',()=>{if(!$('diagnosticsPanel')?.hidde
 new MutationObserver(()=>{state.diagnostics.lastComposerChange={at:new Date().toLocaleTimeString('en-GB'),disabled:$('messageInput').disabled,readOnly:$('messageInput').readOnly};diagLog('composer-attributes-changed',state.diagnostics.lastComposerChange)}).observe($('messageInput'),{attributes:true,attributeFilter:['disabled','readonly']});
 window.addEventListener('error',e=>{state.diagnostics.lastRenderError='JS: '+(e.message||'unknown');diagLog('window-error',{message:e.message,source:e.filename,line:e.lineno})});
 window.addEventListener('unhandledrejection',e=>{state.diagnostics.lastRenderError='Promise: '+String(e.reason?.message||e.reason||'unknown');diagLog('unhandled-rejection',{message:state.diagnostics.lastRenderError})});
-function setAuthMode(mode){state.authMode=mode;const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'التسجيل متاح للأعضاء الذين لديهم دعوة ورقم عضوية رسمي فقط.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('passwordStrength').classList.toggle('hidden',!signup);updatePasswordStrength();$('authError').classList.add('hidden');$('resendSignupVerification')?.classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
+function setAuthMode(mode){state.authMode=mode;window.BizmindAuthLight?.setState('idle');const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'التسجيل متاح للأعضاء الذين لديهم دعوة ورقم عضوية رسمي فقط.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('passwordStrength').classList.toggle('hidden',!signup);updatePasswordStrength();$('authError').classList.add('hidden');$('resendSignupVerification')?.classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
 function normalizeSignupDisplayName(value){return String(value||'').normalize('NFC').trim().replace(/\s+/gu,' ')}
 function validateSignupDisplayName(value){
  const normalized=normalizeSignupDisplayName(value),parts=normalized.split(' ');
@@ -663,6 +665,7 @@ $('authForm').addEventListener('submit',async e=>{
  e.preventDefault();
  if($('authSubmit').disabled)return;
  $('authError').classList.add('hidden');$('authStatus').hidden=true;
+ window.BizmindAuthLight?.setState('checking');
  const email=$('email').value.trim(),password=$('password').value;
  const attemptMode=state.authMode;
  const btn=$('authSubmit');
@@ -682,18 +685,20 @@ $('authForm').addEventListener('submit',async e=>{
    btn.disabled=true;btn.textContent='جارٍ إنشاء الحساب...';authProgress('جارٍ إنشاء حسابك والتحقق من البيانات...');
    const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.href.split('#')[0].split('?')[0],data:{username,display_name:display,membership_number:membershipNumber,membership_invite_code:membershipInviteCode}}});
    if(error)throw error;
-   if(data.session){authProgress('تم إنشاء الحساب. جارٍ فتح مساحة المحادثات...');await enterApp(data.user)}
-   else{authProgress('تم إنشاء الحساب. أرسلنا رابط توثيق إلى بريدك الإلكتروني. افتح الرسالة ثم سجّل الدخول بعد التوثيق.');$('resendSignupVerification').classList.remove('hidden');}
+   if(data.session){window.BizmindAuthLight?.setState('success');authProgress('تم إنشاء الحساب. جارٍ فتح مساحة المحادثات...');await enterApp(data.user)}
+   else{window.BizmindAuthLight?.setState('idle');authProgress('تم إنشاء الحساب. أرسلنا رابط توثيق إلى بريدك الإلكتروني. افتح الرسالة ثم سجّل الدخول بعد التوثيق.');$('resendSignupVerification').classList.remove('hidden');}
   }else{
    btn.disabled=true;btn.textContent='جارٍ تسجيل الدخول...';authProgress('جارٍ التحقق من بيانات الدخول مع الخادم...');
    const {data,error}=await withAuthTimeout(supabaseClient.auth.signInWithPassword({email,password}),'لم يستجب خادم تسجيل الدخول خلال 20 ثانية. تحقق من الاتصال وحاول مجدداً.');
    if(error)throw error;
    if(!data?.user)throw new Error('تم الاتصال بالخادم لكن لم يتم استلام بيانات المستخدم. أعد المحاولة.');
+   window.BizmindAuthLight?.setState('success');
    authProgress('تم قبول بيانات الدخول. جارٍ تجهيز حسابك وفتح التطبيق...');
    const entered=await enterApp(data.user);
    if(entered===false)throw new Error('تم التحقق من الحساب لكن تعذر إكمال تهيئة التطبيق. راجع رسالة الخطأ أعلاه.');
   }
  }catch(err){
+  window.BizmindAuthLight?.setState('error');
   console.error('Authentication flow failed:',err);
   authError(window.BizmindAuthErrors.toUserMessage(err,attemptMode==='signup'));
  }finally{
@@ -701,7 +706,7 @@ $('authForm').addEventListener('submit',async e=>{
   btn.disabled=false;btn.textContent=state.authMode==='signup'?'إنشاء الحساب':'تسجيل الدخول';
  }
 });
-$('logoutBtn').onclick=async()=>{const {error}=await supabaseClient.auth.signOut({scope:'local'});if(error){toast('تعذر تسجيل الخروج من هذا الجهاز');console.error(error);return}location.reload()};
+$('logoutBtn').onclick=async()=>{const {error}=await supabaseClient.auth.signOut({scope:'local'});if(error){toast('تعذر تسجيل الخروج من هذا الجهاز');console.error(error);return}window.BizmindAuthLight?.setState('idle');location.reload()};
 function renderAvatar(container,profile,className='directory-avatar'){
  container.replaceChildren();container.className=className;
  const fallback=document.createElement('span');fallback.textContent=initials(profile?.display_name||profile?.username);container.append(fallback);

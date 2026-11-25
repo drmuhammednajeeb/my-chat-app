@@ -1,0 +1,167 @@
+/* BizmindMakers Smart Login — isolated visual layer */
+#auth.auth-screen{
+  background:
+    radial-gradient(ellipse at 16% 45%,rgba(210,145,58,.15),transparent 36%),
+    radial-gradient(ellipse at 82% 12%,rgba(56,74,96,.15),transparent 38%),
+    linear-gradient(125deg,#10120f 0%,#0c1016 52%,#090c11 100%);
+  justify-content:center;
+  padding:clamp(18px,3vw,48px);
+}
+.auth-light-layout{
+  direction:ltr;
+  display:grid;
+  grid-template-columns:minmax(300px,1fr) minmax(350px,440px);
+  align-items:center;
+  gap:clamp(24px,5vw,76px);
+  width:min(100%,1080px);
+  min-height:min(760px,calc(100dvh - 64px));
+  margin:auto;
+}
+.auth-light-layout>.auth-card{
+  direction:rtl;
+  box-sizing:border-box;
+  flex:0 0 auto;
+  width:100%;
+  max-width:440px;
+  margin:auto;
+  padding:clamp(24px,3.2vw,38px);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:26px;
+  background:linear-gradient(145deg,rgba(23,29,38,.96),rgba(12,16,23,.97));
+  box-shadow:0 32px 85px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.05);
+  backdrop-filter:blur(18px);
+}
+.auth-light-stage{
+  direction:ltr;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  min-width:0;
+  min-height:620px;
+  overflow:hidden;
+  color:#f7f4ed;
+  isolation:isolate;
+}
+.auth-light-brand{
+  position:absolute;
+  top:2%;
+  left:2%;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  letter-spacing:.02em;
+}
+.auth-light-brand-mark{
+  width:43px;height:43px;display:grid;place-items:center;
+  border:1px solid rgba(242,181,68,.55);border-radius:14px;
+  color:#f2b544;font-size:24px;
+  box-shadow:0 0 25px rgba(242,181,68,.09);
+}
+.auth-light-brand strong{display:block;font-size:19px;font-weight:800;color:#f5b94e}
+.auth-light-brand small{display:block;margin-top:3px;font-size:9px;letter-spacing:.2em;color:#a8adb6}
+.auth-light-art{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:min(100%,490px);
+  height:510px;
+  margin-top:40px;
+}
+.auth-light-halo{
+  position:absolute;
+  width:78%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,rgba(246,179,82,.12),rgba(246,179,82,.035) 42%,transparent 72%);
+  filter:blur(12px);opacity:.55;transition:opacity .8s,transform .8s;
+}
+.auth-desk-lamp{
+  position:relative;z-index:1;
+  width:min(100%,390px);height:auto;overflow:visible;
+  filter:drop-shadow(18px 24px 24px rgba(0,0,0,.5));
+}
+.lamp-light-beam{transition:opacity .75s ease}
+.lamp-bulb{transition:fill .55s,filter .55s}
+.lamp-inner-rim{transition:stroke .55s,filter .55s}
+.lamp-bulb-glow{transition:opacity .55s}
+.lamp-floor-glow{transition:opacity .7s}
+.auth-light-particles{position:absolute;inset:4% 0;pointer-events:none}
+.auth-light-particles i{
+  position:absolute;width:3px;height:3px;border-radius:50%;
+  background:#d9aa5a;opacity:.42;box-shadow:0 0 9px #e8b75c;
+  animation:auth-light-float 6s ease-in-out infinite;
+}
+.auth-light-particles i:nth-child(1){left:10%;top:28%}
+.auth-light-particles i:nth-child(2){left:26%;top:14%;animation-delay:-2s}
+.auth-light-particles i:nth-child(3){left:80%;top:20%;animation-delay:-1s}
+.auth-light-particles i:nth-child(4){left:72%;top:52%;animation-delay:-3s}
+.auth-light-particles i:nth-child(5){left:18%;top:67%;animation-delay:-4s}
+.auth-light-particles i:nth-child(6){left:88%;top:73%;animation-delay:-2.5s}
+@keyframes auth-light-float{50%{transform:translateY(-11px);opacity:.82}}
+.auth-light-caption{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:32px;margin-top:-8px;color:#aeb4be;font-size:12px;
+  text-align:center;transition:color .3s;
+}
+.auth-light-status-dot{
+  width:8px;height:8px;border-radius:50%;background:#6b737e;
+  box-shadow:0 0 0 4px rgba(107,115,126,.1);transition:all .35s;
+}
+.auth-light-tagline{margin:12px 0 0;color:#727b87;font-size:10px;letter-spacing:.14em}
+.auth-light-stage.is-checking .auth-light-status-dot{
+  background:#efb34d;box-shadow:0 0 0 5px rgba(239,179,77,.13),0 0 15px rgba(239,179,77,.6);
+  animation:auth-light-pulse 1.05s ease-in-out infinite;
+}
+.auth-light-stage.is-checking .auth-light-halo{opacity:.8}
+@keyframes auth-light-pulse{50%{transform:scale(.78);opacity:.6}}
+.auth-light-stage.is-lit .auth-light-halo{
+  opacity:1;transform:scale(1.16);
+  background:radial-gradient(circle,rgba(255,190,94,.34),rgba(255,176,70,.13) 38%,transparent 72%);
+}
+.auth-light-stage.is-lit .lamp-light-beam{opacity:.23}
+.auth-light-stage.is-lit .lamp-bulb{
+  fill:#fff1bf;filter:drop-shadow(0 0 8px #ffc56c) drop-shadow(0 0 20px rgba(255,183,82,.9));
+}
+.auth-light-stage.is-lit .lamp-bulb-glow{opacity:.9}
+.auth-light-stage.is-lit .lamp-inner-rim{
+  stroke:#ffd27a;filter:drop-shadow(0 0 7px rgba(255,184,85,.95));
+}
+.auth-light-stage.is-lit .lamp-floor-glow{opacity:.5}
+.auth-light-stage.is-lit .auth-light-status-dot{
+  background:#f3b84e;box-shadow:0 0 0 5px rgba(243,184,78,.16),0 0 18px rgba(255,190,94,.9);
+}
+.auth-light-stage.is-lit .auth-light-caption{color:#f4c46e}
+.auth-light-stage.has-error .auth-light-status-dot{
+  background:#e77f70;box-shadow:0 0 0 4px rgba(231,127,112,.12);
+}
+.auth-light-stage.has-error .auth-light-caption{color:#e8a097}
+@media(max-width:900px){
+  #auth.auth-screen{justify-content:flex-start;padding:18px 14px max(22px,env(safe-area-inset-bottom))}
+  .auth-light-layout{
+    grid-template-columns:minmax(0,1fr);
+    gap:10px;
+    width:min(100%,500px);
+    min-height:0;
+    margin:auto;
+  }
+  .auth-light-stage{min-height:270px;padding-top:44px}
+  .auth-light-brand{top:0;left:2%}
+  .auth-light-art{width:300px;height:245px;margin:0;overflow:visible}
+  .auth-desk-lamp{width:245px;max-height:255px}
+  .auth-light-halo{width:85%}
+  .auth-light-caption{margin-top:-3px}
+  .auth-light-tagline{margin-top:4px}
+  .auth-light-layout>.auth-card{max-width:480px}
+}
+@media(max-width:480px){
+  .auth-light-stage{min-height:220px;padding-top:43px}
+  .auth-light-art{height:195px;width:245px}
+  .auth-desk-lamp{width:205px;max-height:210px}
+  .auth-light-brand strong{font-size:17px}
+  .auth-light-layout>.auth-card{padding:22px 19px;border-radius:21px}
+}
+@media(prefers-reduced-motion:reduce){
+  .auth-light-particles i,.auth-light-stage.is-checking .auth-light-status-dot{animation:none!important}
+  .auth-light-halo,.lamp-light-beam,.lamp-bulb,.lamp-inner-rim,.lamp-bulb-glow,.lamp-floor-glow{transition:none!important}
+}
