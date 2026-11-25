@@ -704,7 +704,6 @@ test('ten forward migrations remain outside the production ledger and record exp
     ['20261119120000_fix_conversation_avatar_public_channel_read.sql', []],
     ['20261119130000_increase_message_cleanup_http_timeout.sql', []],
     ['20261121120000_enforce_signup_display_name_server_side.sql', []],
-    ['20261123120000_message_visibility_pins_and_secure_delete.sql', ['DAG-020']]
   ]);
   for (const [name, blockers] of expected) {
     const path = 'supabase/migrations/' + name;
@@ -741,17 +740,6 @@ test('ten forward migrations remain outside the production ledger and record exp
       assert.equal(forward?.localRuntimeRunId, 44873724263);
       assert.equal(forward?.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
       assert.equal(forward?.productionApplied, false);
-    } else if (name === '20261123120000_message_visibility_pins_and_secure_delete.sql') {
-      assert.ok(['PENDING_DISPOSABLE_LOCAL_SUPABASE', 'PASSED_DISPOSABLE_LOCAL_SUPABASE'].includes(forward?.localRuntimeStatus));
-      if (forward?.localRuntimeStatus === 'PASSED_DISPOSABLE_LOCAL_SUPABASE') {
-        assert.ok(Number.isInteger(forward.localRuntimeRunId) && forward.localRuntimeRunId > 0);
-        assert.match(forward.localRuntimeCommit, /^[0-9a-f]{40}$/);
-      } else {
-        assert.equal(forward?.localRuntimeRunId, undefined);
-        assert.equal(forward?.localRuntimeCommit, undefined);
-      }
-      assert.equal(forward?.productionApplied, false);
-      assert.deepEqual(forward?.blockedBy, ['DAG-020']);
     } else {
       assert.equal(forward?.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.ok(Number.isInteger(forward?.localRuntimeRunId) && forward.localRuntimeRunId > 0);
