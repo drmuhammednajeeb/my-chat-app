@@ -14,7 +14,7 @@
       "execution": "NEVER_EXECUTE"
     },
     "duplicateActiveCopies": 0,
-    "forwardReconciliationMigrations": 11
+    "forwardReconciliationMigrations": 10
   },
   "platformNodes": [
     {
@@ -1587,7 +1587,7 @@
     {
       "id": "chat.message-visibility-pins-and-delete",
       "source": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql"
+        "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql"
       ],
       "provides": [
         "public.user_hidden_messages",
@@ -1603,22 +1603,40 @@
         "test-fixture.admin-assertion",
         "test-fixture.direct-chat-profiles"
       ],
-      "status": "FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING",
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
       "testSource": [
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "blockedBy": [
-        "DAG-020"
-      ],
+      "blockedBy": [],
       "note": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion.",
       "runtimeEvidence": {
-        "workflowRunId": 45078684896,
-        "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+        "workflowRunId": 45717477940,
+        "commit": "4804a5178ffe7101d32e9af4bb2dd7c78a24a517",
         "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-        "completedAt": "2026-11-22T22:39:11Z",
+        "completedAt": "2026-11-25T22:59:05Z",
         "sqlFilesExecuted": 94
       }
+    },
+    {
+      "id": "chat.message-visibility-foreign-key-indexes",
+      "source": [
+        "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql"
+      ],
+      "provides": [
+        "user_hidden_messages.conversation_id index",
+        "user_hidden_messages.message_id index",
+        "user_conversation_pins.conversation_id index"
+      ],
+      "requires": [
+        "chat.message-visibility-pins-and-delete"
+      ],
+      "status": "PRODUCTION_APPLIED_RUNTIME_PENDING",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+      ],
+      "blockedBy": [],
+      "note": "Additive FK-leading indexes required for efficient cascade checks and to close the unindexed-foreign-key advisor findings discovered immediately after production activation."
     }
   ],
   "explicitEdges": [
@@ -2797,14 +2815,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "PRODUCTION_APPROVAL_PENDING",
-      "issue": "Disposable-local PostgreSQL replay, secure-delete catalog assertions, and authenticated runtime probes passed (run 45078684896, 94 SQL sources). Active author deletion succeeds; suspended, removed-member, non-author, direct-update bypass, and expired-window attempts are rejected. The forward migration remains unapplied to production pending separate explicit owner approval.",
+      "severity": "RESOLVED_PRODUCTION_APPLIED",
+      "issue": "Owner approval was granted and migration 20261125230604 was applied to production. The secure-delete and RLS runtime probes passed; only repository source synchronization and the additional index migration replay remain.",
       "evidence": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED"
     }
   ],
   "duplicateProvenance": [],
@@ -2883,9 +2901,9 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 45078684896,
-    "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
-    "completedAt": "2026-11-22T22:39:11Z",
+    "workflowRunId": 45717477940,
+    "commit": "4804a5178ffe7101d32e9af4bb2dd7c78a24a517",
+    "completedAt": "2026-11-25T22:59:05Z",
     "localOnly": true,
     "sqlFilesExecuted": 94,
     "checks": [
@@ -2956,5 +2974,6 @@
     "tests": 107,
     "passed": 107,
     "failed": 0
-  }
+  },
+  "reviewState": "PR165_PRODUCTION_APPLIED_SOURCE_SYNC_AND_INDEX_RUNTIME_PENDING"
 }
