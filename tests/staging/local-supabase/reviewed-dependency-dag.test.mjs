@@ -368,11 +368,10 @@ test('least-privilege overlay is a final, locally validated, loopback-only SQL f
 });
 
 
-test('chat composer media allowlists are checked against the archived proposal, not represented as applied production SQL', async () => {
+test('chat media allowlists match the archived proposal while reaction runtime assets remain removed', async () => {
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   const migration = await readFile(path.join(root, 'database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
   const reactionSchema = await readFile(path.join(root, 'supabase/migrations/20261106125643_message_reactions_and_realtime.sql'), 'utf8');
-  const reactionModule = await readFile(path.join(root, 'modules/message-reactions.js'), 'utf8');
   for (const mime of [
     'video/mp4',
     'video/webm',
@@ -386,13 +385,17 @@ test('chat composer media allowlists are checked against the archived proposal, 
   }
   const archiveManifest = JSON.parse(await readFile(path.join(root, 'database/archive/manifest.json'), 'utf8'));
   assert.ok(archiveManifest.sqlFiles.some(file => file.path === 'database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql' && file.classification === 'unapplied-proposal'));
-  assert.ok(html.includes('modules/message-reactions.js'));
-  assert.ok(html.includes('modules/message-reactions.css'));
-  assert.match(reactionModule, /type: "like"/);
-  assert.match(reactionModule, /type: "heart"/);
+  assert.doesNotMatch(html, /messageReactions|message-reactions|message_reactions/);
+  await assert.rejects(
+    readFile(path.join(root, 'modules/message-reactions.js')),
+    error => error?.code === 'ENOENT'
+  );
+  await assert.rejects(
+    readFile(path.join(root, 'modules/message-reactions.css')),
+    error => error?.code === 'ENOENT'
+  );
   assert.ok(reactionSchema.includes("'like'"));
   assert.ok(reactionSchema.includes("'heart'"));
-  assert.doesNotMatch(reactionModule, /type: "(wow|pray|fire|celebrate)"/);
   for (const mime of [
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -660,11 +663,10 @@ test('least-privilege overlay is a final, locally validated, loopback-only SQL f
 });
 
 
-test('chat composer media allowlists are checked against the archived proposal, not represented as applied production SQL', async () => {
+test('chat media allowlists match the archived proposal while reaction runtime assets remain removed', async () => {
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   const migration = await readFile(path.join(root, 'database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql'), 'utf8');
   const reactionSchema = await readFile(path.join(root, 'supabase/migrations/20261106125643_message_reactions_and_realtime.sql'), 'utf8');
-  const reactionModule = await readFile(path.join(root, 'modules/message-reactions.js'), 'utf8');
   for (const mime of [
     'video/mp4',
     'video/webm',
@@ -678,13 +680,17 @@ test('chat composer media allowlists are checked against the archived proposal, 
   }
   const archiveManifest = JSON.parse(await readFile(path.join(root, 'database/archive/manifest.json'), 'utf8'));
   assert.ok(archiveManifest.sqlFiles.some(file => file.path === 'database/archive/unapplied/20261110100000_chat_media_and_reaction_capabilities.sql' && file.classification === 'unapplied-proposal'));
-  assert.ok(html.includes('modules/message-reactions.js'));
-  assert.ok(html.includes('modules/message-reactions.css'));
-  assert.match(reactionModule, /type: "like"/);
-  assert.match(reactionModule, /type: "heart"/);
+  assert.doesNotMatch(html, /messageReactions|message-reactions|message_reactions/);
+  await assert.rejects(
+    readFile(path.join(root, 'modules/message-reactions.js')),
+    error => error?.code === 'ENOENT'
+  );
+  await assert.rejects(
+    readFile(path.join(root, 'modules/message-reactions.css')),
+    error => error?.code === 'ENOENT'
+  );
   assert.ok(reactionSchema.includes("'like'"));
   assert.ok(reactionSchema.includes("'heart'"));
-  assert.doesNotMatch(reactionModule, /type: "(wow|pray|fire|celebrate)"/);
   for (const mime of [
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
