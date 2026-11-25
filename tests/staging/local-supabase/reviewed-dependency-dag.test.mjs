@@ -178,7 +178,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
     assert.ok(fixture.endsWith('.sql'));
     await access(path.join(root, fixture));
   }
-  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 23);
+  assert.equal(manifest.sourceCoverage.testOnlySqlFixtures, 24);
   for (const fixture of [
     'tests/staging/local-supabase/fixtures/direct-conversation-rpc-eligibility-guard.sql',
     'tests/staging/local-supabase/fixtures/direct-conversation-eligibility-runtime.test.sql',
@@ -497,7 +497,7 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 23);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 24);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 96);
   assert.equal(manifest.sourceCoverage.candidateSqlFiles, 96);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
@@ -772,7 +772,7 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 23);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 24);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 96);
   assert.equal(manifest.sourceCoverage.candidateSqlFiles, 96);
 });
