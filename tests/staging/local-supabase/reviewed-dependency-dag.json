@@ -6,7 +6,7 @@
   "sourceSets": {
     "canonicalMigrations": {
       "path": "supabase/migrations",
-      "count": 64
+      "count": 65
     },
     "nonExecutableArchive": {
       "path": "database/archive",
@@ -14,7 +14,7 @@
       "execution": "NEVER_EXECUTE"
     },
     "duplicateActiveCopies": 0,
-    "forwardReconciliationMigrations": 11,
+    "forwardReconciliationMigrations": 10,
     "canonicalCliMigrationFiles": 75,
     "testOnlyFixtureCount": 24,
     "testOnlyFixturePaths": [
@@ -1643,7 +1643,7 @@
     {
       "id": "chat.latest-visible-conversation-previews",
       "source": [
-        "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
+        "supabase/migrations/20261125232617_latest_visible_conversation_previews.sql"
       ],
       "provides": [
         "public.get_latest_visible_conversation_messages(uuid[])"
@@ -1651,13 +1651,20 @@
       "requires": [
         "chat.message-visibility-foreign-key-indexes"
       ],
-      "status": "FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION",
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
       "testSource": [
         "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
       "blockedBy": [],
-      "note": "RLS-invoker RPC returns the latest non-deleted message per conversation while excluding rows hidden by auth.uid(); used by the global conversation-list preview path."
+      "note": "RLS-invoker RPC returns the latest non-deleted message per conversation while excluding rows hidden by auth.uid(); used by the global conversation-list preview path.",
+      "runtimeEvidence": {
+        "workflowRunId": 45720775547,
+        "commit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
+        "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "completedAt": "2026-11-25T23:24:08Z",
+        "sqlFilesExecuted": 97
+      }
     }
   ],
   "explicitEdges": [
@@ -2930,11 +2937,11 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 45717477940,
-    "commit": "4804a5178ffe7101d32e9af4bb2dd7c78a24a517",
-    "completedAt": "2026-11-25T22:59:05Z",
+    "workflowRunId": 45720775547,
+    "commit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
+    "completedAt": "2026-11-25T23:24:08Z",
     "localOnly": true,
-    "sqlFilesExecuted": 94,
+    "sqlFilesExecuted": 97,
     "checks": [
       "All 94 reviewed SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
       "The message-visibility and conversation-pins migration executed; its catalog assertions and authenticated runtime fixture passed.",
@@ -2942,7 +2949,8 @@
       "Direct chat_messages UPDATE bypass and expired 15-minute deletion attempts were rejected.",
       "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
       "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
-    ]
+    ],
+    "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
   },
   "auditEvidence": {
     "status": "PASSED",
@@ -3004,5 +3012,5 @@
     "passed": 107,
     "failed": 0
   },
-  "reviewState": "PR165_PRODUCTION_APPLIED_PREVIEW_PRIVACY_FIX_RUNTIME_PENDING"
+  "reviewState": "PR165_PRODUCTION_ACTIVATION_AND_PREVIEW_PRIVACY_APPLIED"
 }
