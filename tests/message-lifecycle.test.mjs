@@ -875,3 +875,39 @@ test('approved chat design keeps message copy/export and forwarding absent while
   assert.doesNotMatch(source, /exportSelectedMessages|exportActiveConversation|exportConversationBtn/);
   assert.doesNotMatch(source, /نسخ الرسالة|إعادة توجيه الرسالة|forwardMessage/i);
 });
+
+
+test('per-user hidden-message state fails closed across rendering, polling, search and realtime', () => {
+  assert.match(source, /hiddenMessageIdsReady:false/);
+  const loadGate = source.indexOf('const messageLoadPromise=loadHiddenMessageIds(c.id).then(loaded=>');
+  const failedGuard = source.indexOf('if(!loaded)', loadGate);
+  const realtimeStart = source.indexOf('subscribeConversation();', loadGate);
+  assert.ok(loadGate >= 0 && failedGuard > loadGate && realtimeStart > failedGuard,
+    'conversation realtime must start only after hidden-message state loads successfully');
+  assert.match(source, /async function renderMessage\([\s\S]{0,500}if\(state\.hiddenMessageIdsReady===false\)return false;/);
+  assert.match(source, /function startMessagePolling\(conversationId\)\{\s*if\(state\.hiddenMessageIdsReady===false\)return;/);
+  assert.match(source, /async function pollMessagesFallback\([\s\S]{0,220}if\(state\.hiddenMessageIdsReady===false\|\|state\.messagePollBusy/);
+  const searchStart = source.indexOf('async function searchActiveConversation');
+  const searchEnd = source.indexOf('async function jumpToMessage', searchStart);
+  const search = source.slice(searchStart, searchEnd);
+  assert.match(search, /if\(state\.hiddenMessageIdsReady===false\)/);
+  assert.match(search, /visibleData=\(data\|\|\[\]\)\.filter\(message=>!state\.hiddenMessageIds\?\.has\(message\.id\)\)/);
+  const hiddenStart = source.indexOf('async function loadHiddenMessageIds');
+  const hiddenEnd = source.indexOf('async function hideMessageForMe', hiddenStart);
+  const hiddenLoader = source.slice(hiddenStart, hiddenEnd);
+  assert.match(hiddenLoader, /state\.hiddenMessageIdsReady=true/);
+  assert.match(hiddenLoader, /const requestId=state\.hiddenMessageRequestId=/);
+  assert.match(hiddenLoader, /const userId=state\.user\?\.id/);
+  assert.match(hiddenLoader, /requestId!==state\.hiddenMessageRequestId/);
+  assert.match(hiddenLoader, /state\.active\?\.id!==conversationId/);
+  assert.match(hiddenLoader, /state\.user\?\.id!==userId/);
+  assert.match(hiddenLoader, /if\(error\)[\s\S]*return false/);
+  assert.match(source, /if\(openToken!==state\.conversationOpenVersion\|\|state\.active\?\.id!==c\.id\)return false;\s*if\(!loaded\)/);
+});
+
+test('conversation previews use the RLS-safe latest-visible-message RPC', async () => {
+  const load = source.slice(source.indexOf('async function loadConversations'), source.indexOf('function findDirectConversation'));
+  assert.match(load, /rpc\('get_latest_visible_conversation_messages'/);
+  assert.doesNotMatch(load, /from\('chat_messages'\)\.select\('id,conversation_id,content,created_at,sender_id'\)/);
+});
+

@@ -6,7 +6,7 @@
   "sourceSets": {
     "canonicalMigrations": {
       "path": "supabase/migrations",
-      "count": 62
+      "count": 65
     },
     "nonExecutableArchive": {
       "path": "database/archive",
@@ -14,7 +14,12 @@
       "execution": "NEVER_EXECUTE"
     },
     "duplicateActiveCopies": 0,
-    "forwardReconciliationMigrations": 11
+    "forwardReconciliationMigrations": 10,
+    "canonicalCliMigrationFiles": 75,
+    "testOnlyFixtureCount": 24,
+    "testOnlyFixturePaths": [
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
+    ]
   },
   "platformNodes": [
     {
@@ -1587,7 +1592,7 @@
     {
       "id": "chat.message-visibility-pins-and-delete",
       "source": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql"
+        "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql"
       ],
       "provides": [
         "public.user_hidden_messages",
@@ -1603,21 +1608,62 @@
         "test-fixture.admin-assertion",
         "test-fixture.direct-chat-profiles"
       ],
-      "status": "FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING",
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
       "testSource": [
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
       ],
-      "blockedBy": [
-        "DAG-020"
-      ],
+      "blockedBy": [],
       "note": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion.",
       "runtimeEvidence": {
-        "workflowRunId": 45078684896,
-        "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
+        "workflowRunId": 45717477940,
+        "commit": "4804a5178ffe7101d32e9af4bb2dd7c78a24a517",
         "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-        "completedAt": "2026-11-22T22:39:11Z",
+        "completedAt": "2026-11-25T22:59:05Z",
         "sqlFilesExecuted": 94
+      }
+    },
+    {
+      "id": "chat.message-visibility-foreign-key-indexes",
+      "source": [
+        "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql"
+      ],
+      "provides": [
+        "user_hidden_messages.conversation_id index",
+        "user_hidden_messages.message_id index",
+        "user_conversation_pins.conversation_id index"
+      ],
+      "requires": [
+        "chat.message-visibility-pins-and-delete"
+      ],
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
+      "testSource": [],
+      "blockedBy": [],
+      "note": "Adds leading-column indexes for all three per-user visibility and conversation-pin foreign keys. Applied to production as version 20261125230631; all three indexes passed catalog assertions in the 97-source disposable Supabase replay, and the production performance advisor no longer reports these unindexed foreign keys."
+    },
+    {
+      "id": "chat.latest-visible-conversation-previews",
+      "source": [
+        "supabase/migrations/20261125232617_latest_visible_conversation_previews.sql"
+      ],
+      "provides": [
+        "public.get_latest_visible_conversation_messages(uuid[])"
+      ],
+      "requires": [
+        "chat.message-visibility-foreign-key-indexes"
+      ],
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+      ],
+      "blockedBy": [],
+      "note": "RLS-invoker RPC returns the latest non-deleted message per conversation while excluding rows hidden by auth.uid(); used by the global conversation-list preview path.",
+      "runtimeEvidence": {
+        "workflowRunId": 45720775547,
+        "commit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
+        "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "completedAt": "2026-11-25T23:24:08Z",
+        "sqlFilesExecuted": 97
       }
     }
   ],
@@ -2577,6 +2623,14 @@
     [
       "test-fixture.admin-assertion",
       "chat.message-visibility-pins-and-delete"
+    ],
+    [
+      "chat.message-visibility-pins-and-delete",
+      "chat.message-visibility-foreign-key-indexes"
+    ],
+    [
+      "chat.message-visibility-foreign-key-indexes",
+      "chat.latest-visible-conversation-previews"
     ]
   ],
   "blockers": [
@@ -2797,14 +2851,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "PRODUCTION_APPROVAL_PENDING",
-      "issue": "Disposable-local PostgreSQL replay, secure-delete catalog assertions, and authenticated runtime probes passed (run 45078684896, 94 SQL sources). Active author deletion succeeds; suspended, removed-member, non-author, direct-update bypass, and expired-window attempts are rejected. The forward migration remains unapplied to production pending separate explicit owner approval.",
+      "severity": "RESOLVED_PRODUCTION_APPLIED",
+      "issue": "Owner approval was granted and the per-user visibility, conversation-pin, secure-delete, foreign-key index, and RLS-invoker conversation-preview migrations were applied to production. The 97-source disposable Supabase replay passed, including catalog assertions and two-user preview privacy probes. Two unrelated historical applied migrations remain tracked as source-recovery gaps.",
       "evidence": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED"
     }
   ],
   "duplicateProvenance": [],
@@ -2883,19 +2937,18 @@
   "runtimeEvidence": {
     "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "workflow": "Disposable local Supabase runtime verification",
-    "workflowRunId": 45078684896,
-    "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
-    "completedAt": "2026-11-22T22:39:11Z",
+    "workflowRunId": 45722387043,
+    "commit": "73a7d78aae7bf2b8d81956ac81f9b4df213bba38",
+    "completedAt": "2026-11-25T23:36:11Z",
     "localOnly": true,
-    "sqlFilesExecuted": 94,
+    "sqlFilesExecuted": 97,
     "checks": [
-      "All 94 reviewed SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
-      "The message-visibility and conversation-pins migration executed; its catalog assertions and authenticated runtime fixture passed.",
-      "Authenticated runtime probes confirmed active-author deletion succeeds, while suspended members, removed conversation members, and non-authors are denied without changing the target message.",
-      "Direct chat_messages UPDATE bypass and expired 15-minute deletion attempts were rejected.",
-      "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
-      "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
-    ]
+      "All 97 selected SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
+      "Per-user hidden-message and conversation-pin RLS, secure 15-minute author-only deletion, Storage access policy, and all three foreign-key-leading indexes passed catalog assertions.",
+      "The SECURITY INVOKER latest-visible-conversation RPC passed ACL and two-user runtime probes: a message hidden by one user is omitted from that user's preview and remains visible to another active member.",
+      "The disposable Supabase stack was stopped and destroyed; this validation did not access or modify production."
+    ],
+    "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE"
   },
   "auditEvidence": {
     "status": "PASSED",
@@ -2956,5 +3009,6 @@
     "tests": 107,
     "passed": 107,
     "failed": 0
-  }
+  },
+  "reviewState": "PR165_PRODUCTION_ACTIVATION_AND_PREVIEW_PRIVACY_APPLIED"
 }

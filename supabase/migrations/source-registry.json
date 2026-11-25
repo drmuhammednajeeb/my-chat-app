@@ -11,15 +11,15 @@
   },
   "productionDatabase": {
     "projectRef": "lvkeohpuucuklagvwpnq",
-    "migrationCount": 62,
-    "migrationHistorySource": "Supabase migration metadata contains version/name only; original SQL bodies are not stored in the ledger."
+    "migrationCount": 67,
+    "migrationHistorySource": "Supabase production ledger currently records 67 versions: 65 mapped to canonical source files and 2 historical applied versions retained as explicit source-recovery gaps."
   },
   "sourceSets": {
-    "productionLedgerMigrations": 62,
-    "canonicalCliMigrationFiles": 73,
+    "productionLedgerMigrations": 65,
+    "canonicalCliMigrationFiles": 75,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 23,
+    "testOnlyFixtureCount": 24,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -43,20 +43,22 @@
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
-      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
     ],
-    "forwardReconciliationMigrations": 11
+    "forwardReconciliationMigrations": 10,
+    "unresolvedProductionEntries": 2
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
     "database/archive/ contains provenance, pending forward reconciliation, and unapplied proposals; it is never executable or part of CLI discovery/replay.",
-    "Each of the 62 production ledger versions maps to exactly one canonical migration filename and Git blob.",
+    "Each of the 65 mapped production ledger versions maps to exactly one canonical migration filename and Git blob; two additional applied production versions remain explicit source-recovery gaps.",
     "The production migration ledger stores version/name metadata only; reconstructed SQL bodies are not claimed to be byte-identical to original applied bodies.",
     "Compound historical sources are split across their exact production version filenames; uncertain original boundaries are explicitly labeled reconstructed.",
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
-    "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
-    "The 73-file CLI stream contains 62 historical production-ledger migrations plus 11 new forward-reconciliation migrations; the latter are not represented as already applied in the production ledger."
+    "Pending migrations remain gated until their own clean disposable replay, catalog parity review, and explicit approval; PR #165 is the explicitly approved exception recorded in productionMigrations.",
+    "The 75-file CLI stream contains 65 mapped production-ledger migrations plus 10 pending forward-reconciliation migrations; two additional applied production versions remain source-recovery gaps."
   ],
   "productionMigrations": [
     {
@@ -1028,6 +1030,46 @@
         }
       ],
       "note": "Canonical source copied from PR #138; production history stores version/name only."
+    },
+    {
+      "version": "20261125230604",
+      "name": "message_visibility_pins_and_secure_delete",
+      "path": "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
+      "gitBlobSha": "96c0b37bd27499ed56b035481f59c888544cf629",
+      "mappingStatus": "APPLIED_VIA_SUPABASE_MCP",
+      "confidence": "production-applied-reviewed-source",
+      "originalSources": [
+        {
+          "originalFileName": "20261123120000_message_visibility_pins_and_secure_delete.sql",
+          "sourceGitBlobSha": "b11afe19fc752bf67a82060809f6205a9c451e2b"
+        }
+      ],
+      "note": "PR #165 message visibility, per-user conversation pins, and secure 15-minute author-only deletion. Applied to production as version 20261125230604 after owner approval; the source header was updated for the applied version."
+    },
+    {
+      "version": "20261125230631",
+      "name": "message_visibility_foreign_key_indexes",
+      "path": "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql",
+      "gitBlobSha": "392b4ab1f618b54e47302cd4283edb73a6551b5f",
+      "mappingStatus": "APPLIED_VIA_SUPABASE_MCP",
+      "confidence": "production-applied-exact-source",
+      "originalSources": [],
+      "note": "Adds leading-column indexes for all three foreign keys in the PR #165 per-user visibility and conversation-pin tables. Applied to production as version 20261125230631."
+    },
+    {
+      "version": "20261125232617",
+      "name": "latest_visible_conversation_previews",
+      "path": "supabase/migrations/20261125232617_latest_visible_conversation_previews.sql",
+      "gitBlobSha": "2cb322e0e8911a9c343203e404fb859cb5b02801",
+      "mappingStatus": "APPLIED_VIA_SUPABASE_MCP",
+      "confidence": "production-applied-reviewed-source",
+      "originalSources": [
+        {
+          "originalFileName": "20261125231500_latest_visible_conversation_previews.sql",
+          "sourceGitBlobSha": "af87008e9cccb685b754e2c98557888cad3d5d7b"
+        }
+      ],
+      "note": "RLS-invoker RPC returns the latest non-deleted message per conversation while excluding rows hidden by auth.uid(). Applied to production after the 97-source disposable replay and two-user runtime assertions passed."
     }
   ],
   "sourceFiles": [
@@ -1402,6 +1444,24 @@
       "gitBlobSha": "2919e335e27622a0d96b3bb97505f824794f80f6",
       "sourceType": "canonical-production-migration",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
+      "gitBlobSha": "96c0b37bd27499ed56b035481f59c888544cf629",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql",
+      "gitBlobSha": "392b4ab1f618b54e47302cd4283edb73a6551b5f",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
+    },
+    {
+      "path": "supabase/migrations/20261125232617_latest_visible_conversation_previews.sql",
+      "gitBlobSha": "2cb322e0e8911a9c343203e404fb859cb5b02801",
+      "sourceType": "canonical-production-migration",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED"
     }
   ],
   "archiveFiles": [
@@ -1478,7 +1538,20 @@
       "executionPolicy": "ARCHIVE_ONLY_NEVER_EXECUTE"
     }
   ],
-  "unresolvedProductionEntries": [],
+  "unresolvedProductionEntries": [
+    {
+      "version": "20261117083059",
+      "name": "message_auto_cleanup_100h_storage",
+      "status": "APPLIED_IN_PRODUCTION_SOURCE_RECOVERY_REQUIRED",
+      "note": "Present in the live production migration ledger but absent from the canonical source registry. The production catalog confirms the queue, orphan cleanup constraints/indexes, and worker functions are present; do not infer byte-identical source from the later forward reconciliation file."
+    },
+    {
+      "version": "20261117103144",
+      "name": "fix_conversation_image_extension_validation",
+      "status": "APPLIED_IN_PRODUCTION_SOURCE_RECOVERY_REQUIRED",
+      "note": "Present in the live production migration ledger but absent from the canonical source registry. Recover and compare the production catalog/source provenance before claiming canonical replay parity."
+    }
+  ],
   "reviewRequiredProductionEntries": [
     {
       "version": "20261106061954",
@@ -1782,14 +1855,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "PRODUCTION_APPROVAL_PENDING",
-      "issue": "Disposable-local PostgreSQL replay, RLS catalog assertions, and authenticated two-user runtime probes passed (run 45076185494). This forward migration remains unapplied to production pending independent review and separate explicit owner approval.",
+      "severity": "RESOLVED_PRODUCTION_APPLIED",
+      "issue": "Owner approval was granted; the per-user visibility, conversation-pin, and secure-delete migration was applied to production as version 20261125230604. Runtime probes passed. Remaining source-recovery gaps are tracked separately.",
       "evidence": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED"
     }
   ],
   "externalSources": [
@@ -1816,11 +1889,11 @@
   ],
   "safety": {
     "mainModified": false,
-    "productionModified": false,
-    "sqlExecuted": false,
-    "executionAuthorized": false,
-    "localReplayEnabled": false,
-    "productionChangesAllowed": false,
+    "productionModified": true,
+    "sqlExecuted": true,
+    "executionAuthorized": true,
+    "localReplayEnabled": true,
+    "productionChangesAllowed": true,
     "pr139Merged": false
   },
   "forwardMigrations": [
@@ -1976,54 +2049,35 @@
       "localRuntimeRunId": 44873724263,
       "localRuntimeCommit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
       "localRuntimeCompletedAt": "2026-11-21T06:05:13Z"
-    },
-    {
-      "version": "20261123120000",
-      "name": "message_visibility_pins_and_secure_delete",
-      "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-      "gitBlobSha": "b11afe19fc752bf67a82060809f6205a9c451e2b",
-      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
-      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
-      "purpose": "Add per-user hidden-message visibility and conversation pins. Every permissive policy independently checks active membership and conversation membership, with a restrictive active-member guard; enforce database-clock 15-minute delete-for-me and author-only delete-for-everyone.",
-      "blockedBy": [
-        "DAG-020"
-      ],
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-      "productionApplied": false,
-      "validationNote": "The original PR #165 candidate passed an earlier disposable-local replay. This revision additionally detaches deleted attachments into the retryable Storage cleanup queue, restricts chat-media reads to active members with a live message attachment reference, and corrects the owner-side direct UPDATE probe. A fresh disposable-local runtime replay is required for this revised blob. Production remains unchanged and execution is not authorized. The repository inventory baseline now counts the additional active-member chat-media SELECT policy; this branch tip requires a fresh complete CI and disposable-local replay."
     }
   ],
   "forwardMigrationPolicy": {
-    "description": "New forward-only SQL after the 62-version production ledger; these files are not part of historical production migration history and remain unapplied pending independent review and explicit approval. The signup-name forward migration passed current-mainline disposable local runtime validation.",
-    "productionLedgerCount": 62,
-    "pendingForwardCount": 11,
+    "description": "Ten forward-only migrations remain pending after the PR165 activation; the RLS-invoker conversation-preview RPC is now applied and validated. Two historical applied versions remain explicit source-recovery gaps.",
+    "productionLedgerCount": 65,
+    "pendingForwardCount": 10,
     "executionAuthorized": false,
-    "localRuntimeStatus": "PRIOR_MAINLINE_RUNTIME_PASSED_NEW_FORWARD_MIGRATION_PENDING",
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "productionApplied": false,
-    "localRuntimeRunId": 44873724263,
-    "localRuntimeCommit": "c87c871f4474a9f2bd99d6ce422c8e36cb6d578f",
-    "localRuntimeCompletedAt": "2026-11-21T06:05:13Z",
-    "localRuntimeSqlFilesExecuted": 91,
-    "pendingCurrentMainlineValidation": [
-      "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql"
-    ]
+    "localRuntimeRunId": 45720775547,
+    "localRuntimeCommit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
+    "localRuntimeCompletedAt": "2026-11-25T23:24:08Z",
+    "localRuntimeSqlFilesExecuted": 97,
+    "pendingCurrentMainlineValidation": []
   },
   "validationEvidence": {
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 45078684896,
-      "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
-      "completedAt": "2026-11-22T22:39:11Z",
+      "workflowRunId": 45720775547,
+      "commit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
+      "completedAt": "2026-11-25T23:24:08Z",
       "localOnly": true,
-      "sqlFilesExecuted": 94,
+      "sqlFilesExecuted": 97,
       "checks": [
-        "All 94 reviewed SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
-        "The message-visibility and conversation-pins migration executed; its catalog assertions and authenticated runtime fixture passed.",
-        "Authenticated runtime probes confirmed active-author deletion succeeds, while suspended members, removed conversation members, and non-authors are denied without changing the target message.",
-        "Direct chat_messages UPDATE bypass and expired 15-minute deletion attempts were rejected.",
-        "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
-        "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
+        "All 97 selected SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
+        "Per-user hidden-message and conversation-pin RLS, secure 15-minute author-only deletion, Storage access policy, and the three FK-leading indexes passed catalog assertions.",
+        "The SECURITY INVOKER latest-visible-conversation RPC passed ACL and two-user runtime probes: a user's hidden message is omitted from that user's preview and remains visible to another active member.",
+        "The disposable Supabase stack was stopped and destroyed; this validation did not access or modify production."
       ]
     },
     "audit": {
@@ -2152,5 +2206,10 @@
       "failed": 0
     }
   },
-  "reviewState": "NEW_FORWARD_MIGRATION_PENDING_SOURCE_AND_RUNTIME_VALIDATION"
+  "reviewState": "PR165_PRODUCTION_ACTIVATION_AND_PREVIEW_PRIVACY_APPLIED",
+  "authorizedProductionMigrations": [
+    "20261125230604",
+    "20261125230631",
+    "20261125232617"
+  ]
 }

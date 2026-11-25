@@ -1,5 +1,5 @@
 -- Per-user message hiding, conversation pins, and server-enforced 15-minute global deletion.
--- Forward-only candidate. This migration is not authorized for production execution.
+-- Applied to production as migration 20261125230604 after explicit owner approval.
 
 create table if not exists public.user_hidden_messages (
   user_id uuid not null references auth.users(id) on delete cascade,

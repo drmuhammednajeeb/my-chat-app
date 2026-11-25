@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.23.3"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
+<meta name="theme-color" content="#101a2a"><meta name="app-version" content="2026.11.26.2"><meta name="description" content="BizmindMakers Chat Pro — منصة محادثات حديثة وآمنة">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png"><link rel="icon" type="image/png" sizes="1024x1024" href="./icon-1024.png"><link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>BizmindMakers Chat Pro</title>
@@ -307,7 +307,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),hiddenMessageIds:new Set(),pinnedConversationIds:new Set(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),hiddenMessageIds:new Set(),hiddenMessageIdsReady:false,hiddenMessageRequestId:0,pinnedConversationIds:new Set(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v2';
@@ -1044,7 +1044,7 @@ async function loadConversations(){
  const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url,bio)').in('conversation_id',ids);
  if(me){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  const [latestResult,pinsResult,settingsResult]=await Promise.all([
-  supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40)),
+  supabaseClient.rpc('get_latest_visible_conversation_messages',{p_conversation_ids:ids}),
   supabaseClient.from('user_conversation_pins').select('conversation_id').eq('user_id',state.user.id).in('conversation_id',ids),
   supabaseClient.from('user_conversation_settings').select('conversation_id,is_muted,notification_tone,is_favorite').eq('user_id',state.user.id).in('conversation_id',ids)
  ]);
@@ -1194,7 +1194,7 @@ async function openConversation(c){
  const conversationOpenStarted=performance.now();
  if(voiceRecorder.isActive()){voiceRecorder.cancel();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.hiddenMessageIds=new Set();state.loadedHistoryIds=new Set();messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
+ state.active=c;state.hiddenMessageIds=new Set();state.hiddenMessageIdsReady=false;state.loadedHistoryIds=new Set();messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
  applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
  state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.messagePollOffset=0;state.messagePollOffsetConversationId=c.id;state.newMessageCount=0;updateNewMessagesIndicator();
  $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
@@ -1204,12 +1204,16 @@ async function openConversation(c){
  diagLog('conversation-open',{id:c.id,openToken});renderConversations();$('chatTitle').textContent=convName(c);renderChatAvatar(c);
  $('messages').scrollTop=$('messages').scrollHeight;
  if(innerWidth<=760)$('sidebar').classList.add('closed');
- // Start the live channel and latest-message fetch before optional settings complete.
- subscribeConversation();subscribeProfileUpdates(c);
- const messageLoadPromise=loadHiddenMessageIds(c.id).then(()=>{
+ // Load per-user visibility before opening the realtime channel or rendering messages.
+ subscribeProfileUpdates(c);
+ let hiddenStateReady=false;
+ const messageLoadPromise=loadHiddenMessageIds(c.id).then(loaded=>{
   if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return false;
+  if(!loaded){toast('تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.');return false;}
+  hiddenStateReady=true;
+  subscribeConversation();
   return loadMessages();
- }).finally(()=>{if(openToken===state.conversationOpenVersion&&state.active?.id===c.id)startMessagePolling(c.id)});
+ }).finally(()=>{if(hiddenStateReady&&openToken===state.conversationOpenVersion&&state.active?.id===c.id)startMessagePolling(c.id)});
  const starredLoadPromise=loadStarredMessageIds(c.id);
  const settingsLoadPromise=(async()=>{
   if(c.type==='group')await loadGroupSettings(c.id);else state.groupSettings=null;
@@ -1319,17 +1323,21 @@ async function searchActiveConversation(term){
  if(!query){const p=document.createElement('p');p.textContent='اكتب كلمة للبحث داخل المحادثة الحالية.';panel.append(p);return}
  if(!conversationId){const p=document.createElement('p');p.textContent='افتح محادثة أولاً.';panel.append(p);return}
  if(query.length<2){const p=document.createElement('p');p.textContent='اكتب حرفين على الأقل.';panel.append(p);return}
+ if(state.hiddenMessageIdsReady===false){const p=document.createElement('p');p.textContent='تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.';panel.append(p);return}
  const loading=document.createElement('p');loading.textContent='جارٍ البحث…';panel.append(loading);
  try{
   const pattern='%'+query+'%';
   let searchQuery=supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,created_at,deleted_at').eq('conversation_id',conversationId).ilike('content',pattern);if(state.activeChatPreference?.cleared_before)searchQuery=searchQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await searchQuery.order('created_at',{ascending:false}).limit(30);
   if(error)throw error;if(request!==state.chatSearchRequest||state.active?.id!==conversationId)return;
   panel.replaceChildren();
-  if(!data?.length){const p=document.createElement('p');p.textContent='لا توجد رسائل مطابقة في هذه المحادثة.';panel.append(p);return}
-  data.forEach(message=>{const button=document.createElement('button');button.type='button';button.className='chat-search-result';const member=(state.active?.members||[]).find(m=>m.user_id===message.sender_id);const name=document.createElement('strong');name.textContent=member?.profile?.display_name||(message.sender_id===state.user?.id?'أنت':'عضو');const body=document.createElement('span');body.textContent=message.deleted_at?'تم حذف هذه الرسالة':message.content||'مرفق';const date=document.createElement('small');date.textContent=new Date(message.created_at).toLocaleString('ar-SA');button.append(name,body,date);button.onclick=()=>{$('chatSearchPanel').classList.add('hidden');jumpToMessage(message.id)};panel.append(button)});
+  const visibleData=(data||[]).filter(message=>!state.hiddenMessageIds?.has(message.id));
+  if(!visibleData.length){const p=document.createElement('p');p.textContent='لا توجد رسائل مطابقة في هذه المحادثة.';panel.append(p);return}
+  visibleData.forEach(message=>{const button=document.createElement('button');button.type='button';button.className='chat-search-result';const member=(state.active?.members||[]).find(m=>m.user_id===message.sender_id);const name=document.createElement('strong');name.textContent=member?.profile?.display_name||(message.sender_id===state.user?.id?'أنت':'عضو');const body=document.createElement('span');body.textContent=message.deleted_at?'تم حذف هذه الرسالة':message.content||'مرفق';const date=document.createElement('small');date.textContent=new Date(message.created_at).toLocaleString('ar-SA');button.append(name,body,date);button.onclick=()=>{$('chatSearchPanel').classList.add('hidden');jumpToMessage(message.id)};panel.append(button)});
  }catch(error){console.error('Conversation search failed:',error);panel.replaceChildren();const p=document.createElement('p');p.textContent='تعذر البحث. حاول مرة أخرى.';panel.append(p)}
 }
 async function jumpToMessage(id){
+ if(state.hiddenMessageIdsReady===false){toast('تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة.');return false;}
+ if(state.hiddenMessageIds?.has(id)){toast('هذه الرسالة مخفية لديك');return false;}
  let row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);
  if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500);return}
  const conversationId=state.active?.id;if(!conversationId)return;
@@ -1436,6 +1444,7 @@ async function markConversationReceipt(conversationId,markRead=true,requestId=nu
 async function publishTyping(isTyping){if(!state.typingChannel||!state.user)return;const now=Date.now();if(isTyping&&now-state.typingSent<1000)return;state.typingSent=now;try{await state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile?.display_name||'عضو',is_typing:isTyping}})}catch(e){console.debug('Typing broadcast failed',e?.message||e)}}
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
+ if(state.hiddenMessageIdsReady===false)return false;
  if(state.hiddenMessageIds?.has(m.id)){state.messageIds.add(m.id);return true;}
  state.messageRenderPromises ||= new Map();
  const pending=state.messageRenderPromises.get(m.id);
@@ -1719,11 +1728,12 @@ function stopMessagePolling(){
  diagLog('poll-stopped',{generation:state.messagePollGeneration});
 }
 function startMessagePolling(conversationId){
+ if(state.hiddenMessageIdsReady===false)return;
  stopMessagePolling();const generation=state.messagePollGeneration;
  scheduleMessagePolling(conversationId,generation);diagLog('poll-started',{conversationId,generation,delay:messagePollingDelay()});
 }
 async function pollMessagesFallback(conversationId,generation=state.messagePollGeneration){
- if(state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
+ if(state.hiddenMessageIdsReady===false||state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
  const messageRequestId=state.messageLoadVersion,pollStartedAt=state.messagePollLastCheckedAt||new Date(Date.now()-60000).toISOString(),pollCutoffAt=new Date().toISOString();
  const cursor=state.messagePollCursor?.conversationId===conversationId?state.messagePollCursor:null;
  const pollOffset=state.messagePollOffsetConversationId===conversationId?Math.max(0,Number(state.messagePollOffset)||0):0;
@@ -1929,11 +1939,17 @@ function canDeleteMessageForEveryone(m){
  return canDeleteMessageForMe(m);
 }
 async function loadHiddenMessageIds(conversationId){
- state.hiddenMessageIds=new Set();
- if(!state.user?.id||!conversationId)return true;
- const {data,error}=await supabaseClient.from('user_hidden_messages').select('message_id').eq('user_id',state.user.id).eq('conversation_id',conversationId);
- if(error){console.warn('Per-user hidden messages are unavailable until the visibility migration is applied:',error.message);return false}
- state.hiddenMessageIds=new Set((data||[]).map(row=>row.message_id));return true;
+ const requestId=state.hiddenMessageRequestId=(state.hiddenMessageRequestId||0)+1;
+ const userId=state.user?.id;
+ state.hiddenMessageIdsReady=false;state.hiddenMessageIds=new Set();
+ if(!userId||!conversationId){
+  if(requestId!==state.hiddenMessageRequestId||state.active?.id!==conversationId||state.user?.id!==userId)return false;
+  state.hiddenMessageIdsReady=true;return true;
+ }
+ const {data,error}=await supabaseClient.from('user_hidden_messages').select('message_id').eq('user_id',userId).eq('conversation_id',conversationId);
+ if(requestId!==state.hiddenMessageRequestId||state.active?.id!==conversationId||state.user?.id!==userId)return false;
+ if(error){console.warn('Per-user hidden-message state could not be loaded:',error.message);return false}
+ state.hiddenMessageIds=new Set((data||[]).map(row=>row.message_id));state.hiddenMessageIdsReady=true;return true;
 }
 async function hideMessageForMe(message){
  if(!canDeleteMessageForMe(message)){toast('حذف الرسالة من حسابك متاح خلال أول 15 دقيقة من إرسالها');return false}
