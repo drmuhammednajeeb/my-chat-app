@@ -6,7 +6,7 @@
   "sourceSets": {
     "canonicalMigrations": {
       "path": "supabase/migrations",
-      "count": 62
+      "count": 64
     },
     "nonExecutableArchive": {
       "path": "database/archive",
@@ -15,7 +15,11 @@
     },
     "duplicateActiveCopies": 0,
     "forwardReconciliationMigrations": 11,
-    "canonicalCliMigrationFiles": 75
+    "canonicalCliMigrationFiles": 75,
+    "testOnlyFixtureCount": 24,
+    "testOnlyFixturePaths": [
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
+    ]
   },
   "platformNodes": [
     {
@@ -1606,8 +1610,7 @@
       ],
       "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
       "testSource": [
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
       ],
       "blockedBy": [],
       "note": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion.",
@@ -1633,9 +1636,7 @@
         "chat.message-visibility-pins-and-delete"
       ],
       "status": "PRODUCTION_APPLIED_RUNTIME_PENDING",
-      "testSource": [
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
-      ],
+      "testSource": [],
       "blockedBy": [],
       "note": "Additive FK-leading indexes required for efficient cascade checks and to close the unindexed-foreign-key advisor findings discovered immediately after production activation."
     },
@@ -1652,8 +1653,8 @@
       ],
       "status": "FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION",
       "testSource": [
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
+        "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
       "blockedBy": [],
       "note": "RLS-invoker RPC returns the latest non-deleted message per conversation while excluding rows hidden by auth.uid(); used by the global conversation-list preview path."
