@@ -1141,18 +1141,14 @@
     },
     {
       "path": "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
-      "status": "TEST_ONLY_POST_FORWARD_ASSERTION",
-      "blockedBy": [
-        "DAG-020"
-      ],
+      "status": "TEST_ONLY_POST_PRODUCTION_ASSERTION",
+      "blockedBy": [],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     },
     {
       "path": "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
-      "status": "TEST_ONLY_AUTHENTICATED_MULTIUSER_RUNTIME",
-      "blockedBy": [
-        "DAG-020"
-      ],
+      "status": "TEST_ONLY_POST_PRODUCTION_ASSERTION",
+      "blockedBy": [],
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
