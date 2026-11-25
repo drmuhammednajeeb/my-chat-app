@@ -232,7 +232,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   const canonicalSourceCounts = new Map();
   for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
-  assert.equal(canonicalSourceCounts.size, 74);
+  assert.equal(canonicalSourceCounts.size, 75);
   assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
@@ -412,7 +412,7 @@ test('ten forward migrations remain outside the production ledger with explicit 
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 64);
-  assert.equal(registry.forwardMigrations.length, 10);
+  assert.equal(registry.forwardMigrations.length, 11);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
@@ -494,8 +494,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 23);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 95);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 95);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 96);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 96);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'chat.auto-cleanup-100h').testSource.includes('tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs'));
@@ -692,7 +692,7 @@ test('ten forward migrations remain outside the production ledger and record exp
   const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
   const dag = JSON.parse(await readFile(dagPath, 'utf8'));
   assert.equal(registry.productionMigrations.length, 64);
-  assert.equal(registry.forwardMigrations.length, 10);
+  assert.equal(registry.forwardMigrations.length, 11);
   const expected = new Map([
     ['20261112160000_harden_direct_conversation_eligibility.sql', []],
     ['20261112160001_harden_chat_media_upload_ownership.sql', []],
@@ -766,8 +766,8 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 23);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 95);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 95);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 96);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 96);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
@@ -798,4 +798,18 @@ test('message visibility, conversation pins and secure deletion are applied and 
   const blocker = dag.blockers.find(item => item.id === 'DAG-020');
   assert.equal(blocker?.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
   assert.ok(blocker.evidence.includes(node.source[0]));
+});
+
+test('latest visible conversation previews remain caller-RLS scoped and pending runtime validation', async () => {
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'chat.latest-visible-conversation-previews');
+  assert.ok(node);
+  assert.equal(node.status, 'FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION');
+  assert.deepEqual(node.blockedBy ?? [], []);
+  assert.ok(node.requires.includes('chat.message-visibility-foreign-key-indexes'));
+  const migration = registry.forwardMigrations.find(item => item.version === '20261125231500');
+  assert.equal(migration?.productionApplied, false);
+  assert.equal(migration?.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
+  assert.match(migration?.purpose ?? '', /excluding rows hidden by the authenticated caller/);
 });
