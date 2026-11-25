@@ -1172,18 +1172,16 @@
     "runtime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
-      "workflowRunId": 45078684896,
-      "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
-      "completedAt": "2026-11-22T22:39:11Z",
+      "workflowRunId": 45722387043,
+      "commit": "73a7d78aae7bf2b8d81956ac81f9b4df213bba38",
+      "completedAt": "2026-11-25T23:36:11Z",
       "localOnly": true,
-      "sqlFilesExecuted": 94,
+      "sqlFilesExecuted": 97,
       "checks": [
-        "All 94 reviewed SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
-        "The message-visibility and conversation-pins migration executed; its catalog assertions and authenticated runtime fixture passed.",
-        "Authenticated runtime probes confirmed active-author deletion succeeds, while suspended members, removed conversation members, and non-authors are denied without changing the target message.",
-        "Direct chat_messages UPDATE bypass and expired 15-minute deletion attempts were rejected.",
-        "Least-privilege RLS, Storage API ownership and access probes, and message auto-cleanup Storage runtime probes passed.",
-        "The disposable Supabase stack was stopped and destroyed; no production database was accessed or modified."
+        "All 97 selected SQL migration and test-fixture sources replayed successfully in an isolated disposable Supabase stack.",
+        "Per-user hidden-message and conversation-pin RLS, secure 15-minute author-only deletion, Storage access policy, and all three foreign-key-leading indexes passed catalog assertions.",
+        "The SECURITY INVOKER latest-visible-conversation RPC passed ACL and two-user runtime probes: a message hidden by one user is omitted from that user's preview and remains visible to another active member.",
+        "The disposable Supabase stack was stopped and destroyed; this validation did not access or modify production."
       ]
     },
     "audit": {
