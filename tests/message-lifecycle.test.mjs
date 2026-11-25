@@ -46,25 +46,23 @@ function extractFunction(name) {
   throw new Error('Unbalanced function body: ' + name);
 }
 
-test('message reactions are restored through an isolated realtime module and cached assets', async () => {
-  const reactionSource = await readFile(new URL('../modules/message-reactions.js', import.meta.url), 'utf8');
-  const reactionStyles = await readFile(new URL('../modules/message-reactions.css', import.meta.url), 'utf8');
+test('message reactions are fully removed from the application runtime and cached assets', async () => {
   const serviceWorker = await readFile(new URL('../service-worker.js', import.meta.url), 'utf8');
-  assert.match(source, /modules\/message-reactions\.js/);
-  assert.match(source, /messageReactions\.attach\(row,m,bubble\.querySelector\('\.message-menu-wrap'\)\)/);
-  assert.match(source, /messageReactions\.render\(row,m\)/);
-  assert.match(source, /messageReactions\.handleRealtime\(p,id\)/);
-  assert.match(reactionSource, /from\("message_reactions"\)/);
-  assert.match(reactionSource, /\.insert\(value\)/);
-  assert.match(reactionSource, /\.delete\(\)/);
-  assert.doesNotMatch(reactionSource, /\.upsert\(/);
-  assert.match(reactionSource, /readOwnReaction/);
-  assert.match(reactionSource, /applyRealtimeEvent/);
-  assert.match(reactionStyles, /\.message-reaction-picker/);
-  assert.match(reactionStyles, /\.message-reactions/);
-  assert.match(serviceWorker, /modules\/message-reactions\.js/);
-  assert.match(serviceWorker, /modules\/message-reactions\.css/);
-  assert.match(overrides, /\.message-menu-trigger\{opacity:1;pointer-events:auto\}/);
+  const messageLoader = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(source, /messageReactions|message-reactions|message_reactions|state\\.reactions/);
+  assert.doesNotMatch(serviceWorker, /message-reactions/i);
+  assert.doesNotMatch(messageLoader, /reaction/i);
+  assert.doesNotMatch(overrides, /message-reaction/i);
+
+  await assert.rejects(
+    readFile(new URL('../modules/message-reactions.js', import.meta.url)),
+    error => error?.code === 'ENOENT'
+  );
+  await assert.rejects(
+    readFile(new URL('../modules/message-reactions.css', import.meta.url)),
+    error => error?.code === 'ENOENT'
+  );
 });
 
 test('stickers are sent through the existing message pipeline and rendered as validated sticker content', () => {
@@ -211,10 +209,9 @@ test('hard-delete realtime handler removes the row and all local message indexes
     replyMessages: new Map([['m1', {}]]),
     conversations: []
   };
-  const messageReactions = { removeMessage() {} };
   const document = { querySelectorAll: selector => selector === '.message' ? [row] : [] };
   const handler = vm.runInNewContext('(' + extractFunction('handleMessageDeleteRealtime') + ')', {
-    state, document, messageReactions: { removeMessage() {} }, $: () => area, reconcileMessageTimeline: () => {}
+    state, document, $: () => area, reconcileMessageTimeline: () => {}
   });
   assert.equal(handler({ old: { id: 'm1' } }, 'c1'), true);
   assert.deepEqual(state.messages.map(message => message.id), ['m2']);
@@ -243,7 +240,7 @@ test('hard-deleting the final message restores the empty-conversation state', ()
   };
   const area = { innerHTML: '' };
   const handler = vm.runInNewContext('(' + extractFunction('handleMessageDeleteRealtime') + ')', {
-    state, document: { querySelectorAll: () => [] }, messageReactions: { removeMessage() {} }, $: () => area,
+    state, document: { querySelectorAll: () => [] }, $: () => area,
     reconcileMessageTimeline() {}
   });
   assert.equal(handler({ old: { id: 'm1' } }, 'c1'), true);
@@ -464,7 +461,7 @@ test('in-flight older history is protected from reconciliation and safely remove
     rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')'),
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
     loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
-    messageReactions: { load: async () => true }, reconcileMessageTimeline() {}, toast() {},
+    reconcileMessageTimeline() {}, toast() {},
     renderMessage: async message => {
       const node = { className: 'message', dataset: { messageId: message.id }, remove() { area.children = area.children.filter(item => item !== this); } };
       area.children.push(node); state.messageIds.add(message.id);
@@ -609,7 +606,6 @@ test('failed older-history batch restores the original transcript and pagination
     rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')'),
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
     loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
-    messageReactions: { load: async () => true },
     reconcileMessageTimeline() {}, toast: message => toastMessages.push(message),
     renderMessage: async message => {
       renderCount += 1;
