@@ -52,7 +52,7 @@
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
     "database/archive/ contains provenance, pending forward reconciliation, and unapplied proposals; it is never executable or part of CLI discovery/replay.",
-    "Each of the 64 mapped production ledger versions maps to exactly one canonical migration filename and Git blob; two additional applied production versions remain explicit source-recovery gaps.",
+    "Each of the 65 mapped production ledger versions maps to exactly one canonical migration filename and Git blob; two additional applied production versions remain explicit source-recovery gaps.",
     "The production migration ledger stores version/name metadata only; reconstructed SQL bodies are not claimed to be byte-identical to original applied bodies.",
     "Compound historical sources are split across their exact production version filenames; uncertain original boundaries are explicitly labeled reconstructed.",
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
