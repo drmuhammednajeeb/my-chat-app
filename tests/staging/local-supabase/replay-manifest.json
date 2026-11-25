@@ -751,6 +751,14 @@
       "parityNote": null
     },
     {
+      "nodeId": "chat.latest-visible-conversation-previews",
+      "status": "FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION",
+      "testSources": [
+        "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
+      ],
+      "blockedBy": []
+    },
+    {
       "nodeId": "security.direct-conversation-eligibility-forward",
       "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
       "testSources": [
@@ -858,14 +866,6 @@
         "DAG-016"
       ],
       "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
-    },
-    {
-      "nodeId": "chat.latest-visible-conversation-previews",
-      "status": "FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION",
-      "testSources": [
-        "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
-      ],
-      "blockedBy": []
     }
   ],
   "duplicateSelection": {
