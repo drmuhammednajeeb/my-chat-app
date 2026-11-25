@@ -16,11 +16,11 @@ test('production registry records applied PR165 migrations and ten pending forwa
   assert.equal(registry.productionDatabase.migrationCount, 66);
   assert.equal(registry.productionMigrations.length, 64);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 64);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 74);
-  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 10);
-  assert.equal(registry.forwardMigrations.length, 10);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 75);
+  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 11);
+  assert.equal(registry.forwardMigrations.length, 11);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 64);
-  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 10);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 11);
   assert.equal(registry.forwardMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
@@ -37,7 +37,7 @@ test('production registry records applied PR165 migrations and ten pending forwa
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 74);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 75);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
@@ -91,6 +91,10 @@ test('production registry records applied PR165 migrations and ten pending forwa
       assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(migration.localRuntimeRunId, 44873724263);
       assert.equal(migration.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
+      assert.equal(migration.productionApplied, false);
+      assert.deepEqual(migration.blockedBy, []);
+    } else if (migration.version === '20261125231500') {
+      assert.equal(migration.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(migration.productionApplied, false);
       assert.deepEqual(migration.blockedBy, []);
     } else {
