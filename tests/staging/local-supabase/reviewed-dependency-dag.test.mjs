@@ -828,8 +828,10 @@ test('production migration ledger and disposable replay evidence remain internal
   assert.equal(registry.sourceSets.canonicalCliMigrationFiles, registry.productionMigrations.length + registry.forwardMigrations.length);
   assert.ok(registry.rules.some(rule => rule.includes('Each of the 65 mapped production ledger versions')));
   assert.equal(registry.forwardMigrations.length, 10);
-  assert.equal(dag.forwardMigrationPolicy.productionLedgerCount, 65);
-  assert.equal(dag.forwardMigrationPolicy.pendingForwardCount, 10);
+  assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 65);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 10);
+  assert.equal(dag.safety.forwardReconciliationMigrations, 10);
+  assert.equal(dag.safety.forwardMigrationExecutionAuthorized, false);
   assert.equal(dag.runtimeEvidence.workflowRunId, 45722387043);
   assert.equal(dag.runtimeEvidence.commit, '73a7d78aae7bf2b8d81956ac81f9b4df213bba38');
   assert.equal(dag.runtimeEvidence.sqlFilesExecuted, 97);
