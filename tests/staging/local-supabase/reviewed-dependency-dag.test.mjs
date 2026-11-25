@@ -793,7 +793,7 @@ test('message visibility, conversation pins and secure deletion are applied and 
   assert.equal(applied?.name, 'message_visibility_pins_and_secure_delete');
   assert.equal(applied?.path, node.source[0]);
   const indexNode = dag.nodes.find(item => item.id === 'chat.message-visibility-foreign-key-indexes');
-  assert.equal(indexNode?.status, 'PRODUCTION_APPLIED_RUNTIME_PENDING');
+  assert.equal(indexNode?.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
   assert.ok(indexNode?.requires.includes(node.id));
   const blocker = dag.blockers.find(item => item.id === 'DAG-020');
   assert.equal(blocker?.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
@@ -813,4 +813,32 @@ test('latest visible conversation previews are production-applied and caller-RLS
   assert.equal(applied?.path, node.source[0]);
   assert.equal(applied?.mappingStatus, 'APPLIED_VIA_SUPABASE_MCP');
   assert.equal(dag.runtimeEvidence.sqlFilesExecuted, 97);
+});
+
+
+test('production migration ledger and disposable replay evidence remain internally consistent', async () => {
+  const registry = JSON.parse(await readFile(path.join(root, 'supabase/migrations/source-registry.json'), 'utf8'));
+  const dag = JSON.parse(await readFile(dagPath, 'utf8'));
+  const manifest = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  assert.equal(registry.productionDatabase.migrationCount, 67);
+  assert.equal(registry.productionMigrations.length, 65);
+  assert.equal(registry.unresolvedProductionEntries.length, 2);
+  assert.equal(registry.productionDatabase.migrationCount, registry.productionMigrations.length + registry.unresolvedProductionEntries.length);
+  assert.equal(registry.sourceSets.productionLedgerMigrations, registry.productionMigrations.length);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, registry.productionMigrations.length + registry.forwardMigrations.length);
+  assert.ok(registry.rules.some(rule => rule.includes('Each of the 65 mapped production ledger versions')));
+  assert.equal(registry.forwardMigrations.length, 10);
+  assert.equal(dag.forwardMigrationPolicy.productionLedgerCount, 65);
+  assert.equal(dag.forwardMigrationPolicy.pendingForwardCount, 10);
+  assert.equal(dag.runtimeEvidence.workflowRunId, 45722387043);
+  assert.equal(dag.runtimeEvidence.commit, '73a7d78aae7bf2b8d81956ac81f9b4df213bba38');
+  assert.equal(dag.runtimeEvidence.sqlFilesExecuted, 97);
+  assert.equal(manifest.validationEvidence.runtime.workflowRunId, dag.runtimeEvidence.workflowRunId);
+  assert.equal(manifest.validationEvidence.runtime.commit, dag.runtimeEvidence.commit);
+  assert.equal(manifest.validationEvidence.runtime.completedAt, dag.runtimeEvidence.completedAt);
+  assert.equal(manifest.validationEvidence.runtime.sqlFilesExecuted, dag.runtimeEvidence.sqlFilesExecuted);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 97);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 97);
+  assert.equal(dag.nodes.find(node => node.id === 'chat.message-visibility-foreign-key-indexes')?.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
+  assert.doesNotMatch(JSON.stringify(dag.runtimeEvidence.checks) + JSON.stringify(manifest.validationEvidence.runtime.checks), /\\b94\\b/);
 });
