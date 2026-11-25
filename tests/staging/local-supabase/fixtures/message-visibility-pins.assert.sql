@@ -24,6 +24,12 @@ begin
     raise exception 'user_conversation_pins must have RLS enabled';
   end if;
 
+  if to_regclass('public.user_hidden_messages_conversation_id_idx') is null
+     or to_regclass('public.user_hidden_messages_message_id_idx') is null
+     or to_regclass('public.user_conversation_pins_conversation_id_idx') is null then
+    raise exception 'per-user visibility and pin foreign-key indexes are missing';
+  end if;
+
   if not exists (
     select 1 from pg_policies
     where schemaname = 'public' and tablename = 'user_hidden_messages'
