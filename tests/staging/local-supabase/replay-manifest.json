@@ -38,12 +38,12 @@
     "executedMappedSources": 73,
     "executedTestOnlySqlFixtures": 24,
     "executedSqlFiles": 97,
-    "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
+    "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "candidateMappedSources": 73,
     "candidateTestOnlySqlFixtures": 24,
     "candidateSqlFiles": 97,
-    "localRuntimeRunId": null,
-    "localRuntimeCommit": null,
+    "localRuntimeRunId": 45720775547,
+    "localRuntimeCommit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
     "testOnlyFixtureCount": 24
   },
   "execution": {
@@ -753,9 +753,9 @@
     },
     {
       "nodeId": "chat.latest-visible-conversation-previews",
-      "status": "FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION",
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
       "testSources": [
-        "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql",
+        "supabase/migrations/20261125232617_latest_visible_conversation_previews.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
@@ -1162,14 +1162,6 @@
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     },
     {
-      "version": "20261125231500",
-      "path": "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql",
-      "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
-      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
-      "productionApplied": false,
-      "blockedBy": []
-    },
-    {
       "path": "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
       "status": "TEST_ONLY_POST_PRODUCTION_ASSERTION",
       "blockedBy": [],
@@ -1223,10 +1215,7 @@
         "the disposable Supabase stack was stopped and destroyed"
       ]
     },
-    "pendingAdditionalSources": [
-      "supabase/migrations/20261125230631_message_visibility_foreign_key_indexes.sql",
-      "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
-    ],
+    "pendingAdditionalSources": [],
     "preMergeMainRuntime": {
       "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
       "workflow": "Disposable local Supabase runtime verification",
@@ -1346,5 +1335,5 @@
       "failed": 0
     }
   },
-  "reviewState": "PR165_PRODUCTION_APPLIED_PREVIEW_PRIVACY_FIX_RUNTIME_PENDING"
+  "reviewState": "PR165_PRODUCTION_ACTIVATION_AND_PREVIEW_PRIVACY_APPLIED"
 }
