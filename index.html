@@ -307,7 +307,7 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
  if(messagesScrollFrame)cancelAnimationFrame(messagesScrollFrame);
  messagesScrollFrame=requestAnimationFrame(()=>{messagesScrollFrame=0;if(area.isConnected)area.scrollTo({top:area.scrollHeight,behavior})});
 }
-const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),hiddenMessageIds:new Set(),hiddenMessageIdsReady:false,pinnedConversationIds:new Set(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
+const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),hiddenMessageIds:new Set(),hiddenMessageIdsReady:false,hiddenMessageRequestId:0,pinnedConversationIds:new Set(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
 // Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
 const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v2';
@@ -1208,9 +1208,9 @@ async function openConversation(c){
  subscribeProfileUpdates(c);
  let hiddenStateReady=false;
  const messageLoadPromise=loadHiddenMessageIds(c.id).then(loaded=>{
+  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return false;
   if(!loaded){toast('تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.');return false;}
   hiddenStateReady=true;
-  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return false;
   subscribeConversation();
   return loadMessages();
  }).finally(()=>{if(hiddenStateReady&&openToken===state.conversationOpenVersion&&state.active?.id===c.id)startMessagePolling(c.id)});
@@ -1939,9 +1939,15 @@ function canDeleteMessageForEveryone(m){
  return canDeleteMessageForMe(m);
 }
 async function loadHiddenMessageIds(conversationId){
+ const requestId=state.hiddenMessageRequestId=(state.hiddenMessageRequestId||0)+1;
+ const userId=state.user?.id;
  state.hiddenMessageIdsReady=false;state.hiddenMessageIds=new Set();
- if(!state.user?.id||!conversationId){state.hiddenMessageIdsReady=true;return true;}
- const {data,error}=await supabaseClient.from('user_hidden_messages').select('message_id').eq('user_id',state.user.id).eq('conversation_id',conversationId);
+ if(!userId||!conversationId){
+  if(requestId!==state.hiddenMessageRequestId||state.active?.id!==conversationId||state.user?.id!==userId)return false;
+  state.hiddenMessageIdsReady=true;return true;
+ }
+ const {data,error}=await supabaseClient.from('user_hidden_messages').select('message_id').eq('user_id',userId).eq('conversation_id',conversationId);
+ if(requestId!==state.hiddenMessageRequestId||state.active?.id!==conversationId||state.user?.id!==userId)return false;
  if(error){console.warn('Per-user hidden-message state could not be loaded:',error.message);return false}
  state.hiddenMessageIds=new Set((data||[]).map(row=>row.message_id));state.hiddenMessageIdsReady=true;return true;
 }
