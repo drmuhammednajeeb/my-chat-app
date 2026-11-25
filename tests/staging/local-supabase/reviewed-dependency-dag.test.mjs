@@ -785,7 +785,7 @@ test('message visibility, conversation pins and secure deletion are applied and 
   assert.ok(node);
   assert.equal(node.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
   assert.deepEqual(node.blockedBy ?? [], []);
-  assert.match(node.note, /locks active profile\\/Auth rows and the conversation-membership row/);
+  assert.match(node.note, /locks active profile\/Auth rows and the conversation-membership row/);
   assert.ok(node.provides.includes('public.user_hidden_messages'));
   assert.ok(node.provides.includes('public.user_conversation_pins'));
   assert.ok(node.provides.includes('public.delete_message_secure(uuid)'));
