@@ -896,7 +896,13 @@ test('per-user hidden-message state fails closed across rendering, polling, sear
   const hiddenEnd = source.indexOf('async function hideMessageForMe', hiddenStart);
   const hiddenLoader = source.slice(hiddenStart, hiddenEnd);
   assert.match(hiddenLoader, /state\.hiddenMessageIdsReady=true/);
+  assert.match(hiddenLoader, /const requestId=state\.hiddenMessageRequestId=/);
+  assert.match(hiddenLoader, /const userId=state\.user\?\.id/);
+  assert.match(hiddenLoader, /requestId!==state\.hiddenMessageRequestId/);
+  assert.match(hiddenLoader, /state\.active\?\.id!==conversationId/);
+  assert.match(hiddenLoader, /state\.user\?\.id!==userId/);
   assert.match(hiddenLoader, /if\(error\)[\s\S]*return false/);
+  assert.match(source, /if\(openToken!==state\.conversationOpenVersion\|\|state\.active\?\.id!==c\.id\)return false;\s*if\(!loaded\)/);
 });
 
 test('conversation previews use the RLS-safe latest-visible-message RPC', async () => {
