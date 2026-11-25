@@ -1044,7 +1044,7 @@ async function loadConversations(){
  const {data:allMembers,error:me}=await supabaseClient.from('conversation_members').select('conversation_id,user_id,role,last_read_at,last_delivered_at,profiles(id,username,display_name,avatar_url,bio)').in('conversation_id',ids);
  if(me){state.conversationsLoading=false;recordConversationsLoad(false);toast('تعذر قراءة أعضاء المحادثات');console.error(me);renderConversations();if(state.sidebarView==='channels')renderMyChannels();return false}
  const [latestResult,pinsResult,settingsResult]=await Promise.all([
-  supabaseClient.from('chat_messages').select('id,conversation_id,content,created_at,sender_id').in('conversation_id',ids).is('deleted_at',null).order('created_at',{ascending:false}).limit(Math.max(ids.length*2,40)),
+  supabaseClient.rpc('get_latest_visible_conversation_messages',{p_conversation_ids:ids}),
   supabaseClient.from('user_conversation_pins').select('conversation_id').eq('user_id',state.user.id).in('conversation_id',ids),
   supabaseClient.from('user_conversation_settings').select('conversation_id,is_muted,notification_tone,is_favorite').eq('user_id',state.user.id).in('conversation_id',ids)
  ]);
