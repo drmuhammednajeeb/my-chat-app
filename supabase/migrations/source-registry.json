@@ -56,7 +56,7 @@
     "Compound historical sources are split across their exact production version filenames; uncertain original boundaries are explicitly labeled reconstructed.",
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
-    "No migration is authorized for local or production execution until clean disposable replay and catalog parity review pass.",
+    "Pending migrations remain gated until their own clean disposable replay, catalog parity review, and explicit approval; PR #165 is the explicitly approved exception recorded in productionMigrations.",
     "The 74-file CLI stream contains 64 mapped production-ledger migrations plus 10 pending forward-reconciliation migrations."
   ],
   "productionMigrations": [
@@ -1833,14 +1833,14 @@
     },
     {
       "id": "DAG-020",
-      "severity": "PRODUCTION_APPROVAL_PENDING",
-      "issue": "Disposable-local PostgreSQL replay, RLS catalog assertions, and authenticated two-user runtime probes passed (run 45076185494). This forward migration remains unapplied to production pending independent review and separate explicit owner approval.",
+      "severity": "RESOLVED_PRODUCTION_APPLIED",
+      "issue": "Owner approval was granted; the per-user visibility, conversation-pin, and secure-delete migration was applied to production as version 20261125230604. Runtime probes passed. Remaining source-recovery gaps are tracked separately.",
       "evidence": [
-        "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
+        "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
-      "status": "LOCAL_RUNTIME_PASSED_PRODUCTION_UNCHANGED"
+      "status": "PRODUCTION_APPLIED_RUNTIME_PASSED"
     }
   ],
   "externalSources": [
@@ -2188,5 +2188,9 @@
       "failed": 0
     }
   },
-  "reviewState": "PR165_PRODUCTION_APPLIED_SOURCE_SYNC_AND_INDEX_RUNTIME_PENDING"
+  "reviewState": "PR165_PRODUCTION_APPLIED_SOURCE_SYNC_AND_INDEX_RUNTIME_PENDING",
+  "authorizedProductionMigrations": [
+    "20261125230604",
+    "20261125230631"
+  ]
 }
