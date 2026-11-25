@@ -7,7 +7,7 @@
     "mappedSources": 75,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 23,
+    "testOnlySqlFixtures": 24,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -31,11 +31,12 @@
       "tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql",
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
-      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
     "executedMappedSources": 73,
-    "executedTestOnlySqlFixtures": 23,
+    "executedTestOnlySqlFixtures": 24,
     "executedSqlFiles": 97,
     "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "candidateMappedSources": 73,
