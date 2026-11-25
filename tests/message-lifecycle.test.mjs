@@ -884,19 +884,19 @@ test('per-user hidden-message state fails closed across rendering, polling, sear
   const realtimeStart = source.indexOf('subscribeConversation();', loadGate);
   assert.ok(loadGate >= 0 && failedGuard > loadGate && realtimeStart > failedGuard,
     'conversation realtime must start only after hidden-message state loads successfully');
-  assert.match(source, /async function renderMessage\\([\\s\\S]{0,500}if\\(!state\\.hiddenMessageIdsReady\\)return false;/);
-  assert.match(source, /function startMessagePolling\\(conversationId\\)\\{\\s*if\\(!state\\.hiddenMessageIdsReady\\)return;/);
-  assert.match(source, /async function pollMessagesFallback\\([\\s\\S]{0,220}if\\(!state\\.hiddenMessageIdsReady\\|\\|state\\.messagePollBusy/);
+  assert.match(source, /async function renderMessage\([\s\S]{0,500}if\(!state\.hiddenMessageIdsReady\)return false;/);
+  assert.match(source, /function startMessagePolling\(conversationId\)\{\s*if\(!state\.hiddenMessageIdsReady\)return;/);
+  assert.match(source, /async function pollMessagesFallback\([\s\S]{0,220}if\(!state\.hiddenMessageIdsReady\|\|state\.messagePollBusy/);
   const searchStart = source.indexOf('async function searchActiveConversation');
   const searchEnd = source.indexOf('async function jumpToMessage', searchStart);
   const search = source.slice(searchStart, searchEnd);
-  assert.match(search, /if\\(!state\\.hiddenMessageIdsReady\\)/);
-  assert.match(search, /visibleData=\\(data\\|\\|\\[\\]\\)\\.filter\\(message=>!state\\.hiddenMessageIds\\?\\.has\\(message\\.id\\)\\)/);
+  assert.match(search, /if\(!state\.hiddenMessageIdsReady\)/);
+  assert.match(search, /visibleData=\(data\|\|\[\]\)\.filter\(message=>!state\.hiddenMessageIds\?\.has\(message\.id\)\)/);
   const hiddenStart = source.indexOf('async function loadHiddenMessageIds');
   const hiddenEnd = source.indexOf('async function hideMessageForMe', hiddenStart);
   const hiddenLoader = source.slice(hiddenStart, hiddenEnd);
-  assert.match(hiddenLoader, /state\\.hiddenMessageIdsReady=true/);
-  assert.match(hiddenLoader, /if\\(error\\)[\\s\\S]*return false/);
+  assert.match(hiddenLoader, /state\.hiddenMessageIdsReady=true/);
+  assert.match(hiddenLoader, /if\(error\)[\s\S]*return false/);
 });
 
 test('conversation previews use the RLS-safe latest-visible-message RPC', async () => {
