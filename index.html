@@ -1323,7 +1323,7 @@ async function searchActiveConversation(term){
  if(!query){const p=document.createElement('p');p.textContent='اكتب كلمة للبحث داخل المحادثة الحالية.';panel.append(p);return}
  if(!conversationId){const p=document.createElement('p');p.textContent='افتح محادثة أولاً.';panel.append(p);return}
  if(query.length<2){const p=document.createElement('p');p.textContent='اكتب حرفين على الأقل.';panel.append(p);return}
- if(!state.hiddenMessageIdsReady){const p=document.createElement('p');p.textContent='تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.';panel.append(p);return}
+ if(state.hiddenMessageIdsReady===false){const p=document.createElement('p');p.textContent='تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.';panel.append(p);return}
  const loading=document.createElement('p');loading.textContent='جارٍ البحث…';panel.append(loading);
  try{
   const pattern='%'+query+'%';
@@ -1336,7 +1336,7 @@ async function searchActiveConversation(term){
  }catch(error){console.error('Conversation search failed:',error);panel.replaceChildren();const p=document.createElement('p');p.textContent='تعذر البحث. حاول مرة أخرى.';panel.append(p)}
 }
 async function jumpToMessage(id){
- if(!state.hiddenMessageIdsReady){toast('تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة.');return false;}
+ if(state.hiddenMessageIdsReady===false){toast('تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة.');return false;}
  if(state.hiddenMessageIds?.has(id)){toast('هذه الرسالة مخفية لديك');return false;}
  let row=Array.from(document.querySelectorAll('.message')).find(x=>x.dataset.messageId===id);
  if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1500);return}
@@ -1444,7 +1444,7 @@ async function markConversationReceipt(conversationId,markRead=true,requestId=nu
 async function publishTyping(isTyping){if(!state.typingChannel||!state.user)return;const now=Date.now();if(isTyping&&now-state.typingSent<1000)return;state.typingSent=now;try{await state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile?.display_name||'عضو',is_typing:isTyping}})}catch(e){console.debug('Typing broadcast failed',e?.message||e)}}
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
- if(!state.hiddenMessageIdsReady)return false;
+ if(state.hiddenMessageIdsReady===false)return false;
  if(state.hiddenMessageIds?.has(m.id)){state.messageIds.add(m.id);return true;}
  state.messageRenderPromises ||= new Map();
  const pending=state.messageRenderPromises.get(m.id);
@@ -1728,12 +1728,12 @@ function stopMessagePolling(){
  diagLog('poll-stopped',{generation:state.messagePollGeneration});
 }
 function startMessagePolling(conversationId){
- if(!state.hiddenMessageIdsReady)return;
+ if(state.hiddenMessageIdsReady===false)return;
  stopMessagePolling();const generation=state.messagePollGeneration;
  scheduleMessagePolling(conversationId,generation);diagLog('poll-started',{conversationId,generation,delay:messagePollingDelay()});
 }
 async function pollMessagesFallback(conversationId,generation=state.messagePollGeneration){
- if(!state.hiddenMessageIdsReady||state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
+ if(state.hiddenMessageIdsReady===false||state.messagePollBusy||generation!==state.messagePollGeneration||state.active?.id!==conversationId||!state.user)return;
  const messageRequestId=state.messageLoadVersion,pollStartedAt=state.messagePollLastCheckedAt||new Date(Date.now()-60000).toISOString(),pollCutoffAt=new Date().toISOString();
  const cursor=state.messagePollCursor?.conversationId===conversationId?state.messagePollCursor:null;
  const pollOffset=state.messagePollOffsetConversationId===conversationId?Math.max(0,Number(state.messagePollOffset)||0):0;
