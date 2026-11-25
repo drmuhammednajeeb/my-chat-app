@@ -50,7 +50,7 @@ test('message reactions are fully removed from the application runtime and cache
   const serviceWorker = await readFile(new URL('../service-worker.js', import.meta.url), 'utf8');
   const messageLoader = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
 
-  assert.doesNotMatch(source, /messageReactions|message-reactions|message_reactions|state\\.reactions/);
+  assert.doesNotMatch(source, /messageReactions|message-reactions|message_reactions|state\.reactions/);
   assert.doesNotMatch(serviceWorker, /message-reactions/i);
   assert.doesNotMatch(messageLoader, /reaction/i);
   assert.doesNotMatch(overrides, /message-reaction/i);
