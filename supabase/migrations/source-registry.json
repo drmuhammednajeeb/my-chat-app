@@ -57,7 +57,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "Pending migrations remain gated until their own clean disposable replay, catalog parity review, and explicit approval; PR #165 is the explicitly approved exception recorded in productionMigrations.",
-    "The 74-file CLI stream contains 64 mapped production-ledger migrations plus 10 pending forward-reconciliation migrations."
+    "The 75-file CLI stream contains 64 mapped production-ledger migrations plus 11 pending forward-reconciliation migrations; two additional applied production versions remain source-recovery gaps."
   ],
   "productionMigrations": [
     {
@@ -2043,7 +2043,7 @@
     }
   ],
   "forwardMigrationPolicy": {
-    "description": "New forward-only SQL after the 62-version production ledger; these files are not part of historical production migration history and remain unapplied pending independent review and explicit approval. The signup-name forward migration passed current-mainline disposable local runtime validation.",
+    "description": "New forward-only SQL after the 64 mapped production ledger versions; ten existing forward migrations and the new caller-RLS preview RPC remain pending separate validation and approval. Two additional historical production versions are tracked as explicit source-recovery gaps.",
     "productionLedgerCount": 64,
     "pendingForwardCount": 11,
     "executionAuthorized": false,
