@@ -1645,7 +1645,7 @@
         "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
       ],
       "provides": [
-        "public.get_latest_visible_conversation_previews(uuid[])"
+        "public.get_latest_visible_conversation_messages(uuid[])"
       ],
       "requires": [
         "chat.message-visibility-foreign-key-indexes"
