@@ -130,7 +130,7 @@ test('production registry records applied PR165 migrations and ten pending forwa
 test('every canonical migration closes every explicit transaction block', async () => {
   const directory = path.join(root, 'supabase/migrations');
   const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
-  assert.equal(files.length, 73);
+  assert.equal(files.length, 74);
   for (const name of files) {
     const source = await readFile(path.join(directory, name), 'utf8');
     const begins = (source.match(/^\s*BEGIN\s*;\s*$/gim) ?? []).length;
