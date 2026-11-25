@@ -1981,20 +1981,16 @@
       "version": "20261123120000",
       "name": "message_visibility_pins_and_secure_delete",
       "path": "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
-      "gitBlobSha": "8d58b81aed2e9799bf411ac26db7239e04ddf558",
+      "gitBlobSha": "b11afe19fc752bf67a82060809f6205a9c451e2b",
       "status": "FORWARD_RECONCILIATION_NOT_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "purpose": "Add per-user hidden-message visibility and conversation pins. Every permissive policy independently checks active membership and conversation membership, with a restrictive active-member guard; enforce database-clock 15-minute delete-for-me and author-only delete-for-everyone.",
       "blockedBy": [
         "DAG-020"
       ],
-      "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false,
-      "validationNote": "Disposable local Supabase replay passed on the PR #165 candidate. The secure delete RPC locks the caller's active profile/Auth rows and conversation-membership row before locking the message; authenticated runtime probes passed for active author, suspended member, removed member, non-author, direct-update bypass, and the 15-minute deadline. Production remains unchanged and execution is not authorized.",
-      "localRuntimeRunId": 45078684896,
-      "localRuntimeCommit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
-      "localRuntimeCompletedAt": "2026-11-22T22:39:11Z",
-      "localRuntimeSqlFilesExecuted": 94
+      "validationNote": "The original PR #165 candidate passed an earlier disposable-local replay. This revision additionally detaches deleted attachments into the retryable Storage cleanup queue, restricts chat-media reads to active members with a live message attachment reference, and corrects the owner-side direct UPDATE probe. A fresh disposable-local runtime replay is required for this revised blob. Production remains unchanged and execution is not authorized. The repository inventory baseline now counts the additional active-member chat-media SELECT policy; this branch tip requires a fresh complete CI and disposable-local replay."
     }
   ],
   "forwardMigrationPolicy": {

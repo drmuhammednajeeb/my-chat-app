@@ -684,7 +684,7 @@
     },
     {
       "nodeId": "chat.message-visibility-pins-and-delete",
-      "status": "FORWARD_RECONCILIATION_RUNTIME_PASSED_PRODUCTION_APPROVAL_PENDING",
+      "status": "FORWARD_RECONCILIATION_RUNTIME_PENDING_PRODUCTION_APPROVAL_PENDING",
       "testSources": [
         "supabase/migrations/20261123120000_message_visibility_pins_and_secure_delete.sql",
         "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
@@ -693,14 +693,7 @@
       "blockedBy": [
         "DAG-020"
       ],
-      "parityNote": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, direct-update bypass, and expired deletion.",
-      "runtimeEvidence": {
-        "workflowRunId": 45078684896,
-        "commit": "0640be6d42c8548fdf609e7008be706e2dbbaa42",
-        "result": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-        "completedAt": "2026-11-22T22:39:11Z",
-        "sqlFilesExecuted": 94
-      }
+      "parityNote": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; revised runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, owner-side direct-update trigger rejection, attachment detachment into the retryable Storage cleanup queue, and expired deletion. Chat-media SELECT requires an active conversation member and a live chat_messages attachment reference; previously issued signed URLs remain valid until expiry or physical Storage removal. Fresh disposable-local replay pending for this revised source blob."
     },
     {
       "nodeId": "test-fixture.direct-chat-runtime",

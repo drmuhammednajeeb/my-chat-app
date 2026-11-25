@@ -97,6 +97,23 @@ create policy "Users unpin own conversations"
   using (user_id = (select auth.uid()) and (select app_private.is_active_member())
     and app_private.is_conversation_member(conversation_id));
 
+-- A deleted message must stop authorizing reads of its attachment immediately.
+-- The private cleanup worker removes the physical object through the Storage API.
+drop policy if exists "Conversation members read chat media" on storage.objects;
+create policy "Conversation members read chat media"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'chat-media'
+    and (select app_private.is_active_member())
+    and exists (
+      select 1
+      from public.chat_messages m
+      where m.attachment_path = storage.objects.name
+        and m.deleted_at is null
+        and app_private.is_conversation_member(m.conversation_id)
+    )
+  );
+
 -- Replace the legacy direct soft-delete exception with a narrow transaction-local
 -- guard. Message edits continue to use app.allow_message_edit; global deletion
 -- must use delete_message_secure and cannot be performed by a direct table UPDATE.
@@ -134,8 +151,24 @@ begin
        and new.content = 'تم حذف الرسالة'
        and new.edited_at is not distinct from old.edited_at
        and new.edit_revision is not distinct from old.edit_revision
-       and new.attachment_path is not distinct from old.attachment_path
-       and new.attachment_type is not distinct from old.attachment_type then
+       and (
+         (
+           old.attachment_path is null
+           and new.attachment_path is null
+           and new.attachment_type is not distinct from old.attachment_type
+         )
+         or (
+           old.attachment_path is not null
+           and new.attachment_path is null
+           and new.attachment_type is null
+           and exists (
+             select 1
+             from app_private.message_cleanup_queue q
+             where q.item_kind = 'orphan'
+               and q.storage_path = old.attachment_path
+           )
+         )
+       ) then
       return new;
     end if;
 
@@ -222,10 +255,20 @@ begin
     raise exception 'The 15-minute delete window has expired' using errcode = '22023';
   end if;
 
+  -- Detach the private media path immediately so authenticated Storage reads
+  -- stop succeeding, then let the existing retryable worker remove the object.
+  if v_message.attachment_path is not null then
+    insert into app_private.message_cleanup_queue (item_kind, storage_path)
+    values ('orphan', v_message.attachment_path)
+    on conflict do nothing;
+  end if;
+
   perform set_config('app.allow_message_delete', 'on', true);
   update public.chat_messages
   set deleted_at = clock_timestamp(),
-      content = 'تم حذف الرسالة'
+      content = 'تم حذف الرسالة',
+      attachment_path = null,
+      attachment_type = null
   where id = v_message.id
   returning * into v_deleted;
 
