@@ -878,7 +878,6 @@ test('approved chat design keeps message copy/export and forwarding absent while
 
 
 test('conversation previews use the RLS-safe latest-visible-message RPC', async () => {
-  const source = await readFile(path.join(root, 'index.html'), 'utf8');
   const load = source.slice(source.indexOf('async function loadConversations'), source.indexOf('function findDirectConversation'));
   assert.match(load, /rpc\('get_latest_visible_conversation_messages'/);
   assert.doesNotMatch(load, /from\('chat_messages'\)\.select\('id,conversation_id,content,created_at,sender_id'\)/);
