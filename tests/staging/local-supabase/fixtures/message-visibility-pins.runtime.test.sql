@@ -64,6 +64,14 @@ BEGIN
   INSERT INTO public.user_conversation_pins(user_id,conversation_id)
   VALUES(v_user_a,v_conversation);
 
+  -- The preview RPC must omit A's hidden latest message under A's RLS context.
+  SELECT count(*) INTO v_count
+  FROM public.get_latest_visible_conversation_messages(ARRAY[v_conversation])
+  WHERE id=v_fresh_message;
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'Conversation preview exposed a message hidden by the current user';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM public.user_hidden_messages
     WHERE user_id=v_user_a AND message_id=v_fresh_message
@@ -94,6 +102,13 @@ BEGIN
 
   -- B cannot see or remove A's private state, but can still see the underlying message.
   PERFORM set_config('request.jwt.claim.sub',v_user_b::text,true);
+  -- A's private hide record must not suppress the message in B's preview.
+  SELECT count(*) INTO v_count
+  FROM public.get_latest_visible_conversation_messages(ARRAY[v_conversation])
+  WHERE id=v_fresh_message;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'Conversation preview incorrectly hid A message from User B';
+  END IF;
   IF EXISTS (SELECT 1 FROM public.user_hidden_messages WHERE message_id=v_fresh_message) THEN
     RAISE EXCEPTION 'User B can see User A hidden-message state';
   END IF;
