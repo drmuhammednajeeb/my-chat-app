@@ -36,13 +36,14 @@
     "mappedSourcesReplacedByFixtures": 2,
     "executedMappedSources": 73,
     "executedTestOnlySqlFixtures": 23,
-    "executedSqlFiles": 96,
+    "executedSqlFiles": 97,
     "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
     "candidateMappedSources": 73,
-    "candidateTestOnlySqlFixtures": 23,
-    "candidateSqlFiles": 96,
+    "candidateTestOnlySqlFixtures": 24,
+    "candidateSqlFiles": 97,
     "localRuntimeRunId": null,
-    "localRuntimeCommit": null
+    "localRuntimeCommit": null,
+    "testOnlyFixtureCount": 24
   },
   "execution": {
     "enabled": false,
@@ -687,8 +688,7 @@
       "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
       "testSources": [
         "supabase/migrations/20261125230604_message_visibility_pins_and_secure_delete.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
-        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql"
       ],
       "blockedBy": [],
       "parityNote": "Per-user message hiding and conversation pins, plus database-clock-enforced 15-minute delete-for-me and author-only delete-for-everyone. Secure delete locks active profile/Auth rows and the conversation-membership row before the message row; revised runtime probes cover active author success, suspended member denial, removed member denial, non-author denial, owner-side direct-update trigger rejection, attachment detachment into the retryable Storage cleanup queue, and expired deletion. Chat-media SELECT requires an active conversation member and a live chat_messages attachment reference; previously issued signed URLs remain valid until expiry or physical Storage removal. Fresh disposable-local replay pending for this revised source blob."
@@ -754,7 +754,9 @@
       "nodeId": "chat.latest-visible-conversation-previews",
       "status": "FORWARD_RECONCILIATION_PENDING_RUNTIME_VALIDATION",
       "testSources": [
-        "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql"
+        "supabase/migrations/20261125231500_latest_visible_conversation_previews.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+        "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql"
       ],
       "blockedBy": []
     },
@@ -1165,6 +1167,12 @@
       "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE",
       "productionApplied": false,
       "blockedBy": []
+    },
+    {
+      "path": "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+      "status": "TEST_ONLY_POST_PRODUCTION_ASSERTION",
+      "blockedBy": [],
+      "localRuntimeStatus": "PENDING_DISPOSABLE_LOCAL_SUPABASE"
     }
   ],
   "validationEvidence": {
