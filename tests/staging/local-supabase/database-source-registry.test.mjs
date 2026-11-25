@@ -9,31 +9,31 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const registryPath = path.join(root, 'supabase/migrations/source-registry.json');
 const blobSha = buffer => createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
-test('production registry records applied PR165 migrations and eleven pending forward migrations', async () => {
+test('production registry records applied PR165 migrations and ten pending forward migrations', async () => {
   const registry = JSON.parse(await readFile(registryPath, 'utf8'));
   assert.equal(registry.schemaVersion, 3);
   assert.equal(registry.registryStatus, 'CANONICAL_SOURCE_STREAM_ASSEMBLED_REVIEW_REQUIRED');
-  assert.equal(registry.productionDatabase.migrationCount, 66);
-  assert.equal(registry.productionMigrations.length, 64);
-  assert.equal(registry.sourceSets.productionLedgerMigrations, 64);
+  assert.equal(registry.productionDatabase.migrationCount, 67);
+  assert.equal(registry.productionMigrations.length, 65);
+  assert.equal(registry.sourceSets.productionLedgerMigrations, 65);
   assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 75);
-  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 11);
-  assert.equal(registry.forwardMigrations.length, 11);
-  assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 64);
-  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 11);
+  assert.equal(registry.sourceSets.forwardReconciliationMigrations, 10);
+  assert.equal(registry.forwardMigrations.length, 10);
+  assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 65);
+  assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 10);
   assert.equal(registry.forwardMigrationPolicy.executionAuthorized, false);
   assert.equal(registry.sourceSets.archiveSqlFiles, 12);
   assert.equal(registry.sourceSets.duplicatePairs, 0);
-  assert.equal(registry.sourceFiles.length, 64);
+  assert.equal(registry.sourceFiles.length, 65);
   assert.equal(registry.sourceSets.testOnlyFixtureCount, 24);
   assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 24);
   assert.ok(registry.sourceSets.testOnlyFixturePaths.includes('tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql'));
 
   const versions = registry.productionMigrations.map(item => item.version);
-  assert.equal(new Set(versions).size, 64);
+  assert.equal(new Set(versions).size, 65);
   assert.deepEqual(versions, [...versions].sort());
   const paths = registry.productionMigrations.map(item => item.path);
-  assert.equal(new Set(paths).size, 64);
+  assert.equal(new Set(paths).size, 65);
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
@@ -91,10 +91,6 @@ test('production registry records applied PR165 migrations and eleven pending fo
       assert.equal(migration.localRuntimeStatus, 'PASSED_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(migration.localRuntimeRunId, 44873724263);
       assert.equal(migration.localRuntimeCommit, 'c87c871f4474a9f2bd99d6ce422c8e36cb6d578f');
-      assert.equal(migration.productionApplied, false);
-      assert.deepEqual(migration.blockedBy, []);
-    } else if (migration.version === '20261125231500') {
-      assert.equal(migration.localRuntimeStatus, 'PENDING_DISPOSABLE_LOCAL_SUPABASE');
       assert.equal(migration.productionApplied, false);
       assert.deepEqual(migration.blockedBy, []);
     } else {
