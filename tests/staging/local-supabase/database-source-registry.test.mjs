@@ -41,6 +41,7 @@ test('production registry records applied PR165 migrations and ten pending forwa
   assert.equal(registry.sourceSets.testOnlyFixtureCount, 25);
   assert.equal(registry.sourceSets.testOnlyFixturePaths.length, 25);
   assert.ok(registry.sourceSets.testOnlyFixturePaths.includes('tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql'));
+  assert.ok(registry.sourceSets.testOnlyFixturePaths.includes('tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql'));
 
   const versions = registry.productionMigrations.map(item => item.version);
   assert.equal(new Set(versions).size, 65);
