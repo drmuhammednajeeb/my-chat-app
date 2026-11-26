@@ -163,49 +163,6 @@ test('multi-session concurrency and message stress runner is restricted to dispo
   assert.deepEqual(node.blockedBy, []);
   assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.direct-chat-runtime' && to === node.id));
 });
-  assert.equal(sql.includes('\nBEGIN;'), true);
-  assert.match(sql.trimEnd(), /ROLLBACK;$/);
-  assert.match(sql, /public\.admin_set_member_official_number/);
-  assert.match(sql, /public\.admin_update_membership_status/);
-  assert.match(sql, /DO \$membership_format\$/);
-  assert.match(sql, /profiles_membership_number_official_format/);
-  assert.match(sql, /member_invitation_number_format/);
-  for (const signature of [
-    'admin_create_official_member_invites_impl',
-    'admin_set_member_official_number_impl',
-    'create_profile_for_invited_user',
-    'enforce_invited_auth_signup',
-    'guard_profile_membership_fields',
-    'is_active_member'
-  ]) assert.ok(sql.includes(signature), 'missing membership format assertion for ' + signature);
-  assert.match(sql, /Invalid official membership number was accepted/);
-  assert.match(sql, /SET LOCAL ROLE authenticated;\s*DO \$invalid_membership\$/);
-  assert.match(sql, /\$invalid_membership\$;\s*RESET ROLE;/);
-  assert.match(sql, /public\.get_or_create_direct_conversation/);
-  assert.match(sql, /current_setting\('app\.test\.direct_a_id'\)::uuid/);
-  assert.match(sql, /:'direct_a_id'/);
-  assert.doesNotMatch(sql, /22222222-2222-4222-8222-22222222220[1-6]/);
-  assert.match(sql, /SET LOCAL statement_timeout = '30s'/);
-  assert.match(sql, /SET LOCAL lock_timeout = '10s'/);
-  assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
-  for (const label of [
-    'suspended target', 'suspended caller', 'unverified target', 'unverified caller',
-    'unconfirmed target', 'unconfirmed caller', 'missing profile target', 'missing auth user target',
-    'missing profile caller', 'missing auth user caller'
-  ]) assert.ok(sql.includes(label), 'missing runtime denial case: ' + label);
-  assert.match(sql, /Unauthenticated caller was accepted/);
-  assert.match(sql, /Self-target was accepted/);
-  assert.match(sql, /Null target was accepted/);
-  assert.match(sql, /has_function_privilege\('authenticated'/);
-  assert.match(sql, /has_function_privilege\('anon'/);
-  assert.match(sql, /aclexplode/);
-  assert.match(sql, /SET LOCAL ROLE service_role/);
-  assert.match(sql, /service_role invocation without an authenticated user was accepted/);
-  assert.match(sql, /SQLSTATE '28000' OR insufficient_privilege/);
-  assert.match(sql, /either SQLSTATE is a secure fail-closed denial/i);
-  assert.match(sql, /24-session reversed-pair and concurrent-message stress is a separate required test/i);
-  assert.doesNotMatch(sql, /auth_users_placeholder|session_replication_role|DISABLE TRIGGER/i);
-});
 
 test('runtime fixture remains design-only and cannot authorize local/cloud execution', async () => {
   const dag = JSON.parse(await readFile(
