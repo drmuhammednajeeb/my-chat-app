@@ -1385,6 +1385,8 @@ async function markConversationReceipt(conversationId,markRead=true,requestId=nu
 }
 async function publishTyping(isTyping){if(!state.typingChannel||!state.user)return;const now=Date.now();if(isTyping&&now-state.typingSent<1000)return;state.typingSent=now;try{await state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile?.display_name||'عضو',is_typing:isTyping}})}catch(e){console.debug('Typing broadcast failed',e?.message||e)}}
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
+ if(state.hiddenMessageIdsReady===false)return false;
+ if(state.hiddenMessageIds?.has(m?.id)){state.messageIds.add(m.id);return true;}
  return window.BizmindMessageLoader.renderMessage({state,message:m,conversationId,requestId,render:renderMessageInternal});
 }
 function reconcileMessageTimeline(area){
