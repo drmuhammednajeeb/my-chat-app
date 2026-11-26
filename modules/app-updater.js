@@ -37,6 +37,13 @@
     let latestRelease = null;
     let started = false;
     let reloadAfterControllerChange = false;
+    let intervalId = null;
+    let focusHandler = null;
+    let visibilityHandler = null;
+    let updateFoundHandler = null;
+    let controllerChangeHandler = null;
+    let startPromise = null;
+    let disposed = false;
 
     const currentVersion = () => doc.querySelector('meta[name="app-version"]')?.content || "0.0.0";
     const dismissedKey = "bizmindmakers-dismissed-update";
@@ -53,7 +60,7 @@
 
     function showUpdate(release) {
       const version = String(release?.version || "تحديث جديد");
-      if (wasDismissed(version) || overlay) return;
+      if (disposed || wasDismissed(version) || overlay) return;
       latestRelease = release || { version };
       const backdrop = doc.createElement("div");
       backdrop.className = "app-update-overlay";
@@ -99,12 +106,13 @@
     async function waitForInstall(worker) {
       if (!worker || worker.state === "installed" || worker.state === "activated" || worker.state === "redundant") return;
       await new Promise(resolve => {
-        const finish = () => { worker.removeEventListener("statechange", onChange); resolve(); };
+        let timer = null;
+        const finish = () => { worker.removeEventListener("statechange", onChange); if (timer !== null) win.clearTimeout(timer); resolve(); };
         const onChange = () => {
           if (worker.state === "installed" || worker.state === "activated" || worker.state === "redundant") finish();
         };
         worker.addEventListener("statechange", onChange);
-        win.setTimeout(finish, 12000);
+        timer = win.setTimeout(finish, 12000);
       });
     }
 
@@ -128,7 +136,7 @@
     }
 
     async function checkLatest() {
-      if (!fetcher) return null;
+      if (!fetcher || disposed) return null;
       try {
         const url = new URL("./version.json", doc.baseURI);
         url.searchParams.set("check", String(Date.now()));
@@ -152,12 +160,15 @@
     }
 
     async function start() {
+      if (disposed) return null;
+      if (startPromise) return startPromise;
       if (started) return registration;
       started = true;
+      startPromise = (async () => {
       if (win.navigator?.serviceWorker && win.location.protocol === "https:") {
         try {
           registration = await win.navigator.serviceWorker.register(new URL("./service-worker.js", doc.baseURI).toString(), { updateViaCache: "none" });
-          registration.addEventListener("updatefound", () => {
+          updateFoundHandler = () => {
             const worker = registration.installing;
             if (!worker) return;
             worker.addEventListener("statechange", () => {
@@ -165,26 +176,42 @@
                 void checkLatest().then(release => showUpdate(release || { version: "تحديث جديد" }));
               }
             });
-          });
+          };
+          registration.addEventListener("updatefound", updateFoundHandler);
           if (registration.waiting) void checkLatest().then(release => showUpdate(release || { version: "تحديث جديد" }));
-          win.navigator.serviceWorker.addEventListener("controllerchange", () => {
-            if (reloadAfterControllerChange) win.location.reload();
-          });
+          controllerChangeHandler = () => { if (reloadAfterControllerChange && !disposed) win.location.reload(); };
+          win.navigator.serviceWorker.addEventListener("controllerchange", controllerChangeHandler);
           await registration.update().catch(() => {});
         } catch (error) {
           console.warn("Service worker registration failed:", error);
         }
       }
+      if (disposed) return registration;
       await checkLatest();
-      win.addEventListener("focus", checkLatest);
-      doc.addEventListener("visibilitychange", () => {
-        if (doc.visibilityState === "visible") checkLatest();
-      });
-      win.setInterval(checkLatest, 5 * 60 * 1000);
+      if (disposed) return registration;
+      focusHandler = () => { void checkLatest(); };
+      visibilityHandler = () => { if (doc.visibilityState === "visible") void checkLatest(); };
+      win.addEventListener("focus", focusHandler);
+      doc.addEventListener("visibilitychange", visibilityHandler);
+      intervalId = win.setInterval(() => { void checkLatest(); }, 5 * 60 * 1000);
       return registration;
+      })();
+      return startPromise;
     }
 
-    return { start, checkLatest, compareVersions, getRegistration: () => registration };
+    function dispose() {
+      if (disposed) return false;
+      disposed = true;
+      if (intervalId !== null) { win.clearInterval(intervalId); intervalId = null; }
+      if (focusHandler) win.removeEventListener("focus", focusHandler);
+      if (visibilityHandler) doc.removeEventListener("visibilitychange", visibilityHandler);
+      if (updateFoundHandler && registration) registration.removeEventListener("updatefound", updateFoundHandler);
+      if (controllerChangeHandler && win.navigator?.serviceWorker) win.navigator.serviceWorker.removeEventListener("controllerchange", controllerChangeHandler);
+      overlay?.remove(); overlay = null;
+      return true;
+    }
+
+    return Object.freeze({ start, checkLatest, compareVersions, getRegistration: () => registration, dispose });
   }
 
   return { create, compareVersions };
