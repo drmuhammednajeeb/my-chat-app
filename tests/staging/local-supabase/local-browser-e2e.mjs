@@ -290,11 +290,18 @@ try {
       secondConversation,
       { timeout: 20000 }
     );
+    await accountB.page.waitForFunction(
+      expected => eval('state.diagnostics.lastRealtimeReceivedConversationId') === expected,
+      secondConversation,
+      { timeout: 20000 }
+    );
     const isolation = await accountB.page.evaluate(() => ({
+      appReceivedConversation: eval('state.diagnostics.lastRealtimeReceivedConversationId'),
       appConversation: eval('state.diagnostics.lastRealtimeConversationId'),
       activeConversation: eval('state.active?.id'),
       foreignMessageVisible: document.querySelector('#messages')?.innerText.includes(window.__BIZMIND_E2E_FOREIGN_MESSAGE__ || '__not_set__') || false
     }));
+    assert.equal(isolation.appReceivedConversation, secondConversation, 'The application channel itself must receive the foreign conversation INSERT.');
     assert.equal(isolation.activeConversation, conversation, 'Account B must remain in the original active conversation.');
     assert.equal(isolation.appConversation, conversation, 'Foreign conversation CDC events must not enter the active app handler.');
     assert.equal(isolation.foreignMessageVisible, false, 'A message from another conversation must never render in the active chat.');
