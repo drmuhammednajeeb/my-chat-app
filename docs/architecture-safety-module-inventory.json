@@ -5,17 +5,17 @@
     "auth-error-messages.js",
     "auth-light.js",
     "backup-restore.js",
+    "conversation-search.js",
     "message-loader.js",
     "message-reactions.js",
+    "message-timeline.js",
+    "password-strength.js",
+    "performance-analytics.js",
     "profile-status-and-conversation-images.js",
     "runtime-config.js",
-    "status-workspace.js",
-    "voice-recorder.js",
-    "password-strength.js",
     "signup-name-validation.js",
-    "conversation-search.js",
-    "performance-analytics.js",
-    "message-timeline.js"
+    "status-workspace.js",
+    "voice-recorder.js"
   ],
   "implicitGlobals": [
     {
@@ -52,6 +52,13 @@
         "toast"
       ],
       "reason": "Existing shared-state and service coupling; lifecycle contract to be hardened."
+    },
+    {
+      "module": "message-timeline.js",
+      "globals": [
+        "state"
+      ],
+      "reason": "Rollback helper receives the existing shared state object explicitly."
     }
   ]
 }
