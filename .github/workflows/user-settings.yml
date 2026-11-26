@@ -1,0 +1,45 @@
+name: User Settings Controller Checks
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'modules/user-settings.js'
+      - 'modules/app-theme.js'
+      - 'tests/user-settings.test.js'
+      - '.github/workflows/user-settings.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'modules/user-settings.js'
+      - 'modules/app-theme.js'
+      - 'tests/user-settings.test.js'
+      - '.github/workflows/user-settings.yml'
+permissions:
+  contents: read
+jobs:
+  user-settings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tests/user-settings.test.js
+      - name: Verify user settings integration
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const moduleTag = html.indexOf('./modules/user-settings.js');
+          const inline = html.indexOf('window.BizmindUserSettings.create');
+          const theme = html.indexOf('./modules/app-theme.js');
+          if (theme < 0 || moduleTag < 0 || inline < 0 || theme > moduleTag || moduleTag > inline) {
+            throw new Error('User settings module must load after app theme and before inline integration.');
+          }
+          if (!html.includes('async function loadUserSettings(){return userSettingsController.load()}') ||
+              !html.includes('async function saveUserSetting(key,value){return userSettingsController.save(key,value)}')) {
+            throw new Error('Legacy compatibility wrappers are missing.');
+          }
+          console.log('user settings script order and wrappers verified');
+          NODE
