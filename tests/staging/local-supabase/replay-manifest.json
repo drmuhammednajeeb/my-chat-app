@@ -7,7 +7,7 @@
     "mappedSources": 77,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 24,
+    "testOnlySqlFixtures": 25,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -32,16 +32,17 @@
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
-      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+      "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
     "executedMappedSources": 73,
-    "executedTestOnlySqlFixtures": 24,
-    "executedSqlFiles": 97,
+    "executedTestOnlySqlFixtures": 25,
+    "executedSqlFiles": 99,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
     "candidateMappedSources": 75,
-    "candidateTestOnlySqlFixtures": 24,
-    "candidateSqlFiles": 99,
+    "candidateTestOnlySqlFixtures": 25,
+    "candidateSqlFiles": 100,
     "localRuntimeRunId": 45720775547,
     "localRuntimeCommit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
     "testOnlyFixtureCount": 24
@@ -685,6 +686,15 @@
       "parityNote": "Current-mainline runtime pending; previous PR #147 evidence is not carried forward."
     },
     {
+      "nodeId": "security.self-chat-rls-repair",
+      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "testSources": [
+        "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Forward-only RPC hardening; not production-applied."
+    },
+    {
       "nodeId": "chat.message-visibility-pins-and-delete",
       "status": "PRODUCTION_APPLIED_RUNTIME_PASSED",
       "testSources": [
@@ -732,6 +742,15 @@
       ],
       "blockedBy": [],
       "parityNote": "Synthetic rollback-only signup assertions; current-mainline runtime pending."
+    },
+    {
+      "nodeId": "test-fixture.self-chat-runtime",
+      "status": "TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PENDING",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Rollback-only runtime assertions on disposable local Supabase synthetic identities."
     },
     {
       "nodeId": "chat.message-visibility-foreign-key-indexes",
