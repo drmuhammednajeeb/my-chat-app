@@ -1,0 +1,46 @@
+name: Conversation Lifecycle Checks
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'modules/conversation-lifecycle.js'
+      - 'tests/conversation-lifecycle.test.js'
+      - '.github/workflows/conversation-lifecycle.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'modules/conversation-lifecycle.js'
+      - 'tests/conversation-lifecycle.test.js'
+      - '.github/workflows/conversation-lifecycle.yml'
+permissions:
+  contents: read
+jobs:
+  conversation-lifecycle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tests/conversation-lifecycle.test.js
+      - name: Verify conversation lifecycle integration
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const moduleTag = html.indexOf('./modules/conversation-lifecycle.js');
+          const inline = html.indexOf('window.BizmindConversationLifecycle.create');
+          if (moduleTag < 0 || inline < 0 || moduleTag > inline) {
+            throw new Error('Conversation lifecycle module must load before inline integration.');
+          }
+          if (!html.includes('conversationLifecycle.begin(c.id)') ||
+              !html.includes('conversationLifecycle.isCurrent(openToken,c.id)') ||
+              !html.includes('conversationLifecycle.invalidate()')) {
+            throw new Error('Conversation open, stale-result guard, and invalidation integration are required.');
+          }
+          if (html.includes('openToken!==state.conversationOpenVersion')) {
+            throw new Error('Legacy conversation open-token checks remain.');
+          }
+          console.log('conversation lifecycle script order and integration verified');
+          NODE
