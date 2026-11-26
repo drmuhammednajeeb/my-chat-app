@@ -56,8 +56,8 @@ test("runtime deployment configuration always bypasses caches and emits no-store
 
 test("offline navigation falls back to the cached document before the scope root", () => {
   assert.match(worker, /if \(request\.mode === ["']navigate["']\)/);
-  assert.ok(worker.includes('cache.match(new URL("./index.html", scopeUrl))'));
-  assert.ok(worker.includes('cache.match(new URL("./", scopeUrl))'));
+  assert.ok(worker.includes('cache.match(new URL("./index.html", scopeUrl).href)'));
+  assert.ok(worker.includes('cache.match(new URL("./", scopeUrl).href)'));
   assert.match(worker, /status: 503/);
 });
 
@@ -67,6 +67,6 @@ test("CDN cache stores only successful or opaque responses and tolerates offline
   assert.match(worker, /statusText: ["']Offline static asset unavailable["']/);
 });
 
-test("PWA manifest remains linked from the application document", () => {
+test("PWA registration remains present and points to the application service worker", () => {\n  assert.match(html, /serviceWorker/);\n  assert.match(html, /service-worker\\.js/);\n});\n\ntest("PWA manifest remains linked from the application document", () => {
   assert.match(html, /<link rel="manifest" href="\.\/manifest\.json">/);
 });

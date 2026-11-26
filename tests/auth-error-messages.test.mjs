@@ -47,7 +47,7 @@ test('auth request mode is captured and mode controls are locked while pending',
 
 test('the service worker precaches the auth error helper and advances its cache version', () => {
   assert.match(worker, /auth-error-messages\.js/);
-  assert.match(worker, /CACHE_VERSION = "v48"/);
+  assert.match(worker, /CACHE_VERSION = "v49"/);
 });
 
 test('safe local validation messages remain actionable for both auth modes', () => {
