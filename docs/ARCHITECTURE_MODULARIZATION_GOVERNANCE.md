@@ -74,3 +74,25 @@ Features should not import or invoke other feature internals directly. Cross-fea
 ## Scoring discipline
 
 100/100 for architecture is an aspirational target, not an immediate label. A score requires evidence that the boundaries are enforced, coupling reduced, module lifecycle covered, dependency graph verified, and extraction regression tests passed across the full application. Static governance is the first closure step, not the finish line.
+
+## Stage scorecard (evidence-based, provisional)
+
+Scores are stage snapshots for this refactor and are not a certification or a full application audit.
+
+| Stage | Score | Evidence / remaining gap |
+|---|---:|---|
+| Baseline architecture | 61/100 | Large inline controller, implicit contracts and manual dependency map remain. |
+| Governance & shell contracts | 68/100 | Static shell/module/CSS/DOM/event-attribute checks added; no AST graph or ownership enforcement yet. |
+| Lifecycle pilot: app updater | 72/100 (module lifecycle) | Start idempotency, interval/listener disposal and timeout cleanup added and tested; the rest of the modules still require audit and teardown coverage. |
+| Whole application architecture | 63/100 (provisional) | Governance and a single lifecycle pilot reduce specific risks; the broad controller and cross-feature coupling still dominate. |
+
+### Current stage closure conditions
+
+- [x] Shell/module and offline asset contract checks.
+- [x] Duplicate DOM id and inline event-handler contract checks.
+- [x] Module updater start idempotency pilot.
+- [x] Module updater polling and listener disposal pilot.
+- [ ] CI validation of the latest lifecycle change.
+- [ ] Lifecycle audit across the remaining modules.
+- [ ] Generated/verified dependency inventory and cycle enforcement.
+- [ ] Explicit dependency contracts for the first broader feature extraction.
