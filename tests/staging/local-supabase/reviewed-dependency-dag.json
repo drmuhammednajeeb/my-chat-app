@@ -1691,7 +1691,9 @@
       "requires": [
         "chat.self",
         "membership.final-format",
-        "test-fixture.direct-chat-profiles"
+        "test-fixture.direct-chat-profiles",
+        "security.active-membership-rls-forward",
+        "chat.latest-visible-conversation-previews"
       ],
       "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "testSource": [
@@ -2708,6 +2710,14 @@
     [
       "test-fixture.direct-chat-profiles",
       "test-fixture.self-chat-runtime"
+    ],
+    [
+      "security.active-membership-rls-forward",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "chat.latest-visible-conversation-previews",
+      "security.self-chat-rls-repair"
     ]
   ],
   "blockers": [
