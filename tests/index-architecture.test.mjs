@@ -1,0 +1,28 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+const moduleSource=readFileSync(new URL("../modules/password-strength.js",import.meta.url),"utf8");
+const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const context={};vm.runInNewContext(moduleSource,context);
+const calculate=context.BizmindPasswordStrength.calculate;
+test("password-strength utility is standalone and loaded before the core",()=>{
+ assert.equal(typeof calculate,"function");
+ assert.doesNotMatch(moduleSource,/(?:^|\n)\s*import\s|\bexport\s/m);
+ assert.ok(html.indexOf("./modules/password-strength.js")<html.indexOf("__bootMainScriptStarted"));
+});
+test("empty and short password behavior remains stable",()=>{
+ assert.deepEqual(JSON.parse(JSON.stringify(calculate(""))),{level:0,label:"لم تُدخل كلمة المرور بعد"});
+ assert.equal(calculate("abc").level,1);assert.equal(calculate("abc").label,"ضعيفة");
+});
+test("representative medium, strong and very-strong cases are retained",()=>{
+ assert.equal(calculate("abcdefgh").level,1);
+ assert.equal(calculate("abcdefghij").level,2);
+ assert.equal(calculate("Abcdefgh12").level,3);
+ assert.equal(calculate("Abcdefgh12!XYZ").level,4);
+});
+test("UI wrapper delegates to the extracted module",()=>{
+ const wrapper=html.match(/function updatePasswordStrength\(\)\{[\s\S]*?\n\}/);
+ assert.ok(wrapper);assert.match(wrapper[0],/window\.BizmindPasswordStrength\.calculate/);
+ assert.doesNotMatch(html,/function getPasswordStrength\(/);
+});
