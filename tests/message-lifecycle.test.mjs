@@ -7,6 +7,10 @@ import audioPlayer from '../modules/audio-player.js';
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const loaderSource = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
 const timelineSource = await readFile(new URL('../modules/message-timeline.js', import.meta.url), 'utf8');
+const olderLoaderSource = await readFile(new URL('../modules/older-message-loader.js', import.meta.url), 'utf8');
+const olderLoaderContext = { window: {}, console };
+vm.runInNewContext(olderLoaderSource, olderLoaderContext);
+const olderHistoryApi = olderLoaderContext.window.BizmindOlderHistory;
 const timelineContext = {};
 vm.runInNewContext(timelineSource, timelineContext);
 const timelineApi = timelineContext.BizmindMessageTimeline;
@@ -290,12 +294,12 @@ test('message loader reconciles the latest server page while preserving explicit
   assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
   assert.match(loaderSource, /function mergeWindow\(currentRows, fetchedRows, conversationId, syncStartedAt, clearedBefore, compare, loadedHistoryIds\)/);
   assert.match(loaderSource, /isAfterClear\(row, clearedBefore\)/);
-  assert.match(older, /older\.forEach\(message=>state\.loadedHistoryIds\.add\(message\.id\)\)/);
+  assert.match(olderLoaderSource, /older\.forEach\(message=>state\.loadedHistoryIds\.add\(message\.id\)\)/);
   assert.match(open, /state\.loadedHistoryIds=new Set\(\)/);
-  assert.match(older, /rollbackCancelledOlderHistory\(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds\)/);
-  assert.match(older, /const rollbackApplied=rollbackCancelledOlderHistory/);
-  assert.match(older, /if\(rollbackApplied\)\{/);
-  assert.match(older, /messageTimelineRenderOwner===requestId/);
+  assert.match(olderLoaderSource, /rollbackCancelledOlderHistory\(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds\)/);
+  assert.match(olderLoaderSource, /const rollbackApplied=rollbackCancelledOlderHistory/);
+  assert.match(olderLoaderSource, /if\(rollbackApplied\)\{/);
+  assert.match(olderLoaderSource, /messageTimelineRenderOwner===requestId/);
   assert.match(loaderSource, /state\.messageTimelineCommitVersion = requestId/);
   assert.doesNotMatch(loaderSource, /slice\(-100\)/);
 });
@@ -465,7 +469,7 @@ test('in-flight older history is protected from reconciliation and safely remove
     }),
     createDocumentFragment: () => ({ children: [], append(node) { this.children.push(node); } })
   };
-  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
+  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', { BizmindOlderHistory: olderHistoryApi,
     state, document, supabaseClient, $: () => area, console,
     rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')', { BizmindMessageTimeline: timelineApi }),
     BizmindMessageTimeline: timelineApi,
@@ -611,7 +615,7 @@ test('failed older-history batch restores the original transcript and pagination
   };
   const toastMessages = [];
   let renderCount = 0;
-  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
+  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', { BizmindOlderHistory: olderHistoryApi,
     state, document, supabaseClient, $: () => area, console,
     rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')', { BizmindMessageTimeline: timelineApi }),
     BizmindMessageTimeline: timelineApi,
@@ -641,7 +645,7 @@ test('failed older-history batch restores the original transcript and pagination
 });
 
 test('older-history rendering is transactional and releases only its own loading state', () => {
-  const older = extractFunction('loadOlderMessages');
+  const older = olderLoaderSource;
   assert.match(older, /const originalMessages=state\.messages\.slice\(\)/);
   assert.match(older, /originalHasMore=state\.hasMoreMessages/);
   assert.match(older, /renderedHistoryIds\.add\(message\.id\)/);

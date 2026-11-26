@@ -23,7 +23,7 @@
     },
     {
       "path": "modules/voice-recorder.js",
-      "loadOrder": 16,
+      "loadOrder": 17,
       "dependsOn": [
         "state",
         "toast"
@@ -55,17 +55,17 @@
     },
     {
       "path": "modules/runtime-config.js",
-      "loadOrder": 13,
+      "loadOrder": 14,
       "dependsOn": []
     },
     {
       "path": "modules/password-strength.js",
-      "loadOrder": 10,
+      "loadOrder": 11,
       "dependsOn": []
     },
     {
       "path": "modules/signup-name-validation.js",
-      "loadOrder": 14,
+      "loadOrder": 15,
       "dependsOn": []
     },
     {
@@ -77,7 +77,7 @@
     },
     {
       "path": "modules/profile-status-and-conversation-images.js",
-      "loadOrder": 12,
+      "loadOrder": 13,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -86,7 +86,7 @@
     },
     {
       "path": "modules/status-workspace.js",
-      "loadOrder": 15,
+      "loadOrder": 16,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -107,7 +107,7 @@
     },
     {
       "path": "modules/performance-analytics.js",
-      "loadOrder": 11,
+      "loadOrder": 12,
       "dependsOn": [
         "localStorage",
         "performance",
@@ -121,6 +121,18 @@
       "loadOrder": 9,
       "dependsOn": [
         "state"
+      ]
+    },
+    {
+      "path": "modules/older-message-loader.js",
+      "loadOrder": 10,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast",
+        "messageReactions",
+        "renderMessage",
+        "timeline rollback/reconciliation callbacks"
       ]
     }
   ]

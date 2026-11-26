@@ -9,6 +9,7 @@
     "message-loader.js",
     "message-reactions.js",
     "message-timeline.js",
+    "older-message-loader.js",
     "password-strength.js",
     "performance-analytics.js",
     "profile-status-and-conversation-images.js",
@@ -59,6 +60,15 @@
         "state"
       ],
       "reason": "Rollback helper receives the existing shared state object explicitly."
+    },
+    {
+      "module": "older-message-loader.js",
+      "globals": [
+        "state",
+        "supabaseClient",
+        "toast"
+      ],
+      "reason": "Older-history pagination is isolated behind injected dependencies and an index.html compatibility facade."
     }
   ]
 }
