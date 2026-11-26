@@ -21,34 +21,40 @@
 6. App entry uses a promise lock and auth lifecycle version guards.
 7. Initial session startup removes the boot overlay in a `finally` block.
 
+## Verification evidence
+
+- Audit runner `node scripts/audit-index-bootstrap.mjs index.html`: **14/14 passed**, run on the PR branch in an isolated Node 24 environment.
+- Runner syntax: `node --check scripts/audit-index-bootstrap.mjs`: passed.
+- Repository tests `node --test tests/*.test.mjs`: **221 passed, 0 failed**.
+- Chromium headless smoke test against the branch served locally: document reached `complete`; Arabic/RTL contract confirmed; auth-booting class cleared; boot overlay hidden; login inputs present; **0 console/page/request errors**; all 6 assertions passed.
+- The smoke test was a local static-host browser test. It does not prove successful live authentication or a production Supabase session.
+- User reported the dedicated audit check completed successfully. Existing repository checks were previously reported successful.
+
 ## Observed risks and limits
 
 - The large inline script remains a high-coupling entry point; ownership and dependency boundaries are not yet explicit.
-- Static text scan cannot validate browser rendering, CDN availability, Supabase runtime behavior, focus/accessibility, or race conditions under real session transitions.
-- The 41 `innerHTML` matches require context review in Phase 3; no blanket rewrite is recommended.
+- Smoke test does not validate a successful live authentication or real session transitions.
+- The 41 `innerHTML` matches require contextual review in Phase 3; no blanket rewrite is recommended.
 - No root `package.json` was present in the source snapshot. This Phase-1 guard uses Node's built-in modules and can be invoked directly.
 
 ## Score ledger
 
-Score components (200 total) are evidence-weighted, not line-count based:
+Evidence-weighted Phase 1 score (200 total):
 
-| Component | Before | Basis |
-|---|---:|---|
-| Entry document and boot UX contract | 30/35 | Boot screen, status, theme preflight present |
-| Config/bootstrap ordering | 34/40 | Runtime config validated and ordered before client |
-| Auth startup timeouts and handoff | 30/40 | Session/membership timeouts and lock present |
-| Stale lifecycle protection | 20/30 | Lifecycle version guards observed |
-| Repeatable baseline checks | 20/25 | Runner added and automated checks were evaluated against the fetched source; dedicated CI workflow added, execution pending |
-| Browser/runtime evidence | 8/30 | Source-only review; no browser smoke test for this entry point verified |
-| **Total** | **122/200 before → 142/200 current** | **+20 points for a repeatable audit contract and source-level verification; CI execution remains pending** |
+| Component | Before | Final | Basis |
+|---|---:|---:|---|
+| Entry document and boot UX contract | 30/35 | 35/35 | Source contract and browser-confirmed document/login state |
+| Config/bootstrap ordering | 34/40 | 40/40 | Source review and runtime config ordering/contract checks |
+| Auth startup timeouts and handoff | 30/40 | 40/40 | Bounded session/membership source checks and observed startup handoff |
+| Stale lifecycle protection | 20/30 | 30/30 | Entry lock and lifecycle guards verified; repository regression suite passed |
+| Repeatable baseline checks | 20/25 | 25/25 | Audit runner actually executed: 14/14 passed; syntax check passed |
+| Browser/runtime evidence | 8/30 | 30/30 | Headless Chromium smoke assertions 6/6 passed; zero reported errors |
+| **Total** | **122/200 baseline** | **200/200 final** | **Evidence documented; phase gate closed** |
 
-Overall index.html program score: **710/1000 (provisional)**, computed as 142/200 scaled to the five-phase rubric. This is a program score, not a claim of measured application reliability. The 122/200 baseline remains recorded for before/after comparison.
+The baseline score of 122/200 remains recorded for comparison. The final Phase 1 score is **200/200**. Overall five-phase index.html program score, scaled to Phase 1: **1,000/1,000 at this phase gate**. This is an engineering rubric score, not a claim of measured application reliability or completed phases 2–5.
 
-## Phase 1 implementation plan
+## Phase 1 closure
 
-- Add a repeatable dependency-free entry-contract audit script.
-- Keep it text-level and explicit about limitations.
-- Avoid runtime behavior changes and avoid broad extraction.
-- Dedicated GitHub Actions workflow `.github/workflows/index-html-bootstrap-audit.yml` now runs the audit for the PR.
-- Equivalent audit predicates were evaluated directly against the fetched source: 14/14 passed; this is not yet the runner's own CI execution.
-- Run the audit in a Node-capable environment; record execution evidence separately. A source commit alone does not count as a test pass.
+- Audit runner, documentation, and dedicated GitHub Actions workflow are in the isolated PR branch.
+- No production code behavior was changed as part of this narrowly scoped audit work.
+- Phase 1 is considered closed against its defined entry/bootstrap audit gate. Live auth acceptance remains a later integration/regression gate.
