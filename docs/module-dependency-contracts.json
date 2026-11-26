@@ -115,6 +115,11 @@
         "PerformanceObserver",
         "updateDiagnostics callback"
       ]
+    },
+    {
+      "path": "modules/message-timeline.js",
+      "loadOrder": 16,
+      "dependsOn": []
     }
   ]
 }
