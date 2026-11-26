@@ -12,7 +12,8 @@
     "status-workspace.js",
     "voice-recorder.js",
     "password-strength.js",
-    "signup-name-validation.js"
+    "signup-name-validation.js",
+    "conversation-search.js"
   ],
   "implicitGlobals": [
     {
