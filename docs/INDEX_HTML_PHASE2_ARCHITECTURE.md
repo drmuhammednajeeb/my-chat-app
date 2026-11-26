@@ -86,3 +86,12 @@ Score is an evidence-weighted engineering rubric, not a reliability metric. Phas
 - Added focused tests for stale timeline ownership, rollback of request-owned rows, preservation of replacement rows, chronological ordering and day-divider reconciliation.
 - Registered the module in the dependency contract and safety inventory, loaded it before the core, and precached it in service-worker cache v54.
 - Wave 5 verification is pending automated checks; no merge, deployment or production database changes.
+
+
+## Wave 6 — Deep Core Responsibility Extraction: older-history pagination
+- Extracted the asynchronous older-history pagination lifecycle from the inline core into `modules/older-message-loader.js`.
+- Kept the inline `loadOlderMessages()` call surface as a compatibility facade, injecting state, backend client, renderer, metadata enrichers, timeline rollback/reconciliation helpers, and toast callback.
+- Preserved cursor pagination, cleared-history boundary, reply-context enrichment, stale-conversation/request fences, request-owned rollback, chronological reconciliation, DOM anchoring, and bounded batch size.
+- Registered the module in dependency and safety inventories; precached it in the shell and bumped service-worker cache to v55.
+- Added focused boundary tests for API shape, safe no-op preconditions, cursor and chronological commit behavior.
+- Wave 6 is awaiting CI validation; this extraction does not modify schema, production data, or deployment.
