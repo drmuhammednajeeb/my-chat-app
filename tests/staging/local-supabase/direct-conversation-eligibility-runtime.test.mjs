@@ -62,6 +62,125 @@ test('synthetic profiles are inserted after the profile guard and before officia
 
 test('PostgreSQL runtime assertions cover success, rejection, reuse, and RPC ACL inside rollback', async () => {
   const sql = await read('direct-conversation-eligibility-runtime.test.sql');
+  const selfChatMigration = await readFile(
+    path.join(root, 'supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql'), 'utf8');
+  assert.match(selfChatMigration, /SECURITY DEFINER/);
+  assert.match(selfChatMigration, /SET search_path = ''/);
+  assert.match(selfChatMigration, /auth\.uid\(\)/);
+  assert.match(selfChatMigration, /membership_status = 'active'/);
+  assert.match(selfChatMigration, /membership_number_verified IS TRUE/);
+  assert.match(selfChatMigration, /membership_number ~ '\^971\[0-9\]\{9\}\
+  assert.equal(sql.includes('\nBEGIN;'), true);
+  assert.match(sql.trimEnd(), /ROLLBACK;$/);
+  assert.match(sql, /public\.admin_set_member_official_number/);
+  assert.match(sql, /public\.admin_update_membership_status/);
+  assert.match(sql, /DO \$membership_format\$/);
+  assert.match(sql, /profiles_membership_number_official_format/);
+  assert.match(sql, /member_invitation_number_format/);
+  for (const signature of [
+    'admin_create_official_member_invites_impl',
+    'admin_set_member_official_number_impl',
+    'create_profile_for_invited_user',
+    'enforce_invited_auth_signup',
+    'guard_profile_membership_fields',
+    'is_active_member'
+  ]) assert.ok(sql.includes(signature), 'missing membership format assertion for ' + signature);
+  assert.match(sql, /Invalid official membership number was accepted/);
+  assert.match(sql, /SET LOCAL ROLE authenticated;\s*DO \$invalid_membership\$/);
+  assert.match(sql, /\$invalid_membership\$;\s*RESET ROLE;/);
+  assert.match(sql, /public\.get_or_create_direct_conversation/);
+  assert.match(sql, /current_setting\('app\.test\.direct_a_id'\)::uuid/);
+  assert.match(sql, /:'direct_a_id'/);
+  assert.doesNotMatch(sql, /22222222-2222-4222-8222-22222222220[1-6]/);
+  assert.match(sql, /SET LOCAL statement_timeout = '30s'/);
+  assert.match(sql, /SET LOCAL lock_timeout = '10s'/);
+  assert.match(sql, /app_private\.get_or_create_direct_conversation_impl/);
+  for (const label of [
+    'suspended target', 'suspended caller', 'unverified target', 'unverified caller',
+    'unconfirmed target', 'unconfirmed caller', 'missing profile target', 'missing auth user target',
+    'missing profile caller', 'missing auth user caller'
+  ]) assert.ok(sql.includes(label), 'missing runtime denial case: ' + label);
+  assert.match(sql, /Unauthenticated caller was accepted/);
+  assert.match(sql, /Self-target was accepted/);
+  assert.match(sql, /Null target was accepted/);
+  assert.match(sql, /has_function_privilege\('authenticated'/);
+  assert.match(sql, /has_function_privilege\('anon'/);
+  assert.match(sql, /aclexplode/);
+  assert.match(sql, /SET LOCAL ROLE service_role/);
+  assert.match(sql, /service_role invocation without an authenticated user was accepted/);
+  assert.match(sql, /SQLSTATE '28000' OR insufficient_privilege/);
+  assert.match(sql, /either SQLSTATE is a secure fail-closed denial/i);
+  assert.match(sql, /24-session reversed-pair and concurrent-message stress is a separate required test/i);
+  assert.doesNotMatch(sql, /auth_users_placeholder|session_replication_role|DISABLE TRIGGER/i);
+});
+
+test('runtime fixture remains design-only and cannot authorize local/cloud execution', async () => {
+  const dag = JSON.parse(await readFile(
+    path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const manifest = JSON.parse(await readFile(
+    path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-runtime');
+  assert.ok(node);
+  assert.equal(node.status, 'TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED');
+  assert.ok(node.blockedBy.includes('DAG-014'));
+  assert.ok(node.blockedBy.includes('DAG-015'));
+  assert.ok(node.requires.includes('membership.final-format'));
+  assert.ok(node.requires.includes('chat.direct-conversation-rpc-eligibility-guard'));
+  assert.equal(dag.status, 'BLOCKED');
+  assert.equal(dag.executionAuthorized, false);
+  assert.equal(dag.safety.sqlExecutionEnabled, false);
+  assert.equal(dag.safety.supabaseStartupAuthorized, false);
+  assert.equal(dag.safety.cloudConnectionsAllowed, false);
+  assert.equal(dag.safety.productionDataAllowed, false);
+  assert.equal(manifest.mode, 'DESIGN_ONLY');
+  assert.equal(manifest.status, 'BLOCKED');
+  assert.equal(manifest.execution.enabled, false);
+  assert.deepEqual(manifest.execution.files, []);
+  assert.equal(manifest.execution.sqlExecuted, false);
+  assert.equal(manifest.execution.localStackStarted, false);
+  assert.equal(manifest.execution.cloudAllowed, false);
+  assert.equal(manifest.execution.productionAllowed, false);
+});
+
+test('multi-session concurrency and message stress runner is restricted to disposable loopback PostgreSQL', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8');
+  assert.match(runner, /LOCAL_SUPABASE_DB_URL/);
+  assert.match(runner, /const eligibleSql/);
+  assert.match(runner, /statement_timeout = '60s'/);
+  assert.match(runner, /lock_timeout = '30s'/);
+  assert.match(runner, /PGCONNECT_TIMEOUT: '5'/);
+  assert.match(runner, /PATH: process\.env\.PATH/);
+  assert.doesNotMatch(runner, /\.\.\.process\.env/);
+  assert.match(runner, /127\.0\.0\.1/);
+  assert.match(runner, /url\.port !== expectedDbPort/);
+  assert.ok(runner.includes('LOCAL_SUPABASE_EXPECTED_DB_PORT'));
+  assert.match(runner, /url\.username !== 'postgres'/);
+  assert.match(runner, /Promise\.allSettled/);
+  assert.match(runner, /pg_sleep\(0\.25\)/);
+  assert.match(runner, /SELECT count\(\*\)::text FROM public\.conversations/);
+  assert.match(runner, /callSql\(callerA, callerB\)/);
+  assert.match(runner, /callSql\(callerB, callerA\)/);
+  assert.match(runner, /Refusing non-local database target/);
+  assert.match(runner, /NOT EXISTS \(SELECT 1 FROM public\.chat_messages/);
+  assert.match(runner, /conversationIds/);
+  assert.doesNotMatch(runner, /supabase\.co|service_role key|SUPABASE_SERVICE_ROLE_KEY/i);
+  const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-concurrency');
+  assert.ok(node);
+  assert.equal(node.status, 'TEST_ONLY_DIRECT_CHAT_CONCURRENCY_RUNTIME_PASSED');
+  assert.deepEqual(node.blockedBy, []);
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.direct-chat-runtime' && to === node.id));
+});
+/);
+  assert.match(selfChatMigration, /email_confirmed_at IS NOT NULL/);
+  assert.match(selfChatMigration, /FOR SHARE OF p, u/);
+  assert.match(selfChatMigration, /REVOKE ALL ON FUNCTION public\.ensure_self_chat\(\) FROM PUBLIC, anon, authenticated/);
+  assert.match(selfChatMigration, /GRANT EXECUTE ON FUNCTION public\.ensure_self_chat\(\) TO authenticated/);
+  assert.match(sql, /public\.ensure_self_chat\(\)/);
+  assert.match(sql, /Self-chat creation must be idempotent/);
+  assert.match(sql, /Self-chat accepted an ineligible caller/);
+  assert.match(sql, /Self-chat accepted an unauthenticated caller/);
+  assert.match(sql, /Self-chat RPC EXECUTE ACL is not restricted to authenticated/);
   assert.equal(sql.includes('\nBEGIN;'), true);
   assert.match(sql.trimEnd(), /ROLLBACK;$/);
   assert.match(sql, /public\.admin_set_member_official_number/);
