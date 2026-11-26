@@ -88,7 +88,7 @@ test('the real authentication flow owns lamp state transitions and static assets
   assert.match(html, /BizmindAuthLight\?\.setState\('checking'\)/);
   assert.match(html, /BizmindAuthLight\?\.setState\('success'\)/);
   assert.match(html, /BizmindAuthLight\?\.setState\('error'\)/);
-  assert.match(worker, /CACHE_VERSION = "v55"/);
+  assert.match(worker, /CACHE_VERSION = "v56"/);
   assert.match(worker, /\.\/modules\/auth-light\.js/);
   assert.match(worker, /\.\/modules\/auth-light\.css/);
 });
