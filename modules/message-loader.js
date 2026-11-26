@@ -572,5 +572,7 @@
     }
   }
 
-  root.BizmindMessageLoader = Object.freeze({ loadMessages, loadOlderMessages, renderMessage, mergeWindow, mergeTimeline, isCurrentRequest });
+  const api = Object.freeze({ loadMessages, loadOlderMessages, renderMessage, mergeWindow, mergeTimeline, isCurrentRequest });
+  root.BizmindMessageLoader = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
