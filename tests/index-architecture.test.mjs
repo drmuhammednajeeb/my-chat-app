@@ -8,7 +8,8 @@ const context={};vm.runInNewContext(moduleSource,context);
 const calculate=context.BizmindPasswordStrength.calculate;
 test("password-strength utility is standalone and loaded before the core",()=>{
  assert.equal(typeof calculate,"function");
- assert.doesNotMatch(moduleSource,/(?:^|\n)\s*import\s|\bexport\s/m);
+ assert.doesNotMatch(moduleSource,/(?:^|
+)\s*import\s|\bexport\s/m);
  assert.ok(html.indexOf("./modules/password-strength.js")<html.indexOf("__bootMainScriptStarted"));
 });
 test("empty and short password behavior remains stable",()=>{
@@ -22,8 +23,10 @@ test("representative medium, strong and very-strong cases are retained",()=>{
  assert.equal(calculate("Abcdefgh12!XYZ").level,4);
 });
 test("UI wrapper delegates to the extracted module",()=>{
- const wrapper=html.match(/function updatePasswordStrength\(\)\{[\s\S]*?\n\}/);
+ const wrapper=html.match(/function updatePasswordStrength\(\)\{[\s\S]*?
+\}/);
  assert.ok(wrapper);assert.match(wrapper[0],/window\.BizmindPasswordStrength\.calculate/);
  assert.doesNotMatch(html,/function getPasswordStrength\(/);
 });
-test("search UI adapter delegates to extracted query service",()=>{assert.match(html,/BizmindConversationSearch\.searchConversationMessages/);});\ntest("performance analytics module precedes core",()=>{assert.ok(html.indexOf("./modules/performance-analytics.js")<html.indexOf("__bootMainScriptStarted"));});\n
+test("search UI adapter delegates to extracted query service",()=>{assert.match(html,/BizmindConversationSearch\.searchConversationMessages/);});
+test("performance analytics module precedes core",()=>{assert.ok(html.indexOf("./modules/performance-analytics.js")<html.indexOf("__bootMainScriptStarted"));});
