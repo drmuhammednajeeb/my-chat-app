@@ -9,7 +9,7 @@
   const {data,error}=await request.order('created_at',{ascending:false}).limit(30);
   if(error)throw error;
   if(typeof isCurrent==='function'&&!isCurrent())return {status:'stale',messages:[]};
-  const hidden=hiddenIds instanceof Set?hiddenIds:new Set();
+  const hidden=hiddenIds&&typeof hiddenIds.has==="function"?hiddenIds:{has:()=>false};
   return {status:'ok',messages:(data||[]).filter(message=>!hidden.has(message.id))};
  }
  root.BizmindConversationSearch=Object.freeze({searchConversationMessages});
