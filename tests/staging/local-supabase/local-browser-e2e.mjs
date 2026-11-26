@@ -126,8 +126,8 @@ const pageErrors = [];
 
 async function createUserPage(email) {
   const context = await browser.newContext({ viewport: { width: 1365, height: 900 } });
-  await context.addInitScript(({ url, anonKey }) => {
-    window.__BIZMIND_LOCAL_SUPABASE_TEST_CONFIG__ = { url, anonKey };
+  await context.addInitScript(({ url, anonKey, expectedApiPort }) => {
+    window.__BIZMIND_LOCAL_SUPABASE_TEST_CONFIG__ = { url, anonKey, expectedApiPort };
   }, { url: api.origin, anonKey, expectedApiPort });
   const page = await context.newPage();
   page.on('request', request => {
