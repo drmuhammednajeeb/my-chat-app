@@ -102,7 +102,7 @@ test('authentication password visibility is user-controlled, accessible, and res
   assert.match(html, /input\.type=shown\?'text':'password'/);
   assert.match(html, /function togglePasswordVisibility\(\)/);
   assert.match(html, /setPasswordVisibility\(false\);window\.BizmindAuthLight/);
-  assert.match(html, /togglePasswordVisibility',togglePasswordVisibility/);
+  assert.match(html, /togglePasswordVisibility'\)\.addEventListener\('click',togglePasswordVisibility\)/);
   assert.match(html, /ph-eye-slash/);
   assert.match(worker, /CACHE_VERSION = "v47"/);
 });
