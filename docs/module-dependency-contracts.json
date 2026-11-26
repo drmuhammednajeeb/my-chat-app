@@ -134,6 +134,18 @@
         "renderMessage",
         "timeline rollback/reconciliation callbacks"
       ]
+    },
+    {
+      "path": "modules/message-attachment-renderer.js",
+      "loadOrder": 18,
+      "dependsOn": [
+        "supabaseClient",
+        "voiceMessagePlayer",
+        "document",
+        "DOM lookup callback",
+        "isCurrent callback",
+        "toast callback"
+      ]
     }
   ]
 }
