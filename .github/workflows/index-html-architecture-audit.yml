@@ -5,6 +5,14 @@ on:
     paths:
       - index.html
       - modules/password-strength.js
+      - modules/signup-name-validation.js
+      - service-worker.js
+      - docs/module-dependency-contracts.json
+      - docs/architecture-safety-module-inventory.json
+      - tests/signup-name-validation.test.mjs
+      - tests/auth-signup-viewport.test.mjs
+      - tests/architecture-safety-contract.test.mjs
+      - tests/service-worker-lifecycle.test.mjs
       - scripts/audit-index-architecture.mjs
       - tests/index-architecture.test.mjs
       - docs/INDEX_HTML_PHASE2_ARCHITECTURE.md
@@ -23,4 +31,5 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/audit-index-architecture.mjs index.html
-      - run: node --test tests/index-architecture.test.mjs
+      - run: node --test tests/index-architecture.test.mjs tests/signup-name-validation.test.mjs
+      - run: node --test tests/auth-signup-viewport.test.mjs tests/architecture-safety-contract.test.mjs tests/service-worker-lifecycle.test.mjs
