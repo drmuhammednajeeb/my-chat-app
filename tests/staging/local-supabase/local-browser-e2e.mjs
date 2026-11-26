@@ -263,14 +263,17 @@ try {
       '--no-psqlrc', '--quiet', '--set=ON_ERROR_STOP=1',
       '--set=conversation_id=' + secondConversation,
       '--set=user_id=' + users.direct_b,
-      '--command', `
+      rawDb
+    ], {
+      encoding: 'utf8',
+      input: `
         INSERT INTO public.conversations (id, type, title, created_by)
         VALUES (:'conversation_id'::uuid, 'group', 'Realtime Isolation E2E', :'user_id'::uuid);
         INSERT INTO public.conversation_members (conversation_id, user_id, role)
         VALUES (:'conversation_id'::uuid, :'user_id'::uuid, 'owner');
       `,
-      rawDb
-    ], { encoding: 'utf8', env: { PATH: process.env.PATH || '', PGCONNECT_TIMEOUT: '5' } });
+      env: { PATH: process.env.PATH || '', PGCONNECT_TIMEOUT: '5' }
+    });
     if (provisionSecondConversation.error || provisionSecondConversation.status !== 0) {
       throw new Error('Could not provision the isolated second conversation in disposable local Supabase: '
         + (provisionSecondConversation.stderr || provisionSecondConversation.error?.message || 'unknown error'));
