@@ -11,7 +11,7 @@ test('application test endpoint override is loopback-only and preserves producti
   const app = await read('index.html');
   assert.match(app, /const __localSupabaseTestConfig=window\.__BIZMIND_LOCAL_SUPABASE_TEST_CONFIG__\|\|null/);
   assert.match(app, /location\.protocol!=='http:'/);
-  assert.match(app, /loopbackHosts\.includes\(pageHost\)/);
+  assert.match(app, /isLoopbackHost\(pageHost\)/);
   assert.match(app, /localApi\.port!==expectedPort/);
   assert.match(app, /window\.BizmindRuntimeConfig\.isPublicAnonKey/);
   assert.match(app, /__deploymentConfig=window\.BizmindRuntimeConfig\.resolve/);
