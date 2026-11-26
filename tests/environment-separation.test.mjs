@@ -45,7 +45,7 @@ test('runtime configuration is never precached and is fetched with no-store sema
   assert.match(worker, /url\.pathname\.endsWith\("\/deployment-config\.js"\)/);
   assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/);
   assert.match(worker, /Cache-Control", "no-store, max-age=0, must-revalidate"/);
-  assert.match(worker, /CACHE_VERSION = "v49"/);
+  assert.match(worker, /CACHE_VERSION = "v50"/);
 });
 test('Vercel production follows every main commit while Preview remains isolated', () => {
   const config = JSON.parse(read('../vercel.json'));
