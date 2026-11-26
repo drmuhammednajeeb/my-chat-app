@@ -343,5 +343,234 @@
     }
   }
 
-  root.BizmindMessageLoader = Object.freeze({ loadMessages, mergeWindow });
+
+  function isCurrentRequest(state, requestId, conversationId) {
+    return !!conversationId && state?.active?.id === conversationId &&
+      Number(state.messageLoadVersion) === requestId;
+  }
+
+  function mergeTimeline(currentRows, incomingRows, compare) {
+    const rows = new Map();
+    for (const row of currentRows || []) if (row?.id) rows.set(row.id, row);
+    for (const row of incomingRows || []) {
+      if (!row?.id) continue;
+      const previous = rows.get(row.id);
+      if (!previous || messageRevisionTime(row) >= messageRevisionTime(previous)) rows.set(row.id, row);
+    }
+    return Array.from(rows.values()).sort(compare);
+  }
+
+  async function renderMessage(deps) {
+    const { state, message, conversationId = state?.active?.id, requestId = null, render } = deps || {};
+    if (!state || !message?.id || !conversationId || typeof render !== 'function' ||
+        state.active?.id !== conversationId ||
+        (requestId !== null && requestId !== state.messageLoadVersion)) return false;
+    if (state.messageIds?.has(message.id)) return true;
+    state.messageRenderPromises ||= new Map();
+    const pending = state.messageRenderPromises.get(message.id);
+    if (pending) {
+      const rendered = await pending;
+      if (rendered || state.messageIds?.has(message.id)) return true;
+      if (state.active?.id !== conversationId ||
+          (requestId !== null && requestId !== state.messageLoadVersion)) return false;
+      const latest = (state.messages || []).find(item => item.id === message.id);
+      if (!latest) return false;
+      return renderMessage({ ...deps, message: latest });
+    }
+    const task = Promise.resolve().then(() => render(message, conversationId, requestId));
+    state.messageRenderPromises.set(message.id, task);
+    try { return await task; }
+    finally {
+      if (state.messageRenderPromises.get(message.id) === task) state.messageRenderPromises.delete(message.id);
+    }
+  }
+
+  function rollbackCancelledOlderHistory(deps, conversationId, olderIds, renderedHistoryIds,
+      area, requestId, originalMessageIdSet, requestRowsById, originalLoadedHistoryIds) {
+    const { state } = deps;
+    if (state.active?.id !== conversationId) return false;
+    const newerTimelineAlreadyCommitted = Number(state.messageTimelineCommitVersion) > requestId;
+    const newerRenderOwnsTimeline = !!state.messageTimelineRenderOwner &&
+      state.messageTimelineRenderOwner !== requestId;
+    if (newerTimelineAlreadyCommitted || newerRenderOwnsTimeline) return false;
+    const before = state.messages || [];
+    const removedIds = new Set();
+    state.messages = before.filter(message => {
+      if (!olderIds.has(message.id) || originalMessageIdSet?.has(message.id)) return true;
+      if (requestRowsById?.get(message.id) !== message) return true;
+      removedIds.add(message.id);
+      return false;
+    });
+    removedIds.forEach(id => {
+      Array.from(area.querySelectorAll('.message'))
+        .filter(node => node.dataset.messageId === id).forEach(node => node.remove());
+      state.messageIds.delete(id);
+      if (!originalLoadedHistoryIds?.has(id)) state.loadedHistoryIds?.delete(id);
+    });
+    return true;
+  }
+
+  async function loadOlderMessages(deps) {
+    const {
+      state, $, supabaseClient, document: documentRef,
+      loadMessagePins = async () => true,
+      loadPrivateReplyContexts = async () => true,
+      loadMessageReactions = async () => true,
+      renderMessage: render,
+      reconcileMessageTimeline: reconcile,
+      compareMessagesChronologically: compare,
+      toast = () => {},
+      logger: log = logger
+    } = deps || {};
+    const conversationId = state?.active?.id, area = $('messages');
+    if (!conversationId || !area || state.loadingOlderMessages || !state.hasMoreMessages ||
+        !state.messages?.length || typeof render !== 'function' ||
+        typeof reconcile !== 'function' || typeof compare !== 'function') return false;
+    const oldest = state.messages[0];
+    if (!oldest?.created_at || !oldest?.id) return false;
+    const originalMessages = state.messages.slice(), originalHasMore = state.hasMoreMessages;
+    const originalMessageIdSet = new Set(originalMessages.map(message => message.id));
+    state.loadingOlderMessages = true;
+    const requestId = state.messageLoadVersion;
+    state.loadingOlderRequestId = requestId;
+    const isCurrent = () => isCurrentRequest(state, requestId, conversationId);
+    const anchor = Array.from(area.querySelectorAll('.message'))
+      .find(node => node.getBoundingClientRect().bottom > area.getBoundingClientRect().top);
+    const anchorId = anchor?.dataset.messageId;
+    const anchorTop = anchor?.getBoundingClientRect().top ?? 0;
+    const oldTop = area.scrollTop;
+    const loader = documentRef.createElement('div');
+    loader.className = 'messages-history-loader';
+    loader.textContent = 'جارٍ تحميل الرسائل الأقدم…';
+    area.prepend(loader);
+    const originalFirstChild = loader.nextSibling;
+    let olderIds = new Set(), renderedHistoryIds = new Set(), requestRowsById = new Map();
+    state.loadedHistoryIds ||= new Set();
+    const originalLoadedHistoryIds = new Set(state.loadedHistoryIds);
+    try {
+      const cursorFilter = 'created_at.lt.' + oldest.created_at +
+        ',and(created_at.eq.' + oldest.created_at + ',id.lt.' + oldest.id + ')';
+      let olderQuery = supabaseClient.from('chat_messages').select('*')
+        .eq('conversation_id', conversationId).or(cursorFilter);
+      if (state.activeChatPreference?.cleared_before) {
+        olderQuery = olderQuery.gt('created_at', state.activeChatPreference.cleared_before);
+      }
+      const { data, error } = await olderQuery.order('created_at', { ascending: false })
+        .order('id', { ascending: false }).limit(50);
+      if (error) throw error;
+      if (!isCurrent()) return false;
+      const older = (data || []).slice().reverse();
+      if (!older.length) { state.hasMoreMessages = false; return false; }
+      olderIds = new Set(older.map(message => message.id));
+      requestRowsById = new Map(older.map(message => [message.id, message]));
+      const replyIds = [...new Set(older.map(message => message.reply_to)
+        .filter(id => id && !state.messages.some(item => item.id === id)))];
+      const replyTask = replyIds.length
+        ? supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at')
+          .eq('conversation_id', conversationId).in('id', replyIds)
+        : Promise.resolve({ data: [], error: null });
+      const [, , , replyResult] = await Promise.all([
+        loadMessagePins(conversationId, requestId),
+        loadPrivateReplyContexts(conversationId, older, requestId),
+        loadMessageReactions(conversationId, older, requestId),
+        replyTask
+      ]);
+      if (!isCurrent()) {
+        rollbackCancelledOlderHistory(deps, conversationId, olderIds, renderedHistoryIds,
+          area, requestId, originalMessageIdSet, requestRowsById, originalLoadedHistoryIds);
+        return false;
+      }
+      if (replyResult?.error) log.warn('Older reply metadata unavailable:', replyResult.error.message);
+      else (replyResult?.data || []).forEach(parent => state.replyMessages.set(parent.id, parent));
+      older.forEach(message => state.loadedHistoryIds.add(message.id));
+      state.messages = mergeTimeline(older, state.messages, compare);
+      state.hasMoreMessages = older.length === 50;
+      state.isLoadingMessages = true;
+      state.batchRenderingMessages = true;
+      state.batchRenderingConversationId = conversationId;
+      area.style.overflowAnchor = 'none';
+      const beforeRenderNodes = new Set(Array.from(area.childNodes));
+      for (const message of older) {
+        if (!isCurrent()) {
+          rollbackCancelledOlderHistory(deps, conversationId, olderIds, renderedHistoryIds,
+            area, requestId, originalMessageIdSet, requestRowsById, originalLoadedHistoryIds);
+          return false;
+        }
+        if (state.messageIds.has(message.id)) continue;
+        if (!originalMessageIdSet.has(message.id)) renderedHistoryIds.add(message.id);
+        const rendered = await render(message, conversationId, requestId);
+        if (!rendered && !state.messageIds.has(message.id)) {
+          throw new Error('Older message rendering did not complete');
+        }
+      }
+      if (!isCurrent()) {
+        rollbackCancelledOlderHistory(deps, conversationId, olderIds, renderedHistoryIds,
+          area, requestId, originalMessageIdSet, requestRowsById, originalLoadedHistoryIds);
+        return false;
+      }
+      state.batchRenderingMessages = false;
+      state.batchRenderingConversationId = null;
+      reconcile(area);
+      const addedSet = new Set(Array.from(area.querySelectorAll('.message'))
+        .filter(node => olderIds.has(node.dataset.messageId) && !beforeRenderNodes.has(node)));
+      addedSet.forEach(node => {
+        const previous = node.previousElementSibling;
+        if (previous?.classList.contains('day-divider') && !beforeRenderNodes.has(previous)) addedSet.add(previous);
+      });
+      const addedNodes = Array.from(area.childNodes).filter(node => addedSet.has(node));
+      const fragment = documentRef.createDocumentFragment();
+      addedNodes.forEach(node => fragment.append(node));
+      if (fragment.childNodes.length) area.insertBefore(fragment, originalFirstChild);
+      loader.remove();
+      const restoredAnchor = anchorId
+        ? Array.from(area.querySelectorAll('.message')).find(node => node.dataset.messageId === anchorId)
+        : null;
+      area.scrollTop = restoredAnchor
+        ? oldTop + (restoredAnchor.getBoundingClientRect().top - anchorTop)
+        : oldTop;
+      state.isLoadingMessages = false;
+      area.style.overflowAnchor = '';
+      return true;
+    } catch (error) {
+      log.error('Older message loading failed:', error);
+      if (isCurrent()) {
+        const rollbackApplied = rollbackCancelledOlderHistory(deps, conversationId, olderIds,
+          renderedHistoryIds, area, requestId, originalMessageIdSet, requestRowsById, originalLoadedHistoryIds);
+        if (rollbackApplied) {
+          const restored = new Map(originalMessages.map(message => [message.id, message]));
+          for (const message of state.messages || []) {
+            if (!originalMessageIdSet.has(message.id)) restored.set(message.id, message);
+          }
+          state.messages = Array.from(restored.values()).sort(compare);
+          state.hasMoreMessages = originalHasMore;
+          state.batchRenderingMessages = false;
+          state.batchRenderingConversationId = null;
+          state.isLoadingMessages = false;
+          area.style.overflowAnchor = '';
+          reconcile(area);
+          toast('تعذر تحميل الرسائل الأقدم؛ احتفظنا بالمحادثة الحالية دون فقد الرسائل.');
+        }
+      }
+      return false;
+    } finally {
+      if (state.loadingOlderRequestId === requestId) {
+        if (state.batchRenderingMessages && state.batchRenderingConversationId === conversationId) {
+          state.batchRenderingMessages = false;
+          state.batchRenderingConversationId = null;
+          if (state.active?.id === conversationId &&
+              Number(state.messageTimelineCommitVersion) <= requestId &&
+              (!state.messageTimelineRenderOwner || state.messageTimelineRenderOwner === requestId)) {
+            reconcile(area);
+          }
+        }
+        state.loadingOlderMessages = false;
+        state.loadingOlderRequestId = null;
+        if (isCurrent()) state.isLoadingMessages = false;
+        area.style.overflowAnchor = '';
+      }
+      loader.remove();
+    }
+  }
+
+  root.BizmindMessageLoader = Object.freeze({ loadMessages, loadOlderMessages, renderMessage, mergeWindow, mergeTimeline, isCurrentRequest });
 })(typeof window !== 'undefined' ? window : globalThis);
