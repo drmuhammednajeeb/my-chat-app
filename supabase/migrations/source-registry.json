@@ -19,7 +19,7 @@
     "canonicalCliMigrationFiles": 77,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
-    "testOnlyFixtureCount": 24,
+    "testOnlyFixtureCount": 25,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -44,7 +44,8 @@
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
-      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+      "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
     ],
     "forwardReconciliationMigrations": 10,
     "unresolvedProductionEntries": 2,
@@ -2228,10 +2229,11 @@
       "version": "20261126150000",
       "name": "harden_self_chat_creation_under_membership_rls",
       "path": "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql",
+      "gitBlobSha": "b1456b4397d956138402f6d8117dbffb0764dda6",
       "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "productionApplied": false,
-      "note": "Narrow self-chat RPC hardening. Requires disposable-local browser and PostgreSQL runtime proof; not production-applied."
+      "note": "Narrow self-chat RPC hardening; disposable-local runtime and browser E2E required before merge. Not production-applied."
     }
   ]
 }
