@@ -766,9 +766,9 @@ test('post-forward runtime assertions are ordered after their matching security 
     'tests/staging/local-supabase/fixtures/forward-hardening-postconditions.assert.sql',
     'tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql'
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
-  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 24);
-  assert.equal(manifest.sourceCoverage.executedSqlFiles, 97);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 98);
+  assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 25);
+  assert.equal(manifest.sourceCoverage.executedSqlFiles, 99);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 100);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
