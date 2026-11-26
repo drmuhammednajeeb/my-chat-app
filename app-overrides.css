@@ -108,11 +108,11 @@ html,body{font-family:var(--chat-font)}
 #appThemeToggle i{font-size:18px;color:var(--muted)}
 .chat-header-menu{background:var(--menu-bg);border-color:var(--line);color:var(--menu-text);box-shadow:var(--menu-shadow)}
 .chat-header-menu>button{background:transparent;color:var(--text)}
-.chat-header-menu>button:hover{background:var(--menu-hover)}
+
 .chat-header-menu>button i,.chat-header-menu>button svg{color:var(--muted)}
 .message-options-menu{background:var(--menu-bg);border-color:var(--line);color:var(--menu-text);box-shadow:var(--menu-shadow)}
 .message-menu-option{background:transparent;color:var(--text)}
-.message-menu-option:hover{background:var(--menu-hover)}
+
 .message-menu-option i{color:var(--muted)}
 /* Theme-independent component rules; palette values come only from semantic tokens. */
 .channel-card,.group-person,.notification-head,.chat-search-top{
