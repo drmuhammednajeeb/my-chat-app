@@ -382,3 +382,37 @@ html body{font-weight:500}
 .password-strength-caption strong{color:var(--text)}
 .password-strength-caption small{color:var(--muted);line-height:1.6}
 @media(prefers-reduced-motion:reduce){.password-strength-meter span{transition:none}}
+
+/* Sidebar scrolling ergonomics: reclaim vertical space and assign scrolling to the list. */
+#sidebar.sidebar{min-height:0;height:100%;overflow:hidden;display:flex;flex-direction:column;gap:0}
+#sidebar>.brand{flex:0 0 auto;padding:clamp(10px,1.5vh,18px) 16px}
+#sidebar>.profile{flex:0 0 auto;margin:0 10px 8px;padding:8px}
+#sidebar>.sidebar-tabs{flex:0 0 auto;padding-block:5px}
+#sidebar>.searchbox{flex:0 0 auto;margin:0 10px 7px}
+#sidebar>#directoryFilters,#sidebar>#workspaceInboxTabs,#sidebar>#chatFilters{flex:0 0 auto;padding-block:4px 7px;max-height:48px}
+#sidebar>.sectionhead{flex:0 0 auto;padding-block:5px}
+#sidebar>#customListsPanel{flex:0 0 auto;max-height:clamp(60px,12vh,105px);overflow-y:auto;overscroll-behavior:contain}
+#sidebar>#conversationList,#sidebar>#directoryList{flex:1 1 0;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#sidebar>#directoryHelp,#sidebar>#directorySummary{flex:0 0 auto;max-height:22vh;overflow-y:auto}
+#sidebar>#loadMoreUsers{flex:0 0 auto}
+#sidebar>.sidebar-foot{flex:0 0 auto;padding:8px 12px}
+@media(max-width:760px){
+ #sidebar>.brand{padding:8px 12px}
+ #sidebar>.profile{margin:0 8px 6px;padding:7px}
+ #sidebar>.sidebar-tabs{padding-block:4px}
+ #sidebar>.searchbox{margin:0 8px 5px}
+ #sidebar>#directoryFilters,#sidebar>#workspaceInboxTabs,#sidebar>#chatFilters{padding-block:3px 5px}
+ #sidebar>.sectionhead{padding-block:4px}
+ #sidebar>#customListsPanel{max-height:76px}
+ #sidebar>.sidebar-foot{padding:6px 10px}
+}
+@media(max-height:680px){
+ #sidebar>.brand{padding-block:6px}
+ #sidebar>.brandmark{width:36px;height:36px}
+ #sidebar>.profile{margin-bottom:5px;padding:6px}
+ #sidebar>.sidebar-tabs{padding-block:3px}
+ #sidebar>.searchbox{margin-bottom:4px}
+ #sidebar>#directoryFilters,#sidebar>#workspaceInboxTabs,#sidebar>#chatFilters{padding-block:2px 4px}
+ #sidebar>.sectionhead{padding-block:3px}
+ #sidebar>#customListsPanel{max-height:64px}
+}
