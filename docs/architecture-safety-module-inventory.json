@@ -1,0 +1,37 @@
+{
+  "modules": [
+    "app-updater.js",
+    "audio-player.js",
+    "auth-error-messages.js",
+    "auth-light.js",
+    "backup-restore.js",
+    "message-loader.js",
+    "message-reactions.js",
+    "profile-status-and-conversation-images.js",
+    "runtime-config.js",
+    "status-workspace.js",
+    "voice-recorder.js"
+  ],
+  "implicitGlobals": [
+    {
+      "module": "backup-restore.js",
+      "globals": ["state", "supabaseClient", "toast"],
+      "reason": "Existing compatibility coupling; gradual facade migration planned."
+    },
+    {
+      "module": "message-loader.js",
+      "globals": ["state", "supabaseClient"],
+      "reason": "Message lifecycle module uses the shared application state and backend client."
+    },
+    {
+      "module": "profile-status-and-conversation-images.js",
+      "globals": ["state", "supabaseClient", "toast"],
+      "reason": "Existing shared-state and service coupling; lifecycle contract to be hardened."
+    },
+    {
+      "module": "status-workspace.js",
+      "globals": ["state", "supabaseClient", "toast"],
+      "reason": "Existing shared-state and service coupling; lifecycle contract to be hardened."
+    }
+  ]
+}
