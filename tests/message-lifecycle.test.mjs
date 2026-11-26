@@ -82,7 +82,7 @@ test('stickers are sent through the existing message pipeline and rendered as va
   assert.match(source, /function encodeChatSticker\(emoji\)/);
   assert.match(source, /function decodeChatSticker\(content\)/);
   assert.match(source, /CHAT_STICKERS\.includes\(emoji\)/);
-  assert.match(source, /const sticker=decodeChatSticker\(m\.content\)/);
+  assert.match(source, /BizmindMessageContent\.render\(\{content:m\.content,bubble,decodeSticker:decodeChatSticker,document\}\)/);
   assert.match(source, /\$\('messageInput'\)\.value=encodeChatSticker\(emoji\);sendMessage\(\)/);
 });
 

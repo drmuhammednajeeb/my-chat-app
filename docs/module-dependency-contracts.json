@@ -147,6 +147,15 @@
         "toast callback",
         "toast"
       ]
+    },
+    {
+      "path": "modules/message-content-renderer.js",
+      "loadOrder": 19,
+      "dependsOn": [
+        "document",
+        "decodeSticker callback",
+        "bubble"
+      ]
     }
   ]
 }

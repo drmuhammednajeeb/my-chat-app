@@ -103,3 +103,10 @@ Score is an evidence-weighted engineering rubric, not a reliability metric. Phas
 - Preserves one-hour signed URLs, refreshable audio URLs, stale-request fencing, lazy image loading, video controls, safe external link attributes and existing error text.
 - Registered the module and focused tests; precached the new script and bumped the shell cache to v56.
 - Wave 7 remains isolated and stacked on Wave 6; no production DB changes, deployment, or merge.
+
+
+## Wave 8 — Message content rendering boundary
+- Extracted text/sticker rendering into `modules/message-content-renderer.js`; this module receives the content, bubble, DOM document, and sticker-decoding callback. It uses `textContent` for ordinary text and sticker glyphs, and creates the existing sticker accessibility attributes.
+- `index.html` retains message-row lifecycle, replies, attachments, metadata, status, menus, reactions, timeline reconciliation, unread counters, and request/conversation fencing. This wave only delegates the small content DOM construction path.
+- Registered and precached the module; bumped the PWA shell cache to v57. Added focused tests and updated cache regression contracts.
+- Wave 8 is stacked on Wave 7; no production DB changes, deployment, or merge.

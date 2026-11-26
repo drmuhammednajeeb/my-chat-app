@@ -17,7 +17,8 @@
     "signup-name-validation.js",
     "status-workspace.js",
     "voice-recorder.js",
-    "message-attachment-renderer.js"
+    "message-attachment-renderer.js",
+    "message-content-renderer.js"
   ],
   "implicitGlobals": [
     {
