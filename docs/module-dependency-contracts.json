@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "policy": "classic-script-compatibility",
+  "description": "Explicit contracts for extracted browser modules. Dependencies are existing runtime globals, not ES module imports. Keep this registry synchronized with script order in index.html.",
+  "modules": [
+    {
+      "path": "modules/message-loader.js",
+      "loadOrder": 1,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast"
+      ]
+    },
+    {
+      "path": "modules/message-reactions.js",
+      "loadOrder": 2,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast"
+      ]
+    },
+    {
+      "path": "modules/voice-recorder.js",
+      "loadOrder": 3,
+      "dependsOn": [
+        "state",
+        "toast"
+      ]
+    },
+    {
+      "path": "modules/audio-player.js",
+      "loadOrder": 4,
+      "dependsOn": []
+    },
+    {
+      "path": "modules/app-updater.js",
+      "loadOrder": 5,
+      "dependsOn": [
+        "state"
+      ]
+    },
+    {
+      "path": "modules/auth-error-messages.js",
+      "loadOrder": 6,
+      "dependsOn": []
+    },
+    {
+      "path": "modules/auth-light.js",
+      "loadOrder": 7,
+      "dependsOn": [
+        "state"
+      ]
+    },
+    {
+      "path": "modules/runtime-config.js",
+      "loadOrder": 8,
+      "dependsOn": []
+    },
+    {
+      "path": "modules/profile-status-and-conversation-images.js",
+      "loadOrder": 10,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast"
+      ]
+    },
+    {
+      "path": "modules/status-workspace.js",
+      "loadOrder": 11,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast",
+        "addEventListener",
+        "enterApp"
+      ]
+    },
+    {
+      "path": "modules/backup-restore.js",
+      "loadOrder": 12,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast",
+        "crypto"
+      ]
+    }
+  ]
+}
