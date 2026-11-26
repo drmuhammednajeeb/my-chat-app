@@ -16,9 +16,10 @@
     "duplicateActiveCopies": 0,
     "forwardReconciliationMigrations": 10,
     "canonicalCliMigrationFiles": 77,
-    "testOnlyFixtureCount": 24,
+    "testOnlyFixtureCount": 25,
     "testOnlyFixturePaths": [
-      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+      "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
     ],
     "stage3RemediationMigrationCount": 2
   },
@@ -1684,14 +1685,39 @@
       "source": [
         "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
       ],
+      "provides": [
+        "public.ensure_self_chat() uses a narrow authenticated SECURITY DEFINER boundary"
+      ],
       "requires": [
         "chat.self",
         "membership.final-format",
-        "test-fixture.self-chat-runtime"
+        "test-fixture.direct-chat-profiles"
       ],
       "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "testSource": [
+        "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
+      ],
       "blockedBy": [],
-      "note": "Narrow SECURITY DEFINER RPC repair with authoritative active-membership checks and locked profile/Auth rows. Do not apply to production until disposable-local runtime and browser E2E pass."
+      "note": "Only the caller's own self-chat can be created; authoritative active/verified/confirmed membership is checked and locked before writes. Production application is not authorized."
+    },
+    {
+      "id": "test-fixture.self-chat-runtime",
+      "source": [
+        "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
+      ],
+      "provides": [
+        "rollback-only self-chat success, idempotency, eligibility denial and ACL assertions"
+      ],
+      "requires": [
+        "security.self-chat-rls-repair",
+        "test-fixture.direct-chat-profiles"
+      ],
+      "status": "TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PENDING",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
+      ],
+      "blockedBy": [],
+      "note": "Executed only by disposable local Supabase replay using synthetic .test identities; transaction rolls back all test writes."
     }
   ],
   "explicitEdges": [
@@ -2662,6 +2688,26 @@
     [
       "test-fixture.forward-hardening-postconditions",
       "security.stage3-acl-reconciliation"
+    ],
+    [
+      "chat.self",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "membership.final-format",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "test-fixture.direct-chat-profiles",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "security.self-chat-rls-repair",
+      "test-fixture.self-chat-runtime"
+    ],
+    [
+      "test-fixture.direct-chat-profiles",
+      "test-fixture.self-chat-runtime"
     ]
   ],
   "blockers": [
