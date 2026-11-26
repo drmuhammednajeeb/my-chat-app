@@ -12,6 +12,7 @@ add("No duplicate static IDs",(()=>{const ids=[...html.matchAll(/\sid=["']([^"']
 add("No inline event-handler attributes",! /\son(?:click|input|change|submit|keydown|keyup|load)\s*=/.test(html),"Inline HTML handlers absent.");
 add("At least 12 module script references",scripts.filter(s=>/\bsrc\s*=/.test(s.attrs)&&/\.\/modules\//.test(s.attrs)).length>=13,"Module references detected.");
 add("Signup name-validation module precedes core",html.indexOf("./modules/signup-name-validation.js")>=0&&html.indexOf("./modules/signup-name-validation.js")<html.indexOf("__bootMainScriptStarted"),"Extracted signup-name utility loads before consumer.");
+add("Conversation search module precedes core",html.indexOf("./modules/conversation-search.js")>=0&&html.indexOf("./modules/conversation-search.js")<html.indexOf("__bootMainScriptStarted"),"Extracted search module loads before consumer.");
 add("Password module precedes core",html.indexOf("./modules/password-strength.js")>=0&&html.indexOf("./modules/password-strength.js")<html.indexOf("__bootMainScriptStarted"),"Extracted utility loads before consumer.");
 add("Runtime config precedes core",html.indexOf("__bootMainScriptStarted")>html.indexOf("./modules/runtime-config.js"),"Config script precedes core.");
 const report={checks,summary:{total:checks.length,passed:checks.filter(x=>x.pass).length,failed:checks.filter(x=>!x.pass).length}};
