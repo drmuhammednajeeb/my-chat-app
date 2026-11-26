@@ -95,3 +95,11 @@ Score is an evidence-weighted engineering rubric, not a reliability metric. Phas
 - Registered the module in dependency and safety inventories; precached it in the shell and bumped service-worker cache to v55.
 - Added focused boundary tests for API shape, safe no-op preconditions, cursor and chronological commit behavior.
 - Wave 6 is awaiting CI validation; this extraction does not modify schema, production data, or deployment.
+
+
+## Wave 7 — Message attachment rendering boundary
+- Extracted signed attachment URL resolution and DOM construction for image, video, audio-player, and generic file attachments into `modules/message-attachment-renderer.js`.
+- The module receives the message, bubble, client, audio-player factory, document, lightbox lookup, conversation/request fence, toast, and console dependencies explicitly. The inline message renderer retains content/sticker rendering, metadata, menu, reactions, row commit and timeline ownership.
+- Preserves one-hour signed URLs, refreshable audio URLs, stale-request fencing, lazy image loading, video controls, safe external link attributes and existing error text.
+- Registered the module and focused tests; precached the new script and bumped the shell cache to v56.
+- Wave 7 remains isolated and stacked on Wave 6; no production DB changes, deployment, or merge.
