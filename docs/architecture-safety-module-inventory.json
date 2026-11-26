@@ -11,7 +11,8 @@
     "runtime-config.js",
     "status-workspace.js",
     "voice-recorder.js",
-    "password-strength.js"
+    "password-strength.js",
+    "signup-name-validation.js"
   ],
   "implicitGlobals": [
     {
