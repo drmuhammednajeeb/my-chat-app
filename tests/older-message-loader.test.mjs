@@ -40,7 +40,7 @@ test('older history request uses a stable cursor and commits only in the current
   };
   const supabaseClient = { from(table) { assert.equal(table, 'chat_messages'); return query; } };
   const document = { createElement() { return { className: '', textContent: '', remove() { area.children.splice(area.children.indexOf(this), 1); area.childNodes=area.children; } }; },
-    createDocumentFragment() { return { childNodes: [], append(node) { this.childNodes.push(node); } }; },
+    createDocumentFragment() { return { childNodes: [], append(node) { const i=area.children.indexOf(node); if(i>=0) area.children.splice(i,1); this.childNodes.push(node); area.childNodes=area.children; } }; },
   const renderMessage = async message => {
     const node = { className: 'message', dataset: { messageId: message.id, createdAt: message.created_at }, getBoundingClientRect() { return { top: 100, bottom: 140 }; }, remove() {} };
     area.children.push(node); area.childNodes=area.children; state.messageIds.add(message.id); return true;
