@@ -208,8 +208,6 @@ const __supabaseResource=performance.getEntriesByType('resource').find(entry=>en
 window.__BIZMIND_BOOT_TIMINGS__={mainScriptStarted:__bootMainScriptStarted,supabaseScriptMs:__supabaseResource?Math.round(__supabaseResource.duration):null,clientReady:performance.now()};
 const $=id=>document.getElementById(id);
 const voiceMessagePlayer=window.BizmindAudioPlayer.create();
-const appThemeController=window.BizmindAppTheme.create({saveUserSetting,toast,logger:console});
-appThemeController.init();
 async function loadUserSettings(){
  const userId=state.user?.id;if(!userId)return false;
  try{
@@ -310,6 +308,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
 const toast=(msg)=>{const n=document.createElement('div');n.textContent=msg;n.style.cssText='position:fixed;z-index:20;bottom:28px;left:50%;transform:translateX(-50%);background:#253c50;border:1px solid #426078;color:white;padding:11px 17px;border-radius:12px;font-size:12px;box-shadow:var(--shadow)';document.body.append(n);setTimeout(()=>n.remove(),3200)};
+const appThemeController=window.BizmindAppTheme.create({saveUserSetting,toast,logger:console});
+appThemeController.init();
 const messageReactions=window.BizmindMessageReactions.create({state,supabaseClient,document,toast});
 
 
