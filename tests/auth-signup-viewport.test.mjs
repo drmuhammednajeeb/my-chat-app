@@ -42,7 +42,7 @@ test("submit button is a normal full-width control, not a sticky overlay", () =>
 });
 
 test("service worker cache is invalidated for the corrected auth stylesheet", () => {
-  assert.match(sw, /const CACHE_VERSION = "v49";/);
+  assert.match(sw, /const CACHE_VERSION = "v50";/);
   assert.match(html, new RegExp('app-version" content="' + release.version.split(".").join("\\.") + '"'));
 });
 
@@ -57,7 +57,7 @@ test("signup requires a two- or three-part real name and normalizes whitespace",
 
 test("password strength is live guidance and does not enforce complexity", () => {
   assert.match(html, /id="passwordStrengthMeter"[^>]*role="progressbar"/);
-  assert.match(html, /function getPasswordStrength\(value\)/);
+  assert.match(html, /BizmindPasswordStrength\.calculate/);
   assert.match(html, /function updatePasswordStrength\(\)/);
   assert.match(html, /\$\('password'\)\.addEventListener\('input',updatePasswordStrength\)/);
   assert.match(html, /if\(password\.length<8\)throw new Error/);
@@ -69,7 +69,7 @@ test("signup name validator accepts two or three Arabic/Latin names only", () =>
   const end = html.indexOf("function updatePasswordStrength()", start);
   assert.ok(start >= 0 && end > start, "signup validation helpers must exist");
   const helpers = html.slice(start, end);
-  const api = runInNewContext(`${helpers};({ normalizeSignupDisplayName, validateSignupDisplayName, getPasswordStrength })`);
+  const api = runInNewContext(`${helpers};({ normalizeSignupDisplayName, validateSignupDisplayName })`);
   assert.equal(api.validateSignupDisplayName("محمد النبهاني").valid, true);
   assert.equal(api.validateSignupDisplayName("محمد أحمد النبهاني").valid, true);
   assert.equal(api.validateSignupDisplayName("Mohammed bin Ali Nabhani").valid, false, "four parts are not allowed");
