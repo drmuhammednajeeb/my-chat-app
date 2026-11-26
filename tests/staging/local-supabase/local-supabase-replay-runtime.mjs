@@ -250,6 +250,19 @@ run(process.execPath, [
   LOCAL_SUPABASE_DB_URL: raw
 }, 'message-auto-cleanup-storage-runtime');
 
+run(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/local-browser-e2e.mjs')
+], {
+  ...env,
+  LOCAL_SUPABASE_URL: process.env.LOCAL_SUPABASE_URL ?? '',
+  LOCAL_SUPABASE_ANON_KEY: process.env.LOCAL_SUPABASE_ANON_KEY ?? '',
+  LOCAL_SUPABASE_DB_URL: raw,
+  LOCAL_SUPABASE_EXPECTED_API_PORT: expectedApiPort,
+  LOCAL_SUPABASE_EXPECTED_DB_PORT: expectedDbPort,
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? '',
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
+}, 'browser-auth-chat-realtime-e2e');
+
 const patchManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
 if (patchManifest.mode !== 'TEST_COPY_ONLY' || !Array.isArray(patchManifest.patches)) {
   fail('synthetic fixture patch manifest is invalid');
