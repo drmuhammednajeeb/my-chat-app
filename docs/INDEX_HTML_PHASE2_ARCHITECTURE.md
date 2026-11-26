@@ -69,3 +69,12 @@ Score is an evidence-weighted engineering rubric, not a reliability metric. Phas
 - Loaded before the inline core and precached in service-worker cache v52.
 - Added isolated tests for API shape, invalid input, query contract, hidden-message filtering, stale fencing, errors and script load ordering.
 - Wave 3 score: 170/200 (rubric assessment, not reliability measurement). Before Phase 2 60/200; Wave 2 160/200.
+
+
+## Wave 4 — Performance analytics extraction
+- Extracted local privacy-safe telemetry storage, sample recording and persistence, percentile calculation, summary aggregation (resource/network data), and long-task observer setup into `modules/performance-analytics.js`.
+- `index.html` retains a compatibility facade (`recordPerf`, `persistPerfSamples`, `performancePercentile`, `performanceSummary`) so existing call sites remain unchanged.
+- Module receives a diagnostics callback rather than owning the diagnostics UI.
+- Added standalone tests for API/load ordering, percentile edge cases, bounded samples, persistence, summary, pagehide and precache contract.
+- Registered module dependency/inventory; service-worker shell cache bumped to v53.
+- Wave 4 completion is pending CI execution and code review. Preliminary score: 180/200 rubric estimate, contingent on tests passing; no merge or production deployment.
