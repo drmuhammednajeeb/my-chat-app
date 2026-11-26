@@ -55,6 +55,10 @@ test('self-chat runtime fixture is explicitly restricted to disposable local rep
   assert.ok(repair.requires.includes('chat.latest-visible-conversation-previews'));
   assert.ok(repair.requires.includes('test-fixture.direct-chat-runtime'));
   assert.ok(runtime.requires.includes('security.self-chat-rls-repair'));
+  assert.equal(repair.status, 'FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION');
+  assert.equal(runtime.status, 'TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PASSED');
+  assert.equal(runtime.runtimeEvidence.workflowRunId, 45842223208);
+  assert.equal(runtime.runtimeEvidence.commit, '01a1d1d3e55b114ec36bdef094e66500cd8e2852');
   const manifest = JSON.parse(await readFile(path.join(root,
     'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
   const order = manifest.candidateNodeOrder.map(node => node.nodeId);
