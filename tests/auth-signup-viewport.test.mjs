@@ -64,7 +64,7 @@ test("password strength is live guidance and does not enforce complexity", () =>
   assert.doesNotMatch(html, /if\(.*(?:uppercase|lowercase|symbol|digit).*(?:throw new Error)/i);
 });
 
-test("signup name validator accepts two or three Arabic/Latin names only", () => {
+test("signup name validator accepts two or three Arabic/Latin names only", async () => {
   const nameSource = await readFile(new URL("../modules/signup-name-validation.js", import.meta.url), "utf8");
   const nameContext = {};
   runInNewContext(nameSource, nameContext);
