@@ -16,6 +16,7 @@ test('application test endpoint override is loopback-only and preserves producti
   assert.match(app, /window\.BizmindRuntimeConfig\.isPublicAnonKey/);
   assert.match(app, /__deploymentConfig=window\.BizmindRuntimeConfig\.resolve/);
   assert.match(app, /p\.new\?\.conversation_id!==id\|\|state\.active\?\.id!==id/);
+  assert.match(app, /state\.diagnostics\.lastRealtimeReceivedConversationId=p\.new\?\.conversation_id\|\|null/);
   assert.match(app, /state\.diagnostics\.lastRealtimeConversationId=id/);
 });
 
@@ -43,6 +44,9 @@ test('full browser E2E requires local-only endpoints and two synthetic authentic
     'pg_publication_tables',
     '__BIZMIND_E2E_REALTIME_OBSERVER__',
     'lastRealtimeConversationId',
+    'lastRealtimeReceivedConversationId',
+    'appReceivedConversation',
+    'application channel itself must receive the foreign conversation INSERT',
     'receivedMessage.count(), 1',
     'reloadedMessage.count(), 1',
     "['direct_a', 'direct_b']",
