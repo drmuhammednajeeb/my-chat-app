@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const worker = readFileSync(new URL("../service-worker.js", import.meta.url), "utf8");
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");\nconst updater = readFileSync(new URL("../modules/app-updater.js", import.meta.url), "utf8");
 
 test("cache namespace is versioned and both runtime caches share the release version", () => {
   assert.match(worker, /const CACHE_PREFIX = ["']ultra-chat-pro["']/);
