@@ -1673,7 +1673,7 @@
         "supabase/migrations/20261126110000_stage3_acl_reconciliation.sql"
       ],
       "requires": [
-        "chat.latest-visible-conversation-previews"
+        "test-fixture.forward-hardening-postconditions"
       ],
       "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "blockedBy": [],
@@ -2646,7 +2646,7 @@
       "chat.latest-visible-conversation-previews"
     ],
     [
-      "chat.latest-visible-conversation-previews",
+      "test-fixture.forward-hardening-postconditions",
       "security.stage3-acl-reconciliation"
     ]
   ],
