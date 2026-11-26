@@ -91,7 +91,9 @@
     {
       "path": "modules/conversation-search.js",
       "loadOrder": 11,
-      "dependsOn": ["supabaseClient"]
+      "dependsOn": [
+        "supabaseClient"
+      ]
     },
     {
       "path": "modules/password-strength.js",
@@ -102,6 +104,17 @@
       "path": "modules/signup-name-validation.js",
       "loadOrder": 10,
       "dependsOn": []
+    },
+    {
+      "path": "modules/performance-analytics.js",
+      "loadOrder": 15,
+      "dependsOn": [
+        "localStorage",
+        "performance",
+        "navigator",
+        "PerformanceObserver",
+        "updateDiagnostics callback"
+      ]
     }
   ]
-}
+}\n
