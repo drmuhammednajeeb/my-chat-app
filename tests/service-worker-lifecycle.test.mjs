@@ -77,3 +77,7 @@ test("PWA updater registers the scoped service worker without stale HTTP cache",
 test("PWA manifest remains linked from the application document", () => {
   assert.match(html, /<link rel="manifest" href="\.\/manifest\.json">/);
 });
+
+test("v54 shell cache includes the extracted message timeline module",()=>{
+ assert.ok(worker.includes('new URL("./modules/message-timeline.js", base).href'));
+});
