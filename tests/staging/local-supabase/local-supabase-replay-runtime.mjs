@@ -42,8 +42,8 @@ async function provisionSyntheticDirectChatAuthUsers() {
     { key: 'direct_suspended', email: 'direct-suspended@bizmindmakers.test', number: '971001000004', verified: true, confirmed: true, username: 'direct_suspended', displayName: 'Direct Test Suspended' },
     { key: 'direct_unverified', email: 'direct-unverified@bizmindmakers.test', number: '971001000005', verified: false, confirmed: true, username: 'direct_unverified', displayName: 'Direct Test Unverified' },
     { key: 'direct_unconfirmed', email: 'direct-unconfirmed@bizmindmakers.test', number: '971001000006', verified: true, confirmed: false, username: 'direct_unconfirmed', displayName: 'Direct Test Unconfirmed' },
-    { key: 'direct_missing_profile', email: 'direct-missing-profile@bizmindmakers.test', number: '971001000007', verified: true, confirmed: true, username: 'direct_missing_profile', displayName: 'Direct Test Missing Profile' }
-    ,{ key: 'direct_c', email: 'direct-c@bizmindmakers.test', number: '971001000008', verified: true, confirmed: true, username: 'direct_c', displayName: 'Direct Test C' }
+    { key: 'direct_missing_profile', email: 'direct-missing-profile@bizmindmakers.test', number: '971001000007', verified: true, confirmed: true, username: 'direct_missing_profile', displayName: 'Direct Test Missing Profile' },
+    { key: 'direct_c', email: 'direct-c@bizmindmakers.test', number: '971001000008', verified: true, confirmed: true, username: 'direct_c', displayName: 'Direct Test C' }
   ];
 
   for (const user of users) {
