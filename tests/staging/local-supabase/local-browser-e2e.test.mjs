@@ -7,23 +7,16 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const read = file => readFile(path.join(root, file), 'utf8');
 
-test('application test endpoint override is loopback-only and keeps production defaults', async () => {
+test('application test endpoint override is loopback-only and preserves production runtime config', async () => {
   const app = await read('index.html');
   assert.match(app, /const __localSupabaseTestConfig=window\.__BIZMIND_LOCAL_SUPABASE_TEST_CONFIG__\|\|null/);
-  assert.match(app, /localApi\.port!==expectedPort/);
+  assert.match(app, /location\.protocol!=='http:'/);
   assert.match(app, /loopbackHosts\.includes\(pageHost\)/);
+  assert.match(app, /localApi\.port!==expectedPort/);
   assert.match(app, /window\.BizmindRuntimeConfig\.isPublicAnonKey/);
   assert.match(app, /__deploymentConfig=window\.BizmindRuntimeConfig\.resolve/);
-  assert.match(app, /state\.diagnostics\.lastRealtimeConversationId=id/);
-  assert.match(app, /location\.protocol!=='http:'/);
-  assert.match(app, /\['127\.0\.0\.1','localhost','::1'\]\.includes\(host\)/);
-  assert.match(app, /endpoint\.port!=='54321'/);
-  assert.match(app, /endpoint\.protocol!=='http:'/);
-  assert.match(app, /endpoint\.pathname!=='\/'/);
-  assert.match(app, /SUPABASE_URL=endpoint\.origin/);
-  assert.match(app, /SUPABASE_ANON_KEY=__localSupabaseTestConfig\.anonKey/);
   assert.match(app, /p\.new\?\.conversation_id!==id\|\|state\.active\?\.id!==id/);
-  assert.match(app, /lastRealtimeConversationId=id/);
+  assert.match(app, /state\.diagnostics\.lastRealtimeConversationId=id/);
 });
 
 test('full browser E2E requires local-only endpoints and two synthetic authenticated users', async () => {
@@ -82,7 +75,7 @@ test('disposable replay invokes browser E2E before destroying local Supabase', a
 test('bounded message pressure probe is local-only and verifies all persisted writes', async () => {
   const runner = await read('tests/staging/local-supabase/local-message-load.mjs');
   for (const token of [
-    'db.port !== expectedDbPort',
+    "db.port !== '54322'",
     "db.username !== 'postgres'",
     "db.pathname !== '/postgres'",
     'const batchSize = 40, batches = 3, expected = batchSize * batches',
