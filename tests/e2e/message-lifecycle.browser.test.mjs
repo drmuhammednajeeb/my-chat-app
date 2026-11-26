@@ -5,6 +5,7 @@ import { chromium } from 'playwright';
 
 const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8');
 const voiceModuleSource = await readFile(new URL('../../modules/voice-recorder.js', import.meta.url), 'utf8');
+const timelineModuleSource = await readFile(new URL('../../modules/message-timeline.js', import.meta.url), 'utf8');
 
 function extractFunction(name) {
   const pattern = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\(');
@@ -303,6 +304,7 @@ test('browser: cancelled history rollback keeps model and DOM under a newer time
   const page = await newPage();
   try {
     await page.setContent('<!doctype html><html><body><div id="messages"><div class="message" data-message-id="old-1"></div><div class="message" data-message-id="recent-1"></div></div></body></html>');
+    await page.addScriptTag({ content: timelineModuleSource });
     const result = await page.evaluate(({ source }) => {
       const area = document.getElementById('messages');
       const state = {
