@@ -79,13 +79,12 @@ test("signup name validator accepts two or three Arabic/Latin names only", () =>
 });
 
 test("password strength levels are advisory and the only signup threshold is eight characters", () => {
-  const start = html.indexOf("function normalizeSignupDisplayName");
-  const end = html.indexOf("function updatePasswordStrength()", start);
-  const api = runInNewContext(`${html.slice(start, end)};({ getPasswordStrength })`);
-  assert.equal(api.getPasswordStrength("abcdefgh").label, "ضعيفة");
-  assert.equal(api.getPasswordStrength("abcdefghij").label, "متوسطة");
-  assert.equal(api.getPasswordStrength("Abcdefgh1").label, "قوية");
-  assert.equal(api.getPasswordStrength("Abcdefgh1234!").label, "قوية جداً");
+  const strengthSource = readFile(new URL("../modules/password-strength.js", import.meta.url), "utf8");
+  const strengthApi = runInNewContext(strengthSource, {}).BizmindPasswordStrength;
+  assert.equal(strengthApi.calculate("abcdefgh").label, "ضعيفة");
+  assert.equal(strengthApi.calculate("abcdefghij").label, "متوسطة");
+  assert.equal(strengthApi.calculate("Abcdefgh1").label, "قوية");
+  assert.equal(strengthApi.calculate("Abcdefgh1234!").label, "قوية جداً");
   assert.match(html, /if\(password\.length<8\)throw new Error/);
 });
 
