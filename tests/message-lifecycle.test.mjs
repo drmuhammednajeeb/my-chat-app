@@ -228,7 +228,7 @@ test('conversation subscription listens for hard deletes and soft-delete renderi
   const subscribe = extractFunction('subscribeConversation');
   const update = extractFunction('handleMessageUpdateRealtime');
   assert.match(subscribe, /event:'DELETE',schema:'public',table:'chat_messages'/);
-  assert.match(subscribe, /event:'INSERT',schema:'public',table:'chat_messages'\},p=>\{if\(p\.new\?\.conversation_id!==id\|\|state\.active\?\.id!==id\)return/);
+  assert.match(subscribe, /event:'INSERT',schema:'public',table:'chat_messages'\},p=>\{state\.diagnostics\.lastRealtimeReceivedConversationId=p\.new\?\.conversation_id\|\|null;if\(p\.new\?\.conversation_id!==id\|\|state\.active\?\.id!==id\)return/);
   assert.doesNotMatch(subscribe, /event:'INSERT',schema:'public',table:'chat_messages',filter:/);
   assert.match(subscribe, /handleMessageDeleteRealtime\(p,id\)/);
   assert.match(subscribe, /channelHasSubscribed&&s==='SUBSCRIBED'/);
