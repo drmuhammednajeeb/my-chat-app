@@ -14,10 +14,10 @@
 - Inline code spans auth/signup, notifications, profile/avatar, sidebar/directory, conversation and message workflows, composer, diagnostics, group/channel, team administration, workspace/settings and other feature logic. Boundaries require further mapping.
 
 ## Incremental, reversible strategy
-1. **Inventory/dependency map:** identify function blocks, globals read/written, DOM IDs, tables/RPCs, event registration and contracts. No code move yet.
-2. **Test harness:** static boundary/script-order/API checks and tests for the selected extraction.
-3. **Pilot:** choose a narrow feature with explicit dependencies and reversible boundary.
-4. **Incremental extraction:** one controller per stage; avoid broad refactors or simultaneous DOM/CSS/database changes.
+1. **Inventory/dependency map:** static initial cluster inventory recorded in `docs/INDEX_HTML_DEPENDENCY_MAP.md`; call graph, globals read/written, DOM IDs and database contracts remain partially mapped.
+2. **Test harness:** focused pure-helper regression tests authored for the pilot; execution and automated script-order checks remain outstanding.
+3. **Pilot:** extracted pure signup-name and password-strength helpers behind a frozen browser API; retained compatibility wrappers.
+4. **Incremental extraction:** one bounded helper/controller per stage; avoid broad refactors or simultaneous DOM/CSS/database changes.
 5. **Contract stabilization:** reduce implicit globals gradually and define explicit dependencies.
 6. **Markup reduction:** only after JS extraction, separately move markup/templates if appropriate; preserve selectors and accessibility.
 
