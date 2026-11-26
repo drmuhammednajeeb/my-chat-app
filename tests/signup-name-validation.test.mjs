@@ -9,14 +9,14 @@ const api=context.BizmindSignupName;
 test("signup-name utility is standalone and loaded before the core",()=>{
  assert.equal(typeof api.normalize,"function");
  assert.equal(typeof api.validate,"function");
- assert.doesNotMatch(source,/(?:^|\\n)\\s*import\\s|\\bexport\\s/m);
+ assert.doesNotMatch(source,/(?:^|\n)\s*import\s|\bexport\s/m);
  assert.ok(html.indexOf("./modules/signup-name-validation.js")<html.indexOf("__bootMainScriptStarted"));
- assert.match(html,/BizmindSignupName\\.normalize/);
- assert.match(html,/BizmindSignupName\\.validate/);
+ assert.match(html,/BizmindSignupName\.normalize/);
+ assert.match(html,/BizmindSignupName\.validate/);
 });
 test("normalization canonicalizes unicode and collapses whitespace",()=>{
  assert.equal(api.normalize("  محمد   النبهاني  "),"محمد النبهاني");
- assert.equal(api.normalize("e\\u0301"),"é");
+ assert.equal(api.normalize("e\u0301"),"é");
 });
 test("validator retains the two-to-three-part Arabic/Latin name contract",()=>{
  assert.equal(api.validate("محمد النبهاني").valid,true);
