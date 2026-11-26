@@ -214,6 +214,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/runtime-config.js"></script>
 <script src="./modules/password-strength.js"></script>
 <script src="./modules/signup-name-validation.js"></script>
+<script src="./modules/conversation-search.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -1335,11 +1336,9 @@ async function searchActiveConversation(term){
  if(state.hiddenMessageIdsReady===false){const p=document.createElement('p');p.textContent='تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.';panel.append(p);return}
  const loading=document.createElement('p');loading.textContent='جارٍ البحث…';panel.append(loading);
  try{
-  const pattern='%'+query+'%';
-  let searchQuery=supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,created_at,deleted_at').eq('conversation_id',conversationId).ilike('content',pattern);if(state.activeChatPreference?.cleared_before)searchQuery=searchQuery.gt('created_at',state.activeChatPreference.cleared_before);const {data,error}=await searchQuery.order('created_at',{ascending:false}).limit(30);
-  if(error)throw error;if(request!==state.chatSearchRequest||state.active?.id!==conversationId)return;
-  panel.replaceChildren();
-  const visibleData=(data||[]).filter(message=>!state.hiddenMessageIds?.has(message.id));
+  const result=await window.BizmindConversationSearch.searchConversationMessages({client:supabaseClient,conversationId,query,clearedBefore:state.activeChatPreference?.cleared_before,hiddenIds:state.hiddenMessageIds,isCurrent:()=>request===state.chatSearchRequest&&state.active?.id===conversationId});
+  if(result.status==='stale')return;
+  panel.replaceChildren();const visibleData=result.messages;
   if(!visibleData.length){const p=document.createElement('p');p.textContent='لا توجد رسائل مطابقة في هذه المحادثة.';panel.append(p);return}
   visibleData.forEach(message=>{const button=document.createElement('button');button.type='button';button.className='chat-search-result';const member=(state.active?.members||[]).find(m=>m.user_id===message.sender_id);const name=document.createElement('strong');name.textContent=member?.profile?.display_name||(message.sender_id===state.user?.id?'أنت':'عضو');const body=document.createElement('span');body.textContent=message.deleted_at?'تم حذف هذه الرسالة':message.content||'مرفق';const date=document.createElement('small');date.textContent=new Date(message.created_at).toLocaleString('ar-SA');button.append(name,body,date);button.onclick=()=>{$('chatSearchPanel').classList.add('hidden');jumpToMessage(message.id)};panel.append(button)});
  }catch(error){console.error('Conversation search failed:',error);panel.replaceChildren();const p=document.createElement('p');p.textContent='تعذر البحث. حاول مرة أخرى.';panel.append(p)}
