@@ -22,9 +22,11 @@ test("representative medium, strong and very-strong cases are retained",()=>{
  assert.equal(calculate("Abcdefgh12!XYZ").level,4);
 });
 test("UI wrapper delegates to the extracted module",()=>{
- const wrapper=html.match(/function updatePasswordStrength\(\)\{[\s\S]*?
-\}/);
- assert.ok(wrapper);assert.match(wrapper[0],/window\.BizmindPasswordStrength\.calculate/);
+ const start=html.indexOf("function updatePasswordStrength()");
+ const end=html.indexOf("\n}",start);
+ assert.ok(start>=0&&end>start);
+ const wrapper=html.slice(start,end+2);
+ assert.match(wrapper,/window\.BizmindPasswordStrength\.calculate/);
  assert.doesNotMatch(html,/function getPasswordStrength\(/);
 });
 test("search UI adapter delegates to extracted query service",()=>{assert.match(html,/BizmindConversationSearch\.searchConversationMessages/);});
