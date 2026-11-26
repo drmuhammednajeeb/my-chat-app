@@ -767,7 +767,7 @@ test('post-forward runtime assertions are ordered after their matching security 
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 24);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 97);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 97);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 98);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
@@ -840,7 +840,7 @@ test('production migration ledger and disposable replay evidence remain internal
   assert.equal(manifest.validationEvidence.runtime.completedAt, dag.runtimeEvidence.completedAt);
   assert.equal(manifest.validationEvidence.runtime.sqlFilesExecuted, dag.runtimeEvidence.sqlFilesExecuted);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 97);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 97);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 98);
   assert.equal(dag.nodes.find(node => node.id === 'chat.message-visibility-foreign-key-indexes')?.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
   const runtimeEvidenceText = JSON.stringify(dag.runtimeEvidence.checks) + JSON.stringify(manifest.validationEvidence.runtime.checks);
   assert.deepEqual(dag.runtimeEvidence.checks, manifest.validationEvidence.runtime.checks);
