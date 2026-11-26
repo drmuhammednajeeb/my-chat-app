@@ -52,7 +52,7 @@ test('older history request uses a stable cursor and commits only in the current
   const result = await api.loadOlderMessages(deps);
   assert.equal(result, true);
   assert.match(cursor, /created_at\.lt\.2026-01-03T00:00:00Z/);
-  assert.deepEqual(state.messages.map(row=>row.id), ['m1','m2','m3']);
+  assert.equal(state.messages.map(row=>row.id).join(','), 'm1,m2,m3');
   assert.equal(state.loadingOlderMessages, false);
   assert.equal(state.hasMoreMessages, false);
 });
