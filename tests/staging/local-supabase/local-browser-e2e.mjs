@@ -53,14 +53,13 @@ for (const key of ['direct_a', 'direct_b']) {
   }
 }
 
-async function apiCall(pathname, { method = 'GET', token = null, body, prefer = null } = {}) {
+async function apiCall(pathname, { method = 'GET', token = null, body } = {}) {
   const response = await fetch(new URL(pathname, api.origin), {
     method,
     headers: {
       apikey: anonKey,
       ...(token ? { Authorization: 'Bearer ' + token } : {}),
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-      ...(prefer ? { Prefer: prefer } : {})
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {})
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     signal: AbortSignal.timeout(20000)
