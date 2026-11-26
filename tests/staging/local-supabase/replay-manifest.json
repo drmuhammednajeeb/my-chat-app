@@ -896,7 +896,7 @@
         "supabase/migrations/20261126110000_stage3_acl_reconciliation.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Isolated ACL remediation candidate executed successfully in the disposable CI replay; 98 candidate SQL files were executed. This remains review-only and production execution is not authorized."
+      "parityNote": "Isolated ACL remediation candidate executed successfully in the disposable CI replay; 100 candidate SQL files were executed. This remains review-only and production execution is not authorized."
     }
   ],
   "duplicateSelection": {
