@@ -59,43 +59,6 @@
       "dependsOn": []
     },
     {
-      "path": "modules/profile-status-and-conversation-images.js",
-      "loadOrder": 12,
-      "dependsOn": [
-        "state",
-        "supabaseClient",
-        "toast"
-      ]
-    },
-    {
-      "path": "modules/status-workspace.js",
-      "loadOrder": 13,
-      "dependsOn": [
-        "state",
-        "supabaseClient",
-        "toast",
-        "addEventListener",
-        "enterApp"
-      ]
-    },
-    {
-      "path": "modules/backup-restore.js",
-      "loadOrder": 14,
-      "dependsOn": [
-        "state",
-        "supabaseClient",
-        "toast",
-        "crypto"
-      ]
-    },
-    {
-      "path": "modules/conversation-search.js",
-      "loadOrder": 11,
-      "dependsOn": [
-        "supabaseClient"
-      ]
-    },
-    {
       "path": "modules/password-strength.js",
       "loadOrder": 9,
       "dependsOn": []
@@ -106,8 +69,45 @@
       "dependsOn": []
     },
     {
-      "path": "modules/performance-analytics.js",
+      "path": "modules/conversation-search.js",
+      "loadOrder": 11,
+      "dependsOn": [
+        "supabaseClient"
+      ]
+    },
+    {
+      "path": "modules/profile-status-and-conversation-images.js",
+      "loadOrder": 13,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast"
+      ]
+    },
+    {
+      "path": "modules/status-workspace.js",
+      "loadOrder": 14,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast",
+        "addEventListener",
+        "enterApp"
+      ]
+    },
+    {
+      "path": "modules/backup-restore.js",
       "loadOrder": 15,
+      "dependsOn": [
+        "state",
+        "supabaseClient",
+        "toast",
+        "crypto"
+      ]
+    },
+    {
+      "path": "modules/performance-analytics.js",
+      "loadOrder": 12,
       "dependsOn": [
         "localStorage",
         "performance",
