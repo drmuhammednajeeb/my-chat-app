@@ -298,7 +298,7 @@ test('message loader reconciles the latest server page while preserving explicit
   assert.match(open, /state\.loadedHistoryIds=new Set\(\)/);
   assert.match(olderLoaderSource, /rollbackCancelledOlderHistory\(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds\)/);
   assert.match(olderLoaderSource, /const rollbackApplied=rollbackCancelledOlderHistory/);
-  assert.match(older, /if\(rollbackApplied\)\{/);
+  assert.match(olderLoaderSource, /if\(rollbackApplied\)\{/);
   assert.match(olderLoaderSource, /messageTimelineRenderOwner===requestId/);
   assert.match(loaderSource, /state\.messageTimelineCommitVersion = requestId/);
   assert.doesNotMatch(loaderSource, /slice\(-100\)/);
@@ -615,7 +615,7 @@ test('failed older-history batch restores the original transcript and pagination
   };
   const toastMessages = [];
   let renderCount = 0;
-  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
+  const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', { BizmindOlderHistory: olderHistoryApi,
     state, document, supabaseClient, $: () => area, console,
     rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')', { BizmindMessageTimeline: timelineApi }),
     BizmindMessageTimeline: timelineApi,
