@@ -14,7 +14,8 @@
     "password-strength.js",
     "signup-name-validation.js",
     "conversation-search.js",
-    "performance-analytics.js"
+    "performance-analytics.js",
+    "message-timeline.js"
   ],
   "implicitGlobals": [
     {
