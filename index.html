@@ -198,6 +198,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/runtime-config.js"></script>
 <script src="./modules/app-theme.js"></script>
 <script src="./modules/user-settings.js"></script>
+<script src="./modules/auth-session.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -520,18 +521,8 @@ async function ensureProfile(user){
  if(retry)return retry;
  throw createError||retryError||new Error('تعذر إنشاء الملف الشخصي');
 }
-let authLifecycleVersion=0,appEntryPromise=null,appEntryUserId=null;
-async function enterApp(user){
- if(!user?.id)return false;
- if(appEntryPromise){
-  if(appEntryUserId===user.id)return appEntryPromise;
-  try{await appEntryPromise}catch(_){}
- }
- const lifecycleVersion=authLifecycleVersion;
- appEntryUserId=user.id;
- appEntryPromise=enterAppInternal(user,lifecycleVersion);
- try{return await appEntryPromise}finally{if(appEntryUserId===user.id){appEntryPromise=null;appEntryUserId=null}}
-}
+const authSessionLifecycle=window.BizmindAuthSession.create();
+async function enterApp(user){return authSessionLifecycle.enter(user,enterAppInternal)}
 async function enterAppInternal(user,lifecycleVersion){
  if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
  const membershipStarted=performance.now();
@@ -550,12 +541,12 @@ async function enterAppInternal(user,lifecycleVersion){
  }
  const {data:membershipState,error:membershipStateError}=membershipResult;
  recordPerf('startup_membership_check',performance.now()-membershipStarted,{success:!membershipStateError});
- if(lifecycleVersion!==authLifecycleVersion)return false;
+ if(!authSessionLifecycle.isCurrent(lifecycleVersion))return false;
  if(membershipStateError){console.error('Membership state check failed:',membershipStateError);authError('تعذر التحقق من حالة العضوية. تحقق من الاتصال وحاول مجدداً.');return false;}
  if(membershipState?.membership_status!=='active'||membershipState?.membership_number_verified!==true||!/^971[0-9]{9}$/.test(membershipState?.membership_number||'')){await supabaseClient.auth.signOut({scope:'local'});authError('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');return false;}
  state.user=user;state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.activeListId=null;state.starredMessageIds.clear();state.groupSettings=null;state.selectedMessageIds.clear();state.selectionMode=false;subscribePersonalChatData();
  const profileStarted=performance.now();try{authProgress('تم التحقق من الحساب. جارٍ تجهيز ملفك الشخصي...');state.profile=await withAuthTimeout(ensureProfile(user),'استغرق تجهيز الملف الشخصي أكثر من 20 ثانية. تحقق من الاتصال ثم أعد المحاولة.');recordPerf('profile_load',performance.now()-profileStarted,{success:true})}catch(e){recordPerf('profile_load',performance.now()-profileStarted,{success:false});console.error('Profile setup after authentication failed:',e);authError('تم قبول تسجيل الدخول، لكن تعذر تجهيز الملف الشخصي: '+(e.message||'خطأ غير معروف'));return false}
- if(lifecycleVersion!==authLifecycleVersion)return false;
+ if(!authSessionLifecycle.isCurrent(lifecycleVersion))return false;
  if(state.profile.membership_status!=='active'||!/^971[0-9]{9}$/.test(state.profile.membership_number||''))throw new Error('هذه العضوية غير نشطة أو غير معتمدة. تواصل مع مسؤول المنصة.');
  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
  const shellRevealAt=performance.now();
@@ -566,13 +557,13 @@ async function enterAppInternal(user,lifecycleVersion){
  const conversationsStarted=performance.now();
  const conversationsLoaded=await loadConversations();
  recordPerf('startup_conversations_load',performance.now()-conversationsStarted,{success:true});
- if(lifecycleVersion!==authLifecycleVersion)return false;
+ if(!authSessionLifecycle.isCurrent(lifecycleVersion))return false;
  let invitedChannelId=null;const inviteToken=new URLSearchParams(location.search).get('invite');
  if(inviteToken){try{const {data,error}=await supabaseClient.rpc('join_channel_by_invite',{p_token:inviteToken});if(error)throw error;invitedChannelId=data;await loadConversations();toast('تم الانضمام إلى القناة بنجاح');}catch(error){console.error('Channel invite join failed:',error);toast(error.message||'رابط الدعوة غير صالح أو منتهي الصلاحية')}finally{const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('invite');history.replaceState({},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)}}
- if(lifecycleVersion!==authLifecycleVersion)return false;
+ if(!authSessionLifecycle.isCurrent(lifecycleVersion))return false;
  // Non-critical profile, notification, and admin data load in parallel after the chat shell is ready.
  void Promise.allSettled([
-  (async()=>{try{await ensureSelfConversation();if(lifecycleVersion===authLifecycleVersion)renderConversations()}catch(error){console.error('Self chat initialization failed:',error);toast('تعذر تجهيز مساحة مراسلة نفسك. يمكنك إعادة تحميل قائمة المحادثات لاحقاً')}})(),
+  (async()=>{try{await ensureSelfConversation();if(authSessionLifecycle.isCurrent(lifecycleVersion))renderConversations()}catch(error){console.error('Self chat initialization failed:',error);toast('تعذر تجهيز مساحة مراسلة نفسك. يمكنك إعادة تحميل قائمة المحادثات لاحقاً')}})(),
   (async()=>{subscribeNotifications();await loadNotifications()})(),
   loadTeamDashboard(true)
  ]);
@@ -2355,7 +2346,7 @@ $('closeLightbox').onclick=()=>$('lightbox').classList.add('hidden');$('lightbox
 $('conversationWorkspaceBtn').onclick=()=>{closeChatHeaderMenu();openConversationWorkspace()};
 $('workspaceInboxTabs').addEventListener('click',e=>{const label=e.target.closest('[data-workspace-label]');if(label){state.workspaceActiveLabelId=state.workspaceActiveLabelId===label.dataset.workspaceLabel?null:label.dataset.workspaceLabel;renderWorkspaceInboxTabs();renderConversations();return}const b=e.target.closest('[data-workspace-category]');if(!b)return;state.workspaceCategory=b.dataset.workspaceCategory;state.workspaceActiveLabelId=null;renderWorkspaceInboxTabs();renderConversations()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('conversationWorkspaceModal')?.classList.contains('open'))closeConversationWorkspace()});
-supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authLifecycleVersion++;voiceMessagePlayer.stopAll();diagLog('auth-signed-out');if(voiceRecorder.isActive())voiceRecorder.cancel();stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='TOKEN_REFRESHED'&&session?.user){state.user=session.user;$('connectionState').textContent='متصل'}if(event==='SIGNED_OUT'){state.workspaceClassifications.clear();state.workspaceActiveLabelId=null;state.workspaceEditingNoteId=null;state.workspaceLabels=[];state.workspaceLabelItems.clear();state.workspaceRules=[];state.privateReplyContexts.clear();state.privateReplyPending=null;authSessionLifecycle.invalidate();voiceMessagePlayer.stopAll();diagLog('auth-signed-out');if(voiceRecorder.isActive())voiceRecorder.cancel();stopMessagePolling();if(state.presenceChannel){supabaseClient.removeChannel(state.presenceChannel);state.presenceChannel=null}if(state.channel){supabaseClient.removeChannel(state.channel);state.channel=null}if(state.typingChannel){supabaseClient.removeChannel(state.typingChannel);state.typingChannel=null}if(state.notificationChannel){supabaseClient.removeChannel(state.notificationChannel);state.notificationChannel=null}if(state.personalChannel){supabaseClient.removeChannel(state.personalChannel);state.personalChannel=null}state.notifications=[];state.notificationUnread=0;$('notificationsPanel').classList.add('hidden');$('notificationBell').setAttribute('aria-expanded','false');renderNotificationBadge();state.onlineUsers.clear();state.customLists=[];state.chatListItems.clear();state.userConversationSettings.clear();state.starredMessageIds.clear();state.activeListId=null;state.selectedMessageIds.clear();state.selectionMode=false;state.groupSettings=null;state.user=null;state.active=null;$('messageInput').disabled=true;$('sendBtn').disabled=true;$('app').classList.add('hidden');$('auth').classList.remove('hidden');authError('انتهت جلسة الدخول على هذا الجهاز. سجّل الدخول للمتابعة.')}});
 (async()=>{
  const bootStatus=document.getElementById('bootStatus');
  const bootSupabaseMs=window.__BIZMIND_BOOT_TIMINGS__?.supabaseScriptMs;
