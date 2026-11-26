@@ -8,8 +8,7 @@ const context={};vm.runInNewContext(moduleSource,context);
 const calculate=context.BizmindPasswordStrength.calculate;
 test("password-strength utility is standalone and loaded before the core",()=>{
  assert.equal(typeof calculate,"function");
- assert.doesNotMatch(moduleSource,/(?:^|
-)\s*import\s|\bexport\s/m);
+ assert.doesNotMatch(moduleSource,/^\s*import\s|\bexport\s/m);
  assert.ok(html.indexOf("./modules/password-strength.js")<html.indexOf("__bootMainScriptStarted"));
 });
 test("empty and short password behavior remains stable",()=>{
