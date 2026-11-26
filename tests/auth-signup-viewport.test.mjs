@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { runInNewContext } from "node:vm";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const { normalizeSignupDisplayName, validateSignupDisplayName, getPasswordStrength } = require("../modules/auth-validation.js");
 
 const [html, css, sw, versionJson] = await Promise.all([
   readFile(new URL("../index.html", import.meta.url), "utf8"),
@@ -47,9 +49,9 @@ test("service worker cache is invalidated for the corrected auth stylesheet", ()
 });
 
 test("signup requires a two- or three-part real name and normalizes whitespace", () => {
-  assert.match(html, /function normalizeSignupDisplayName\(value\)/);
-  assert.match(html, /function validateSignupDisplayName\(value\)/);
-  assert.match(html, /parts\.length>=2&&parts\.length<=3/);
+  assert.match(html, /function normalizeSignupDisplayName\(value\)\{return window\.BizmindAuthValidation\.normalizeSignupDisplayName\(value\)\}/);
+  assert.match(html, /function validateSignupDisplayName\(value\)\{return window\.BizmindAuthValidation\.validateSignupDisplayName\(value\)\}/);
+  assert.match(html, /BizmindAuthValidation\.validateSignupDisplayName/);
   assert.match(html, /nameResult\.valid/);
   assert.match(html, /اسمك مع لقبك على الأقل/);
   assert.match(html, /محمد النبهاني أو محمد أحمد النبهاني/);
@@ -65,27 +67,19 @@ test("password strength is live guidance and does not enforce complexity", () =>
 });
 
 test("signup name validator accepts two or three Arabic/Latin names only", () => {
-  const start = html.indexOf("function normalizeSignupDisplayName");
-  const end = html.indexOf("function updatePasswordStrength()", start);
-  assert.ok(start >= 0 && end > start, "signup validation helpers must exist");
-  const helpers = html.slice(start, end);
-  const api = runInNewContext(`${helpers};({ normalizeSignupDisplayName, validateSignupDisplayName, getPasswordStrength })`);
-  assert.equal(api.validateSignupDisplayName("محمد النبهاني").valid, true);
-  assert.equal(api.validateSignupDisplayName("محمد أحمد النبهاني").valid, true);
-  assert.equal(api.validateSignupDisplayName("Mohammed bin Ali Nabhani").valid, false, "four parts are not allowed");
-  assert.equal(api.validateSignupDisplayName("محمد").valid, false);
-  assert.equal(api.validateSignupDisplayName("محمد  النبهاني").normalized, "محمد النبهاني");
-  assert.equal(api.validateSignupDisplayName("محمد 123").valid, false);
+  assert.equal(validateSignupDisplayName("محمد النبهاني").valid, true);
+  assert.equal(validateSignupDisplayName("محمد أحمد النبهاني").valid, true);
+  assert.equal(validateSignupDisplayName("Mohammed bin Ali Nabhani").valid, false, "four parts are not allowed");
+  assert.equal(validateSignupDisplayName("محمد").valid, false);
+  assert.equal(normalizeSignupDisplayName("محمد  النبهاني"), "محمد النبهاني");
+  assert.equal(validateSignupDisplayName("محمد 123").valid, false);
 });
 
 test("password strength levels are advisory and the only signup threshold is eight characters", () => {
-  const start = html.indexOf("function normalizeSignupDisplayName");
-  const end = html.indexOf("function updatePasswordStrength()", start);
-  const api = runInNewContext(`${html.slice(start, end)};({ getPasswordStrength })`);
-  assert.equal(api.getPasswordStrength("abcdefgh").label, "ضعيفة");
-  assert.equal(api.getPasswordStrength("abcdefghij").label, "متوسطة");
-  assert.equal(api.getPasswordStrength("Abcdefgh1").label, "قوية");
-  assert.equal(api.getPasswordStrength("Abcdefgh1234!").label, "قوية جداً");
+  assert.equal(getPasswordStrength("abcdefgh").label, "ضعيفة");
+  assert.equal(getPasswordStrength("abcdefghij").label, "متوسطة");
+  assert.equal(getPasswordStrength("Abcdefgh1").label, "قوية");
+  assert.equal(getPasswordStrength("Abcdefgh1234!").label, "قوية جداً");
   assert.match(html, /if\(password\.length<8\)throw new Error/);
 });
 
