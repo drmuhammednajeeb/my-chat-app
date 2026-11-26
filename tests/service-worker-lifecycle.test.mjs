@@ -69,7 +69,7 @@ test("CDN cache stores only successful or opaque responses and tolerates offline
 });
 
 test("PWA updater registers the scoped service worker without stale HTTP cache", () => {
-  assert.ok(updater.includes("win.navigator?.serviceWorker.register"));
+  assert.ok(updater.includes("win.navigator?.serviceWorker &&") && updater.includes("win.navigator.serviceWorker.register"));
   assert.ok(updater.includes('new URL("./service-worker.js", doc.baseURI)'));
   assert.ok(updater.includes('updateViaCache: "none"'));
 });
