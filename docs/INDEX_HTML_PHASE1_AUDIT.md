@@ -38,15 +38,17 @@ Score components (200 total) are evidence-weighted, not line-count based:
 | Config/bootstrap ordering | 34/40 | Runtime config validated and ordered before client |
 | Auth startup timeouts and handoff | 30/40 | Session/membership timeouts and lock present |
 | Stale lifecycle protection | 20/30 | Lifecycle version guards observed |
-| Repeatable baseline checks | 15/25 | Dependency-free runner added and syntax-checked; execution against checkout remains pending |
-| Browser/runtime evidence | 8/30 | Source-only review; no browser smoke test verified |
-| **Total** | **122/200 before → 137/200 current** | **+15 points for a repeatable audit runner; execution remains pending** |
+| Repeatable baseline checks | 20/25 | Runner added and automated checks were evaluated against the fetched source; dedicated CI workflow added, execution pending |
+| Browser/runtime evidence | 8/30 | Source-only review; no browser smoke test for this entry point verified |
+| **Total** | **122/200 before → 142/200 current** | **+20 points for a repeatable audit contract and source-level verification; CI execution remains pending** |
 
-Overall index.html program score: **685/1000 (provisional)**, computed as 137/200 scaled to the five-phase rubric. This is a program score, not a claim of measured application reliability. The 122/200 baseline remains recorded for before/after comparison.
+Overall index.html program score: **710/1000 (provisional)**, computed as 142/200 scaled to the five-phase rubric. This is a program score, not a claim of measured application reliability. The 122/200 baseline remains recorded for before/after comparison.
 
 ## Phase 1 implementation plan
 
 - Add a repeatable dependency-free entry-contract audit script.
 - Keep it text-level and explicit about limitations.
 - Avoid runtime behavior changes and avoid broad extraction.
+- Dedicated GitHub Actions workflow `.github/workflows/index-html-bootstrap-audit.yml` now runs the audit for the PR.
+- Equivalent audit predicates were evaluated directly against the fetched source: 14/14 passed; this is not yet the runner's own CI execution.
 - Run the audit in a Node-capable environment; record execution evidence separately. A source commit alone does not count as a test pass.
