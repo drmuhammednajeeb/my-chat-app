@@ -16,7 +16,7 @@ assert.match(backup,/function backupValidateShape\(value,user,expectedSchemaVers
 assert.match(backup,/value\.schemaVersion!==expectedSchemaVersion/);
 assert.doesNotMatch(backup,/value\.schemaVersion!==envelope\.schemaVersion/);
 assert.match(backup,/item\.bucket!=='avatars'&&!available\.has\(item\.conversationId\)/);
-assert.match(backup,/تُضمّن المرفقات المسموح بها داخل الملف المشفّر/);
+assert.match(backup,/تُضمّن مرفقات الحساب المملوكة له فقط ضمن حدود الحجم؛ أصول القنوات المشتركة لا تُنسخ/);
 assert.match(backup,/\[1,2\]\.includes\(envelope\?\.schemaVersion\)/);
 assert.match(backup,/crypto\.subtle\.digest\('SHA-256'/);
 assert.match(backup,/AES-256-GCM/);
