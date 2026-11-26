@@ -1,0 +1,44 @@
+name: App Theme Controller Checks
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'modules/app-theme.js'
+      - 'modules/theme-boot.js'
+      - 'tests/app-theme.test.js'
+      - '.github/workflows/app-theme.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'modules/app-theme.js'
+      - 'modules/theme-boot.js'
+      - 'tests/app-theme.test.js'
+      - '.github/workflows/app-theme.yml'
+permissions:
+  contents: read
+jobs:
+  app-theme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tests/app-theme.test.js
+      - name: Verify theme script order and inline integration
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const boot = html.indexOf('./modules/theme-boot.js');
+          const appTheme = html.indexOf('./modules/app-theme.js');
+          const inline = html.indexOf("const appThemeController=window.BizmindAppTheme.create");
+          if (boot < 0 || appTheme < 0 || inline < 0 || boot > html.indexOf('./app.css') || appTheme > inline) {
+            throw new Error('Theme scripts must load before their consumers and before app CSS for boot theme.');
+          }
+          if (!html.includes("appThemeController.setPreference(settings.theme,true)")) {
+            throw new Error('Account theme settings must be applied through the extracted controller.');
+          }
+          console.log('theme script order and integration verified');
+          NODE
