@@ -1205,6 +1205,15 @@ async function clearDirectChatForMe(){
 
 $('directShortcutBtn').onclick=toggleDirectChatShortcut;
 $('directClearBtn').onclick=clearDirectChatForMe;
+function renderConversationStatus(title,description,loading=false){
+ const area=$('messages');if(!area)return;
+ const box=document.createElement('div');box.className='welcome';box.setAttribute('role','status');box.setAttribute('aria-live','polite');
+ if(loading){const icon=document.createElement('div');icon.className='welcome-icon';const glyph=document.createElement('i');glyph.className='ph ph-spinner-gap';icon.append(glyph);box.append(icon)}
+ const heading=document.createElement('h2');heading.textContent=title;
+ const detail=document.createElement('p');detail.textContent=description;
+ box.append(heading,detail);area.replaceChildren(box);
+}
+
 async function openConversation(c){
  if(!c?.id)return;
  const openToken=state.conversationOpenVersion=(state.conversationOpenVersion||0)+1;
@@ -1212,7 +1221,7 @@ async function openConversation(c){
  const conversationOpenStarted=performance.now();
  if(voiceRecorder.isActive()){voiceRecorder.cancel();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
  if(state.editTarget){$('messageInput').value='';state.attachment=null;$('fileInput').value='';$('attachmentPreview').classList.add('hidden')}
- state.active=c;state.hiddenMessageIds=new Set();state.hiddenMessageIdsReady=false;state.loadedHistoryIds=new Set();messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
+ state.active=c;$('messageInput').disabled=true;$('messageInput').placeholder='جارٍ تحميل المحادثة…';renderConversationStatus('جارٍ تحميل المحادثة','يرجى الانتظار حتى تكتمل تهيئة المحادثة.',true);state.hiddenMessageIds=new Set();state.hiddenMessageIdsReady=false;state.loadedHistoryIds=new Set();messageReactions.reset();state.activeChatPreference=state.chatPrefs.get(c.id)||{theme:'dark',cleared_before:null,is_shortcut:false,is_archived:false};
  applyDirectChatTheme();state.messages=[];state.hasMoreMessages=false;state.loadingOlderMessages=false;state.loadingOlderRequestId=null;state.batchRenderingMessages=false;state.batchRenderingConversationId=null;$('messages').style.overflowAnchor='';
  state.messagePollCursor=null;state.messagePollLastCheckedAt=null;state.messagePollOffset=0;state.messagePollOffsetConversationId=c.id;state.newMessageCount=0;updateNewMessagesIndicator();
  $('chatSearchPanel').classList.add('hidden');$('chatSearchInput').value='';
@@ -1227,7 +1236,7 @@ async function openConversation(c){
  let hiddenStateReady=false;
  const messageLoadPromise=loadHiddenMessageIds(c.id).then(loaded=>{
   if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return false;
-  if(!loaded){toast('تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.');return false;}
+  if(!loaded){if(openToken===state.conversationOpenVersion&&state.active?.id===c.id)renderConversationStatus('تعذر تحميل المحادثة','تعذر تحميل إعدادات الخصوصية. أعد فتح المحادثة للمحاولة.');toast('تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.');return false;}
   hiddenStateReady=true;
   subscribeConversation();
   return loadMessages();
