@@ -214,7 +214,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/runtime-config.js"></script>
 <script src="./modules/password-strength.js"></script>
 <script src="./modules/signup-name-validation.js"></script>
-<script src="./modules/conversation-search.js"></script>
+<script src="./modules/conversation-search.js"></script>\n<script src="./modules/performance-analytics.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -330,38 +330,14 @@ function scheduleMessagesBottom(area=$('messages'),behavior='auto'){
 }
 const state={user:null,profile:null,userSettings:{},profileChannel:null,voiceDuration:0,conversations:[],conversationsLoading:false,teamLoading:false,memberReads:{},directConversationPromises:new Map(),conversationFilter:'all',sidebarView:'chats',sidebarReturnView:null,isTeamAdmin:false,teamData:null,teamSelectedGroupId:'',teamSearch:'',teamMembers:[],teamMembersLoading:false,teamMembersLoadedFor:'',directoryUsers:[],directoryLoading:false,directoryRequestId:0,directorySearch:'',directoryFilter:'all',directorySearchTimer:null,directoryOffset:0,directoryHasMore:false,onlineUsers:new Set(),presenceChannel:null,notifications:[],notificationUnread:0,notificationFilter:'unread',notificationChannel:null,notificationLoading:false,active:null,chatPrefs:new Map(),activeChatPreference:null,channel:null,typingChannel:null,typingTimer:null,typingSent:0,attachment:null,uploading:false,newMessageCount:0,chatSearchTimer:null,chatSearchRequest:0,authMode:'login',messageIds:new Set(),messages:[],reactions:new Map(),hasMoreMessages:false,loadingOlderMessages:false,loadingOlderRequestId:null,batchRenderingMessages:false,batchRenderingConversationId:null,pinnedMessages:new Map(),replyMessages:new Map(),hiddenMessageIds:new Set(),hiddenMessageIdsReady:false,hiddenMessageRequestId:0,pinnedConversationIds:new Set(),replyTarget:null,editTarget:null,messageLoadVersion:0,realtimeStatus:'CONNECTING',messagePollTimer:null,messagePollBusy:false,messagePollGeneration:0,messagePollCursor:null,messagePollLastCheckedAt:null,messagePollOffset:0,messagePollOffsetConversationId:null,pendingMessageSends:new Map(),renderingMessageIds:new Set(),diagnostics:{events:[],lastFetchAt:null,lastFetchCount:null,lastFetchError:null,lastRenderError:null,lastRenderAt:null,lastPollAt:null,lastRealtimeAt:null,lastRealtimeEvent:null,lastRealtimeReceivedConversationId:null,lastRealtimeConversationId:null,lastComposerChange:null,composerInteractions:[],lastHitTest:null}};
 Object.assign(state,{workspaceCategory:'all',workspaceClassifications:new Map(),workspaceLabels:[],workspaceLabelItems:new Map(),workspaceRules:[],privateReplyPending:null,privateReplyContexts:new Map(),workspaceActiveLabelId:null,workspaceEditingNoteId:null});
-// Privacy-safe local performance telemetry: timings only, no message text, user IDs, or URLs.
-const PERF_STORAGE_KEY='bizmindmakers.chat.performance.v2';
-const perfSamples=(()=>{try{const value=JSON.parse(localStorage.getItem(PERF_STORAGE_KEY)||'[]');return Array.isArray(value)?value.slice(-500):[]}catch(_e){return []}})();
-let perfPersistTimer=null;
-function persistPerfSamples(){try{localStorage.setItem(PERF_STORAGE_KEY,JSON.stringify(perfSamples))}catch(_e){}perfPersistTimer=null}
-function recordPerf(metric,duration,details={}){
- const sample={metric,ms:Math.round(Math.max(0,Number(duration)||0)*10)/10,at:Date.now(),...details};
- perfSamples.push(sample);if(perfSamples.length>500)perfSamples.splice(0,perfSamples.length-500);
- // Batch storage writes so instrumentation does not add synchronous I/O to message rendering.
- if(perfPersistTimer)clearTimeout(perfPersistTimer);
- perfPersistTimer=setTimeout(persistPerfSamples,1200);
- if(!$('diagnosticsPanel')?.hidden)updateDiagnostics();
-}
-window.addEventListener('pagehide',persistPerfSamples,{capture:true});
-function performancePercentile(values,percentile){
- if(!values.length)return null;
- const sorted=values.slice().sort((a,b)=>a-b);
- const rank=Math.max(1,Math.ceil((Math.min(100,Math.max(0,percentile))/100)*sorted.length));
- return sorted[rank-1];
-}
-function performanceSummary(){
- const metrics={};
- for(const metric of ['startup_supabase_script','startup_get_session','startup_membership_check','profile_load','startup_shell_reveal','startup_conversations_load','conversations_load','profile_modal_open','directory_query','conversation_open','message_fetch','message_render_batch','message_render_item','message_load_total','realtime_subscribe','realtime_message_render']){
-  const values=perfSamples.filter(x=>x.metric===metric).slice(-200).map(x=>x.ms);
-  if(values.length)metrics[metric]={samples:values.length,avg_ms:Math.round(values.reduce((a,b)=>a+b,0)/values.length),p50_ms:performancePercentile(values,50),p95_ms:performancePercentile(values,95),p99_ms:performancePercentile(values,99),max_ms:Math.max(...values)};
- }
- const resources=performance.getEntriesByType('resource').filter(entry=>/supabase\.co\/(rest|storage|auth|realtime)/i.test(entry.name)).slice(-100);
- const network={supabase_resource_count:resources.length,reported_transfer_bytes:resources.reduce((sum,item)=>sum+(item.transferSize||0),0),reported_encoded_bytes:resources.reduce((sum,item)=>sum+(item.encodedBodySize||0),0),avg_resource_ms:resources.length?Math.round(resources.reduce((sum,item)=>sum+item.duration,0)/resources.length):0,bytes_may_be_zero_when_cross_origin_timing_is_restricted:true};
- const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
- return {metrics,network,connection:connection?{effectiveType:connection.effectiveType||null,downlink_mbps:connection.downlink||null,rtt_ms:connection.rtt||null,saveData:!!connection.saveData}:null,long_tasks:perfSamples.filter(x=>x.metric==='long_task').slice(-10).map(x=>({ms:x.ms,at:x.at})),stored_samples:perfSamples.length,storage:'local browser only'};
-}
-if(typeof PerformanceObserver!=='undefined'){try{const longTaskObserver=new PerformanceObserver(list=>list.getEntries().forEach(entry=>recordPerf('long_task',entry.duration)));longTaskObserver.observe({type:'longtask',buffered:true})}catch(_e){}}
+// Performance telemetry facade (extracted in Wave 4).
+const perfSamples=BizmindPerformanceAnalytics.getSamples();
+function persistPerfSamples(){BizmindPerformanceAnalytics.persist();}
+function recordPerf(metric,duration,details={}){BizmindPerformanceAnalytics.record(metric,duration,details);}
+function performancePercentile(values,percentile){return BizmindPerformanceAnalytics.percentile(values,percentile);}
+function performanceSummary(){return BizmindPerformanceAnalytics.summary();}
+const longTaskObserver=BizmindPerformanceAnalytics.initLongTasks();
+BizmindPerformanceAnalytics.setDiagnosticsCallback(()=>!$('diagnosticsPanel')?.hidden?updateDiagnostics():false);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
