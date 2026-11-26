@@ -213,6 +213,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/auth-light.js"></script>
 <script src="./modules/runtime-config.js"></script>
 <script src="./modules/password-strength.js"></script>
+<script src="./modules/signup-name-validation.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -496,12 +497,8 @@ new MutationObserver(()=>{state.diagnostics.lastComposerChange={at:new Date().to
 window.addEventListener('error',e=>{state.diagnostics.lastRenderError='JS: '+(e.message||'unknown');diagLog('window-error',{message:e.message,source:e.filename,line:e.lineno})});
 window.addEventListener('unhandledrejection',e=>{state.diagnostics.lastRenderError='Promise: '+String(e.reason?.message||e.reason||'unknown');diagLog('unhandled-rejection',{message:state.diagnostics.lastRenderError})});
 function setAuthMode(mode){state.authMode=mode;window.BizmindAuthLight?.setState('idle');const signup=mode==='signup';$('signupFields').classList.toggle('hidden',!signup);$('loginTab').classList.toggle('active',!signup);$('signupTab').classList.toggle('active',signup);$('authTitle').textContent=signup?'أنشئ حسابك':'مرحباً بعودتك';$('authSub').textContent=signup?'التسجيل متاح للأعضاء الذين لديهم دعوة ورقم عضوية رسمي فقط.':'سجّل الدخول لمتابعة محادثاتك.';$('authSubmit').textContent=signup?'إنشاء الحساب':'تسجيل الدخول';$('password').autocomplete=signup?'new-password':'current-password';$('passwordStrength').classList.toggle('hidden',!signup);updatePasswordStrength();$('authError').classList.add('hidden');$('resendSignupVerification')?.classList.add('hidden');$('resetPasswordWrap').classList.toggle('hidden',signup);updateResetCooldown()}
-function normalizeSignupDisplayName(value){return String(value||'').normalize('NFC').trim().replace(/\s+/gu,' ')}
-function validateSignupDisplayName(value){
- const normalized=normalizeSignupDisplayName(value),parts=normalized.split(' ');
- const validPart=/^[\p{L}\p{M}]+(?:[-'’][\p{L}\p{M}]+)*$/u;
- return {normalized,valid:parts.length>=2&&parts.length<=3&&parts.every(part=>validPart.test(part))};
-}
+function normalizeSignupDisplayName(value){return window.BizmindSignupName.normalize(value)}
+function validateSignupDisplayName(value){return window.BizmindSignupName.validate(value)}
 function updatePasswordStrength(){
  const result=window.BizmindPasswordStrength.calculate($('password').value),meter=$('passwordStrengthMeter');
  if(!meter)return;
