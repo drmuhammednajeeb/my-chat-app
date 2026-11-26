@@ -155,6 +155,7 @@ async function createUserPage(email) {
   await page.locator('#authSubmit').click();
   await page.locator('#app:not(.hidden)').waitFor({ state: 'visible', timeout: 45000 });
   await page.locator('#auth').waitFor({ state: 'hidden', timeout: 10000 });
+  await page.locator('#conversationList button.self-conversation-row').waitFor({ state: 'visible', timeout: 20000 });
   return { context, page };
 }
 
