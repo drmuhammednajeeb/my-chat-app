@@ -30,6 +30,7 @@
 
 ## Extraction executed
 - Moved the pure password-strength calculation into `modules/password-strength.js`.
+- Extracted signup display-name normalization and validation into `modules/signup-name-validation.js`, preserving the two-to-three-part Arabic/Latin validation contract and Unicode NFC/whitespace normalization.
 - UI wrapper delegates through `window.BizmindPasswordStrength.calculate()`.
 - Module exposes a frozen facade, with no imports/exports and classic-script compatibility.
 - Loaded before the inline core script; focused tests cover empty, short, medium, strong and very-strong cases.
@@ -50,13 +51,13 @@
 6. Extract one responsibility at a time with behavior contracts.
 7. No wholesale rewrite or backend/schema changes in this phase.
 
-## Phase 2 score (200)
+## Phase 2 score — after Wave 2 (200)
 | Dimension | Before | After | Evidence |
 |---|---:|---:|---|
 | Responsibility/dependency mapping | 15/50 | 40/50 | Observed boundary inventory |
-| Module/API boundary design | 15/50 | 35/50 | Narrow pure-utility facade |
-| Actual decomposition | 15/50 | 25/50 | One utility extracted; core remains large |
-| Repeatable guardrails/tests | 15/50 | 40/50 | Audit, tests and CI |
-| **Total** | **60/200** | **140/200** | Partial phase; more extraction required |
+| Module/API boundary design | 15/50 | 40/50 | Narrow pure-utility facades |
+| Actual decomposition | 15/50 | 35/50 | Two utilities extracted; core remains large |
+| Repeatable guardrails/tests | 15/50 | 45/50 | Audit, focused tests, dependency inventory, precache and CI |
+| **Total** | **60/200** | **160/200** | Partial phase; more extraction required |
 
 Score is an evidence-weighted engineering rubric, not a reliability metric. Phase 2 is not closed.
