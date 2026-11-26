@@ -15,12 +15,12 @@
     },
     "duplicateActiveCopies": 0,
     "forwardReconciliationMigrations": 10,
-    "canonicalCliMigrationFiles": 76,
+    "canonicalCliMigrationFiles": 77,
     "testOnlyFixtureCount": 24,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
     ],
-    "stage3RemediationMigrationCount": 1
+    "stage3RemediationMigrationCount": 2
   },
   "platformNodes": [
     {
@@ -1678,6 +1678,20 @@
       "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "blockedBy": [],
       "note": "Narrow table-control privilege reconciliation only; ordinary CRUD grants preserved. Disposable CI runtime replay passed for the 98-file candidate set; review and production approval remain pending."
+    },
+    {
+      "id": "security.self-chat-rls-repair",
+      "source": [
+        "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
+      ],
+      "requires": [
+        "chat.self",
+        "membership.final-format",
+        "test-fixture.self-chat-runtime"
+      ],
+      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "blockedBy": [],
+      "note": "Narrow SECURITY DEFINER RPC repair with authoritative active-membership checks and locked profile/Auth rows. Do not apply to production until disposable-local runtime and browser E2E pass."
     }
   ],
   "explicitEdges": [
