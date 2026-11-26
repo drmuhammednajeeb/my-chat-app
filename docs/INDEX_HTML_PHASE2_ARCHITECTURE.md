@@ -55,8 +55,8 @@
 | Dimension | Before | After | Evidence |
 |---|---:|---:|---|
 | Responsibility/dependency mapping | 15/50 | 40/50 | Observed boundary inventory |
-| Module/API boundary design | 15/50 | 40/50 | Narrow pure-utility facades |
-| Actual decomposition | 15/50 | 35/50 | Three responsibilities incrementally extracted; inline core remains large |
+| Module/API boundary design | 15/50 | 45/50 | Narrow pure-utility facades |
+| Actual decomposition | 15/50 | 40/50 | Three responsibilities incrementally extracted; inline core remains large |
 | Repeatable guardrails/tests | 15/50 | 45/50 | Audit, focused tests, dependency inventory, precache and CI |
 | **Total** | **60/200** | **170/200** | Partial phase; more extraction required |
 
