@@ -51,13 +51,21 @@
 6. Extract one responsibility at a time with behavior contracts.
 7. No wholesale rewrite or backend/schema changes in this phase.
 
-## Phase 2 score — after Wave 2 (200)
+## Phase 2 score — after Wave 3 (200)
 | Dimension | Before | After | Evidence |
 |---|---:|---:|---|
 | Responsibility/dependency mapping | 15/50 | 40/50 | Observed boundary inventory |
 | Module/API boundary design | 15/50 | 40/50 | Narrow pure-utility facades |
-| Actual decomposition | 15/50 | 35/50 | Two utilities extracted; core remains large |
+| Actual decomposition | 15/50 | 35/50 | Three responsibilities incrementally extracted; inline core remains large |
 | Repeatable guardrails/tests | 15/50 | 45/50 | Audit, focused tests, dependency inventory, precache and CI |
-| **Total** | **60/200** | **160/200** | Partial phase; more extraction required |
+| **Total** | **60/200** | **170/200** | Partial phase; more extraction required |
 
 Score is an evidence-weighted engineering rubric, not a reliability metric. Phase 2 is not closed.
+
+
+## Wave 3 extraction
+- Extracted the database query/filtering portion of active-conversation search into `modules/conversation-search.js`; UI rendering and message-jump behavior remain core-owned.
+- Narrow API: `searchConversationMessages({client, conversationId, query, clearedBefore, hiddenIds, isCurrent})`; preserves the conversation scope, substring match, cleared-history boundary, chronological ordering, 30-result limit, hidden-message filtering and stale-request fence.
+- Loaded before the inline core and precached in service-worker cache v52.
+- Added isolated tests for API shape, invalid input, query contract, hidden-message filtering, stale fencing, errors and script load ordering.
+- Wave 3 score: 170/200 (rubric assessment, not reliability measurement). Before Phase 2 60/200; Wave 2 160/200.
