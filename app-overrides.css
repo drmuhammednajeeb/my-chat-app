@@ -108,11 +108,11 @@ html,body{font-family:var(--chat-font)}
 #appThemeToggle i{font-size:18px;color:var(--muted)}
 .chat-header-menu{background:var(--menu-bg);border-color:var(--line);color:var(--menu-text);box-shadow:var(--menu-shadow)}
 .chat-header-menu>button{background:transparent;color:var(--text)}
-.chat-header-menu>button:hover{background:var(--menu-hover)}
+
 .chat-header-menu>button i,.chat-header-menu>button svg{color:var(--muted)}
 .message-options-menu{background:var(--menu-bg);border-color:var(--line);color:var(--menu-text);box-shadow:var(--menu-shadow)}
 .message-menu-option{background:transparent;color:var(--text)}
-.message-menu-option:hover{background:var(--menu-hover)}
+
 .message-menu-option i{color:var(--muted)}
 /* Theme-independent component rules; palette values come only from semantic tokens. */
 .channel-card,.group-person,.notification-head,.chat-search-top{
@@ -124,24 +124,17 @@ html,body{font-family:var(--chat-font)}
 .conv-item,.sidebar-tab,.iconbtn,.directory-filter,.direct-chat-control{
  background:var(--panel2);color:var(--text);border-color:var(--line)
 }
-.conv-item:hover,.sidebar-tab:hover,.iconbtn:hover,.notification-item:hover,
-.conversation:hover{background:var(--surface-hover);color:var(--text)}
+.conv-item:hover{background:var(--surface-hover);color:var(--text)}
 .conv-item.active,.sidebar-tab.active,.directory-filter.active,.conversation.active{
  background:var(--surface-row-active);color:var(--surface-row-active-text);border-color:var(--surface-row-active-border)
 }
-.welcome h2,.chat-title strong,.profile-info strong,.brand h1,.auth-card h2,.group-dialog h2{color:var(--text)}
+.welcome h2,.chat-title strong,.profile-info strong,.brand h1,.group-dialog h2{color:var(--text)}
 .welcome .welcome-icon{background:var(--surface-selected);color:var(--accent-text)}
 .notification-head,.chat-search-top{border-bottom:1px solid var(--line)}
 @media(max-width:760px){
  #messages .bubble{font-size:14px;line-height:1.55}
  #messageInput,.composer textarea{font-size:16px}
 }
-@media(prefers-reduced-motion:reduce){
- html,body,#app,#auth,.sidebar,.chat,.chat-head,.messages,.composer-wrap,.composer,
- .profile,.auth-card,.group-dialog,.notification-panel,.team-panel,.chat-search-panel,
- .conversation,.notification-item,.chat-search-result{transition:none!important}
-}
-
 @media(prefers-reduced-motion:reduce){
  html,body,#app,#auth,.sidebar,.chat,.chat-head,.messages,.composer-wrap,.composer,
  .profile,.auth-card,.group-dialog,.notification-panel,.team-panel,.chat-search-panel,
@@ -155,7 +148,7 @@ html,body{font-family:var(--chat-font)}
 .custom-lists-heading button{border:0;background:var(--panel2);color:var(--accent-text);border-radius:8px;width:28px;height:28px}
 .custom-lists-items{display:flex;gap:6px;flex-wrap:wrap;max-height:112px;overflow:auto}
 .custom-list-chip{border:1px solid var(--line);border-radius:16px;padding:6px 10px;background:var(--panel2);color:var(--text);font-size:11px;display:flex;align-items:center;gap:6px}
-.custom-list-chip.active{background:var(--surface-selected);color:var(--surface-selected-text);border-color:var(--surface-selected-border)}
+
 .custom-list-chip small{opacity:.7}
 .group-management-modal,.starred-modal,.custom-list-modal{position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:14px;background:var(--overlay-scrim);backdrop-filter:blur(5px)}
 .group-management-modal.open,.starred-modal.open,.custom-list-modal.open{display:grid}
