@@ -1,0 +1,51 @@
+name: Message Loading and Rendering Controller
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'modules/message-loader.js'
+      - 'tests/message-loading-rendering-controller.test.js'
+      - '.github/workflows/message-loading-rendering-controller.yml'
+      - 'docs/MESSAGE_LOADING_RENDERING_CONTROLLER.md'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'modules/message-loader.js'
+      - 'tests/message-loading-rendering-controller.test.js'
+      - '.github/workflows/message-loading-rendering-controller.yml'
+      - 'docs/MESSAGE_LOADING_RENDERING_CONTROLLER.md'
+permissions:
+  contents: read
+jobs:
+  message-loading-rendering-controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run controller regression tests
+        run: node tests/message-loading-rendering-controller.test.js
+      - name: Verify module syntax and integration boundaries
+        run: |
+          node --check modules/message-loader.js
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const moduleTag = html.indexOf('./modules/message-loader.js');
+          const inline = html.indexOf('window.BizmindMessageLoader.loadMessages');
+          const older = html.indexOf('window.BizmindMessageLoader.loadOlderMessages');
+          const render = html.indexOf('window.BizmindMessageLoader.renderMessage');
+          if (moduleTag < 0 || inline < 0 || moduleTag > inline ||
+              older < 0 || render < 0 || older < moduleTag || render < moduleTag) {
+            throw new Error('Message loader module must load before all controller adapters.');
+          }
+          if (html.includes('function rollbackCancelledOlderHistory(')) {
+            throw new Error('Older-history rollback implementation must not remain inline.');
+          }
+          if (html.includes('const pending=state.messageRenderPromises.get(m.id)')) {
+            throw new Error('Render de-duplication implementation must not remain inline.');
+          }
+          console.log('message loading/rendering integration verified');
+          NODE
