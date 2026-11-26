@@ -17,3 +17,4 @@ add("Password module precedes core",html.indexOf("./modules/password-strength.js
 add("Runtime config precedes core",html.indexOf("__bootMainScriptStarted")>html.indexOf("./modules/runtime-config.js"),"Config script precedes core.");
 const report={checks,summary:{total:checks.length,passed:checks.filter(x=>x.pass).length,failed:checks.filter(x=>!x.pass).length}};
 console.log(JSON.stringify(report,null,2));if(report.summary.failed)process.exitCode=1;
+\nadd("Performance analytics module precedes core",html.indexOf("./modules/performance-analytics.js")>=0&&html.indexOf("./modules/performance-analytics.js")<html.indexOf("__bootMainScriptStarted"),"Analytics module loads before consumer.");\n
