@@ -216,6 +216,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/signup-name-validation.js"></script>
 <script src="./modules/conversation-search.js"></script>
 <script src="./modules/performance-analytics.js"></script>
+<script src="./modules/message-timeline.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -1446,35 +1447,7 @@ async function renderMessage(m,conversationId=state.active?.id,requestId=null){
  try{return await task}
  finally{if(state.messageRenderPromises.get(m.id)===task)state.messageRenderPromises.delete(m.id)}
 }
-function reconcileMessageTimeline(area){
- if(!area)return;
- const rows=Array.from(area.querySelectorAll(':scope > .message'));
- rows.sort((a,b)=>{
-  const at=Date.parse(a.dataset.createdAt||''),bt=Date.parse(b.dataset.createdAt||'');
-  const timeDiff=(Number.isFinite(at)?at:0)-(Number.isFinite(bt)?bt:0);
-  if(timeDiff)return timeDiff;
-  return String(a.dataset.messageId||'').localeCompare(String(b.dataset.messageId||''));
- });
- const existingDividers=new Map();
- Array.from(area.children).filter(node=>node.classList.contains('day-divider')).forEach(node=>{
-  const day=node.dataset.day||node.textContent||'';
-  if(!existingDividers.has(day))existingDividers.set(day,node);
- });
- const fixed=Array.from(area.children).filter(node=>!node.classList.contains('message')&&!node.classList.contains('day-divider'));
- const desired=[...fixed];let previousDay=null;
- for(const row of rows){
-  const day=row.dataset.day||'';
-  if(day!==previousDay){
-   let divider=existingDividers.get(day);
-   if(!divider){divider=document.createElement('div');divider.className='day-divider';divider.dataset.day=day;divider.textContent=day}
-   desired.push(divider);previousDay=day;
-  }
-  desired.push(row);
- }
- const current=Array.from(area.children);
- if(current.length===desired.length&&current.every((node,index)=>node===desired[index]))return;
- area.replaceChildren(...desired);
-}
+function reconcileMessageTimeline(area){return window.BizmindMessageTimeline.reconcileMessageTimeline(area);}
 async function renderMessageInternal(m,conversationId=state.active?.id,requestId=null){
  if(!m?.id||!conversationId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion)||state.messageIds.has(m.id)||state.renderingMessageIds.has(m.id))return false;
  const isCurrent=()=>state.active?.id===conversationId&&(requestId===null||requestId===state.messageLoadVersion);
@@ -1548,28 +1521,7 @@ async function loadMessages(){
  });
 }
 function compareMessagesChronologically(a,b){const timeDiff=new Date(a.created_at)-new Date(b.created_at);if(timeDiff)return timeDiff;const aid=String(a.id||''),bid=String(b.id||'');return aid<bid?-1:aid>bid?1:0}
-function rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds){
- if(state.active?.id!==conversationId)return false;
- const newerTimelineAlreadyCommitted=Number(state.messageTimelineCommitVersion)>requestId;
- const newerRenderOwnsTimeline=!!state.messageTimelineRenderOwner&&state.messageTimelineRenderOwner!==requestId;
- // A newer owner controls both model and DOM. Never roll back only one layer.
- if(newerTimelineAlreadyCommitted||newerRenderOwnsTimeline)return false;
- const before=state.messages||[];
- const removedIds=new Set();
- state.messages=before.filter(message=>{
-  if(!olderIds.has(message.id)||originalMessageIdSet?.has(message.id))return true;
-  // A newer realtime replacement is not owned by this history request.
-  if(requestRowsById?.get(message.id)!==message)return true;
-  removedIds.add(message.id);
-  return false;
- });
- removedIds.forEach(id=>{
-  Array.from(area.querySelectorAll('.message')).filter(node=>node.dataset.messageId===id).forEach(node=>node.remove());
-  state.messageIds.delete(id);
-  if(!originalLoadedHistoryIds?.has(id))state.loadedHistoryIds?.delete(id);
- });
- return true;
-}
+function rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds){return window.BizmindMessageTimeline.rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);}
 async function loadOlderMessages(){
  const conversationId=state.active?.id,area=$('messages');
  if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
