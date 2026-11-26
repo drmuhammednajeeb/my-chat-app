@@ -26,7 +26,7 @@ test('production registry records applied PR165 migrations and ten pending forwa
   const selfChatRemediation = registry.stage3RemediationMigrations.find(item =>
     item.path === 'supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql');
   assert.ok(selfChatRemediation);
-  assert.equal(selfChatRemediation.status, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
+  assert.equal(selfChatRemediation.status, 'LOCAL_RUNTIME_PASSED_REVIEW_REQUIRED_NOT_PRODUCTION_APPLIED');
   assert.equal(blobSha(await readFile(path.join(root, selfChatRemediation.path))), selfChatRemediation.gitBlobSha,
     'Self-chat remediation blob mismatch');
   const stage3Bytes = await readFile(path.join(root, stage3.path));
