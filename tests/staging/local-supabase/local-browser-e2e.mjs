@@ -46,19 +46,20 @@ if (publicationCheck.error || publicationCheck.status !== 0 || publicationCheck.
   throw new Error('chat_messages is not enabled for INSERT publication in local Supabase: ' + (publicationCheck.stderr || publicationCheck.stdout || publicationCheck.error?.message || 'unknown error'));
 }
 console.log('REALTIME_PUBLICATION_CHAT_MESSAGES=true');
-for (const key of ['direct_a', 'direct_b', 'direct_c']) {
+for (const key of ['direct_a', 'direct_b']) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(users[key] || '')) {
     throw new Error('Missing synthetic E2E identity: ' + key);
   }
 }
 
-async function apiCall(pathname, { method = 'GET', token = null, body } = {}) {
+async function apiCall(pathname, { method = 'GET', token = null, body, prefer = null } = {}) {
   const response = await fetch(new URL(pathname, api.origin), {
     method,
     headers: {
       apikey: anonKey,
       ...(token ? { Authorization: 'Bearer ' + token } : {}),
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {})
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(prefer ? { Prefer: prefer } : {})
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     signal: AbortSignal.timeout(20000)
@@ -255,23 +256,29 @@ try {
     assert.equal(realtime.lastEvent, 'INSERT', 'Application channel must receive the message through Realtime, not only polling.');
     assert.equal(realtime.lastRealtimeConversation, conversation, 'Application Realtime handler must record only its active conversation.');
 
-    console.log('BROWSER_E2E_STEP=prove cross-conversation event isolation for a user in two direct chats');
+    console.log('BROWSER_E2E_STEP=prove cross-conversation event isolation for a user in two conversations');
     const tokenB = await authenticate('direct-b@bizmindmakers.test');
-    const tokenC = await authenticate('direct-c@bizmindmakers.test');
-    const secondConversation = await apiCall('/rest/v1/rpc/get_or_create_direct_conversation', {
+    const createdConversation = await apiCall('/rest/v1/conversations?select=id', {
       method: 'POST',
       token: tokenB,
-      body: { p_other_user_id: users.direct_c }
+      body: { type: 'group', title: 'Realtime Isolation E2E', created_by: users.direct_b },
+      prefer: 'return=representation'
     });
+    const secondConversation = Array.isArray(createdConversation) ? createdConversation[0]?.id : createdConversation?.id;
     if (typeof secondConversation !== 'string' || !/^[0-9a-f-]{36}$/i.test(secondConversation) || secondConversation === conversation) {
-      throw new Error('Second isolated direct conversation RPC returned an invalid or duplicate conversation ID.');
+      throw new Error('Second isolated conversation insert returned an invalid or duplicate conversation ID.');
     }
+    await apiCall('/rest/v1/conversation_members', {
+      method: 'POST',
+      token: tokenB,
+      body: { conversation_id: secondConversation, user_id: users.direct_b, role: 'owner' }
+    });
     const foreignMessage = 'Foreign conversation isolation ' + Date.now() + ' ' + Math.random().toString(36).slice(2, 10);
     await accountB.page.evaluate(value => { window.__BIZMIND_E2E_FOREIGN_MESSAGE__ = value; }, foreignMessage);
     await apiCall('/rest/v1/chat_messages', {
       method: 'POST',
-      token: tokenC,
-      body: { conversation_id: secondConversation, sender_id: users.direct_c, content: foreignMessage }
+      token: tokenB,
+      body: { conversation_id: secondConversation, sender_id: users.direct_b, content: foreignMessage }
     });
     await accountB.page.waitForFunction(
       expected => window.__BIZMIND_E2E_REALTIME_OBSERVER__?.event?.conversationId === expected,
