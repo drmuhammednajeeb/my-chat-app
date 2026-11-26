@@ -2230,10 +2230,10 @@
       "name": "harden_self_chat_creation_under_membership_rls",
       "path": "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql",
       "gitBlobSha": "b1456b4397d956138402f6d8117dbffb0764dda6",
-      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "status": "LOCAL_RUNTIME_PASSED_REVIEW_REQUIRED_NOT_PRODUCTION_APPLIED",
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "productionApplied": false,
-      "note": "Narrow self-chat RPC hardening; disposable-local runtime and browser E2E required before merge. Not production-applied."
+      "note": "Disposable local Supabase runtime and two-user browser E2E passed in run 45842223208; production application remains unauthorized pending review and explicit approval."
     }
   ]
 }
