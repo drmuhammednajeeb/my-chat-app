@@ -16,15 +16,11 @@ const cssFiles = [
 ];
 
 test("feature modules are referenced by the application shell", () => {
-  for (const file of moduleFiles) {
-    assert.ok(html.includes(`./modules/${file}`), `missing application-shell reference: ${file}`);
-  }
+  for (const file of moduleFiles) assert.ok(html.includes(`./modules/${file}`), `missing application-shell reference: ${file}`);
 });
 
 test("feature module scripts are included in the offline shell cache", () => {
-  for (const file of moduleFiles) {
-    assert.ok(worker.includes(`./modules/${file}`), `missing service-worker shell entry: ${file}`);
-  }
+  for (const file of moduleFiles) assert.ok(worker.includes(`./modules/${file}`), `missing service-worker shell entry: ${file}`);
 });
 
 test("module styles are linked and cached", () => {
@@ -41,6 +37,7 @@ test("index.html does not contain duplicate id attributes", () => {
 });
 
 test("index.html has no inline HTML event handler attributes", () => {
-  const attributes = [...html.matchAll(/\s(on[a-z]+)\s*=/gi)].map((match) => match[1]);
+  const tags = [...html.matchAll(/<[^>]+>/g)].map((match) => match[0]);
+  const attributes = tags.flatMap((tag) => [...tag.matchAll(/\s(on[a-z]+)\s*=/gi)].map((match) => match[1]));
   assert.deepEqual(attributes, [], "prefer explicit event binding over HTML event attributes");
 });
