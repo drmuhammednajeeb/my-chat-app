@@ -142,12 +142,6 @@ html,body{font-family:var(--chat-font)}
  .conversation,.notification-item,.chat-search-result{transition:none!important}
 }
 
-@media(prefers-reduced-motion:reduce){
- html,body,#app,#auth,.sidebar,.chat,.chat-head,.messages,.composer-wrap,.composer,
- .profile,.auth-card,.group-dialog,.notification-panel,.team-panel,.chat-search-panel,
- .conversation,.notification-item,.chat-search-result{transition:none!important}
-}
-
 .profile-photo-status{font-size:11px;color:var(--muted);text-align:center;max-width:100%;overflow-wrap:anywhere}.profile-photo-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.profile-photo-approve{border:0;border-radius:10px;padding:10px 16px;background:var(--button-primary-bg);color:var(--button-primary-text);font-size:12px;font-weight:800;cursor:pointer}.profile-photo-approve:disabled{opacity:.6;cursor:wait}.profile-photo-approve.hidden,.profile-photo-actions .hidden{display:none!important}.profile-modal-open{overflow:hidden}.profile-dialog button{touch-action:manipulation}.profile-modal{overscroll-behavior:contain}.profile-dialog{overscroll-behavior:contain}
 
 .custom-lists-panel{padding:5px 13px 10px;border-bottom:1px solid var(--line);flex:none}
