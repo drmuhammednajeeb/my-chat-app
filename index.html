@@ -337,7 +337,7 @@ function recordPerf(metric,duration,details={}){BizmindPerformanceAnalytics.reco
 function performancePercentile(values,percentile){return BizmindPerformanceAnalytics.percentile(values,percentile);}
 function performanceSummary(){return BizmindPerformanceAnalytics.summary();}
 const longTaskObserver=BizmindPerformanceAnalytics.initLongTasks();
-BizmindPerformanceAnalytics.setDiagnosticsCallback(()=>!$('diagnosticsPanel')?.hidden?updateDiagnostics():false);
+BizmindPerformanceAnalytics.setDiagnosticsCallback(flag=>flag?updateDiagnostics():!$('diagnosticsPanel')?.hidden);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=s=>(s||'U').trim().slice(0,1).toUpperCase();
 const time=s=>new Date(s).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
