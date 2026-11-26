@@ -80,7 +80,9 @@ test("signup name validator accepts two or three Arabic/Latin names only", () =>
 
 test("password strength levels are advisory and the only signup threshold is eight characters", async () => {
   const strengthSource = await readFile(new URL("../modules/password-strength.js", import.meta.url), "utf8");
-  const strengthApi = runInNewContext(strengthSource, {}).BizmindPasswordStrength;
+  const context = {};
+  runInNewContext(strengthSource, context);
+  const strengthApi = context.BizmindPasswordStrength;
   assert.equal(strengthApi.calculate("abcdefgh").label, "ضعيفة");
   assert.equal(strengthApi.calculate("abcdefghij").label, "متوسطة");
   assert.equal(strengthApi.calculate("Abcdefgh1").label, "قوية");
