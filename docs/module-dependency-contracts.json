@@ -59,8 +59,25 @@
       "dependsOn": []
     },
     {
-      "path": "modules/profile-status-and-conversation-images.js",
+      "path": "modules/password-strength.js",
+      "loadOrder": 9,
+      "dependsOn": []
+    },
+    {
+      "path": "modules/signup-name-validation.js",
       "loadOrder": 10,
+      "dependsOn": []
+    },
+    {
+      "path": "modules/conversation-search.js",
+      "loadOrder": 11,
+      "dependsOn": [
+        "supabaseClient"
+      ]
+    },
+    {
+      "path": "modules/profile-status-and-conversation-images.js",
+      "loadOrder": 13,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -69,7 +86,7 @@
     },
     {
       "path": "modules/status-workspace.js",
-      "loadOrder": 11,
+      "loadOrder": 14,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -80,12 +97,23 @@
     },
     {
       "path": "modules/backup-restore.js",
-      "loadOrder": 12,
+      "loadOrder": 15,
       "dependsOn": [
         "state",
         "supabaseClient",
         "toast",
         "crypto"
+      ]
+    },
+    {
+      "path": "modules/performance-analytics.js",
+      "loadOrder": 12,
+      "dependsOn": [
+        "localStorage",
+        "performance",
+        "navigator",
+        "PerformanceObserver",
+        "updateDiagnostics callback"
       ]
     }
   ]

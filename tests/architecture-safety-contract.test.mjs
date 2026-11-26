@@ -66,7 +66,7 @@ test("extracted module inventory is explicitly classified before expanding modul
   const expected = [
     "app-updater.js","audio-player.js","auth-error-messages.js","auth-light.js","backup-restore.js",
     "message-loader.js","message-reactions.js","profile-status-and-conversation-images.js",
-    "runtime-config.js","status-workspace.js","voice-recorder.js"
+    "runtime-config.js","password-strength.js","signup-name-validation.js","conversation-search.js","status-workspace.js","voice-recorder.js","performance-analytics.js"
   ].sort();
   assert.deepEqual(inventory.modules.sort(), expected, "module inventory must be reviewed and updated intentionally");
   assert.ok(inventory.implicitGlobals.length > 0, "global-contract debt must be documented rather than hidden");

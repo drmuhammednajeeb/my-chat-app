@@ -893,7 +893,7 @@ test('per-user hidden-message state fails closed across rendering, polling, sear
   const searchEnd = source.indexOf('async function jumpToMessage', searchStart);
   const search = source.slice(searchStart, searchEnd);
   assert.match(search, /if\(state\.hiddenMessageIdsReady===false\)/);
-  assert.match(search, /visibleData=\(data\|\|\[\]\)\.filter\(message=>!state\.hiddenMessageIds\?\.has\(message\.id\)\)/);
+  assert.match(search, /BizmindConversationSearch\.searchConversationMessages/);
   const hiddenStart = source.indexOf('async function loadHiddenMessageIds');
   const hiddenEnd = source.indexOf('async function hideMessageForMe', hiddenStart);
   const hiddenLoader = source.slice(hiddenStart, hiddenEnd);
