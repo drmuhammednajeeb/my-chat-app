@@ -11,23 +11,7 @@
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="./membership.css">
 
-<script>
-(function(){
- const KEY='bizmindmakers-chat-theme';
- let preference=null;
- try{preference=localStorage.getItem(KEY)}catch(_){}
- if(preference!=='dark'&&preference!=='light')preference=null;
- const systemDark=!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
- const theme=preference||(systemDark?'dark':'light');
- const root=document.documentElement;
- root.classList.add('auth-booting');
- root.classList.toggle('dark',theme==='dark');
- root.classList.toggle('light',theme==='light');
- root.dataset.theme=theme;
- root.style.colorScheme=theme;
- window.__BIZMIND_THEME_PREFERENCE__=preference||'system';
-})();
-</script>
+<script src="./modules/theme-boot.js"></script>
 <link rel="stylesheet" href="./app.css">
 <link rel="stylesheet" href="./styles/theme-tokens.css">
 <link rel="stylesheet" href="./modules/voice-recorder.css">
@@ -212,6 +196,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/auth-error-messages.js"></script>
 <script src="./modules/auth-light.js"></script>
 <script src="./modules/runtime-config.js"></script>
+<script src="./modules/app-theme.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -223,19 +208,8 @@ const __supabaseResource=performance.getEntriesByType('resource').find(entry=>en
 window.__BIZMIND_BOOT_TIMINGS__={mainScriptStarted:__bootMainScriptStarted,supabaseScriptMs:__supabaseResource?Math.round(__supabaseResource.duration):null,clientReady:performance.now()};
 const $=id=>document.getElementById(id);
 const voiceMessagePlayer=window.BizmindAudioPlayer.create();
-const APP_THEME_KEY='bizmindmakers-chat-theme';
-let appThemePreference=window.__BIZMIND_THEME_PREFERENCE__||'system';
-let appThemeMedia=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
-function applyAppTheme(theme,save=false){
- const resolved=theme==='system'?(appThemeMedia?.matches?'dark':'light'):theme;
- const root=document.documentElement;
- root.classList.toggle('dark',resolved==='dark');
- root.classList.toggle('light',resolved==='light');
- root.dataset.theme=resolved;root.style.colorScheme=resolved;
- if(save){appThemePreference=theme;try{if(theme==='system')localStorage.removeItem(APP_THEME_KEY);else localStorage.setItem(APP_THEME_KEY,theme)}catch(error){console.warn('Theme preference storage unavailable:',error)}}
- const button=$('appThemeToggle');
- if(button){button.innerHTML=resolved==='dark'?'<i class="ph ph-sun"></i>':'<i class="ph ph-moon"></i>';button.title=resolved==='dark'?'التبديل إلى الوضع الساطع':'التبديل إلى الوضع المظلم';button.setAttribute('aria-label',button.title);button.setAttribute('aria-pressed',String(resolved==='dark'))}
-}
+const appThemeController=window.BizmindAppTheme.create({saveUserSetting,toast,logger:console});
+appThemeController.init();
 async function loadUserSettings(){
  const userId=state.user?.id;if(!userId)return false;
  try{
@@ -244,7 +218,7 @@ async function loadUserSettings(){
   if(state.user?.id!==userId)return false;
   const settings=data?.settings&&typeof data.settings==='object'&&!Array.isArray(data.settings)?data.settings:{};
   state.userSettings=settings;
-  if(['dark','light','system'].includes(settings.theme)){appThemePreference=settings.theme;applyAppTheme(settings.theme,true)}
+  if(['dark','light','system'].includes(settings.theme))appThemeController.setPreference(settings.theme,true)
   return true;
  }catch(error){console.warn('Account settings could not be loaded:',error?.message||error);return false}
 }
@@ -256,16 +230,7 @@ async function saveUserSetting(key,value){
  state.userSettings=(data&&typeof data==='object'&&!Array.isArray(data))?data:{...(state.userSettings||{}),[key]:value};
  return true;
 }
-function toggleAppTheme(){
- const current=document.documentElement.dataset.theme||'light';
- const next=current==='dark'?'light':'dark';
- applyAppTheme(next,true);
- void saveUserSetting('theme',next).catch(error=>{console.warn('Theme preference sync failed:',error);toast('تم تغيير المظهر على هذا الجهاز، وتعذرت مزامنته مع حسابك')});
-}
-$('appThemeToggle')?.addEventListener('click',toggleAppTheme);
-if(appThemeMedia){const onSystemThemeChange=()=>{if(appThemePreference==='system')applyAppTheme('system',false)};if(appThemeMedia.addEventListener)appThemeMedia.addEventListener('change',onSystemThemeChange);else if(appThemeMedia.addListener)appThemeMedia.addListener(onSystemThemeChange)}
-window.addEventListener('storage',event=>{if(event.key===APP_THEME_KEY){const next=event.newValue==='dark'||event.newValue==='light'?event.newValue:'system';appThemePreference=next;applyAppTheme(next,false)}});
-applyAppTheme(appThemePreference,false);
+
 
 let deferredInstallPrompt=null;
 const installAppButton=$('installAppBtn');
