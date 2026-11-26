@@ -123,6 +123,7 @@ const address = server.address();
 const appUrl = 'http://127.0.0.1:' + address.port + '/';
 let browser;
 const productionRequests = [];
+const apiFailures = [];
 const pageErrors = [];
 const browserConsoleErrors = [];
 
@@ -134,6 +135,16 @@ async function createUserPage(email) {
   const page = await context.newPage();
   page.on('request', request => {
     if (request.url().includes('lvkeohpuucuklagvwpnq.supabase.co')) productionRequests.push(request.url());
+  });
+  page.on('response', response => {
+    const responseUrl = new URL(response.url());
+    if (responseUrl.origin === api.origin && response.status() >= 400) {
+      apiFailures.push({
+        status: response.status(),
+        method: response.request().method(),
+        path: responseUrl.pathname
+      });
+    }
   });
   page.on('pageerror', error => pageErrors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') browserConsoleErrors.push(message.text()); });
@@ -163,7 +174,7 @@ async function openDirectChat(page, otherName) {
       diagnostics: typeof state !== 'undefined' ? { fetchError: state.diagnostics?.lastFetchError, fetchAt: state.diagnostics?.lastFetchAt, renderError: state.diagnostics?.lastRenderError, events: state.diagnostics?.events?.slice(-12) } : null,
       visibleText: document.body.innerText.slice(-1800)
     })).catch(() => ({ evaluation: 'unavailable' }));
-    throw new Error('Composer did not become ready after opening ' + otherName + ': ' + JSON.stringify({ diagnostic, pageErrors, browserConsoleErrors: browserConsoleErrors.slice(-20), cause: error.message }));
+    throw new Error('Composer did not become ready after opening ' + otherName + ': ' + JSON.stringify({ diagnostic, apiFailures: apiFailures.slice(-30), pageErrors, browserConsoleErrors: browserConsoleErrors.slice(-20), cause: error.message }));
   }
   await page.locator('#chatTitle').getByText(otherName, { exact: false }).waitFor({ state: 'visible', timeout: 15000 }).catch(async () => {
     const title = await page.locator('#chatTitle').textContent();
