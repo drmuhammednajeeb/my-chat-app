@@ -5,7 +5,7 @@ function fixture(){
  const state={user:{id:'user-a'},userSettings:{old:true}};
  const calls=[],warnings=[],themes=[];
  const client={
-  from(table){assert.equal(table,'user_settings');return {select(column){assert.equal(column,'settings');return {eq(field,id){assert.equal(field,'user_id');return {maybeSingle:async()=>({data:{settings:{theme:'dark',density:'compact'}},error:null})}}}}},
+  from(table){assert.equal(table,'user_settings');return {select(column){assert.equal(column,'settings');return {eq(field,id){assert.equal(field,'user_id');return {maybeSingle:async()=>({data:{settings:{theme:'dark',density:'compact'}},error:null})}}}}}},
   async rpc(name,args){calls.push({name,args});return {data:{theme:'light',language:'ar'},error:null}}
  };
  const controller=create({getState:()=>state,getClient:()=>client,onThemePreference:value=>themes.push(value),logger:{warn:(...args)=>warnings.push(args)}});
