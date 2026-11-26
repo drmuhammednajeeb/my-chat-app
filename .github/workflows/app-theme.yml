@@ -37,8 +37,8 @@ jobs:
           if (boot < 0 || appTheme < 0 || inline < 0 || boot > html.indexOf('./app.css') || appTheme > inline) {
             throw new Error('Theme scripts must load before their consumers and before app CSS for boot theme.');
           }
-          if (!html.includes("appThemeController.setPreference(settings.theme,true)")) {
-            throw new Error('Account theme settings must be applied through the extracted controller.');
+          if (!html.includes("onThemePreference:theme=>appThemeController.setPreference(theme,true)")) {
+            throw new Error('User settings must delegate valid account theme preferences to the extracted theme controller.');
           }
           console.log('theme script order and integration verified');
           NODE
