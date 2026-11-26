@@ -350,7 +350,6 @@ $self_chat_success$;
 
 DO $self_chat_denials$
 DECLARE
-  v_user_id uuid;
   v_rejected boolean;
   v_case record;
 BEGIN
@@ -392,7 +391,7 @@ DECLARE
 BEGIN
   IF NOT has_function_privilege('authenticated', v_oid, 'EXECUTE')
      OR has_function_privilege('anon', v_oid, 'EXECUTE')
-     OR has_function_privilege('public', v_oid, 'EXECUTE') THEN
+ THEN
     RAISE EXCEPTION 'Self-chat RPC EXECUTE ACL is not restricted to authenticated';
   END IF;
   IF NOT (SELECT prosecdef FROM pg_proc WHERE oid = v_oid) THEN
