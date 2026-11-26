@@ -1,0 +1,50 @@
+name: Auth Validation Extraction Checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'modules/auth-validation.js'
+      - 'tests/auth-validation.test.js'
+      - 'index.html'
+      - '.github/workflows/auth-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'modules/auth-validation.js'
+      - 'tests/auth-validation.test.js'
+      - 'index.html'
+      - '.github/workflows/auth-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  auth-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run validation regression tests
+        run: node tests/auth-validation.test.js
+      - name: Check module script ordering and wrappers
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const moduleTag = '<script src="./modules/auth-validation.js"></script>';
+          const mainScript = '<script>\n\'use strict\';';
+          const moduleIndex = html.indexOf(moduleTag);
+          const mainIndex = html.indexOf(mainScript);
+          if (moduleIndex < 0 || mainIndex < 0 || moduleIndex >= mainIndex) {
+            throw new Error('Auth validation module must load before the main inline script.');
+          }
+          for (const name of ['normalizeSignupDisplayName','validateSignupDisplayName','getPasswordStrength']) {
+            if (!html.includes('function '+name+'(') || !html.includes('BizmindAuthValidation.'+name)) {
+              throw new Error('Missing compatibility wrapper: '+name);
+            }
+          }
+          console.log('script ordering and compatibility wrappers verified');
+          NODE
