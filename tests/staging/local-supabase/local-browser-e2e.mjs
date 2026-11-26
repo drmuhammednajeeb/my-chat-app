@@ -124,6 +124,7 @@ const appUrl = 'http://127.0.0.1:' + address.port + '/';
 let browser;
 const productionRequests = [];
 const pageErrors = [];
+const browserConsoleErrors = [];
 
 async function createUserPage(email) {
   const context = await browser.newContext({ viewport: { width: 1365, height: 900 } });
@@ -135,6 +136,7 @@ async function createUserPage(email) {
     if (request.url().includes('lvkeohpuucuklagvwpnq.supabase.co')) productionRequests.push(request.url());
   });
   page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') browserConsoleErrors.push(message.text()); });
   await page.goto(appUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.locator('#auth').waitFor({ state: 'visible', timeout: 20000 });
   await page.locator('#email').fill(email);
@@ -149,7 +151,20 @@ async function openDirectChat(page, otherName) {
   const row = page.locator('#conversationList button.conversation.swipe-conversation').filter({ hasText: otherName }).first();
   await row.waitFor({ state: 'visible', timeout: 30000 });
   await row.click();
-  await page.locator('#messageInput:not([disabled])').waitFor({ state: 'visible', timeout: 30000 });
+  try {
+    await page.waitForFunction(() => { const input = document.getElementById('messageInput'); return !!input && !input.disabled && input.getClientRects().length > 0; }, null, { timeout: 30000 });
+  } catch (error) {
+    const diagnostic = await page.evaluate(() => ({
+      url: location.href, title: document.getElementById('chatTitle')?.textContent,
+      connection: document.getElementById('connectionState')?.textContent,
+      input: { exists: !!document.getElementById('messageInput'), disabled: document.getElementById('messageInput')?.disabled },
+      active: typeof state !== 'undefined' ? state.active?.id : null,
+      hiddenReady: typeof state !== 'undefined' ? state.hiddenMessageIdsReady : null,
+      diagnostics: typeof state !== 'undefined' ? { fetchError: state.diagnostics?.lastFetchError, fetchAt: state.diagnostics?.lastFetchAt, renderError: state.diagnostics?.lastRenderError, events: state.diagnostics?.events?.slice(-12) } : null,
+      visibleText: document.body.innerText.slice(-1800)
+    })).catch(() => ({ evaluation: 'unavailable' }));
+    throw new Error('Composer did not become ready after opening ' + otherName + ': ' + JSON.stringify({ diagnostic, pageErrors, browserConsoleErrors: browserConsoleErrors.slice(-20), cause: error.message }));
+  }
   await page.locator('#chatTitle').getByText(otherName, { exact: false }).waitFor({ state: 'visible', timeout: 15000 }).catch(async () => {
     const title = await page.locator('#chatTitle').textContent();
     if (!title?.includes(otherName)) throw new Error('Opened chat title does not match expected peer: ' + title);
