@@ -21,7 +21,7 @@ test('pagination exits safely when required state or area is unavailable', async
 test('older history request uses a stable cursor and commits only in the current conversation', async () => {
   const area = {
     childNodes: [], children: [], style: {}, scrollTop: 0,
-    prepend(node) { this.children.unshift(node); this.childNodes = this.children; },
+    prepend(node) { this.children.unshift(node); this.childNodes = this.children; node.nextSibling=this.children[1]||null; },
     querySelectorAll(selector) { return selector === '.message' ? this.children.filter(node => node.className === 'message') : []; },
     getBoundingClientRect() { return { top: 0, bottom: 400 }; },
     insertBefore(fragment, target) { const at = this.children.indexOf(target); this.children.splice(at < 0 ? this.children.length : at, 0, ...fragment.childNodes); this.childNodes = this.children; },
@@ -40,7 +40,7 @@ test('older history request uses a stable cursor and commits only in the current
   };
   const supabaseClient = { from(table) { assert.equal(table, 'chat_messages'); return query; } };
   const document = { createElement() { return { className: '', textContent: '', remove() { area.children.splice(area.children.indexOf(this), 1); area.childNodes=area.children; } }; },
-    createDocumentFragment() { return { childNodes: [], append(node) { this.childNodes.push(node); } }; };
+    createDocumentFragment() { return { childNodes: [], append(node) { this.childNodes.push(node); } }; },
   const renderMessage = async message => {
     const node = { className: 'message', dataset: { messageId: message.id, createdAt: message.created_at }, getBoundingClientRect() { return { top: 100, bottom: 140 }; }, remove() {} };
     area.children.push(node); area.childNodes=area.children; state.messageIds.add(message.id); return true;
