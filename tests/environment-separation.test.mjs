@@ -25,7 +25,7 @@ test('no local endpoint can leak into browser runtime assets', () => {
 });
 test('disposable local Supabase runtime is isolated to a temporary runner', () => {
   const workflow = read('../.github/workflows/disposable-local-supabase-runtime.yml');
-  assert.match(workflow, /runs-on:\s*ubuntu-latest/);
+  assert.match(workflow, /runs-on:\s*ubuntu-24\.04/);
   assert.match(workflow, /runner\.temp/);
   assert.match(workflow, /supabase start/);
   assert.match(workflow, /supabase stop/);

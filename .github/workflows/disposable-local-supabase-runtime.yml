@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   local-supabase-runtime:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - name: Check out reviewed source
@@ -30,6 +30,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Validate browser Realtime E2E contract
+        run: |
+          node --check tests/staging/local-supabase/local-browser-e2e.mjs
+          node --test tests/staging/local-supabase/local-browser-e2e.test.mjs
+
+      - name: Install pinned Playwright browser test dependency
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+
+      - name: Install Chromium for full application E2E
+        run: npx playwright install chromium
 
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@v1

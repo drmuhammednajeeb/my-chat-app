@@ -42,7 +42,7 @@ async function provisionSyntheticDirectChatAuthUsers() {
     { key: 'direct_suspended', email: 'direct-suspended@bizmindmakers.test', number: '971001000004', verified: true, confirmed: true, username: 'direct_suspended', displayName: 'Direct Test Suspended' },
     { key: 'direct_unverified', email: 'direct-unverified@bizmindmakers.test', number: '971001000005', verified: false, confirmed: true, username: 'direct_unverified', displayName: 'Direct Test Unverified' },
     { key: 'direct_unconfirmed', email: 'direct-unconfirmed@bizmindmakers.test', number: '971001000006', verified: true, confirmed: false, username: 'direct_unconfirmed', displayName: 'Direct Test Unconfirmed' },
-    { key: 'direct_missing_profile', email: 'direct-missing-profile@bizmindmakers.test', number: '971001000007', verified: true, confirmed: true, username: 'direct_missing_profile', displayName: 'Direct Test Missing Profile' }
+    { key: 'direct_missing_profile', email: 'direct-missing-profile@bizmindmakers.test', number: '971001000007', verified: true, confirmed: true, username: 'direct_missing_profile', displayName: 'Direct Test Missing Profile' },
   ];
 
   for (const user of users) {
@@ -249,6 +249,19 @@ run(process.execPath, [
   LOCAL_SUPABASE_SERVICE_ROLE_KEY: process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY ?? '',
   LOCAL_SUPABASE_DB_URL: raw
 }, 'message-auto-cleanup-storage-runtime');
+
+run(process.execPath, [
+  path.join(ROOT, 'tests/staging/local-supabase/local-browser-e2e.mjs')
+], {
+  ...env,
+  LOCAL_SUPABASE_URL: process.env.LOCAL_SUPABASE_URL ?? '',
+  LOCAL_SUPABASE_ANON_KEY: process.env.LOCAL_SUPABASE_ANON_KEY ?? '',
+  LOCAL_SUPABASE_DB_URL: raw,
+  LOCAL_SUPABASE_EXPECTED_API_PORT: expectedApiPort,
+  LOCAL_SUPABASE_EXPECTED_DB_PORT: expectedDbPort,
+  LOCAL_SYNTHETIC_AUTH_PASSWORD: syntheticAuthPassword ?? '',
+  LOCAL_SYNTHETIC_AUTH_USERS_JSON: JSON.stringify(syntheticAuthIds ?? {})
+}, 'browser-auth-chat-realtime-e2e');
 
 const patchManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/staging/local-supabase/fixtures/synthetic-fixture-patches.json'), 'utf8'));
 if (patchManifest.mode !== 'TEST_COPY_ONLY' || !Array.isArray(patchManifest.patches)) {
