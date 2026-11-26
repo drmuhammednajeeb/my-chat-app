@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('node:assert/strict');
+const { normalizeSignupDisplayName, validateSignupDisplayName, getPasswordStrength } = require('../modules/auth-validation.js');
+assert.equal(normalizeSignupDisplayName('  محمد   النبهاني  '), 'محمد النبهاني');
+assert.equal(validateSignupDisplayName('محمد النبهاني').valid, true);
+assert.equal(validateSignupDisplayName('محمد').valid, false);
+assert.equal(validateSignupDisplayName('محمد النبهاني الثالث').valid, true);
+assert.equal(validateSignupDisplayName('محمد النبهاني الثالث الرابع').valid, false);
+assert.equal(getPasswordStrength('').level, 0);
+assert.equal(getPasswordStrength('abc').level, 1);
+assert.equal(getPasswordStrength('abcdefgh').level, 1);
+assert.equal(getPasswordStrength('Abcdef12').level, 3);
+assert.equal(getPasswordStrength('Abcdefgh1234!').level, 4);
+console.log('auth-validation tests passed');
