@@ -144,7 +144,8 @@
         "document",
         "DOM lookup callback",
         "isCurrent callback",
-        "toast callback"
+        "toast callback",
+        "toast"
       ]
     }
   ]
