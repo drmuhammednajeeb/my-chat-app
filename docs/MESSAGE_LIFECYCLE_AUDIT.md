@@ -25,6 +25,7 @@ No Supabase schema, migration, RLS policy, RPC, Storage policy, or production se
 - Audio signed-URL renewal checks that the original render is still current and the audio element remains connected.
 - An obsolete render no longer displays an error toast for the currently active conversation.
 - Message loading guards reply-parent results before writing them and checks the request token between auxiliary loaders.
+- Reply-parent, reaction, pin and private-reply enrichment waits are bounded to four seconds. A stalled optional lookup cannot hold the authoritative message timeline open; its failure is recorded as an optional enrichment warning while the primary message rows continue to render.
 
 ### Conversation and request isolation
 

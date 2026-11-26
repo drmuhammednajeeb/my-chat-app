@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const source = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
-const sandbox = { console, Date, Set, Map, Array, Number, String, Promise, Object };
+const sandbox = { console, Date, Set, Map, Array, Number, String, Promise, Object, setTimeout, clearTimeout };
 vm.runInNewContext(source, sandbox, { filename: 'message-loader.js' });
 const { loadMessages } = sandbox.BizmindMessageLoader;
 
@@ -111,6 +111,19 @@ test('optional pin and private-reply metadata failures do not block authoritativ
   const h = harness({ rows, metadata: { pins: Promise.reject(new Error('pins offline')), privateReplies: Promise.reject(new Error('private replies offline')) } });
   assert.equal(await loadMessages(h.deps), true);
   assert.deepEqual(h.calls.render, ['m1']);
+});
+
+test('never-settling optional metadata cannot block the authoritative message timeline', async () => {
+  const rows = [{ id: 'm1', conversation_id: 'conversation-1', created_at: '2026-01-01T00:00:00Z' }];
+  const never = new Promise(() => {});
+  const h = harness({ rows, metadata: { pins: never, privateReplies: never } });
+  h.deps.loadMessageReactions = () => never;
+  h.deps.optionalMetadataTimeoutMs = 5;
+
+  assert.equal(await loadMessages(h.deps), true);
+  assert.deepEqual(h.calls.render, ['m1']);
+  assert.equal(h.state.messageTimelineConversationId, 'conversation-1');
+  assert.equal(h.state.isLoadingMessages, false);
 });
 
 test('same-conversation fetch failure preserves the rendered timeline and message state', async () => {

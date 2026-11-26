@@ -25,6 +25,19 @@
     return box;
   }
 
+  function withTimeout(value, timeoutMs, label) {
+    const duration = Number(timeoutMs);
+    if (!Number.isFinite(duration) || duration <= 0 ||
+        typeof root.setTimeout !== 'function' || typeof root.clearTimeout !== 'function') {
+      return Promise.resolve(value);
+    }
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = root.setTimeout(() => reject(new Error(label + ' timed out after ' + duration + 'ms')), duration);
+    });
+    return Promise.race([Promise.resolve(value), timeout]).finally(() => root.clearTimeout(timer));
+  }
+
   function isAfterClear(message, clearedBefore) {
     if (!clearedBefore) return true;
     const created = Date.parse(message.created_at);
@@ -104,7 +117,8 @@
       renderMessage,
       markConversationReceipt = async () => {},
       toast = () => {},
-      performance: performanceRef = root.performance
+      performance: performanceRef = root.performance,
+      optionalMetadataTimeoutMs = 4000
     } = deps || {};
 
     const conversationId = requestedConversationId;
@@ -194,10 +208,14 @@
 
       if (replyIds.length) {
         try {
-          const parentsResult = await supabaseClient.from('chat_messages')
-            .select('id,conversation_id,sender_id,content,deleted_at,created_at')
-            .eq('conversation_id', conversationId)
-            .in('id', replyIds);
+          const parentsResult = await withTimeout(
+            supabaseClient.from('chat_messages')
+              .select('id,conversation_id,sender_id,content,deleted_at,created_at')
+              .eq('conversation_id', conversationId)
+              .in('id', replyIds),
+            optionalMetadataTimeoutMs,
+            'Reply-parent lookup'
+          );
           if (isCurrent() && !parentsResult?.error) {
             (parentsResult?.data || []).forEach(parent => nextReplyMessages.set(parent.id, parent));
           }
@@ -208,9 +226,9 @@
       if (!isCurrent()) return false;
 
       const enrichments = await Promise.allSettled([
-        Promise.resolve().then(() => loadMessageReactions(conversationId, messages, requestId)),
-        Promise.resolve().then(() => loadMessagePins(conversationId, requestId)),
-        Promise.resolve().then(() => loadPrivateReplyContexts(conversationId, messages, requestId))
+        withTimeout(Promise.resolve().then(() => loadMessageReactions(conversationId, messages, requestId)), optionalMetadataTimeoutMs, 'Message reactions'),
+        withTimeout(Promise.resolve().then(() => loadMessagePins(conversationId, requestId)), optionalMetadataTimeoutMs, 'Message pins'),
+        withTimeout(Promise.resolve().then(() => loadPrivateReplyContexts(conversationId, messages, requestId)), optionalMetadataTimeoutMs, 'Private reply contexts')
       ]);
       enrichments.forEach((outcome, index) => {
         if (outcome.status === 'rejected') {
