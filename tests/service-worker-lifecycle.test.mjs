@@ -67,6 +67,11 @@ test("CDN cache stores only successful or opaque responses and tolerates offline
   assert.match(worker, /statusText: ["']Offline static asset unavailable["']/);
 });
 
-test("PWA registration remains present and points to the application service worker", () => {\n  assert.match(html, /serviceWorker/);\n  assert.match(html, /service-worker\\.js/);\n});\n\ntest("PWA manifest remains linked from the application document", () => {
+test("PWA registration remains present and points to the application service worker", () => {
+  assert.match(html, /serviceWorker/);
+  assert.match(html, /service-worker\\.js/);
+});
+
+test("PWA manifest remains linked from the application document", () => {
   assert.match(html, /<link rel="manifest" href="\.\/manifest\.json">/);
 });
