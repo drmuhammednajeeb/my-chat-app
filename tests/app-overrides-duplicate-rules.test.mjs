@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-function collectRules(css) {
+function splitSelectors(selectorList) {\n  const selectors = [];\n  let depth = 0, start = 0;\n  for (let i = 0; i < selectorList.length; i++) {\n    const char = selectorList[i];\n    if (char === '(' || char === '[') depth++;\n    else if (char === ')' || char === ']') depth--;\n    else if (char === ',' && depth === 0) { selectors.push(selectorList.slice(start, i).trim()); start = i + 1; }\n  }\n  selectors.push(selectorList.slice(start).trim());\n  return selectors.filter(Boolean);\n}\n\nfunction collectRules(css) {
   const source = css.replace(/\/\*[\s\S]*?\*\//g, '');
   const rules = [];
   const stack = [];
@@ -23,7 +23,7 @@ function collectRules(css) {
         const context = stack.filter((entry) => entry.startsWith('@')).join(' > ');
         const selector = header.replace(/\s+/g, ' ').trim();
         const declarations = body.replace(/\s+/g, ' ').trim();
-        if (selector && declarations) rules.push({ context, selector, declarations });
+        if (selector && declarations) {\n          for (const item of splitSelectors(selector)) rules.push({ context, selector: item, declarations });\n        }
       }
       start = i + 1;
     } else if (char === ';' && depth === 0) {
