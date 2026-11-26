@@ -13,7 +13,8 @@
     "voice-recorder.js",
     "password-strength.js",
     "signup-name-validation.js",
-    "conversation-search.js"
+    "conversation-search.js",
+    "performance-analytics.js"
   ],
   "implicitGlobals": [
     {
@@ -52,4 +53,4 @@
       "reason": "Existing shared-state and service coupling; lifecycle contract to be hardened."
     }
   ]
-}
+}\n
