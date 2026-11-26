@@ -3,8 +3,8 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 75,
-    "mappedSources": 75,
+    "sqlFiles": 76,
+    "mappedSources": 76,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
     "testOnlySqlFixtures": 24,
@@ -39,9 +39,9 @@
     "executedTestOnlySqlFixtures": 24,
     "executedSqlFiles": 97,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 73,
+    "candidateMappedSources": 74,
     "candidateTestOnlySqlFixtures": 24,
-    "candidateSqlFiles": 97,
+    "candidateSqlFiles": 98,
     "localRuntimeRunId": 45720775547,
     "localRuntimeCommit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
     "testOnlyFixtureCount": 24
@@ -869,6 +869,15 @@
         "DAG-016"
       ],
       "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
+    },
+    {
+      "nodeId": "security.stage3-acl-reconciliation",
+      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "testSources": [
+        "supabase/migrations/20261126110000_stage3_acl_reconciliation.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Isolated ACL remediation candidate executed successfully in the disposable CI replay; 98 candidate SQL files were executed. This remains review-only and production execution is not authorized."
     }
   ],
   "duplicateSelection": {

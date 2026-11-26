@@ -232,7 +232,7 @@ test('replay manifest is design-only, topologically aligned, and fail-closed', a
   for (const duplicate of duplicateCopies) assert.equal(selected.includes(duplicate), false);
   const canonicalSourceCounts = new Map();
   for (const node of dag.nodes) for (const source of node.source ?? []) if (source.startsWith('supabase/migrations/')) canonicalSourceCounts.set(source, (canonicalSourceCounts.get(source) ?? 0) + 1);
-  assert.equal(canonicalSourceCounts.size, 75);
+  assert.equal(canonicalSourceCounts.size, 76);
   assert.ok([...canonicalSourceCounts.values()].every(count => count === 1));
   assert.ok(manifest.candidateNodeOrder.some(node => node.nodeId === 'chat.hardening' && node.blockedBy.includes('DAG-014')));
 });
@@ -495,7 +495,7 @@ test('post-forward runtime assertions are ordered after their matching security 
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 24);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 97);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 97);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 98);
   assert.ok(dag.nodes.some(node => node.id === 'chat.auto-cleanup-100h' && node.source.includes('supabase/migrations/20261117130000_message_auto_cleanup_100h_storage.sql')));
   assert.ok(dag.nodes.some(node => node.id === 'test-fixture.message-auto-cleanup' && node.source.includes('tests/staging/local-supabase/fixtures/message-auto-cleanup.assert.sql')));
   assert.ok(dag.nodes.find(node => node.id === 'chat.auto-cleanup-100h').testSource.includes('tests/staging/local-supabase/message-auto-cleanup-storage-runtime.mjs'));
@@ -767,7 +767,7 @@ test('post-forward runtime assertions are ordered after their matching security 
   ]) assert.ok(manifest.sourceCoverage.testOnlySqlFixturePaths.includes(path));
   assert.equal(manifest.sourceCoverage.executedTestOnlySqlFixtures, 24);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 97);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 97);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 98);
 });
 
 test('direct-conversation stress executes once after the forward eligibility migration', async () => {
@@ -825,7 +825,7 @@ test('production migration ledger and disposable replay evidence remain internal
   assert.equal(registry.unresolvedProductionEntries.length, 2);
   assert.equal(registry.productionDatabase.migrationCount, registry.productionMigrations.length + registry.unresolvedProductionEntries.length);
   assert.equal(registry.sourceSets.productionLedgerMigrations, registry.productionMigrations.length);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, registry.productionMigrations.length + registry.forwardMigrations.length);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, registry.productionMigrations.length + registry.forwardMigrations.length + registry.stage3RemediationMigrations.length);
   assert.ok(registry.rules.some(rule => rule.includes('Each of the 65 mapped production ledger versions')));
   assert.equal(registry.forwardMigrations.length, 10);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 65);
@@ -840,7 +840,7 @@ test('production migration ledger and disposable replay evidence remain internal
   assert.equal(manifest.validationEvidence.runtime.completedAt, dag.runtimeEvidence.completedAt);
   assert.equal(manifest.validationEvidence.runtime.sqlFilesExecuted, dag.runtimeEvidence.sqlFilesExecuted);
   assert.equal(manifest.sourceCoverage.executedSqlFiles, 97);
-  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 97);
+  assert.equal(manifest.sourceCoverage.candidateSqlFiles, 98);
   assert.equal(dag.nodes.find(node => node.id === 'chat.message-visibility-foreign-key-indexes')?.status, 'PRODUCTION_APPLIED_RUNTIME_PASSED');
   const runtimeEvidenceText = JSON.stringify(dag.runtimeEvidence.checks) + JSON.stringify(manifest.validationEvidence.runtime.checks);
   assert.deepEqual(dag.runtimeEvidence.checks, manifest.validationEvidence.runtime.checks);

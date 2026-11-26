@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 65,
-    "canonicalCliMigrationFiles": 75,
+    "canonicalCliMigrationFiles": 76,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 24,
@@ -47,7 +47,8 @@
       "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
     ],
     "forwardReconciliationMigrations": 10,
-    "unresolvedProductionEntries": 2
+    "unresolvedProductionEntries": 2,
+    "stage3RemediationMigrationCount": 1
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -58,7 +59,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "Pending migrations remain gated until their own clean disposable replay, catalog parity review, and explicit approval; PR #165 is the explicitly approved exception recorded in productionMigrations.",
-    "The 75-file CLI stream contains 65 mapped production-ledger migrations plus 10 pending forward-reconciliation migrations; two additional applied production versions remain source-recovery gaps."
+    "The 76-file CLI stream contains 65 mapped production-ledger migrations, 10 pending forward-reconciliation migrations, and one isolated Stage 3 remediation migration; two additional applied production versions remain source-recovery gaps."
   ],
   "productionMigrations": [
     {
@@ -2211,5 +2212,17 @@
     "20261125230604",
     "20261125230631",
     "20261125232617"
+  ],
+  "stage3RemediationMigrations": [
+    {
+      "version": "20261126110000",
+      "name": "stage3_acl_reconciliation",
+      "path": "supabase/migrations/20261126110000_stage3_acl_reconciliation.sql",
+      "gitBlobSha": "785f78e93ed18f4d9ec66585c54810d7df9eb5c5",
+      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "productionApplied": false,
+      "note": "Isolated Stage 3 ACL remediation; must pass disposable local replay and ACL assertions before merge."
+    }
   ]
 }

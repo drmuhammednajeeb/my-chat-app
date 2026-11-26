@@ -16,8 +16,15 @@ test('production registry records applied PR165 migrations and ten pending forwa
   assert.equal(registry.productionDatabase.migrationCount, 67);
   assert.equal(registry.productionMigrations.length, 65);
   assert.equal(registry.sourceSets.productionLedgerMigrations, 65);
-  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 75);
+  assert.equal(registry.sourceSets.canonicalCliMigrationFiles, 76);
   assert.equal(registry.sourceSets.forwardReconciliationMigrations, 10);
+  assert.equal(registry.sourceSets.stage3RemediationMigrationCount, 1);
+  assert.equal(registry.stage3RemediationMigrations.length, 1);
+  const stage3 = registry.stage3RemediationMigrations[0];
+  assert.equal(stage3.path, 'supabase/migrations/20261126110000_stage3_acl_reconciliation.sql');
+  assert.equal(stage3.status, 'REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED');
+  const stage3Bytes = await readFile(path.join(root, stage3.path));
+  assert.equal(blobSha(stage3Bytes), stage3.gitBlobSha, 'Stage 3 remediation blob mismatch');
   assert.equal(registry.forwardMigrations.length, 10);
   assert.equal(registry.forwardMigrationPolicy.productionLedgerCount, 65);
   assert.equal(registry.forwardMigrationPolicy.pendingForwardCount, 10);
@@ -37,7 +44,7 @@ test('production registry records applied PR165 migrations and ten pending forwa
   assert.deepEqual(new Set(registry.sourceFiles.map(item => item.path)), new Set(paths));
 
   const migrationDirectory = await readdir(path.join(root, 'supabase/migrations'));
-  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 75);
+  assert.equal(migrationDirectory.filter(name => name.endsWith('.sql')).length, 76);
   for (const migration of registry.productionMigrations) {
     assert.match(migration.version, /^\d{14}$/);
     assert.equal(migration.path, `supabase/migrations/${migration.version}_${migration.name}.sql`);
@@ -130,7 +137,7 @@ test('production registry records applied PR165 migrations and ten pending forwa
 test('every canonical migration closes every explicit transaction block', async () => {
   const directory = path.join(root, 'supabase/migrations');
   const files = (await readdir(directory)).filter(name => name.endsWith('.sql'));
-  assert.equal(files.length, 75);
+  assert.equal(files.length, 76);
   for (const name of files) {
     const source = await readFile(path.join(directory, name), 'utf8');
     const begins = (source.match(/^\s*BEGIN\s*;\s*$/gim) ?? []).length;

@@ -34,6 +34,8 @@ test('local replay runtime is explicitly authorized and loopback-only', async ()
     'local-rls-least-privilege-runtime.mjs',
     'direct-conversation-concurrency.mjs',
     'local-pg-cron-runtime.mjs',
+    'stage3_acl_assertions.sql',
+    'independent-post-migration-assertions',
     'local-storage-rls-runtime.mjs',
     'expectedSqlCount',
     'synthetic-fixture-patches.json',
