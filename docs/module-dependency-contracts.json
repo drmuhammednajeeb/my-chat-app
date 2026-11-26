@@ -5,7 +5,7 @@
   "modules": [
     {
       "path": "modules/message-loader.js",
-      "loadOrder": 1,
+      "loadOrder": 7,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -14,7 +14,7 @@
     },
     {
       "path": "modules/message-reactions.js",
-      "loadOrder": 2,
+      "loadOrder": 8,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -23,7 +23,7 @@
     },
     {
       "path": "modules/voice-recorder.js",
-      "loadOrder": 3,
+      "loadOrder": 16,
       "dependsOn": [
         "state",
         "toast"
@@ -31,53 +31,53 @@
     },
     {
       "path": "modules/audio-player.js",
-      "loadOrder": 4,
+      "loadOrder": 2,
       "dependsOn": []
     },
     {
       "path": "modules/app-updater.js",
-      "loadOrder": 5,
+      "loadOrder": 1,
       "dependsOn": [
         "state"
       ]
     },
     {
       "path": "modules/auth-error-messages.js",
-      "loadOrder": 6,
+      "loadOrder": 3,
       "dependsOn": []
     },
     {
       "path": "modules/auth-light.js",
-      "loadOrder": 7,
+      "loadOrder": 4,
       "dependsOn": [
         "state"
       ]
     },
     {
       "path": "modules/runtime-config.js",
-      "loadOrder": 8,
+      "loadOrder": 13,
       "dependsOn": []
     },
     {
       "path": "modules/password-strength.js",
-      "loadOrder": 9,
-      "dependsOn": []
-    },
-    {
-      "path": "modules/signup-name-validation.js",
       "loadOrder": 10,
       "dependsOn": []
     },
     {
+      "path": "modules/signup-name-validation.js",
+      "loadOrder": 14,
+      "dependsOn": []
+    },
+    {
       "path": "modules/conversation-search.js",
-      "loadOrder": 11,
+      "loadOrder": 6,
       "dependsOn": [
         "supabaseClient"
       ]
     },
     {
       "path": "modules/profile-status-and-conversation-images.js",
-      "loadOrder": 13,
+      "loadOrder": 12,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -86,7 +86,7 @@
     },
     {
       "path": "modules/status-workspace.js",
-      "loadOrder": 14,
+      "loadOrder": 15,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -97,7 +97,7 @@
     },
     {
       "path": "modules/backup-restore.js",
-      "loadOrder": 15,
+      "loadOrder": 5,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -107,7 +107,7 @@
     },
     {
       "path": "modules/performance-analytics.js",
-      "loadOrder": 12,
+      "loadOrder": 11,
       "dependsOn": [
         "localStorage",
         "performance",
@@ -118,8 +118,10 @@
     },
     {
       "path": "modules/message-timeline.js",
-      "loadOrder": 16,
-      "dependsOn": []
+      "loadOrder": 9,
+      "dependsOn": [
+        "state"
+      ]
     }
   ]
 }
