@@ -1,0 +1,32 @@
+name: index.html bootstrap audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - index.html
+      - scripts/audit-index-bootstrap.mjs
+      - .github/workflows/index-html-bootstrap-audit.yml
+  push:
+    branches:
+      - engineering/index-html-phase-1-bootstrap-audit-20261126
+    paths:
+      - index.html
+      - scripts/audit-index-bootstrap.mjs
+      - .github/workflows/index-html-bootstrap-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run index.html bootstrap contract audit
+        run: node scripts/audit-index-bootstrap.mjs index.html
