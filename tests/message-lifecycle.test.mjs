@@ -646,7 +646,7 @@ test('older-history rendering is transactional and releases only its own loading
   assert.match(older, /originalHasMore=state\.hasMoreMessages/);
   assert.match(older, /renderedHistoryIds\.add\(message\.id\)/);
   assert.match(older, /state\.hasMoreMessages=originalHasMore/);
-  assert.match(extractFunction('rollbackCancelledOlderHistory'), /state\.messageIds\.delete\(id\)/);
+  assert.match(timelineSource, /state\.messageIds\.delete\(id\)/);
   assert.match(older, /state\.loadingOlderRequestId===requestId/);
   assert.match(older, /state\.loadingOlderMessages=false/);
 });
