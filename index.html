@@ -218,6 +218,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/performance-analytics.js"></script>
 <script src="./modules/message-timeline.js"></script>
 <script src="./modules/older-message-loader.js"></script>
+<script src="./modules/message-attachment-renderer.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -1465,13 +1466,8 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
   if(m.reply_to&&!m.deleted_at){let parent=state.messages.find(x=>x.id===m.reply_to)||state.replyMessages.get(m.reply_to);if(!parent){try{const {data:parentRow,error:parentError}=await supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).eq('id',m.reply_to).maybeSingle();if(!isCurrent())return false;if(!parentError&&parentRow){parent=parentRow;state.replyMessages.set(parent.id,parent)}else if(parentError)console.warn('Reply parent could not be loaded:',parentError.message)}catch(parentLoadError){if(!isCurrent())return false;console.warn('Reply parent could not be loaded:',parentLoadError?.message||parentLoadError)}}const quote=document.createElement('div');quote.className='reply-quote';const who=document.createElement('strong');who.textContent=parent?.sender_id===state.user?.id?'أنت':((activeConversation?.members||[]).find(x=>x.user_id===parent?.sender_id)?.profile?.display_name||'رد على رسالة');const preview=document.createElement('span');preview.textContent=messagePreview(parent);quote.append(who,preview);quote.onclick=()=>jumpToMessage(m.reply_to);bubble.append(quote)}
   if(m.deleted_at){bubble.textContent='تم حذف هذه الرسالة'}else{
    if(m.attachment_path){
-    const {data:signed,error:signedError}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);
-    if(!isCurrent())return false;
-    if(signedError){const failed=document.createElement('span');failed.textContent='تعذر فتح المرفق';bubble.append(failed)}
-    else if(m.attachment_type?.startsWith('image/')){const img=document.createElement('img');img.src=signed.signedUrl;img.alt='مرفق';img.loading='lazy';img.onclick=()=>{$('lightboxImage').src=img.src;$('lightbox').classList.remove('hidden')};bubble.append(img)}
-    else if(m.attachment_type?.startsWith('video/')){const video=document.createElement('video');video.className='message-video';video.controls=true;video.preload='metadata';video.playsInline=true;video.src=signed.signedUrl;video.setAttribute('aria-label','مرفق فيديو');bubble.append(video)}
-    else if(m.attachment_type?.startsWith('audio/')){const player=voiceMessagePlayer.createPlayer({messageId:m.id,src:signed.signedUrl,refreshUrl:async()=>{const {data:renewed,error}=await supabaseClient.storage.from('chat-media').createSignedUrl(m.attachment_path,3600);if(error)throw error;if(!isCurrent())return null;return renewed.signedUrl},onError:error=>{console.warn('Audio player error:',error?.message||error);toast('تعذر تشغيل الرسالة الصوتية. أعد تحميل المحادثة وحاول مجدداً')}});bubble.append(player)}
-    else{const a=document.createElement('a');a.href=signed.signedUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='فتح المرفق';a.style.color='var(--accent)';bubble.append(a)}
+    const attachmentResult=await BizmindMessageAttachments.render({message:m,bubble,client:supabaseClient,voicePlayer:voiceMessagePlayer,document,$,isCurrent,toast,console});
+    if(attachmentResult===false)return false;
    }
    if(m.content){
     const sticker=decodeChatSticker(m.content);

@@ -8,6 +8,7 @@ const source = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 const loaderSource = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
 const timelineSource = await readFile(new URL('../modules/message-timeline.js', import.meta.url), 'utf8');
 const olderLoaderSource = await readFile(new URL('../modules/older-message-loader.js', import.meta.url), 'utf8');
+const attachmentSource = await readFile(new URL('../modules/message-attachment-renderer.js', import.meta.url), 'utf8');
 const olderLoaderContext = { window: {}, console };
 vm.runInNewContext(olderLoaderSource, olderLoaderContext);
 const olderHistoryApi = olderLoaderContext.window.BizmindOlderHistory;
@@ -98,7 +99,8 @@ test('voice messages use the custom player with one shared exclusive playback co
   assert.match(source, /<link rel="stylesheet" href="\.\/modules\/audio-player\.css">/);
   assert.match(source, /<script src="\.\/modules\/audio-player\.js"><\/script>/);
   assert.match(source, /const voiceMessagePlayer=window\.BizmindAudioPlayer\.create\(\)/);
-  assert.match(source, /voiceMessagePlayer\.createPlayer\(/);
+  assert.match(source, /BizmindMessageAttachments\.render/);
+  assert.match(attachmentSource, /voicePlayer\.createPlayer\(/);
   assert.doesNotMatch(source, /audio\.controls=true/);
 
   const coordinator = audioPlayer.createPlaybackCoordinator();
@@ -561,7 +563,9 @@ test('receipt writes are serialized per conversation in one client session', asy
 test('renderer and extracted message loader retain stale-result and render-completion guards', () => {
   const render = extractFunction('renderMessageInternal'), load = extractFunction('loadMessages');
   assert.match(render, /if\(!isCurrent\(\)\)return false/);
-  assert.match(render, /createSignedUrl\(m\.attachment_path,3600\)/);
+  assert.match(render, /BizmindMessageAttachments\.render/);
+  assert.match(attachmentSource, /createSignedUrl\(message\.attachment_path,3600\)/);
+  assert.match(attachmentSource, /if\(!isCurrent\(\)\)return false/);
   assert.match(load, /window\.BizmindMessageLoader\.loadMessages/);
   assert.match(loaderSource, /state\.messageLoadVersion === requestId && state\.active\?\.id === conversationId/);
   assert.match(loaderSource, /state\.messagePollCursor = fetchedRows\[0\]/);
