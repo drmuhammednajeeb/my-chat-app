@@ -20,7 +20,7 @@ class FakeArea {
  appendChild(node){node.parent=this;this.children.push(node)}
  insertBefore(fragment,before){const nodes=fragment.childNodes||[];let index=before?this.children.indexOf(before):-1;if(index<0)index=this.children.length;for(const node of nodes){node.parent=this;this.children.splice(index++,0,node)}fragment.childNodes=[]}
 }
-function fakeDocument(){return {createElement:kind=>new FakeNode(kind),createDocumentFragment:()=>({childNodes:[],append(node){this.childNodes.push(node)}})}}
+function fakeDocument(){return {createElement:kind=>new FakeNode(kind),createDocumentFragment:()=>({childNodes:[],append(node){if(node.parent)node.remove();this.childNodes.push(node)}})}}
 
 {
  const merged=loader.mergeTimeline(
@@ -65,7 +65,7 @@ function fakeDocument(){return {createElement:kind=>new FakeNode(kind),createDoc
   select(){return this},eq(){return this},or(value){cursor=value;return this},gt(){return this},
   order(){return this},limit(){return Promise.resolve({data:[
    row('m1','2026-01-02T00:00:00Z'),row('m0','2026-01-01T00:00:00Z')
-  ].reverse(),error:null})}
+  ],error:null})}
  };
  const rendered=[];
  const loaded=await loader.loadOlderMessages({
