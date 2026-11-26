@@ -219,6 +219,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/message-timeline.js"></script>
 <script src="./modules/older-message-loader.js"></script>
 <script src="./modules/message-attachment-renderer.js"></script>
+<script src="./modules/message-content-renderer.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -1469,11 +1470,7 @@ async function renderMessageInternal(m,conversationId=state.active?.id,requestId
     const attachmentResult=await BizmindMessageAttachments.render({message:m,bubble,client:supabaseClient,voicePlayer:voiceMessagePlayer,document,$,isCurrent,toast,console});
     if(attachmentResult===false)return false;
    }
-   if(m.content){
-    const sticker=decodeChatSticker(m.content);
-    if(sticker){const visual=document.createElement('div');visual.className='message-sticker';visual.textContent=sticker;visual.setAttribute('role','img');visual.setAttribute('aria-label','ملصق');bubble.append(visual)}
-    else{const t=document.createElement('div');t.className='message-content';t.textContent=m.content;bubble.append(t)}
-   }
+   if(m.content){BizmindMessageContent.render({content:m.content,bubble,decodeSticker:decodeChatSticker,document})}
   }
   const meta=document.createElement('span');meta.className='meta';meta.textContent=time(m.created_at)+(m.edited_at?' · تم تعديلها':'');(bubble.querySelector('.message-content')||bubble).append(meta);renderMessageStatus(m,bubble);
   if(!m.deleted_at){const actions=document.createElement('div');actions.className='message-menu-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='message-menu-trigger';trigger.innerHTML='<i class="ph ph-caret-down"></i>';trigger.setAttribute('aria-label','خيارات الرسالة');trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');const menu=document.createElement('div');menu.className='message-options-menu hidden';menu.setAttribute('role','menu');const closeMenu=()=>{menu.classList.add('hidden');trigger.setAttribute('aria-expanded','false');if(menu.parentElement===document.body)actions.append(menu);menu.style.position='';menu.style.left='';menu.style.top='';menu.style.maxHeight='';menu._closeMenu=null};menu._closeMenu=closeMenu;const addOption=(label,icon,handler,disabled=false)=>{const option=document.createElement('button');option.type='button';option.className='message-menu-option';option.setAttribute('role','menuitem');option.innerHTML='<i class="ph '+icon+'"></i><span></span>';option.querySelector('span').textContent=label;option.disabled=disabled;if(label==='تعديل')option.dataset.editOption='true';option.onclick=event=>{event.stopPropagation();closeMenu();if(!option.disabled)handler()};menu.append(option);return option};addOption(state.starredMessageIds?.has(m.id)?'إزالة من المميزة':'تمييز بنجمة','ph-star',async()=>{const next=!state.starredMessageIds.has(m.id);if(await toggleMessageStar(m.id,next))toast(next?'تم تمييز الرسالة بنجمة':'تمت إزالة التمييز')});addOption('رد','ph-arrow-bend-up-right',()=>beginReply(m));const pinRecord=state.pinnedMessages.get(m.id),myRole=(activeConversation?.members||[]).find(x=>x.user_id===state.user?.id)?.role,canUnpin=!pinRecord||pinRecord.pinned_by===state.user?.id||['owner','admin'].includes(myRole)||state.isTeamAdmin;addOption(pinRecord?'إلغاء التثبيت':'تثبيت','ph-push-pin',()=>toggleMessagePin(m),!!pinRecord&&!canUnpin);if(m.sender_id===state.user?.id){const editOption=addOption('تعديل','ph-pencil-simple',()=>beginEditMessage(m),!canEditMessage(m));if(editOption.disabled)editOption.title='انتهت مهلة التعديل أو الرسالة غير نصية'}
