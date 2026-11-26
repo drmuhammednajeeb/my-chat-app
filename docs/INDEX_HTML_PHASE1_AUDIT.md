@@ -38,11 +38,11 @@ Score components (200 total) are evidence-weighted, not line-count based:
 | Config/bootstrap ordering | 34/40 | Runtime config validated and ordered before client |
 | Auth startup timeouts and handoff | 30/40 | Session/membership timeouts and lock present |
 | Stale lifecycle protection | 20/30 | Lifecycle version guards observed |
-| Repeatable baseline checks | 0/25 | No dedicated entry-contract audit runner in this scope before phase |
+| Repeatable baseline checks | 15/25 | Dependency-free runner added and syntax-checked; execution against checkout remains pending |
 | Browser/runtime evidence | 8/30 | Source-only review; no browser smoke test verified |
-| **Total** | **122/200** | **Baseline (before Phase 1 implementation)** |
+| **Total** | **122/200 before → 137/200 current** | **+15 points for a repeatable audit runner; execution remains pending** |
 
-Overall index.html program baseline: **610/1000 (provisional)**, computed as 122/200 scaled to the five-phase rubric. This is a program score, not a claim of measured application reliability.
+Overall index.html program score: **685/1000 (provisional)**, computed as 137/200 scaled to the five-phase rubric. This is a program score, not a claim of measured application reliability. The 122/200 baseline remains recorded for before/after comparison.
 
 ## Phase 1 implementation plan
 
