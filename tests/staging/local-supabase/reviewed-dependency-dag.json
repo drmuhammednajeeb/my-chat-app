@@ -15,11 +15,12 @@
     },
     "duplicateActiveCopies": 0,
     "forwardReconciliationMigrations": 10,
-    "canonicalCliMigrationFiles": 75,
+    "canonicalCliMigrationFiles": 76,
     "testOnlyFixtureCount": 24,
     "testOnlyFixturePaths": [
       "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
-    ]
+    ],
+    "stage3RemediationMigrationCount": 1
   },
   "platformNodes": [
     {
@@ -1665,6 +1666,18 @@
         "completedAt": "2026-11-25T23:24:08Z",
         "sqlFilesExecuted": 97
       }
+    },
+    {
+      "id": "security.stage3-acl-reconciliation",
+      "source": [
+        "supabase/migrations/20261126110000_stage3_acl_reconciliation.sql"
+      ],
+      "requires": [
+        "chat.latest-visible-conversation-previews"
+      ],
+      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "blockedBy": [],
+      "note": "Narrow table-control privilege reconciliation only; ordinary CRUD grants preserved. Runtime verification pending."
     }
   ],
   "explicitEdges": [
@@ -2631,6 +2644,10 @@
     [
       "chat.message-visibility-foreign-key-indexes",
       "chat.latest-visible-conversation-previews"
+    ],
+    [
+      "chat.latest-visible-conversation-previews",
+      "security.stage3-acl-reconciliation"
     ]
   ],
   "blockers": [
