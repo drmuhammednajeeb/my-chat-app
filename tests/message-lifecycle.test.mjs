@@ -99,7 +99,8 @@ test('voice messages use the custom player with one shared exclusive playback co
   assert.match(source, /<link rel="stylesheet" href="\.\/modules\/audio-player\.css">/);
   assert.match(source, /<script src="\.\/modules\/audio-player\.js"><\/script>/);
   assert.match(source, /const voiceMessagePlayer=window\.BizmindAudioPlayer\.create\(\)/);
-  assert.match(source, /voiceMessagePlayer\.createPlayer\(/);
+  assert.match(source, /BizmindMessageAttachments\.render/);
+  assert.match(attachmentSource, /voicePlayer\.createPlayer\(/);
   assert.doesNotMatch(source, /audio\.controls=true/);
 
   const coordinator = audioPlayer.createPlaybackCoordinator();
