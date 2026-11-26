@@ -1,0 +1,26 @@
+name: index.html architecture audit
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - index.html
+      - modules/password-strength.js
+      - scripts/audit-index-architecture.mjs
+      - tests/index-architecture.test.mjs
+      - docs/INDEX_HTML_PHASE2_ARCHITECTURE.md
+      - .github/workflows/index-html-architecture-audit.yml
+  push:
+    branches:
+      - engineering/index-html-phase-2-architecture-boundaries-20261126
+permissions:
+  contents: read
+jobs:
+  architecture-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/audit-index-architecture.mjs index.html
+      - run: node --test tests/index-architecture.test.mjs
