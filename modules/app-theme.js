@@ -5,7 +5,7 @@
   const settings=options||{};
   const win=settings.window||root;
   const doc=settings.document||win.document;
-  const storage=settings.storage||win.localStorage;
+  let storage=settings.storage;\n  if(!storage){try{storage=win.localStorage}catch(_){storage={getItem:()=>null,setItem:()=>{throw new Error('Storage unavailable')},removeItem:()=>{throw new Error('Storage unavailable')}}}}
   const media=settings.media|| (win.matchMedia?win.matchMedia('(prefers-color-scheme: dark)'):null);
   const saveUserSetting=settings.saveUserSetting||(()=>Promise.resolve(false));
   const toast=settings.toast||(()=>{});
