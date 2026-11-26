@@ -8,7 +8,7 @@ const updater = readFileSync(new URL("../modules/app-updater.js", import.meta.ur
 
 test("cache namespace is versioned and both runtime caches share the release version", () => {
   assert.match(worker, /const CACHE_PREFIX = ["']ultra-chat-pro["']/);
-  assert.match(worker, /const CACHE_VERSION = ["\']v53["\']/);
+  assert.match(worker, /const CACHE_VERSION = ["\']v54["\']/);
   assert.match(worker, /const SHELL_CACHE = `\$\{CACHE_PREFIX\}-shell-\$\{CACHE_VERSION\}`/);
   assert.match(worker, /const CDN_CACHE = `\$\{CACHE_PREFIX\}-cdn-\$\{CACHE_VERSION\}`/);
 });
