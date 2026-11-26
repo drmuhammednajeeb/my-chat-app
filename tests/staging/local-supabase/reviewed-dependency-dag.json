@@ -1696,12 +1696,12 @@
         "chat.latest-visible-conversation-previews",
         "test-fixture.direct-chat-runtime"
       ],
-      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
       "testSource": [
         "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
       ],
       "blockedBy": [],
-      "note": "Only the caller's own self-chat can be created; authoritative active/verified/confirmed membership is checked and locked before writes. Production application is not authorized."
+      "note": "Forward-only self-chat RPC hardening passed disposable local Supabase runtime and two-user browser E2E. Production remains unchanged; merge and production application remain separately approval-gated."
     },
     {
       "id": "test-fixture.self-chat-runtime",
@@ -1715,12 +1715,19 @@
         "security.self-chat-rls-repair",
         "test-fixture.direct-chat-profiles"
       ],
-      "status": "TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PENDING",
+      "status": "TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PASSED",
       "testSource": [
         "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
       ],
       "blockedBy": [],
-      "note": "Executed only by disposable local Supabase replay using synthetic .test identities; transaction rolls back all test writes."
+      "note": "Rollback-only assertions passed in disposable local Supabase runtime run 45842223208 on commit 01a1d1d3e55b114ec36bdef094e66500cd8e2852. Covers idempotency, caller ownership, suspended/unverified/unconfirmed/unauthenticated denial and EXECUTE ACL.",
+      "runtimeEvidence": {
+        "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "workflowRunId": 45842223208,
+        "commit": "01a1d1d3e55b114ec36bdef094e66500cd8e2852",
+        "completedAt": "2026-11-26T14:48:09Z",
+        "sqlFilesExecuted": 99
+      }
     }
   ],
   "explicitEdges": [
