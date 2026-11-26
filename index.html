@@ -199,6 +199,7 @@ html.auth-booting #boot-screen{position:fixed;inset:0;z-index:2147483647;display
 <script src="./modules/app-theme.js"></script>
 <script src="./modules/user-settings.js"></script>
 <script src="./modules/auth-session.js"></script>
+<script src="./modules/conversation-lifecycle.js"></script>
 <script>
 'use strict';
 const __bootMainScriptStarted=performance.now();
@@ -522,6 +523,7 @@ async function ensureProfile(user){
  throw createError||retryError||new Error('تعذر إنشاء الملف الشخصي');
 }
 const authSessionLifecycle=window.BizmindAuthSession.create();
+const conversationLifecycle=window.BizmindConversationLifecycle.create({getState:()=>state});
 async function enterApp(user){return authSessionLifecycle.enter(user,enterAppInternal)}
 async function enterAppInternal(user,lifecycleVersion){
  if(!user.email_confirmed_at){await supabaseClient.auth.signOut({scope:'local'});authError('يجب توثيق البريد الإلكتروني قبل دخول المنصة. افتح رسالة التوثيق ثم سجّل الدخول مجدداً.');return false;}
@@ -1088,7 +1090,7 @@ async function archiveConversation(conversation,archive=true){
  const {data,error}=await supabaseClient.from('user_chat_preferences').upsert(payload,{onConflict:'user_id,conversation_id'}).select('conversation_id,theme,cleared_before,is_shortcut,is_archived').single();
  if(error){console.error('Archive update failed:',error);toast('تعذرت أرشفة المحادثة');return}
  state.chatPrefs.set(conversation.id,data);
- if(state.active?.id===conversation.id){state.activeChatPreference=data;if(archive){state.active=null;applyDirectChatTheme();stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);$('chatTitle').textContent='تمت أرشفة المحادثة';$('chatSub').textContent='يمكنك استعادتها من قسم المؤرشفة';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-archive-box"></i></div><h2>تمت الأرشفة</h2><p>المحادثة ورسائلها محفوظة ويمكن استعادتها في أي وقت.</p></div>'}}
+ if(state.active?.id===conversation.id){state.activeChatPreference=data;if(archive){conversationLifecycle.invalidate();state.active=null;applyDirectChatTheme();stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);$('chatTitle').textContent='تمت أرشفة المحادثة';$('chatSub').textContent='يمكنك استعادتها من قسم المؤرشفة';$('messages').innerHTML='<div class="welcome"><div class="welcome-icon"><i class="ph ph-archive-box"></i></div><h2>تمت الأرشفة</h2><p>المحادثة ورسائلها محفوظة ويمكن استعادتها في أي وقت.</p></div>'}}
  renderConversations();toast(archive?'تمت أرشفة المحادثة في حسابك فقط':'تمت استعادة المحادثة إلى القائمة');
 }
 $('archiveConversationBtn').onclick=()=>{if(state.active)archiveConversation(state.active,!state.activeChatPreference?.is_archived)};
@@ -1129,7 +1131,7 @@ $('directShortcutBtn').onclick=toggleDirectChatShortcut;
 $('directClearBtn').onclick=clearDirectChatForMe;
 async function openConversation(c){
  if(!c?.id)return;
- const openToken=state.conversationOpenVersion=(state.conversationOpenVersion||0)+1;
+ const openToken=conversationLifecycle.begin(c.id);
  voiceMessagePlayer.stopAll();closeConversationWorkspace();state.messageLoadVersion++;stopMessagePolling();
  const conversationOpenStarted=performance.now();
  if(voiceRecorder.isActive()){voiceRecorder.cancel();toast('تم إلغاء التسجيل عند الانتقال إلى محادثة أخرى')}
@@ -1148,7 +1150,7 @@ async function openConversation(c){
  subscribeProfileUpdates(c);
  let hiddenStateReady=false;
  const messageLoadPromise=loadHiddenMessageIds(c.id).then(loaded=>{
-  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return false;
+  if(!conversationLifecycle.isCurrent(openToken,c.id))return false;
   if(!loaded){toast('تعذر تحميل إعدادات إخفاء الرسائل. أعد فتح المحادثة للمحاولة مجدداً.');return false;}
   hiddenStateReady=true;
   subscribeConversation();
@@ -1157,11 +1159,11 @@ async function openConversation(c){
  const starredLoadPromise=loadStarredMessageIds(c.id);
  const settingsLoadPromise=(async()=>{
   if(c.type==='group')await loadGroupSettings(c.id);else state.groupSettings=null;
-  if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
+  if(!conversationLifecycle.isCurrent(openToken,c.id))return;
   await loadUserConversationSettings(c.id);
  })();
  await Promise.all([messageLoadPromise,starredLoadPromise,settingsLoadPromise]);
- if(openToken!==state.conversationOpenVersion||state.active?.id!==c.id)return;
+ if(!conversationLifecycle.isCurrent(openToken,c.id))return;
  const myRole=(c.members||[]).find(m=>m.user_id===state.user.id)?.role;
  const canPost=(c.type!=='channel'||myRole==='owner'||myRole==='admin')&&!(c.type==='group'&&state.groupSettings?.only_admins_can_send&&!['owner','admin'].includes(myRole));
  $('shareChannelBtn').classList.toggle('hidden',c.type!=='channel'||!(c.created_by===state.user.id||myRole==='owner'||myRole==='admin'));
@@ -2714,7 +2716,7 @@ async function clearActiveConversation(){
 async function closeActiveConversation(){
  if(voiceRecorder.isActive()){toast('أرسل التسجيل أو ألغِه قبل إغلاق الدردشة');return}
  closeChatHeaderMenu();stopMessagePolling();if(state.channel)supabaseClient.removeChannel(state.channel);if(state.typingChannel)supabaseClient.removeChannel(state.typingChannel);
- state.channel=null;state.typingChannel=null;state.active=null;state.messages=[];state.messageIds.clear();state.messageLoadVersion++;
+ state.channel=null;state.typingChannel=null;conversationLifecycle.invalidate();state.active=null;state.messages=[];state.messageIds.clear();state.messageLoadVersion++;
  $('chatTitle').textContent='اختر محادثة';$('chatSub').textContent='محادثاتك الخاصة والمجموعات';$('messages').innerHTML='<div class="welcome"><h2>تم إغلاق الدردشة</h2><p>اختر محادثة أخرى من القائمة.</p></div>';$('messageInput').disabled=true;$('sendBtn').disabled=true;
  if(innerWidth<=760)$('sidebar').classList.remove('closed');$('chatInfoBtn')?.classList.add('hidden');renderConversations();
 }
