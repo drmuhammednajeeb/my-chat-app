@@ -16,7 +16,7 @@
   },
   "sourceSets": {
     "productionLedgerMigrations": 65,
-    "canonicalCliMigrationFiles": 76,
+    "canonicalCliMigrationFiles": 77,
     "archiveSqlFiles": 12,
     "duplicatePairs": 0,
     "testOnlyFixtureCount": 24,
@@ -48,7 +48,7 @@
     ],
     "forwardReconciliationMigrations": 10,
     "unresolvedProductionEntries": 2,
-    "stage3RemediationMigrationCount": 1
+    "stage3RemediationMigrationCount": 2
   },
   "rules": [
     "Only supabase/migrations/ is the canonical Supabase CLI migration stream.",
@@ -59,7 +59,7 @@
     "Folded historical versions remain explicit no-op migrations with provenance notes.",
     "No real administrator identity is hardcoded or seeded; synthetic admin seed exists only in a test fixture.",
     "Pending migrations remain gated until their own clean disposable replay, catalog parity review, and explicit approval; PR #165 is the explicitly approved exception recorded in productionMigrations.",
-    "The 76-file CLI stream contains 65 mapped production-ledger migrations, 10 pending forward-reconciliation migrations, and one isolated Stage 3 remediation migration; two additional applied production versions remain source-recovery gaps."
+    "The 77-file CLI stream contains 65 mapped production-ledger migrations, 10 pending forward-reconciliation migrations, and two isolated Stage 3 remediation migrations; two additional applied production versions remain source-recovery gaps."
   ],
   "productionMigrations": [
     {
@@ -2223,6 +2223,15 @@
       "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "productionApplied": false,
       "note": "Isolated Stage 3 ACL remediation; must pass disposable local replay and ACL assertions before merge."
+    },
+    {
+      "version": "20261126150000",
+      "name": "harden_self_chat_creation_under_membership_rls",
+      "path": "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql",
+      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "executionPolicy": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "productionApplied": false,
+      "note": "Narrow self-chat RPC hardening. Requires disposable-local browser and PostgreSQL runtime proof; not production-applied."
     }
   ]
 }
