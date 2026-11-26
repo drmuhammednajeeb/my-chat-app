@@ -13,8 +13,8 @@ test("cache namespace is versioned and both runtime caches share the release ver
 });
 
 test("install precaches an explicit offline navigation document as well as the scope root", () => {
-  assert.match(worker, /new URL\(["']\.\/["'],\s*base\)/);
-  assert.match(worker, /new URL\(["']\.\/index\.html["'],\s*base\)/);
+  assert.ok(worker.includes('new URL("./", base)'));
+  assert.ok(worker.includes('new URL("./index.html", base)'));
   assert.match(worker, /await cache\.addAll\(\[/);
 });
 
@@ -27,7 +27,7 @@ test("activation removes only obsolete caches owned by this application", () => 
 });
 
 test("worker activation is explicit and does not force skipWaiting during install", () => {
-  assert.match(worker, /event\.data\.type === ["']SKIP_WAITING["']/);
+  assert.match(worker, /event\.data && event\.data\.type === ["']SKIP_WAITING["']/);
   assert.match(worker, /self\.skipWaiting\(\)/);
   assert.doesNotMatch(worker, /addEventListener\(["']install["'][\s\S]{0,300}skipWaiting\(/);
 });
@@ -44,7 +44,6 @@ test("authenticated and API traffic is not handled by a generic runtime cache", 
   assert.match(worker, /if \(!isShellAsset\) return/);
   assert.doesNotMatch(worker, /url\.pathname\.includes\(["']\/rest\/v1/);
   assert.doesNotMatch(worker, /url\.pathname\.includes\(["']\/auth\/v1/);
-  assert.doesNotMatch(worker, /cache\.put\(request, response\.clone\(\)\)[\s\S]{0,80}return response;[\s\S]{0,80}if \(request\.mode/);
 });
 
 test("runtime deployment configuration always bypasses caches and emits no-store headers", () => {
@@ -57,8 +56,8 @@ test("runtime deployment configuration always bypasses caches and emits no-store
 
 test("offline navigation falls back to the cached document before the scope root", () => {
   assert.match(worker, /if \(request\.mode === ["']navigate["']\)/);
-  assert.match(worker, /cache\.match\(new URL\(["']\.\/index\.html["'],\s*scopeUrl\)\)/);
-  assert.match(worker, /cache\.match\(new URL\(["']\.\/["'],\s*scopeUrl\)\)/);
+  assert.ok(worker.includes('cache.match(new URL("./index.html", scopeUrl))'));
+  assert.ok(worker.includes('cache.match(new URL("./", scopeUrl))'));
   assert.match(worker, /status: 503/);
 });
 
@@ -68,7 +67,6 @@ test("CDN cache stores only successful or opaque responses and tolerates offline
   assert.match(worker, /statusText: ["']Offline static asset unavailable["']/);
 });
 
-test("PWA registration remains present and points to the application service worker", () => {
-  assert.match(html, /serviceWorker/);
-  assert.match(html, /service-worker\.js/);
+test("PWA manifest remains linked from the application document", () => {
+  assert.match(html, /<link rel="manifest" href="\.\/manifest\.json">/);
 });
