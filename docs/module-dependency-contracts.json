@@ -87,6 +87,11 @@
         "toast",
         "crypto"
       ]
+    },
+    {
+      "path": "modules/password-strength.js",
+      "loadOrder": 9,
+      "dependsOn": []
     }
   ]
 }
