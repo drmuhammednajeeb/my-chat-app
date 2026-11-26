@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const worker = readFileSync(new URL("../service-worker.js", import.meta.url), "utf8");
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");\nconst updater = readFileSync(new URL("../modules/app-updater.js", import.meta.url), "utf8");
+const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const updater = readFileSync(new URL("../modules/app-updater.js", import.meta.url), "utf8");
 
 test("cache namespace is versioned and both runtime caches share the release version", () => {
   assert.match(worker, /const CACHE_PREFIX = ["']ultra-chat-pro["']/);
@@ -67,9 +68,10 @@ test("CDN cache stores only successful or opaque responses and tolerates offline
   assert.match(worker, /statusText: ["']Offline static asset unavailable["']/);
 });
 
-test("PWA registration remains present and points to the application service worker", () => {
-  assert.match(html, /serviceWorker/);
-  assert.match(html, /service-worker\\.js/);
+test("PWA updater registers the scoped service worker without stale HTTP cache", () => {
+  assert.match(updater, /navigator\\?\\.serviceWorker\\.register/);
+  assert.match(updater, /new URL\\("\\.\\/service-worker\\.js", doc\\.baseURI\\)/);
+  assert.match(updater, /updateViaCache: "none"/);
 });
 
 test("PWA manifest remains linked from the application document", () => {
