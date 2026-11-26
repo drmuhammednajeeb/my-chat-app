@@ -46,4 +46,17 @@ test('self-chat runtime fixture is explicitly restricted to disposable local rep
   assert.match(runner, /LOCAL_SUPABASE_DB_URL/);
   assert.match(runner, /Refusing non-local database target/);
   assert.match(workflow, /Disposable local Supabase runtime verification/);
+  const dag = JSON.parse(await readFile(path.join(root,
+    'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const repair = dag.nodes.find(node => node.id === 'security.self-chat-rls-repair');
+  const runtime = dag.nodes.find(node => node.id === 'test-fixture.self-chat-runtime');
+  assert.ok(repair && runtime);
+  assert.ok(repair.requires.includes('security.active-membership-rls-forward'));
+  assert.ok(repair.requires.includes('chat.latest-visible-conversation-previews'));
+  assert.ok(runtime.requires.includes('security.self-chat-rls-repair'));
+  const manifest = JSON.parse(await readFile(path.join(root,
+    'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const order = manifest.candidateNodeOrder.map(node => node.nodeId);
+  assert.ok(order.indexOf('security.self-chat-rls-repair') > order.indexOf('security.active-membership-rls-forward'));
+  assert.ok(order.indexOf('test-fixture.self-chat-runtime') > order.indexOf('security.self-chat-rls-repair'));
 });
