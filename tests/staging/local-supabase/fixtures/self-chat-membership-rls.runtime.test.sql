@@ -10,6 +10,10 @@ SET LOCAL statement_timeout = '20s';
 SET LOCAL lock_timeout = '10s';
 
 SET LOCAL ROLE authenticated;
+-- Mark the synthetic suspended identity through the real administrative RPC.
+SELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
+SELECT public.admin_update_membership_status(
+  current_setting('app.test.self_chat_suspended_id')::uuid, 'suspended');
 
 DO $self_chat_success$
 DECLARE
