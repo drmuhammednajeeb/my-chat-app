@@ -68,5 +68,5 @@ test('disposable replay invokes browser E2E before destroying local Supabase', a
   assert.ok(replay.indexOf("local-browser-e2e.mjs") < replay.indexOf("const patchManifest"));
   const workflow = await read('.github/workflows/disposable-local-supabase-runtime.yml');
   assert.match(workflow, /playwright@1\.56\.1/);
-  assert.match(workflow, /playwright install --with-deps chromium/);
+  assert.match(workflow, /playwright install chromium/);
 });
