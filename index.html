@@ -218,9 +218,9 @@ const __bootMainScriptStarted=performance.now();
 const __localSupabaseTestConfig=window.__BIZMIND_LOCAL_SUPABASE_TEST_CONFIG__||null;
 let __deploymentConfig;
 if(__localSupabaseTestConfig){
- const pageHost=location.hostname.toLowerCase().replace(/^\\[|\\]$/g,'');
+ const pageHost=location.hostname.toLowerCase().replace(/^\[|\]$/g,'');
  const localApi=new URL(String(__localSupabaseTestConfig.url||''));
- const localHost=localApi.hostname.toLowerCase().replace(/^\\[|\\]$/g,'');
+ const localHost=localApi.hostname.toLowerCase().replace(/^\[|\]$/g,'');
  const loopbackHosts=['127.0.0.1','localhost','::1'];
  const expectedPort=String(__localSupabaseTestConfig.expectedApiPort||'');
  if(location.protocol!=='http:'||!loopbackHosts.includes(pageHost)
