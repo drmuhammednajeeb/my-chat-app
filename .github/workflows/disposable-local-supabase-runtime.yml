@@ -40,7 +40,7 @@ jobs:
         run: npm install --no-save --no-package-lock playwright@1.56.1
 
       - name: Install Chromium for full application E2E
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@v1
