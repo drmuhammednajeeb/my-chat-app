@@ -69,9 +69,9 @@ test("CDN cache stores only successful or opaque responses and tolerates offline
 });
 
 test("PWA updater registers the scoped service worker without stale HTTP cache", () => {
-  assert.match(updater, /navigator\\?\\.serviceWorker\\.register/);
-  assert.match(updater, /new URL\\("\\.\\/service-worker\\.js", doc\\.baseURI\\)/);
-  assert.match(updater, /updateViaCache: "none"/);
+  assert.ok(updater.includes("navigator?.serviceWorker.register"));
+  assert.ok(updater.includes('new URL("./service-worker.js", doc.baseURI)'));
+  assert.ok(updater.includes('updateViaCache: "none"'));
 });
 
 test("PWA manifest remains linked from the application document", () => {
