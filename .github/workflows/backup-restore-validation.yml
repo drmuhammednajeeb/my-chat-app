@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/backup-restore-module
+      - fix/security-quality-audit-backup-restore
   pull_request:
     paths:
       - "modules/backup.js"
