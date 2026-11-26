@@ -26,4 +26,4 @@ test("UI wrapper delegates to the extracted module",()=>{
  assert.ok(wrapper);assert.match(wrapper[0],/window\.BizmindPasswordStrength\.calculate/);
  assert.doesNotMatch(html,/function getPasswordStrength\(/);
 });
-test("search UI adapter delegates to extracted query service",()=>{assert.match(html,/BizmindConversationSearch\.searchConversationMessages/);});
+test("search UI adapter delegates to extracted query service",()=>{assert.match(html,/BizmindConversationSearch\.searchConversationMessages/);});\ntest("performance analytics module precedes core",()=>{assert.ok(html.indexOf("./modules/performance-analytics.js")<html.indexOf("__bootMainScriptStarted"));});\n
