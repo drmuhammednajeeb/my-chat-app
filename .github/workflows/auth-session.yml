@@ -1,0 +1,45 @@
+name: Auth Session Lifecycle Checks
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'modules/auth-session.js'
+      - 'tests/auth-session.test.js'
+      - '.github/workflows/auth-session.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'modules/auth-session.js'
+      - 'tests/auth-session.test.js'
+      - '.github/workflows/auth-session.yml'
+permissions:
+  contents: read
+jobs:
+  auth-session:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tests/auth-session.test.js
+      - name: Verify auth lifecycle integration
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const moduleTag = html.indexOf('./modules/auth-session.js');
+          const inline = html.indexOf('window.BizmindAuthSession.create');
+          if (moduleTag < 0 || inline < 0 || moduleTag > inline) {
+            throw new Error('Auth session module must load before its inline integration.');
+          }
+          for (const legacy of ['authLifecycleVersion','appEntryPromise','appEntryUserId']) {
+            if (html.includes(legacy)) throw new Error('Legacy auth lifecycle state remains: ' + legacy);
+          }
+          if (!html.includes('authSessionLifecycle.invalidate()') ||
+              !html.includes('authSessionLifecycle.isCurrent(lifecycleVersion)')) {
+            throw new Error('Auth invalidation and stale-operation guards must use the extracted lifecycle.');
+          }
+          console.log('auth session script order and lifecycle integration verified');
+          NODE
