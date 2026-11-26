@@ -60,7 +60,7 @@
     },
     {
       "path": "modules/profile-status-and-conversation-images.js",
-      "loadOrder": 10,
+      "loadOrder": 11,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -69,7 +69,7 @@
     },
     {
       "path": "modules/status-workspace.js",
-      "loadOrder": 11,
+      "loadOrder": 12,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -80,7 +80,7 @@
     },
     {
       "path": "modules/backup-restore.js",
-      "loadOrder": 12,
+      "loadOrder": 13,
       "dependsOn": [
         "state",
         "supabaseClient",
@@ -91,6 +91,11 @@
     {
       "path": "modules/password-strength.js",
       "loadOrder": 9,
+      "dependsOn": []
+    },
+    {
+      "path": "modules/signup-name-validation.js",
+      "loadOrder": 10,
       "dependsOn": []
     }
   ]
