@@ -43,8 +43,8 @@
     "candidateMappedSources": 75,
     "candidateTestOnlySqlFixtures": 25,
     "candidateSqlFiles": 100,
-    "localRuntimeRunId": 45720775547,
-    "localRuntimeCommit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
+    "localRuntimeRunId": 45842223208,
+    "localRuntimeCommit": "01a1d1d3e55b114ec36bdef094e66500cd8e2852",
     "testOnlyFixtureCount": 24
   },
   "execution": {
@@ -845,12 +845,12 @@
     },
     {
       "nodeId": "security.self-chat-rls-repair",
-      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
       "testSources": [
         "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Forward-only RPC hardening; not production-applied."
+      "parityNote": "Self-chat RPC hardening passed disposable-local runtime and two-user browser E2E; production remains unchanged."
     },
     {
       "nodeId": "security.least-privilege-overlay",
@@ -871,12 +871,12 @@
     },
     {
       "nodeId": "test-fixture.self-chat-runtime",
-      "status": "TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PENDING",
+      "status": "TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PASSED",
       "testSources": [
         "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Rollback-only runtime assertions on disposable local Supabase synthetic identities."
+      "parityNote": "Rollback-only assertions passed in run 45842223208 on commit 01a1d1d3e55b114ec36bdef094e66500cd8e2852; production data was not touched."
     },
     {
       "nodeId": "test-fixture.forward-hardening-postconditions",
