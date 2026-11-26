@@ -53,6 +53,7 @@ test('self-chat runtime fixture is explicitly restricted to disposable local rep
   assert.ok(repair && runtime);
   assert.ok(repair.requires.includes('security.active-membership-rls-forward'));
   assert.ok(repair.requires.includes('chat.latest-visible-conversation-previews'));
+  assert.ok(repair.requires.includes('test-fixture.direct-chat-runtime'));
   assert.ok(runtime.requires.includes('security.self-chat-rls-repair'));
   const manifest = JSON.parse(await readFile(path.join(root,
     'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
