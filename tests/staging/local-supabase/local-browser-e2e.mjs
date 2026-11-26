@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Full UI-to-Supabase E2E against the disposable local stack only.
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import { createReadStream } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -258,21 +259,23 @@ try {
 
     console.log('BROWSER_E2E_STEP=prove cross-conversation event isolation for a user in two conversations');
     const tokenB = await authenticate('direct-b@bizmindmakers.test');
-    const createdConversation = await apiCall('/rest/v1/conversations?select=id', {
-      method: 'POST',
-      token: tokenB,
-      body: { type: 'group', title: 'Realtime Isolation E2E', created_by: users.direct_b },
-      prefer: 'return=representation'
-    });
-    const secondConversation = Array.isArray(createdConversation) ? createdConversation[0]?.id : createdConversation?.id;
-    if (typeof secondConversation !== 'string' || !/^[0-9a-f-]{36}$/i.test(secondConversation) || secondConversation === conversation) {
-      throw new Error('Second isolated conversation insert returned an invalid or duplicate conversation ID.');
+    const secondConversation = randomUUID();
+    const provisionSecondConversation = spawnSync('psql', [
+      '--no-psqlrc', '--quiet', '--set=ON_ERROR_STOP=1',
+      '--set=conversation_id=' + secondConversation,
+      '--set=user_id=' + users.direct_b,
+      '--command', `
+        INSERT INTO public.conversations (id, type, title, created_by)
+        VALUES (:'conversation_id'::uuid, 'group', 'Realtime Isolation E2E', :'user_id'::uuid);
+        INSERT INTO public.conversation_members (conversation_id, user_id, role)
+        VALUES (:'conversation_id'::uuid, :'user_id'::uuid, 'owner');
+      `,
+      rawDb
+    ], { encoding: 'utf8', env: { PATH: process.env.PATH || '', PGCONNECT_TIMEOUT: '5' } });
+    if (provisionSecondConversation.error || provisionSecondConversation.status !== 0) {
+      throw new Error('Could not provision the isolated second conversation in disposable local Supabase: '
+        + (provisionSecondConversation.stderr || provisionSecondConversation.error?.message || 'unknown error'));
     }
-    await apiCall('/rest/v1/conversation_members', {
-      method: 'POST',
-      token: tokenB,
-      body: { conversation_id: secondConversation, user_id: users.direct_b, role: 'owner' }
-    });
     const foreignMessage = 'Foreign conversation isolation ' + Date.now() + ' ' + Math.random().toString(36).slice(2, 10);
     await accountB.page.evaluate(value => { window.__BIZMIND_E2E_FOREIGN_MESSAGE__ = value; }, foreignMessage);
     await apiCall('/rest/v1/chat_messages', {
