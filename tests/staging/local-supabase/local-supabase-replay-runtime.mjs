@@ -231,6 +231,12 @@ for (const node of manifest.candidateNodeOrder) {
   }
 }
 
+
+run('psql', [
+  '--no-psqlrc', '--set=ON_ERROR_STOP=1',
+  '--file', path.join(ROOT, 'supabase/tests/stage3_acl_assertions.sql'), raw
+], env, 'security.stage3-acl-reconciliation:independent-post-migration-assertions');
+
 run(process.execPath, [
   path.join(ROOT, 'tests/staging/local-supabase/local-storage-rls-runtime.mjs')
 ], {
