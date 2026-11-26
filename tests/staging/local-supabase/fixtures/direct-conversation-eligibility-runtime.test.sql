@@ -391,7 +391,12 @@ DECLARE
 BEGIN
   IF NOT has_function_privilege('authenticated', v_oid, 'EXECUTE')
      OR has_function_privilege('anon', v_oid, 'EXECUTE')
- THEN
+     OR EXISTS (
+       SELECT 1
+       FROM pg_proc p
+       CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+       WHERE p.oid = v_oid AND a.grantee = 0 AND a.privilege_type = 'EXECUTE'
+     ) THEN
     RAISE EXCEPTION 'Self-chat RPC EXECUTE ACL is not restricted to authenticated';
   END IF;
   IF NOT (SELECT prosecdef FROM pg_proc WHERE oid = v_oid) THEN
