@@ -165,3 +165,12 @@
   .auth-light-particles i,.auth-light-stage.is-checking .auth-light-status-dot{animation:none!important}
   .auth-light-halo,.lamp-light-beam,.lamp-bulb,.lamp-inner-rim,.lamp-bulb-glow,.lamp-floor-glow{transition:none!important}
 }
+
+.password-input-wrap{position:relative;width:100%}
+.password-input-wrap>#password{padding-inline-end:92px}
+.password-visibility-toggle{position:absolute;inset-block:5px;inset-inline-end:7px;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:76px;padding:0 9px;border:0;border-radius:9px;background:transparent;color:var(--muted,#9aa7b7);font-family:inherit;font-size:12px;font-weight:600;line-height:1;cursor:pointer;transition:background .18s ease,color .18s ease}
+.password-visibility-toggle:hover{background:rgba(127,146,170,.13);color:var(--text,#f4f7fb)}
+.password-visibility-toggle:focus-visible{outline:2px solid var(--accent,#55cdb8);outline-offset:2px}
+.password-visibility-toggle i{font-size:17px}
+.password-visibility-toggle span{white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.password-visibility-toggle{transition:none}}

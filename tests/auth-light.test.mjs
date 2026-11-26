@@ -88,7 +88,21 @@ test('the real authentication flow owns lamp state transitions and static assets
   assert.match(html, /BizmindAuthLight\?\.setState\('checking'\)/);
   assert.match(html, /BizmindAuthLight\?\.setState\('success'\)/);
   assert.match(html, /BizmindAuthLight\?\.setState\('error'\)/);
-  assert.match(worker, /CACHE_VERSION = "v46"/);
+  assert.match(worker, /CACHE_VERSION = "v47"/);
   assert.match(worker, /\.\/modules\/auth-light\.js/);
   assert.match(worker, /\.\/modules\/auth-light\.css/);
+});
+
+ 
+test('authentication password visibility is user-controlled, accessible, and resets when auth mode changes', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const worker = readFileSync(new URL('../service-worker.js', import.meta.url), 'utf8');
+  assert.match(html, /id="togglePasswordVisibility"[^>]*aria-controls="password"[^>]*aria-label="إظهار كلمة المرور"[^>]*aria-pressed="false"/);
+  assert.match(html, /function setPasswordVisibility\(visible\)/);
+  assert.match(html, /input\.type=shown\?'text':'password'/);
+  assert.match(html, /function togglePasswordVisibility\(\)/);
+  assert.match(html, /setPasswordVisibility\(false\);window\.BizmindAuthLight/);
+  assert.match(html, /togglePasswordVisibility'\)\.addEventListener\('click',togglePasswordVisibility\)/);
+  assert.match(html, /ph-eye-slash/);
+  assert.match(worker, /CACHE_VERSION = "v47"/);
 });
