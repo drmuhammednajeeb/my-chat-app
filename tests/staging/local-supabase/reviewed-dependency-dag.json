@@ -1678,7 +1678,7 @@
       ],
       "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "blockedBy": [],
-      "note": "Narrow table-control privilege reconciliation only; ordinary CRUD grants preserved. Disposable CI runtime replay passed for the 98-file candidate set; review and production approval remain pending."
+      "note": "Narrow table-control privilege reconciliation only; ordinary CRUD grants preserved. Disposable CI runtime replay passed for the 100-file candidate set; review and production approval remain pending."
     },
     {
       "id": "security.self-chat-rls-repair",
