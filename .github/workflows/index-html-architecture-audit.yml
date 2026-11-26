@@ -6,7 +6,8 @@ on:
       - index.html
       - modules/password-strength.js
       - modules/signup-name-validation.js
-      - modules/conversation-search.js\n      - modules/performance-analytics.js
+      - modules/conversation-search.js
+      - modules/performance-analytics.js
       - service-worker.js
       - docs/module-dependency-contracts.json
       - docs/architecture-safety-module-inventory.json
@@ -16,7 +17,8 @@ on:
       - tests/service-worker-lifecycle.test.mjs
       - scripts/audit-index-architecture.mjs
       - tests/index-architecture.test.mjs
-      - tests/conversation-search.test.mjs tests/performance-analytics.test.mjs\n      - tests/performance-analytics.test.mjs
+      - tests/conversation-search.test.mjs
+      - tests/performance-analytics.test.mjs
       - docs/INDEX_HTML_PHASE2_ARCHITECTURE.md
       - .github/workflows/index-html-architecture-audit.yml
   push:
