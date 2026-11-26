@@ -795,15 +795,6 @@
       "parityNote": null
     },
     {
-      "nodeId": "security.stage3-acl-reconciliation",
-      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
-      "testSources": [
-        "supabase/migrations/20261126110000_stage3_acl_reconciliation.sql"
-      ],
-      "blockedBy": [],
-      "parityNote": "New isolated ACL remediation migration. Execution remains disabled in the design manifest; CI disposable replay is the validation gate."
-    },
-    {
       "nodeId": "test-fixture.forward-direct-conversation-eligibility",
       "status": "TEST_ONLY_POST_FORWARD_DIRECT_CONVERSATION_ASSERTIONS_PASSED",
       "testSources": [
@@ -878,6 +869,15 @@
         "DAG-016"
       ],
       "parityNote": "Read-only catalog assertions and rollback-only authenticated CRUD/RPC checks passed, including literal-dot image validation, SECURITY INVOKER/DEFINER boundaries, empty search_path, execute ACLs, locked active-membership checks, and trigger-only ACL revocation. DAG-016 remains an external deployment gate."
+    },
+    {
+      "nodeId": "security.stage3-acl-reconciliation",
+      "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
+      "testSources": [
+        "supabase/migrations/20261126110000_stage3_acl_reconciliation.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "New isolated ACL remediation migration. Execution remains disabled in the design manifest; CI disposable replay is the validation gate."
     }
   ],
   "duplicateSelection": {
