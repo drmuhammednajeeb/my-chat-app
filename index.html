@@ -1385,23 +1385,9 @@ async function markConversationReceipt(conversationId,markRead=true,requestId=nu
 }
 async function publishTyping(isTyping){if(!state.typingChannel||!state.user)return;const now=Date.now();if(isTyping&&now-state.typingSent<1000)return;state.typingSent=now;try{await state.typingChannel.send({type:'broadcast',event:'typing',payload:{user_id:state.user.id,name:state.profile?.display_name||'عضو',is_typing:isTyping}})}catch(e){console.debug('Typing broadcast failed',e?.message||e)}}
 async function renderMessage(m,conversationId=state.active?.id,requestId=null){
- if(!m?.id||!conversationId||state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
  if(state.hiddenMessageIdsReady===false)return false;
- if(state.hiddenMessageIds?.has(m.id)){state.messageIds.add(m.id);return true;}
- state.messageRenderPromises ||= new Map();
- const pending=state.messageRenderPromises.get(m.id);
- if(pending){
-  const rendered=await pending;
-  if(rendered||state.messageIds.has(m.id))return true;
-  if(state.active?.id!==conversationId||(requestId!==null&&requestId!==state.messageLoadVersion))return false;
-  const latest=(state.messages||[]).find(item=>item.id===m.id);
-  if(!latest)return false;
-  return renderMessage(latest,conversationId,requestId);
- }
- const task=renderMessageInternal(m,conversationId,requestId);
- state.messageRenderPromises.set(m.id,task);
- try{return await task}
- finally{if(state.messageRenderPromises.get(m.id)===task)state.messageRenderPromises.delete(m.id)}
+ if(state.hiddenMessageIds?.has(m?.id)){state.messageIds.add(m.id);return true;}
+ return window.BizmindMessageLoader.renderMessage({state,message:m,conversationId,requestId,render:renderMessageInternal});
 }
 function reconcileMessageTimeline(area){
  if(!area)return;
@@ -1505,120 +1491,14 @@ async function loadMessages(){
  });
 }
 function compareMessagesChronologically(a,b){const timeDiff=new Date(a.created_at)-new Date(b.created_at);if(timeDiff)return timeDiff;const aid=String(a.id||''),bid=String(b.id||'');return aid<bid?-1:aid>bid?1:0}
-function rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds){
- if(state.active?.id!==conversationId)return false;
- const newerTimelineAlreadyCommitted=Number(state.messageTimelineCommitVersion)>requestId;
- const newerRenderOwnsTimeline=!!state.messageTimelineRenderOwner&&state.messageTimelineRenderOwner!==requestId;
- // A newer owner controls both model and DOM. Never roll back only one layer.
- if(newerTimelineAlreadyCommitted||newerRenderOwnsTimeline)return false;
- const before=state.messages||[];
- const removedIds=new Set();
- state.messages=before.filter(message=>{
-  if(!olderIds.has(message.id)||originalMessageIdSet?.has(message.id))return true;
-  // A newer realtime replacement is not owned by this history request.
-  if(requestRowsById?.get(message.id)!==message)return true;
-  removedIds.add(message.id);
-  return false;
- });
- removedIds.forEach(id=>{
-  Array.from(area.querySelectorAll('.message')).filter(node=>node.dataset.messageId===id).forEach(node=>node.remove());
-  state.messageIds.delete(id);
-  if(!originalLoadedHistoryIds?.has(id))state.loadedHistoryIds?.delete(id);
- });
- return true;
-}
 async function loadOlderMessages(){
- const conversationId=state.active?.id,area=$('messages');
- if(!conversationId||state.loadingOlderMessages||!state.hasMoreMessages||!state.messages?.length)return false;
- const oldest=state.messages[0];if(!oldest?.created_at||!oldest?.id)return false;
- const originalMessages=state.messages.slice(),originalHasMore=state.hasMoreMessages;
- const originalMessageIdSet=new Set(originalMessages.map(message=>message.id));
-  state.loadingOlderMessages=true;const requestId=state.messageLoadVersion;state.loadingOlderRequestId=requestId;
- const anchor=Array.from(area.querySelectorAll('.message')).find(node=>node.getBoundingClientRect().bottom>area.getBoundingClientRect().top);
- const anchorId=anchor?.dataset.messageId,anchorTop=anchor?.getBoundingClientRect().top??0;
- const oldTop=area.scrollTop;
- const loader=document.createElement('div');loader.className='messages-history-loader';loader.textContent='جارٍ تحميل الرسائل الأقدم…';area.prepend(loader);
- const originalFirstChild=loader.nextSibling;
- let olderIds=new Set(),renderedHistoryIds=new Set(),requestRowsById=new Map();
- state.loadedHistoryIds ||= new Set();
- const originalLoadedHistoryIds=new Set(state.loadedHistoryIds);
- try{
-  const cursorFilter='created_at.lt.'+oldest.created_at+',and(created_at.eq.'+oldest.created_at+',id.lt.'+oldest.id+')';
-  let olderQuery=supabaseClient.from('chat_messages').select('*').eq('conversation_id',conversationId).or(cursorFilter);
-  if(state.activeChatPreference?.cleared_before)olderQuery=olderQuery.gt('created_at',state.activeChatPreference.cleared_before);
-  const {data,error}=await olderQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(50);
-  if(error)throw error;
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId)return false;
-  const older=(data||[]).slice().reverse();
-  if(!older.length){state.hasMoreMessages=false;return false}
-  olderIds=new Set(older.map(message=>message.id));
-  requestRowsById=new Map(older.map(message=>[message.id,message]));
-  const replyIds=[...new Set(older.map(m=>m.reply_to).filter(id=>id&&!state.messages.some(x=>x.id===id)))];
-  const replyTask=replyIds.length?supabaseClient.from('chat_messages').select('id,conversation_id,sender_id,content,deleted_at,created_at').eq('conversation_id',conversationId).in('id',replyIds):Promise.resolve({data:[],error:null});
-  const [, , , replyResult]=await Promise.all([
-   loadMessagePins(conversationId,requestId),
-   loadPrivateReplyContexts(conversationId,older,requestId),
-   messageReactions.load(conversationId,older,requestId),
-   replyTask
-  ]);
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);return false;}
-  if(replyResult?.error)console.warn('Older reply metadata unavailable:',replyResult.error.message);
-  else (replyResult?.data||[]).forEach(parent=>state.replyMessages.set(parent.id,parent));
-  // Mark the page as retained before yielding to asynchronous rendering. A concurrent
-  // reconciliation must treat these in-flight rows as loaded history.
-  older.forEach(message=>state.loadedHistoryIds.add(message.id));
-  const merged=new Map([...older,...state.messages].map(message=>[message.id,message]));
-  state.messages=Array.from(merged.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-  state.hasMoreMessages=older.length===50;
-  state.isLoadingMessages=true;state.batchRenderingMessages=true;state.batchRenderingConversationId=conversationId;area.style.overflowAnchor='none';
-  const beforeRenderNodes=new Set(Array.from(area.childNodes));
-  for(const message of older){
-   if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);return false;}
-   if(state.messageIds.has(message.id))continue;
-   if(!originalMessageIdSet.has(message.id))renderedHistoryIds.add(message.id);
-   const rendered=await renderMessage(message,conversationId,requestId);
-   if(!rendered&&!state.messageIds.has(message.id))throw new Error('Older message rendering did not complete');
-  }
-  if(requestId!==state.messageLoadVersion||state.active?.id!==conversationId){rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);return false;}
-  state.batchRenderingMessages=false;state.batchRenderingConversationId=null;reconcileMessageTimeline(area);
-  const addedSet=new Set(Array.from(area.querySelectorAll('.message')).filter(node=>olderIds.has(node.dataset.messageId)&&!beforeRenderNodes.has(node)));
-  addedSet.forEach(node=>{const previous=node.previousElementSibling;if(previous?.classList.contains('day-divider')&&!beforeRenderNodes.has(previous))addedSet.add(previous)});
-  const addedNodes=Array.from(area.childNodes).filter(node=>addedSet.has(node));
-  const fragment=document.createDocumentFragment();addedNodes.forEach(node=>fragment.append(node));
-  if(fragment.childNodes.length)area.insertBefore(fragment,originalFirstChild);
-  loader.remove();
-  const restoredAnchor=anchorId?Array.from(area.querySelectorAll('.message')).find(node=>node.dataset.messageId===anchorId):null;
-  if(restoredAnchor)area.scrollTop=oldTop+(restoredAnchor.getBoundingClientRect().top-anchorTop);
-  else area.scrollTop=oldTop;
-  state.isLoadingMessages=false;area.style.overflowAnchor='';
-  return true;
- }catch(error){
-  console.error('Older message loading failed:',error);
-  if(requestId===state.messageLoadVersion&&state.active?.id===conversationId){
-   const rollbackApplied=rollbackCancelledOlderHistory(state,conversationId,olderIds,renderedHistoryIds,area,requestId,originalMessageIdSet,requestRowsById,originalLoadedHistoryIds);
-   if(rollbackApplied){
-    const restored=new Map(originalMessages.map(message=>[message.id,message]));
-    for(const message of state.messages||[]){
-     if(!originalMessageIdSet.has(message.id))restored.set(message.id,message);
-    }
-    state.messages=Array.from(restored.values()).sort((a,b)=>compareMessagesChronologically(a,b));
-    state.hasMoreMessages=originalHasMore;
-    state.batchRenderingMessages=false;state.batchRenderingConversationId=null;
-    state.isLoadingMessages=false;area.style.overflowAnchor='';
-    reconcileMessageTimeline(area);
-    toast('تعذر تحميل الرسائل الأقدم؛ احتفظنا بالمحادثة الحالية دون فقد الرسائل.');
-   }
-  }
-  return false;
- }finally{
-  if(state.loadingOlderRequestId===requestId){
-   if(state.batchRenderingMessages&&state.batchRenderingConversationId===conversationId){state.batchRenderingMessages=false;state.batchRenderingConversationId=null;if(state.active?.id===conversationId&&Number(state.messageTimelineCommitVersion)<=requestId&&(!state.messageTimelineRenderOwner||state.messageTimelineRenderOwner===requestId))reconcileMessageTimeline(area)}
-   state.loadingOlderMessages=false;state.loadingOlderRequestId=null;
-   if(requestId===state.messageLoadVersion&&state.active?.id===conversationId)state.isLoadingMessages=false;
-   area.style.overflowAnchor='';
-  }
-  loader.remove();
- }
+ return window.BizmindMessageLoader.loadOlderMessages({
+  state,$,supabaseClient,document,
+  loadMessagePins,
+  loadPrivateReplyContexts,
+  loadMessageReactions:(id,messages,requestId)=>messageReactions.load(id,messages,requestId),
+  renderMessage,reconcileMessageTimeline,compareMessagesChronologically,toast,logger:console
+ });
 }
 function messagePollingDelay(){
  // Do not repeatedly hit Supabase while the browser reports no network.
