@@ -3,11 +3,11 @@
   "mode": "DESIGN_ONLY",
   "status": "BLOCKED",
   "sourceCoverage": {
-    "sqlFiles": 76,
-    "mappedSources": 76,
+    "sqlFiles": 77,
+    "mappedSources": 77,
     "identicalDuplicateCopiesExcluded": 0,
     "allSourcesMappedOrExplicitlyExcluded": true,
-    "testOnlySqlFixtures": 24,
+    "testOnlySqlFixtures": 25,
     "testOnlySqlFixturePaths": [
       "tests/staging/local-supabase/fixtures/20261107152550_official_forever_membership_numbers_manual_verification.sql",
       "tests/staging/local-supabase/fixtures/20261107153110_anchor_initial_official_membership_verification_by_number.sql",
@@ -32,18 +32,19 @@
       "tests/staging/local-supabase/fixtures/signup-name-guard.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.assert.sql",
       "tests/staging/local-supabase/fixtures/message-visibility-pins.runtime.test.sql",
-      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+      "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
     ],
     "mappedSourcesReplacedByFixtures": 2,
     "executedMappedSources": 73,
-    "executedTestOnlySqlFixtures": 24,
-    "executedSqlFiles": 97,
+    "executedTestOnlySqlFixtures": 25,
+    "executedSqlFiles": 99,
     "localRuntimeStatus": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
-    "candidateMappedSources": 74,
-    "candidateTestOnlySqlFixtures": 24,
-    "candidateSqlFiles": 98,
-    "localRuntimeRunId": 45720775547,
-    "localRuntimeCommit": "c599a9455e2a2e226c4fadc4a40c1a5c1710dcf9",
+    "candidateMappedSources": 75,
+    "candidateTestOnlySqlFixtures": 25,
+    "candidateSqlFiles": 100,
+    "localRuntimeRunId": 45842223208,
+    "localRuntimeCommit": "01a1d1d3e55b114ec36bdef094e66500cd8e2852",
     "testOnlyFixtureCount": 24
   },
   "execution": {
@@ -843,6 +844,15 @@
       "parityNote": "Forward-only hardening for privileged SECURITY DEFINER RPCs. Caller and target eligibility checks, active-membership row locks, administrator mutation locks, and trigger-only ACL revocation passed disposable-local runtime. Production remains unchanged."
     },
     {
+      "nodeId": "security.self-chat-rls-repair",
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
+      "testSources": [
+        "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Self-chat RPC hardening passed disposable-local runtime and two-user browser E2E; production remains unchanged."
+    },
+    {
       "nodeId": "security.least-privilege-overlay",
       "status": "TEST_ONLY_PRIVILEGE_BASELINE_OVERLAY_RUNTIME_PASSED",
       "testSources": [
@@ -858,6 +868,15 @@
         "DAG-016"
       ],
       "parityNote": "The existing overlay and CRUD/RPC fixtures include inactive-member rejection probes for channel creation, invite creation/join, image updates, ownership transfer, and inactive target administrators. Disposable-local runtime passed. DAG-016 remains an external Supabase-managed default-ACL review gate."
+    },
+    {
+      "nodeId": "test-fixture.self-chat-runtime",
+      "status": "TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PASSED",
+      "testSources": [
+        "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
+      ],
+      "blockedBy": [],
+      "parityNote": "Rollback-only assertions passed in run 45842223208 on commit 01a1d1d3e55b114ec36bdef094e66500cd8e2852; production data was not touched."
     },
     {
       "nodeId": "test-fixture.forward-hardening-postconditions",
@@ -877,7 +896,7 @@
         "supabase/migrations/20261126110000_stage3_acl_reconciliation.sql"
       ],
       "blockedBy": [],
-      "parityNote": "Isolated ACL remediation candidate executed successfully in the disposable CI replay; 98 candidate SQL files were executed. This remains review-only and production execution is not authorized."
+      "parityNote": "Isolated ACL remediation candidate executed successfully in the disposable CI replay; 100 candidate SQL files were executed. This remains review-only and production execution is not authorized."
     }
   ],
   "duplicateSelection": {

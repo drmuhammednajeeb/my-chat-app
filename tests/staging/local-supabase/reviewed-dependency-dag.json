@@ -15,12 +15,13 @@
     },
     "duplicateActiveCopies": 0,
     "forwardReconciliationMigrations": 10,
-    "canonicalCliMigrationFiles": 76,
-    "testOnlyFixtureCount": 24,
+    "canonicalCliMigrationFiles": 77,
+    "testOnlyFixtureCount": 25,
     "testOnlyFixturePaths": [
-      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql"
+      "tests/staging/local-supabase/fixtures/message-visibility-extensions.assert.sql",
+      "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
     ],
-    "stage3RemediationMigrationCount": 1
+    "stage3RemediationMigrationCount": 2
   },
   "platformNodes": [
     {
@@ -1677,7 +1678,56 @@
       ],
       "status": "REVIEW_REQUIRED_NOT_EXECUTION_AUTHORIZED",
       "blockedBy": [],
-      "note": "Narrow table-control privilege reconciliation only; ordinary CRUD grants preserved. Disposable CI runtime replay passed for the 98-file candidate set; review and production approval remain pending."
+      "note": "Narrow table-control privilege reconciliation only; ordinary CRUD grants preserved. Disposable CI runtime replay passed for the 100-file candidate set; review and production approval remain pending."
+    },
+    {
+      "id": "security.self-chat-rls-repair",
+      "source": [
+        "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
+      ],
+      "provides": [
+        "public.ensure_self_chat() uses a narrow authenticated SECURITY DEFINER boundary"
+      ],
+      "requires": [
+        "chat.self",
+        "membership.final-format",
+        "test-fixture.direct-chat-profiles",
+        "security.active-membership-rls-forward",
+        "chat.latest-visible-conversation-previews",
+        "test-fixture.direct-chat-runtime"
+      ],
+      "status": "FORWARD_RECONCILIATION_LOCAL_RUNTIME_PASSED_NOT_APPLIED_TO_PRODUCTION",
+      "testSource": [
+        "supabase/migrations/20261126150000_harden_self_chat_creation_under_membership_rls.sql"
+      ],
+      "blockedBy": [],
+      "note": "Forward-only self-chat RPC hardening passed disposable local Supabase runtime and two-user browser E2E. Production remains unchanged; merge and production application remain separately approval-gated."
+    },
+    {
+      "id": "test-fixture.self-chat-runtime",
+      "source": [
+        "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
+      ],
+      "provides": [
+        "rollback-only self-chat success, idempotency, eligibility denial and ACL assertions"
+      ],
+      "requires": [
+        "security.self-chat-rls-repair",
+        "test-fixture.direct-chat-profiles"
+      ],
+      "status": "TEST_ONLY_SELF_CHAT_MEMBERSHIP_RLS_RUNTIME_PASSED",
+      "testSource": [
+        "tests/staging/local-supabase/fixtures/self-chat-membership-rls.runtime.test.sql"
+      ],
+      "blockedBy": [],
+      "note": "Rollback-only assertions passed in disposable local Supabase runtime run 45842223208 on commit 01a1d1d3e55b114ec36bdef094e66500cd8e2852. Covers idempotency, caller ownership, suspended/unverified/unconfirmed/unauthenticated denial and EXECUTE ACL.",
+      "runtimeEvidence": {
+        "status": "PASSED_DISPOSABLE_LOCAL_SUPABASE",
+        "workflowRunId": 45842223208,
+        "commit": "01a1d1d3e55b114ec36bdef094e66500cd8e2852",
+        "completedAt": "2026-11-26T14:48:09Z",
+        "sqlFilesExecuted": 99
+      }
     }
   ],
   "explicitEdges": [
@@ -2648,6 +2698,38 @@
     [
       "test-fixture.forward-hardening-postconditions",
       "security.stage3-acl-reconciliation"
+    ],
+    [
+      "chat.self",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "membership.final-format",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "test-fixture.direct-chat-profiles",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "security.self-chat-rls-repair",
+      "test-fixture.self-chat-runtime"
+    ],
+    [
+      "test-fixture.direct-chat-profiles",
+      "test-fixture.self-chat-runtime"
+    ],
+    [
+      "security.active-membership-rls-forward",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "chat.latest-visible-conversation-previews",
+      "security.self-chat-rls-repair"
+    ],
+    [
+      "test-fixture.direct-chat-runtime",
+      "security.self-chat-rls-repair"
     ]
   ],
   "blockers": [

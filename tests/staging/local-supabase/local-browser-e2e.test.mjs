@@ -33,6 +33,7 @@ test('full browser E2E requires local-only endpoints and two synthetic authentic
     '/auth/v1/token?grant_type=password',
     '/rest/v1/rpc/get_or_create_direct_conversation',
     "page.locator('#authSubmit').click()",
+    "#conversationList button.self-conversation-row",
     "page.locator('#messageInput').fill(message)",
     "page.locator('#sendBtn').click()",
     "textContent?.trim() === 'متصل'",

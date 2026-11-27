@@ -163,3 +163,61 @@ test('multi-session concurrency and message stress runner is restricted to dispo
   assert.deepEqual(node.blockedBy, []);
   assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.direct-chat-runtime' && to === node.id));
 });
+
+test('runtime fixture remains design-only and cannot authorize local/cloud execution', async () => {
+  const dag = JSON.parse(await readFile(
+    path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const manifest = JSON.parse(await readFile(
+    path.join(root, 'tests/staging/local-supabase/replay-manifest.json'), 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-runtime');
+  assert.ok(node);
+  assert.equal(node.status, 'TEST_ONLY_POSTGRESQL_RUNTIME_ASSERTIONS_NOT_EXECUTED');
+  assert.ok(node.blockedBy.includes('DAG-014'));
+  assert.ok(node.blockedBy.includes('DAG-015'));
+  assert.ok(node.requires.includes('membership.final-format'));
+  assert.ok(node.requires.includes('chat.direct-conversation-rpc-eligibility-guard'));
+  assert.equal(dag.status, 'BLOCKED');
+  assert.equal(dag.executionAuthorized, false);
+  assert.equal(dag.safety.sqlExecutionEnabled, false);
+  assert.equal(dag.safety.supabaseStartupAuthorized, false);
+  assert.equal(dag.safety.cloudConnectionsAllowed, false);
+  assert.equal(dag.safety.productionDataAllowed, false);
+  assert.equal(manifest.mode, 'DESIGN_ONLY');
+  assert.equal(manifest.status, 'BLOCKED');
+  assert.equal(manifest.execution.enabled, false);
+  assert.deepEqual(manifest.execution.files, []);
+  assert.equal(manifest.execution.sqlExecuted, false);
+  assert.equal(manifest.execution.localStackStarted, false);
+  assert.equal(manifest.execution.cloudAllowed, false);
+  assert.equal(manifest.execution.productionAllowed, false);
+});
+
+test('multi-session concurrency and message stress runner is restricted to disposable loopback PostgreSQL', async () => {
+  const runner = await readFile(path.join(root, 'tests/staging/local-supabase/direct-conversation-concurrency.mjs'), 'utf8');
+  assert.match(runner, /LOCAL_SUPABASE_DB_URL/);
+  assert.match(runner, /const eligibleSql/);
+  assert.match(runner, /statement_timeout = '60s'/);
+  assert.match(runner, /lock_timeout = '30s'/);
+  assert.match(runner, /PGCONNECT_TIMEOUT: '5'/);
+  assert.match(runner, /PATH: process\.env\.PATH/);
+  assert.doesNotMatch(runner, /\.\.\.process\.env/);
+  assert.match(runner, /127\.0\.0\.1/);
+  assert.match(runner, /url\.port !== expectedDbPort/);
+  assert.ok(runner.includes('LOCAL_SUPABASE_EXPECTED_DB_PORT'));
+  assert.match(runner, /url\.username !== 'postgres'/);
+  assert.match(runner, /Promise\.allSettled/);
+  assert.match(runner, /pg_sleep\(0\.25\)/);
+  assert.match(runner, /SELECT count\(\*\)::text FROM public\.conversations/);
+  assert.match(runner, /callSql\(callerA, callerB\)/);
+  assert.match(runner, /callSql\(callerB, callerA\)/);
+  assert.match(runner, /Refusing non-local database target/);
+  assert.match(runner, /NOT EXISTS \(SELECT 1 FROM public\.chat_messages/);
+  assert.match(runner, /conversationIds/);
+  assert.doesNotMatch(runner, /supabase\.co|service_role key|SUPABASE_SERVICE_ROLE_KEY/i);
+  const dag = JSON.parse(await readFile(path.join(root, 'tests/staging/local-supabase/reviewed-dependency-dag.json'), 'utf8'));
+  const node = dag.nodes.find(item => item.id === 'test-fixture.direct-chat-concurrency');
+  assert.ok(node);
+  assert.equal(node.status, 'TEST_ONLY_DIRECT_CHAT_CONCURRENCY_RUNTIME_PASSED');
+  assert.deepEqual(node.blockedBy, []);
+  assert.ok(dag.explicitEdges.some(([from, to]) => from === 'test-fixture.direct-chat-runtime' && to === node.id));
+});

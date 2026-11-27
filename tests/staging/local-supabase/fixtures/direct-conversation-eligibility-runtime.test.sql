@@ -313,5 +313,6 @@ BEGIN
 END
 $acl$;
 
+
 RESET ROLE;
 ROLLBACK;
