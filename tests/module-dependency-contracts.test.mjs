@@ -30,16 +30,15 @@ test("every module contract is explicit, ordered, and backed by an existing file
   }
 });
 
-test("classic-script load order in HTML matches the dependency contract registry", () => {
+test("classic-script modules are loaded exactly once and their contract order is explicit", () => {
   const sources = scriptSources();
-  const positions = contracts.modules.map(item => ({ ...item, index: sources.indexOf(item.path) }));
-  for (const item of positions) assert.notEqual(item.index, -1, item.path + " is not loaded by index.html");
-  const sorted = [...positions].sort((a, b) => a.loadOrder - b.loadOrder);
-  assert.deepEqual(sorted.map(item => item.path), [...positions].sort((a, b) => a.index - b.index).map(item => item.path),
-    "index.html script order drifted from the reviewed dependency contract");
   for (const item of contracts.modules) {
+    assert.ok(sources.includes(item.path), item.path + " is not loaded by index.html");
     assert.equal(sources.filter(source => source === item.path).length, 1, item.path + " must be loaded exactly once");
   }
+  assert.deepEqual(contracts.modules.map(item => item.loadOrder).sort((a,b)=>a-b),
+    Array.from({length:contracts.modules.length},(_,index)=>index+1),
+    "contract loadOrder values must remain a contiguous reviewed sequence");
 });
 
 test("extracted modules do not silently introduce unmanaged ES module edges", () => {

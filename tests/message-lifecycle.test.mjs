@@ -6,6 +6,10 @@ import audioPlayer from '../modules/audio-player.js';
 
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const loaderSource = await readFile(new URL('../modules/message-loader.js', import.meta.url), 'utf8');
+const timelineSource = await readFile(new URL('../modules/message-timeline.js', import.meta.url), 'utf8');
+const timelineContext = {};
+vm.runInNewContext(timelineSource, timelineContext);
+const timelineApi = timelineContext.BizmindMessageTimeline;
 const overrides = await readFile(new URL('../app-overrides.css', import.meta.url), 'utf8');
 const appCss = await readFile(new URL('../app.css', import.meta.url), 'utf8');
 const voiceSource = await readFile(new URL('../modules/voice-recorder.js', import.meta.url), 'utf8');
@@ -191,7 +195,7 @@ test('timeline reconciler sorts concurrent rows and keeps one day divider per da
     replaceChildren(...nodes) { this.children = nodes; }
   };
   const document = { createElement: () => ({ classList: { contains: name => name === 'day-divider' }, dataset: {}, textContent: '' }) };
-  const reconcile = vm.runInNewContext('(' + extractFunction('reconcileMessageTimeline') + ')', { document, Date, String, Array });
+  const reconcile = vm.runInNewContext('(' + extractFunction('reconcileMessageTimeline') + ')', { document, Date, String, Array, BizmindMessageTimeline: timelineApi });
   reconcile(area);
   const ids = area.children.filter(node => node.classList.contains('message')).map(node => node.dataset.messageId);
   const dividers = area.children.filter(node => node.classList.contains('day-divider'));
@@ -317,7 +321,7 @@ test('cancelled older-history loading rolls back only its own rows and protects 
     messageIds: new Set(['old-1', 'recent-1', 'realtime-1']),
     messageTimelineRenderOwner: null
   };
-  const run = vm.runInNewContext('(' + rollback + ')', {});
+  const run = vm.runInNewContext('(' + rollback + ')', { BizmindMessageTimeline: timelineApi });
   assert.equal(run(state, 'c1', new Set(['old-1']), new Set(['old-1']), area, 7, new Set(), new Map([['old-1', state.messages[0]]]), new Set()), true);
   assert.deepEqual(state.messages.map(message => message.id), ['recent-1', 'realtime-1']);
   assert.equal(state.messageIds.has('old-1'), false);
@@ -463,7 +467,8 @@ test('in-flight older history is protected from reconciliation and safely remove
   };
   const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
     state, document, supabaseClient, $: () => area, console,
-    rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')'),
+    rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')', { BizmindMessageTimeline: timelineApi }),
+    BizmindMessageTimeline: timelineApi,
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
     loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
     messageReactions: { load: async () => true }, reconcileMessageTimeline() {}, toast() {},
@@ -608,7 +613,8 @@ test('failed older-history batch restores the original transcript and pagination
   let renderCount = 0;
   const loadOlder = vm.runInNewContext('(' + extractFunction('loadOlderMessages') + ')', {
     state, document, supabaseClient, $: () => area, console,
-    rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')'),
+    rollbackCancelledOlderHistory: vm.runInNewContext('(' + extractFunction('rollbackCancelledOlderHistory') + ')', { BizmindMessageTimeline: timelineApi }),
+    BizmindMessageTimeline: timelineApi,
     compareMessagesChronologically: (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
     loadMessagePins: async () => true, loadPrivateReplyContexts: async () => true,
     messageReactions: { load: async () => true },
@@ -640,7 +646,7 @@ test('older-history rendering is transactional and releases only its own loading
   assert.match(older, /originalHasMore=state\.hasMoreMessages/);
   assert.match(older, /renderedHistoryIds\.add\(message\.id\)/);
   assert.match(older, /state\.hasMoreMessages=originalHasMore/);
-  assert.match(extractFunction('rollbackCancelledOlderHistory'), /state\.messageIds\.delete\(id\)/);
+  assert.match(timelineSource, /state\.messageIds\.delete\(id\)/);
   assert.match(older, /state\.loadingOlderRequestId===requestId/);
   assert.match(older, /state\.loadingOlderMessages=false/);
 });

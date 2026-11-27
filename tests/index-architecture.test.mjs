@@ -31,3 +31,9 @@ test("UI wrapper delegates to the extracted module",()=>{
 });
 test("search UI adapter delegates to extracted query service",()=>{assert.match(html,/BizmindConversationSearch\.searchConversationMessages/);});
 test("performance analytics module precedes core",()=>{assert.ok(html.indexOf("./modules/performance-analytics.js")<html.indexOf("__bootMainScriptStarted"));});
+
+test("message timeline module is loaded before the inline core and adapters delegate",()=>{
+ assert.ok(html.indexOf("./modules/message-timeline.js")<html.indexOf("__bootMainScriptStarted"));
+ assert.match(html,/BizmindMessageTimeline\.rollbackCancelledOlderHistory/);
+ assert.match(html,/BizmindMessageTimeline\.reconcileMessageTimeline/);
+});

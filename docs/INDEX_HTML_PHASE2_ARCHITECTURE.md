@@ -78,3 +78,11 @@ Score is an evidence-weighted engineering rubric, not a reliability metric. Phas
 - Added standalone tests for API/load ordering, percentile edge cases, bounded samples, persistence, summary, pagehide and precache contract.
 - Registered module dependency/inventory; service-worker shell cache bumped to v53.
 - Wave 4 completion is pending CI execution and code review. Preliminary score: 180/200 rubric estimate, contingent on tests passing; no merge or production deployment.
+
+
+## Wave 5 — message timeline boundary extraction
+- Extracted the narrowly scoped timeline reconciliation and cancelled-history rollback helpers into `modules/message-timeline.js`; existing inline call sites delegate through compatibility functions.
+- The module remains classic-script compatible and takes the existing state/DOM references as explicit arguments; it does not add backend or database changes.
+- Added focused tests for stale timeline ownership, rollback of request-owned rows, preservation of replacement rows, chronological ordering and day-divider reconciliation.
+- Registered the module in the dependency contract and safety inventory, loaded it before the core, and precached it in service-worker cache v54.
+- Wave 5 verification is pending automated checks; no merge, deployment or production database changes.
